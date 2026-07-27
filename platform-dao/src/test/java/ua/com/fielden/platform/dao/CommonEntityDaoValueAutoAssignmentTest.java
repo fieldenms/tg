@@ -1,15 +1,6 @@
 package ua.com.fielden.platform.dao;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.sample.domain.TgSubSystemDao.DEFAULT_VALUE_FOR_PROPERTY_EXPLANATION;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.persistence.types.EntityWithAutoAssignableProperties;
@@ -22,6 +13,10 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.sample.domain.TgSubSystemDao.DEFAULT_VALUE_FOR_PROPERTY_EXPLANATION;
 
 public class CommonEntityDaoValueAutoAssignmentTest extends AbstractDaoTestCase {
     private final String loggedInUser = "LOGGED_IN_USER";
@@ -96,10 +91,26 @@ public class CommonEntityDaoValueAutoAssignmentTest extends AbstractDaoTestCase 
     }
 
     @Override
+    public boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+
+    @Override
+    public boolean useSavedDataPopulationScript() {
+        return false;
+    }
+
+    @Override
     protected void populateDomain() {
         super.populateDomain();
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2014-11-23 02:47:00"));
+
+        if (useSavedDataPopulationScript()) {
+            final IUserProvider up = getInstance(IUserProvider.class);
+            up.setUsername(loggedInUser, getInstance(IUser.class));
+            return;
+        }
 
         save(new_(User.class, "USER_1").setBase(true).setEmail("USER1@unit-test.software").setActive(true));
 

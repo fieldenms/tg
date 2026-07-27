@@ -10,26 +10,31 @@
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+    <script src="/resources/test-configuration.js"></script>
 </head>
 
 <body>
     <iron-ajax id="entities_retriever" url="/test/serialisation" handle-as="json" reject-with-request></iron-ajax>
     <iron-ajax id="entities_sender" url="/test/serialisation" method="POST" handle-as="json" reject-with-request></iron-ajax>
 
-	<tg-serialiser id="serialiser"></tg-serialiser>
-
 	<script type="module">
 
         import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
-        import '/resources/serialisation/tg-serialiser.js';
+        import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
         import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 		suite('serialisation', function() {
-		    var serialiser, reflector;
+		    let _serialiser, reflector;
 		
 		    setup(function() {
-		      	serialiser = document.querySelector('#serialiser');
-		      	reflector = serialiser.$.reflector;
+		      	_serialiser = new TgSerialiser();
+                // Add to the DOM to fully initialise Polymer element.
+                // This is needed for this.$ creation and stamping of serialiser's reflector.
+                document.body.appendChild(_serialiser);
+                // `_serialiser` is now fully initialised and can be removed immediately.
+                // Flickering can neither be observed nor expected here, as this should happen in the same microtask.
+                document.body.removeChild(_serialiser);
+		      	reflector = _serialiser.reflector();
 		    });
 		
 		    test('works for client-side circle', function (done) {
@@ -51,29 +56,29 @@
                     id: 1,
                     _type: type12,
                     key: "entity key",
-                    "@key": keyProp1,
+                    "key@": keyProp1,
                     desc: "entity description",
-                    "@desc": descProp1,
+                    "desc@": descProp1,
                     detail: new Entity({
                         id: 2,
                         _type: type13,
-                        "@key": keyProp2
+                        "key@": keyProp2
                     }),
-                    "@detail": detailProp1
+                    "detail@": detailProp1
                 }),
                 inst2 = new Entity({
                     id: 3,
                     _type: type12,
                     key: "entity key1",
-                    "@key": keyProp3,
+                    "key@": keyProp3,
                     desc: "entity description1",
-                    "@desc": descProp2,
+                    "desc@": descProp2,
                     detail: new Entity({
                         id: 4,
                         _type: type13,
-                        "@key": keyProp4
+                        "key@": keyProp4
                     }),
-                    "@detail": detailProp2
+                    "detail@": detailProp2
                 }),
                 objToSerialise = {
                     cause: "Testing purposes",
@@ -107,7 +112,7 @@
                 restoredObj = null;
             	inst1.detail.key = inst1;
             	inst2.detail.key = inst2;
-            	restoredObj = serialiser.deserialise(serialiser.serialise(objToSerialise));
+            	restoredObj = _serialiser.deserialise(_serialiser.serialise(objToSerialise));
             	assert.deepEqual(restoredObj, objToSerialise, "object after serialisation-deserialisation process is not equal to ");
             	done();
             });
@@ -118,7 +123,6 @@
                 entityRetriever.headers = _timeZoneHeader();
                 const entitySender = document.querySelector('#entities_sender');
                 entitySender.headers = _timeZoneHeader();
-                const serialiser = document.querySelector('#serialiser');
                 var onError = function(e, detail, sender) {
                 	console.warn('client-server-client error with done!');
                 	assert.fail(null, null, "The error has happened.");
@@ -144,7 +148,7 @@
                 entityRetriever.addEventListener('response', function(e) {
                 	console.warn('client-server-client entityRetriever.addEventListener');
                     // console.log("not deserialised: ", JSON.stringify(e.detail.response));
-                    var resultWithEntities = serialiser.deserialise(e.detail.response);
+                    var resultWithEntities = _serialiser.deserialise(e.detail.response);
 
                     var entities = resultWithEntities.instance;
 
@@ -212,14 +216,14 @@
                     assert.deepEqual(find(entities, 'PropertyDescriptor')['@pdString'], 'ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger:prop', 'PropertyDescriptor @pdString has incorrect value.');
                     
                     // console.log("deserialised with tg-serialiser: ", JSON.stringify(resultWithEntities));
-                    entitySender.body = JSON.stringify(serialiser.serialise(resultWithEntities));
+                    entitySender.body = JSON.stringify(_serialiser.serialise(resultWithEntities));
                     // console.log("serialised with tg-serialiser: ", entitySender.body);
                     entitySender.generateRequest();
                 });
                 
                 entitySender.addEventListener('response', function(e) {
                 	console.warn('client-server-client entitySender.addEventListener with done!');
-                    assert.equal(e.detail.response.message, 'okay', "The sended entities are not equal.");
+                    assert.equal(e.detail.response.instance, 'okay', "The sent entities are not equal.");
                     done();
                 });
 

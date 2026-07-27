@@ -1,32 +1,23 @@
 package ua.com.fielden.platform.sample.domain;
 
-import java.util.Date;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
+
+import java.util.Date;
 
 @KeyTitle("Meter Reading")
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo("METER_READING")
 @CompanionObject(ITgMeterReading.class)
 public class TgMeterReading extends AbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @Title("Vehicle")
     @CompositeKeyMember(1)
     @MapTo("ID_EQDET")
     private TgVehicle vehicle;
+
     @IsProperty
     @Title(value = "Reading Date", desc = "Reading Date")
     @CompositeKeyMember(2)
@@ -38,66 +29,65 @@ public class TgMeterReading extends AbstractEntity<DynamicEntityKey> {
     @Title(value = "Reading", desc = "Reading")
     @MapTo("LAST_READING")
     private Integer reading;
+
     @IsProperty
     @Title(value = "Work Order")
     @MapTo("ID_WODET")
     private TgWorkOrder workOrder;
+
     @IsProperty
     @Title(value = "Fuel Usage", desc = "Fuel usage instance associated with this meter reading")
     @MapTo("ID_FUEL_USAGE")
     private TgFuelUsage fuelUsage;
-
-    /////////////////////////////////////////////
-    //////////////// GETTERS ////////////////////
-    /////////////////////////////////////////////
-
-    public TgVehicle getVehicle() {
-        return vehicle;
-    }
-
-    public Date getReadingDate() {
-        return readingDate;
-    }
-
-    public Integer getReading() {
-        return reading;
-    }
-
-    public TgWorkOrder getWorkOrder() {
-        return workOrder;
-    }
-
-    /////////////////////////////////////////////
-    //////////////// SETTERS ////////////////////
-    /////////////////////////////////////////////
-
-    @Observable
-    public void setVehicle(final TgVehicle vehicle) {
-        this.vehicle = vehicle;
-    }
-
-    @Observable
-    public void setReadingDate(final Date readingDate) {
-        this.readingDate = readingDate;
-    }
-
-    @Observable
-    public void setReading(final Integer reading) {
-        this.reading = reading;
-    }
-
-    @Observable
-    public void setWorkOrder(final TgWorkOrder workOrder) {
-        this.workOrder = workOrder;
-    }
 
     public TgFuelUsage getFuelUsage() {
         return fuelUsage;
     }
 
     @Observable
-    public void setFuelUsage(final TgFuelUsage fuelUsage) {
+    public TgMeterReading setFuelUsage(final TgFuelUsage fuelUsage) {
         this.fuelUsage = fuelUsage;
+        return this;
+    }
+
+    public TgWorkOrder getWorkOrder() {
+        return workOrder;
+    }
+
+    @Observable
+    public TgMeterReading setWorkOrder(final TgWorkOrder workOrder) {
+        this.workOrder = workOrder;
+        return this;
+    }
+
+    public Integer getReading() {
+        return reading;
+    }
+
+    @Observable
+    public TgMeterReading setReading(final Integer reading) {
+        this.reading = reading;
+        return this;
+    }
+
+    public Date getReadingDate() {
+        return readingDate;
+    }
+
+    @Observable
+    public TgMeterReading setReadingDate(final Date readingDate) {
+        this.readingDate = readingDate;
+        return this;
+    }
+
+    public TgVehicle getVehicle() {
+        return vehicle;
+    }
+
+    @Observable
+    public TgMeterReading setVehicle(final TgVehicle vehicle) {
+        this.vehicle = vehicle;
+        return this;
     }
 
 }

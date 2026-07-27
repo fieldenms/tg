@@ -18,7 +18,6 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
@@ -66,14 +65,13 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.*;
 
-/**
- * Represents a set of utility methods for updating / committing of surrogate centres, for e.g. 'fresh', 'previouslyRun' etc.
- * <p>
- * Every surrogate centre has its own diff centre that, saves into the database during {@link #commitCentre(User, IUserProvider, Class, String, Optional, DeviceProfile, ICentreDomainTreeManagerAndEnhancer, IWebUiConfig, ISerialiser, EntityCentreConfigCo, MainMenuItemCo, IUser)} process.
- *
- * @author TG Team
- *
- */
+/// Represents a set of utility methods for updating / committing of surrogate centres, for e.g. 'fresh', 'previouslyRun' etc.
+///
+/// Every surrogate centre has its own diff centre that is saved into the database during
+/// [#commitCentreWithoutConflicts(User, Class, String, Optional, DeviceProfile, ICentreDomainTreeManagerAndEnhancer, String, IWebUiConfig, EntityCentreConfigCo, MainMenuItemCo, IUser)]
+/// and
+/// [#commitCentreDiffWithoutConflicts(User, Class, String, Optional, DeviceProfile, ICentreDomainTreeManagerAndEnhancer, Map, String, EntityCentreConfigCo, MainMenuItemCo, ICompanionObjectFinder, Function)].
+///
 public class CentreUpdater {
     private static final Logger logger = getLogger(CentreUpdater.class);
     
@@ -95,7 +93,9 @@ public class CentreUpdater {
      *
      */
     enum MetaValueType {
-        VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, OR_GROUP, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, WIDTH, GROW_FACTOR, AUTOCOMPLETE_ACTIVE_ONLY
+        VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, OR_GROUP,
+        DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, WIDTH, GROW_FACTOR,
+        AUTOCOMPLETE_ACTIVE_ONLY, DYNAMIC_LAST_SEEN
     }
     
     /**
@@ -237,12 +237,9 @@ public class CentreUpdater {
             final Optional<String> saveAsName,
             final DeviceProfile device,
             final IWebUiConfig webUiConfig,
-            final EntityCentreConfigCo eccCompanion,
-            final MainMenuItemCo mmiCompanion,
-            final IUser userCompanion,
             final ICompanionObjectFinder companionFinder) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
-        final Map<String, Object> updatedDiff = updateDifferences(miType, user, deviceSpecificName, name, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+        final Map<String, Object> updatedDiff = updateDifferences(miType, user, deviceSpecificName, name, saveAsName, device, webUiConfig, companionFinder);
         return loadCentreFromDefaultAndDiff(miType, updatedDiff, webUiConfig, companionFinder);
     }
     
@@ -255,9 +252,9 @@ public class CentreUpdater {
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      * @return
      */
-    public static String updateCentreDesc(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final EntityCentreConfigCo eccCompanion) {
+    public static String updateCentreDesc(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device);
-        final EntityCentreConfig eccWithDesc = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
+        final EntityCentreConfig eccWithDesc = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, companionFinder);
         return eccWithDesc == null ? null : eccWithDesc.getDesc();
     }
     
@@ -270,9 +267,15 @@ public class CentreUpdater {
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      * @return
      */
-    public static boolean updateCentreDashboardable(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final EntityCentreConfigCo eccCompanion) {
+    public static boolean updateCentreDashboardable(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final DeviceProfile device,
+        final ICompanionObjectFinder companionFinder
+    ) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device);
-        final EntityCentreConfig config = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
+        final EntityCentreConfig config = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, companionFinder);
         return config != null && config.isDashboardable();
     }
     
@@ -287,13 +290,21 @@ public class CentreUpdater {
      * @param selectionCrit -- only specify in case where there is possibility that configuration is inherited; if not specified, inheritness will not even be checked
      * @return
      */
-    public static boolean updateCentreRunAutomatically(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final EntityCentreConfigCo eccCompanion, final IWebUiConfig webUiConfig, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+    public static boolean updateCentreRunAutomatically(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final DeviceProfile device,
+        final ICompanionObjectFinder companionFinder,
+        final IWebUiConfig webUiConfig,
+        final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit
+    ) {
         if (isLink(saveAsName)) { // link
             return true;
         }
         final Function<User, Function<Optional<String>, Boolean>> calcRunAutomaticallyFor = customUser -> customSaveAsName -> {
             final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, customSaveAsName), device);
-            final EntityCentreConfig config = findConfig(miType, customUser, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
+            final EntityCentreConfig config = findConfig(miType, customUser, deviceSpecificName + DIFFERENCES_SUFFIX, companionFinder);
             return config != null ? config.isRunAutomatically() : webUiConfig != null ? defaultRunAutomatically(miType, webUiConfig) : false;
         };
         if (!saveAsName.isPresent()) {
@@ -321,9 +332,15 @@ public class CentreUpdater {
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      * @return
      */
-    public static DashboardRefreshFrequency updateCentreDashboardRefreshFrequency(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final EntityCentreConfigCo eccCompanion) {
+    public static DashboardRefreshFrequency updateCentreDashboardRefreshFrequency(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final DeviceProfile device,
+        final ICompanionObjectFinder companionFinder
+    ) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device);
-        final EntityCentreConfig config = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
+        final EntityCentreConfig config = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, companionFinder);
         return config != null ? config.getDashboardRefreshFrequency() : null;
     }
     
@@ -336,10 +353,16 @@ public class CentreUpdater {
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      * @return
      */
-    public static Optional<String> updateCentreConfigUuid(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final EntityCentreConfigCo eccCompanion) {
+    public static Optional<String> updateCentreConfigUuid(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final DeviceProfile device,
+        final ICompanionObjectFinder companionFinder
+    ) {
         return saveAsName.map(name -> {
             final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, of(name)), device);
-            final EntityCentreConfig eccWithDesc = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
+            final EntityCentreConfig eccWithDesc = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, companionFinder);
             return eccWithDesc == null ? null : eccWithDesc.getConfigUuid();
         });
     }
@@ -365,15 +388,15 @@ public class CentreUpdater {
             final String newDesc,
             final boolean newDashboardable,
             final DashboardRefreshFrequency newDashboardRefreshFrequency,
-            final EntityCentreConfigCo eccCompanion) {
+            final ICompanionObjectFinder companionFinder) {
         final Function<Optional<String>, Function<String, String>> nameOf = (saveAs) -> (surrogateName) -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
         final Function<String, String> currentNameOf = nameOf.apply(saveAsName);
         final String currentNameFresh = currentNameOf.apply(FRESH_CENTRE_NAME);
         final String currentNameSaved = currentNameOf.apply(SAVED_CENTRE_NAME);
         final String currentNamePreviouslyRun = currentNameOf.apply(PREVIOUSLY_RUN_CENTRE_NAME);
-        final EntityCentreConfig freshConfig = findConfig(miType, user, currentNameFresh, eccCompanion);
-        final EntityCentreConfig savedConfig = findConfig(miType, user, currentNameSaved, eccCompanion);
-        final EntityCentreConfig previouslyRunConfig = findConfig(miType, user, currentNamePreviouslyRun, eccCompanion);
+        final EntityCentreConfig freshConfig = findConfig(miType, user, currentNameFresh, companionFinder);
+        final EntityCentreConfig savedConfig = findConfig(miType, user, currentNameSaved, companionFinder);
+        final EntityCentreConfig previouslyRunConfig = findConfig(miType, user, currentNamePreviouslyRun, companionFinder);
         if (freshConfig == null || savedConfig == null) {
             throw failuref("Fresh or saved configuration for configuration [%s] does not exist.", saveAsName);
         }
@@ -393,14 +416,15 @@ public class CentreUpdater {
         
         // clear all centres with the same name in the case where title has been changed -- new title potentially can be in conflict with another configuration and that another configuration should be deleted
         if (!equalsEx(saveAsName, of(newTitle))) {
-            CentreUpdaterUtils.removeCentres(user, miType, eccCompanion, freshConfig.getTitle(), savedConfig.getTitle(), previouslyRunNewTitle);
+            CentreUpdaterUtils.removeCentres(user, miType, companionFinder, freshConfig.getTitle(), savedConfig.getTitle(), previouslyRunNewTitle);
         }
-        
+
+        final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
         // save
-        eccCompanion.saveWithRetry(freshConfig); // editCentreTitleAndDesc is not used inside other transaction scopes (i.e. CentreConfigEditActionDao.performSave and AbstractCentreConfigCommitActionDao.save do not have @SessionRequired) -- saveWithRetry can be used
-        eccCompanion.saveWithRetry(savedConfig);
+        co$EntityCentreConfig.saveWithRetry(freshConfig); // editCentreTitleAndDesc is not used inside other transaction scopes (i.e. CentreConfigEditActionDao.performSave and AbstractCentreConfigCommitActionDao.save do not have @SessionRequired) -- saveWithRetry can be used
+        co$EntityCentreConfig.saveWithRetry(savedConfig);
         if (previouslyRunConfig != null) { // previouslyRun centre may not exist
-            eccCompanion.saveWithRetry(previouslyRunConfig);
+            co$EntityCentreConfig.saveWithRetry(previouslyRunConfig);
         }
     }
     
@@ -419,12 +443,13 @@ public class CentreUpdater {
             final Optional<String> saveAsName,
             final DeviceProfile device,
             final boolean newRunAutomatically,
-            final EntityCentreConfigCo eccCompanion) {
+            final ICompanionObjectFinder companionFinder) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device);
-        final EntityCentreConfig freshConfig = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX , eccCompanion);
+        final EntityCentreConfig freshConfig = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX , companionFinder);
         if (freshConfig != null) {
             freshConfig.setRunAutomatically(newRunAutomatically);
-            eccCompanion.saveWithRetry(freshConfig); // configureCentre is not used inside other transaction scopes (i.e. CentreConfigConfigureActionDao.save has no @SessionRequired) -- saveWithRetry can be used
+            final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
+            co$EntityCentreConfig.saveWithRetry(freshConfig); // configureCentre is not used inside other transaction scopes (i.e. CentreConfigConfigureActionDao.save has no @SessionRequired) -- saveWithRetry can be used
         }
     }
     
@@ -439,10 +464,10 @@ public class CentreUpdater {
      * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param names -- surrogate names of the centres (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
      */
-    public static void removeCentres(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final EntityCentreConfigCo eccCompanion, final String ... names) {
+    public static void removeCentres(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final ICompanionObjectFinder companionFinder, final String ... names) {
         // remove corresponding diff centre instances from persistent storage
         final String[] deviceSpecificDiffNames = stream(names).map(name -> deviceSpecific(saveAsSpecific(name, saveAsName), device) + DIFFERENCES_SUFFIX).toArray(String[]::new);
-        CentreUpdaterUtils.removeCentres(user, miType, eccCompanion, deviceSpecificDiffNames);
+        CentreUpdaterUtils.removeCentres(user, miType, companionFinder, deviceSpecificDiffNames);
     }
     
     /**
@@ -469,13 +494,11 @@ public class CentreUpdater {
             final ICentreDomainTreeManagerAndEnhancer centre,
             final String newDesc,
             final IWebUiConfig webUiConfig,
-            final EntityCentreConfigCo eccCompanion,
-            final MainMenuItemCo mmiCompanion,
-            final IUser userCompanion) {
+            final ICompanionObjectFinder companionFinder) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
         final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
         // override old 'diff' with recently created one and save it
-        saveEntityCentreManager(createDifferences(centre, defaultCentre, getEntityType(miType)), miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, eccCompanion, mmiCompanion, identity());
+        saveEntityCentreManager(createDifferences(centre, defaultCentre, getEntityType(miType)), miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, companionFinder, identity());
         return centre;
     }
     
@@ -503,13 +526,11 @@ public class CentreUpdater {
             final ICentreDomainTreeManagerAndEnhancer defaultCentre,
             final Map<String, Object> diff,
             final String newDesc,
-            final EntityCentreConfigCo eccCompanion,
-            final MainMenuItemCo mmiCompanion,
             final ICompanionObjectFinder companionFinder,
             final Function<EntityCentreConfig, EntityCentreConfig> adjustConfig) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
         // override old 'diff' with recently created one and save it
-        saveEntityCentreManager(diff, miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, eccCompanion, mmiCompanion, adjustConfig);
+        saveEntityCentreManager(diff, miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, companionFinder, adjustConfig);
         return applyDifferences(defaultCentre, diff, getEntityType(miType), companionFinder);
     }
     
@@ -540,7 +561,7 @@ public class CentreUpdater {
             final LoadableCentreConfigCo lccCompanion = companionFinder.find(LoadableCentreConfig.class);
             
             final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
-            final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = findConfigsFunction(user, miType, device, eccCompanion).apply(saveAsNameOpt);
+            final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = findConfigsFunction(user, miType, device).apply(saveAsNameOpt);
             final fetch<EntityCentreConfig> fetch = FETCH_CONFIG.with("configUuid");
             if (user.isBase()) {
                 try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
@@ -550,7 +571,7 @@ public class CentreUpdater {
                     loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE)); // exclude 'link' configuration from load dialog if it is present (aka centre 'link' with criteria parameters was loaded at least once)
                 }
             } else {
-                final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = findConfigsFunction(user.getBasedOnUser(), miType, device, eccCompanion).apply(saveAsNameOpt);
+                final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = findConfigsFunction(user.getBasedOnUser(), miType, device).apply(saveAsNameOpt);
                 try (final Stream<EntityCentreConfig> streamForCurrentUser = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
                      final Stream<EntityCentreConfig> streamForBaseUser = eccCompanion.stream(from(queryForBaseUser).with(fetch).model())) {
                     streamForCurrentUser.forEach(ecc -> {
@@ -645,7 +666,7 @@ public class CentreUpdater {
     /**
      * Creates function for loading of FRESH configs -- either all or one based on function argument.
      */
-    private static Function<Optional<Optional<String>>, EntityResultQueryModel<EntityCentreConfig>> findConfigsFunction(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final EntityCentreConfigCo eccCompanion) {
+    private static Function<Optional<Optional<String>>, EntityResultQueryModel<EntityCentreConfig>> findConfigsFunction(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device) {
         return saveAsNameOpt -> {
             return saveAsNameOpt
                 .map(saveAsName -> modelFor(user, miType.getName(), NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName).apply(device)))
@@ -711,7 +732,7 @@ public class CentreUpdater {
                     miType,
                     user,
                     deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX,
-                    eccCompanion,
+                    companionFinder,
                     fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency").with("runAutomatically").fetchModel()
                 ).ifPresent(ecc ->
                     eccCompanion.saveWithRetry( // not used inside other transaction scopes (e.g. CentreConfigLoadActionDao->makePreferredConfig->makePreferred does not have @SessionRequired) -- saveWithRetry can be used
@@ -883,18 +904,17 @@ public class CentreUpdater {
             final Optional<String> saveAsName,
             final DeviceProfile device,
             final IWebUiConfig webUiConfig,
-            final EntityCentreConfigCo eccCompanion,
-            final MainMenuItemCo mmiCompanion,
-            final IUser userCompanion,
             final ICompanionObjectFinder companionFinder) {
         // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'
         final String deviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
         
         final Map<String, Object> resultantDiff;
         // WILL BE UPDATED IN EVERY CALL OF updateDifferencesCentre!
-        
+
+        final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
+
         // init (or update) diff centre from persistent storage if exists
-        final Optional<Map<String, Object>> retrievedDiff = retrieveDiff(miType, user, deviceSpecificDiffName, eccCompanion);
+        final Optional<Map<String, Object>> retrievedDiff = retrieveDiff(miType, user, deviceSpecificDiffName, companionFinder);
         if (retrievedDiff.isPresent()) {
             resultantDiff = retrievedDiff.get();
         } else {
@@ -902,34 +922,35 @@ public class CentreUpdater {
             // Default centre is now needed for both cases: base or non-base user.
             if (user.isBase() || of(LINK_CONFIG_TITLE).equals(saveAsName) || empty().equals(saveAsName)) { // for non-base user 'link' and 'default' configurations need to be derived from default user-specific configuration instead of base configuration
                 // diff centre does not exist in persistent storage yet -- initialise EMPTY diff
-                resultantDiff = saveNewEntityCentreManager(createEmptyDifferences(), miType, user, deviceSpecificDiffName, null, eccCompanion, mmiCompanion, identity());
+                resultantDiff = saveNewEntityCentreManager(createEmptyDifferences(), miType, user, deviceSpecificDiffName, null, companionFinder, identity());
                 if (FRESH_CENTRE_NAME.equals(name)) { // configs have runAutomatically only in FRESH centre
-                    findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically"))
+                    findConfigOpt(miType, user, deviceSpecificDiffName, companionFinder, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically"))
                         .ifPresent(freshConfig -> {
                             final boolean upstreamRunAutomatically = of(LINK_CONFIG_TITLE).equals(saveAsName) /* link: always runAutomatically */ || defaultRunAutomatically(miType, webUiConfig) /* default/base: runAutomatically as in Centre DSL */;
-                            eccCompanion.saveWithRetry(freshConfig.setRunAutomatically(upstreamRunAutomatically));
+                            co$EntityCentreConfig.saveWithRetry(freshConfig.setRunAutomatically(upstreamRunAutomatically));
                         });
                 }
             } else { // non-base user
                 // diff centre does not exist in persistent storage yet -- load diff from base user's configuration
-                final User baseUser = userCompanion.findByEntityAndFetch(fetch(User.class).with(LAST_UPDATED_BY), user.getBasedOnUser());
-                final Optional<Map<String, Object>> baseCentreDiffOpt = retrieveDiff(miType, baseUser, deviceSpecific(saveAsSpecific(SAVED_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX, eccCompanion);
+                final var coUser = companionFinder.find(User.class, true);
+                final User baseUser = coUser.findByEntityAndFetch(fetch(User.class).with(LAST_UPDATED_BY), user.getBasedOnUser());
+                final Optional<Map<String, Object>> baseCentreDiffOpt = retrieveDiff(miType, baseUser, deviceSpecific(saveAsSpecific(SAVED_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX, companionFinder);
                 // find description of the centre configuration to be copied from
-                final String upstreamDesc = baseCentreDiffOpt.isPresent() ? updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion) : null;
-                final Optional<String> upstreamConfigUuid = baseCentreDiffOpt.isPresent() ? updateCentreConfigUuid(baseUser, miType, saveAsName, device, eccCompanion) : empty();
+                final String upstreamDesc = baseCentreDiffOpt.isPresent() ? updateCentreDesc(baseUser, miType, saveAsName, device, companionFinder) : null;
+                final Optional<String> upstreamConfigUuid = baseCentreDiffOpt.isPresent() ? updateCentreConfigUuid(baseUser, miType, saveAsName, device, companionFinder) : empty();
                 // no need to provide selectionCrit ('null' parameter) for checking whether baseUser's configuration is inherited - it can never be inherited transitively
-                final boolean upstreamRunAutomatically = baseCentreDiffOpt.isPresent() ? updateCentreRunAutomatically(baseUser, miType, saveAsName, device, eccCompanion, webUiConfig, null) : defaultRunAutomatically(miType, webUiConfig);
+                final boolean upstreamRunAutomatically = baseCentreDiffOpt.isPresent() ? updateCentreRunAutomatically(baseUser, miType, saveAsName, device, companionFinder, webUiConfig, null) : defaultRunAutomatically(miType, webUiConfig);
                 // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
                 final Map<String, Object> differences = baseCentreDiffOpt.orElseGet(CentreUpdater::createEmptyDifferences);
                 // promotes diff to persistent storage
-                resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, eccCompanion, mmiCompanion, identity());
+                resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, companionFinder, identity());
                 if (FRESH_CENTRE_NAME.equals(name)) { // inherited configs have uuid only in FRESH centre
                     if (upstreamConfigUuid.isPresent()) {
-                        findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid").with("runAutomatically"))
-                            .ifPresent(freshConfig -> eccCompanion.saveWithRetry(freshConfig.setConfigUuid(upstreamConfigUuid.get()).setRunAutomatically(upstreamRunAutomatically)));
+                        findConfigOpt(miType, user, deviceSpecificDiffName, companionFinder, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid").with("runAutomatically"))
+                            .ifPresent(freshConfig -> co$EntityCentreConfig.saveWithRetry(freshConfig.setConfigUuid(upstreamConfigUuid.get()).setRunAutomatically(upstreamRunAutomatically)));
                     } else {
-                        findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically"))
-                            .ifPresent(freshConfig -> eccCompanion.saveWithRetry(freshConfig.setRunAutomatically(upstreamRunAutomatically)));
+                        findConfigOpt(miType, user, deviceSpecificDiffName, companionFinder, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically"))
+                            .ifPresent(freshConfig -> co$EntityCentreConfig.saveWithRetry(freshConfig.setRunAutomatically(upstreamRunAutomatically)));
                     }
                 }
             }
@@ -1097,7 +1118,7 @@ public class CentreUpdater {
                         diff(property, propertiesDiff).put(VALUE2.name(), convertTo(value2Val, managedTypeSupplier, property));
                     }
                 }
-                if (isActivatableEntityType(propertyType)) {
+                if (isActivatableEntityOrUnionType(propertyType)) {
                     final boolean autocompleteActiveOnlyVal = centre.getFirstTick().getAutocompleteActiveOnly(root, property);
                     if (!equalsEx(autocompleteActiveOnlyVal, defaultCentre.getFirstTick().getAutocompleteActiveOnly(root, property))) {
                         diff(property, propertiesDiff).put(AUTOCOMPLETE_ACTIVE_ONLY.name(), autocompleteActiveOnlyVal);
@@ -1130,7 +1151,7 @@ public class CentreUpdater {
      */
     public static Map<String, Object> extendDiffsWithNonIntrusiveDifferences(final Map<String, Object> diff, final IAddToResultTickManager secondTick, final IAddToResultTickManager defaultSecondTick, final Class<AbstractEntity<?>> root) {
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
-        
+
         // extract widths that are changed and add them to the diff
         for (final String property : secondTick.checkedProperties(root)) {
             final int widthVal = secondTick.getWidth(root, property);
@@ -1142,6 +1163,22 @@ public class CentreUpdater {
                 diff(property, propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
             }
         }
+
+        // Extract dynamic-column widths / grow factors / last-seen millis and add them to the diff.
+        // Dynamic columns are emitted at request time by an IDynamicColumnBuilder, identified by their group-key value.
+        // Their keys never appear in checkedProperties(root), so they are processed separately.
+        // Any value present in the dynamic maps is considered an override.
+        // The "default" is computed by the dynamic builder at emission time and is not available here.
+        // Defensive filter: skip keys that *do* appear in checkedProperties.
+        // Avoids colliding with the static branch above on the rare case of name reuse.
+        final var checkedRootProps = new HashSet<>(secondTick.checkedProperties(root));
+        final var widthsAndGrowFactors = secondTick.getDynamicWidthsAndGrowFactors();
+        final var defaultWidthsAndGrowFactors = defaultSecondTick.getDynamicWidthsAndGrowFactors();
+        final var lastSeen = secondTick.getDynamicLastSeenMap();
+        final var defaultLastSeen = defaultSecondTick.getDynamicLastSeenMap();
+        diffDynamic(widthsAndGrowFactors._1, defaultWidthsAndGrowFactors._1, WIDTH.name(), root, checkedRootProps, propertiesDiff);
+        diffDynamic(widthsAndGrowFactors._2, defaultWidthsAndGrowFactors._2, GROW_FACTOR.name(), root, checkedRootProps, propertiesDiff);
+        diffDynamic(lastSeen, defaultLastSeen, DYNAMIC_LAST_SEEN.name(), root, checkedRootProps, propertiesDiff);
         
         // determine whether usedProperties have been changed (as a whole) and add them to the diff if true
         final List<String> visibilityAndOrderPropertiesVal = secondTick.usedProperties(root);
@@ -1218,6 +1255,30 @@ public class CentreUpdater {
             }
         }
     }
+
+    /// Iterates `source` (a dynamic-column map) and appends an entry to `propertiesDiff` under `diffName`.
+    /// Done for every key whose value differs from `defaultSource`.
+    /// Skips keys whose root class is not `root` or whose property name appears in `checkedRootProps`.
+    /// Used by [#extendDiffsWithNonIntrusiveDifferences(Map, IAddToResultTickManager, IAddToResultTickManager, Class)].
+    ///
+    private static <V> void diffDynamic(
+        final Map<Pair<Class<?>, String>, V> source,
+        final Map<Pair<Class<?>, String>, V> defaultSource,
+        final String diffName,
+        final Class<AbstractEntity<?>> root,
+        final Set<String> checkedRootProps,
+        final Map<String, Map<String, Object>> propertiesDiff
+    ) {
+        source.forEach((key, value) -> {
+            if (
+                root.equals(key.getKey())
+                && !checkedRootProps.contains(key.getValue())
+                && !equalsEx(value, defaultSource.get(key))
+            ) {
+                diff(key.getValue(), propertiesDiff).put(diffName, value);
+            }
+        });
+    }
     
     /**
      * Applies the differences from 'differences centre' on top of 'target centre'.
@@ -1251,9 +1312,28 @@ public class CentreUpdater {
             processValue(diff, AUTOCOMPLETE_ACTIVE_ONLY.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setAutocompleteActiveOnly(root, property, (Boolean) value), property);
             
             final boolean resultSetContains = targetCentre.getSecondTick().checkedProperties(root).contains(property);
-            
-            processValue(diff, WIDTH.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setWidth(root, property, (int) value), property);
-            processValue(diff, GROW_FACTOR.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setGrowFactor(root, property, (int) value), property);
+
+            if (resultSetContains || !diff.containsKey(DYNAMIC_LAST_SEEN.name())) {
+                // Static path (resultSetContains == true) or genuinely-disappeared / legacy entry.
+                // `processValue` applies when `resultSetContains` is true and warns-and-drops when false.
+                // This preserves upstream warn-and-drop semantics for the latter so the diff self-cleans on the next commit.
+                processValue(diff, WIDTH.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setWidth(root, property, (int) value), property);
+                processValue(diff, GROW_FACTOR.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setGrowFactor(root, property, (int) value), property);
+            }
+            else {
+                // The presence of DYNAMIC_LAST_SEEN marks this entry as a *dynamic column* override.
+                // The producer always writes lastSeen alongside any dynamic width/growFactor resize.
+                // Route WIDTH / GROW_FACTOR / DYNAMIC_LAST_SEEN to the dynamic maps.
+                // If the key is orphan or stale, the eviction sweep discards it.
+                // See `CriteriaResource.refreshAndEvictDynamicEntries`.
+                if (diff.containsKey(WIDTH.name())) {
+                    targetCentre.getSecondTick().setDynamicWidth(root, property, (int) diff.get(WIDTH.name()));
+                }
+                if (diff.containsKey(GROW_FACTOR.name())) {
+                    targetCentre.getSecondTick().setDynamicGrowFactor(root, property, (int) diff.get(GROW_FACTOR.name()));
+                }
+                targetCentre.getSecondTick().setDynamicLastSeen(root, property, ((Number) diff.get(DYNAMIC_LAST_SEEN.name())).longValue());
+            }
         }
         
         // process EGI column visibility / order

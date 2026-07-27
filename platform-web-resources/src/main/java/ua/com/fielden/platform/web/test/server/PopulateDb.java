@@ -144,7 +144,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final ITgPerson aoPerson = (ITgPerson) co$(TgPerson.class);
         aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name());
 
-        final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
+        final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative privileges.").setActive(true));
         save(new_composite(UserAndRoleAssociation.class, su, admin));
 
         LOGGER.info("\tPopulate testing entities...");
@@ -154,7 +154,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final var ent3 = save(new_(TgPersistentEntityWithProperties.class, "KEY3").setIntegerProp(15).setDesc("Description for entity with key 3.").setRequiredValidatedProp(30));
         save(ent2.setEntityProp(ent3));
         save(new_(TgPersistentEntityWithProperties.class, "KEY4").setIntegerProp(63).setMoneyProp(new Money("23.0", Currency.getInstance("USD"))).setDesc("Description for entity with key 4.").setRequiredValidatedProp(30));
-        save(new_(TgPersistentEntityWithProperties.class, "KEY5").setBigDecimalProp(new BigDecimal(23.0)).setDesc("Description for entity with key 5.").setRequiredValidatedProp(30));
+        save(new_(TgPersistentEntityWithProperties.class, "KEY5").setBigDecimalProp(new BigDecimal("23.0")).setDesc("Description for entity with key 5.").setRequiredValidatedProp(30));
         save(new_(TgPersistentEntityWithProperties.class, "KEY6").setIntegerProp(61).setStringProp("ok").setDesc("Description for entity with key 6.").setRequiredValidatedProp(30).setBigDecimalProp(new BigDecimal("12"))); // id = 10L
         save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true).setDesc("Description for entity with key 7.").setRequiredValidatedProp(30));
         save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(3609999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
@@ -340,6 +340,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY5").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY5</p>")).setDesc("rich text desc 5"));
         save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY6").setRichTextProp(fromHtml("hello world")).setDesc("rich text desc 6")); // deliberate value without paragraph tags to induce Toast UI transformation; used to test SAVE disablement
 
+        // Population for the entity that redeclares `id` with `@IsProperty` (issue #2726).
+        save(new_(TgEntityWithIsPropertyOverriddenId.class, "OID_KEY1"));
+
         try {
             final ISecurityTokenProvider provider = config.getInstance(ISecurityTokenProvider.class); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
@@ -403,11 +406,11 @@ public class PopulateDb extends DomainDrivenDataPopulation {
      * Creates 30-ty entities to be able to demonstrate (with populated statuses).
      */
     private void createDemoDomain(final TgPersistentEntityWithProperties ent1, final TgPersistentEntityWithProperties ent2, final TgPersistentCompositeEntity compEnt1) {
-        final TgPersistentStatus dr = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "DR").setDesc("Defect Radio"));
-        final TgPersistentStatus is = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "IS").setDesc("In Service"));
-        final TgPersistentStatus ir = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "IR").setDesc("In Repair"));
-        final TgPersistentStatus on = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "ON").setDesc("On Road Defect Station"));
-        final TgPersistentStatus sr = (TgPersistentStatus) save(new_(TgPersistentStatus.class, "SR").setDesc("Defect Smash Repair"));
+        final TgPersistentStatus dr = save(new_(TgPersistentStatus.class, "DR").setDesc("Defect Radio"));
+        final TgPersistentStatus is = save(new_(TgPersistentStatus.class, "IS").setDesc("In Service"));
+        final TgPersistentStatus ir = save(new_(TgPersistentStatus.class, "IR").setDesc("In Repair"));
+        final TgPersistentStatus on = save(new_(TgPersistentStatus.class, "ON").setDesc("On Road Defect Station"));
+        final TgPersistentStatus sr = save(new_(TgPersistentStatus.class, "SR").setDesc("Defect Smash Repair"));
 
         for (int i = 0; i < 30; i++) {
             save(new_(TgPersistentEntityWithProperties.class, "DEMO" + convert(i))

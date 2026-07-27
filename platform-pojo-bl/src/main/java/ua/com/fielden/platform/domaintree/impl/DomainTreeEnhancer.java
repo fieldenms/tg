@@ -656,7 +656,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         boolean existsInOtherExpressionsAsOriginationProperty = false;
         String containingExpression = null;
         for (final CalculatedProperty calc : calcs) {
-            if (StringUtils.equals(calc.getOriginationProperty(), Reflector.fromAbsotule2RelativePath(calc.getContextPath(), calculatedPropertyName))) {
+            if (StringUtils.equals(calc.getOriginationProperty(), Reflector.fromAbsolute2RelativePath(calc.getContextPath(), calculatedPropertyName))) {
                 existsInOtherExpressionsAsOriginationProperty = true;
                 containingExpression = calc.pathAndName();
                 break;

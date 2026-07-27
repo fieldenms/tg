@@ -18,7 +18,6 @@ import java.util.Map;
 import org.junit.Test;
 
 import graphql.AssertException;
-import graphql.execution.UnknownOperationException;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
@@ -47,9 +46,13 @@ public class WebApiInputSpecificationTest extends AbstractDaoTestCase {
         )), result);
     }
     
-    @Test(expected = UnknownOperationException.class)
-    public void multiple_valid_queries_with_different_names_results_in_exception() {
-        webApi.execute(input("query test1($val:String){tgWebApiEntity{key(like:$val)}}query test2($val:String){tgWebApiEntity{key(like:$val)}}", linkedMapOf(t2("val", "CA"))));
+    @Test
+    public void multiple_valid_queries_with_different_names_results_in_errors_and_no_data() {
+        // A document with multiple named operations and no operation name specified is ambiguous.
+        // Since graphql-java 23.0 this is reported as an error in the result rather than a thrown `UnknownOperationException`.
+        final Map<String, Object> result = webApi.execute(input("query test1($val:String){tgWebApiEntity{key(like:$val)}}query test2($val:String){tgWebApiEntity{key(like:$val)}}", linkedMapOf(t2("val", "CA"))));
+        assertFalse(errors(result).isEmpty());
+        assertFalse(result.containsKey(DATA));
     }
     
     //////////////////////// GraphiQL unnatural cases, for completeness [END] ////////////////////////

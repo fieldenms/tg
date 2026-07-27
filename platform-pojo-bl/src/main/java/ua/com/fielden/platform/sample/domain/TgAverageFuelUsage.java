@@ -19,7 +19,7 @@ import ua.com.fielden.platform.types.Money;
 @CompanionObject(ITgAverageFuelUsage.class)
 public class TgAverageFuelUsage extends AbstractEntity<TgVehicle> {
 
-    private static final EntityResultQueryModel<TgAverageFuelUsage> model_ = //
+    protected static final EntityResultQueryModel<TgAverageFuelUsage> model_ = //
             select(TgFuelUsage.class). //
                     where(). //
                     prop("date").gt().iParam("datePeriod.from").and(). //

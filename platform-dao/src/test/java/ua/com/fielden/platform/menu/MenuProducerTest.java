@@ -1,17 +1,6 @@
 package ua.com.fielden.platform.menu;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-
-import java.util.List;
-import java.util.Set;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUser;
@@ -21,12 +10,14 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
-/**
- * A test case for menu invisibility logic.
- * 
- * @author TG Team
- *
- */
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.utils.CollectionUtil.*;
+
+/// A test case for menu invisibility logic.
+///
 public class MenuProducerTest extends AbstractDaoTestCase {
 
     private final IMenuRetriever menuRetriever = new IMenuRetriever() {
@@ -332,5 +323,4 @@ public class MenuProducerTest extends AbstractDaoTestCase {
         save(new_(User.class, "USER_4").setBase(false).setActive(true).setEmail("user4@mail").setBasedOnUser(user2));
         save(new_(User.class, "USER_5").setBase(false).setActive(false).setEmail("user5@mail").setBasedOnUser(user2));
     }
-
 }

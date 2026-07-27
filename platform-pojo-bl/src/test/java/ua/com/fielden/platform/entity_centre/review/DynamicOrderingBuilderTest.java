@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.security.interception.AuthenticationTestIocModule;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
@@ -34,7 +35,10 @@ public class DynamicOrderingBuilderTest {
 
     private static EntityFactory createFactory() {
         final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
-        final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+        final Injector injector = new ApplicationInjectorFactory()
+            .add(new AuthenticationTestIocModule())
+            .add(module)
+            .getInjector();
         return injector.getInstance(EntityFactory.class);
     }
 
@@ -78,7 +82,7 @@ public class DynamicOrderingBuilderTest {
             DynamicOrderingBuilder.createOrderingModel(masterKlass, null);
             fail("There should be null pointer exception");
         } catch (final EntityCentreExecutionException ex) {
-            assertEquals(EntityCentreExecutionException.ERR_NULL_ARGUMENT.formatted("orderedPairs"), ex.getMessage());
+            assertEquals(EntityCentreExecutionException.ERR_NULL_ARGUMENT.formatted("orderedPairsWithUnauthorised"), ex.getMessage());
         }
     }
 

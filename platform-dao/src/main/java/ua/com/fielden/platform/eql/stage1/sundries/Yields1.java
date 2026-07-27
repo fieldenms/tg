@@ -3,10 +3,13 @@ package ua.com.fielden.platform.eql.stage1.sundries;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage1.queries.AbstractQuery1;
+import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.toSet;
@@ -31,10 +34,20 @@ public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.
         this(Arrays.asList(yields));
     }
 
-    public Yields2 transform(final TransformationContextFromStage1To2 context) {
+    public Yields2 transform(final TransformationContextFromStage1To2 context, final AbstractQuery1 query) {
         return yieldsMap.isEmpty()
                ? Yields2.EMPTY_YIELDS
-               : new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).toList());
+               : new Yields2(transform(yieldsMap.values().stream(), context, query).toList());
+    }
+
+    private static Stream<Yield2> transform(
+            final Stream<Yield1> yields,
+            final TransformationContextFromStage1To2 context,
+            final AbstractQuery1 query)
+    {
+        final var expandUnionTypedYield1 = new ExpandUnionTypedYield1(context.domainMetadata);
+        return yields.flatMap(y -> expandUnionTypedYield1.apply(y, context, query)
+                                       .orElseGet(() -> Stream.of(y.transform(context))));
     }
 
     public Collection<Yield1> getYields() {

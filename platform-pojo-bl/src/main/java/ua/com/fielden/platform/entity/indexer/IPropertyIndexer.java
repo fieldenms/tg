@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.entity.indexer;
 
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 
 /**

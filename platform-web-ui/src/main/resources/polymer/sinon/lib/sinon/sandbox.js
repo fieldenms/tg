@@ -14,9 +14,6 @@ const sinonStub = require("./stub");
 const sinonCreateStubInstance = require("./create-stub-instance");
 const sinonFake = require("./fake");
 const valueToString = require("@sinonjs/commons").valueToString;
-const fakeServer = require("nise").fakeServer;
-const fakeXhr = require("nise").fakeXhr;
-const usePromiseLibrary = require("./util/core/use-promise-library");
 
 const DEFAULT_LEAK_THRESHOLD = 10000;
 
@@ -80,7 +77,6 @@ function Sandbox(opts = {}) {
     const sandbox = this;
     const assertOptions = opts.assertOptions || {};
     let fakeRestorers = [];
-    let promiseLib;
 
     let collection = [];
     let loggedLeakWarning = false;
@@ -101,8 +97,6 @@ function Sandbox(opts = {}) {
 
     sandbox.assert = sinonAssert.createAssertObject(assertOptions);
 
-    sandbox.serverPrototype = fakeServer;
-
     // this is for testing only
     sandbox.getFakes = function getFakes() {
         return collection;
@@ -116,8 +110,6 @@ function Sandbox(opts = {}) {
         forEach(ownMethods, function (method) {
             addToCollection(method);
         });
-
-        usePromiseLibrary(promiseLib, ownMethods);
 
         return stubbed;
     };
@@ -163,11 +155,6 @@ function Sandbox(opts = {}) {
             obj.clock = sandbox.clock;
         }
 
-        if (sandbox.server) {
-            obj.server = sandbox.server;
-            obj.requests = sandbox.server.requests;
-        }
-
         obj.match = match;
 
         return obj;
@@ -177,7 +164,6 @@ function Sandbox(opts = {}) {
         const m = sinonMock.apply(null, arguments);
 
         addToCollection(m);
-        usePromiseLibrary(promiseLib, m);
 
         return m;
     };
@@ -418,11 +404,13 @@ function Sandbox(opts = {}) {
         return replacement;
     };
 
-    function commonPostInitSetup(args, spy) {
+    function commonPostInitSetup(args, spy, isStub) {
         const [object, property, types] = args;
 
         const isSpyingOnEntireObject =
-            typeof property === "undefined" && typeof object === "object";
+            typeof property === "undefined" &&
+            (typeof object === "object" ||
+                (isStub && typeof object === "function"));
 
         if (isSpyingOnEntireObject) {
             const ownMethods = collectOwnMethods(spy);
@@ -430,16 +418,12 @@ function Sandbox(opts = {}) {
             forEach(ownMethods, function (method) {
                 addToCollection(method);
             });
-
-            usePromiseLibrary(promiseLib, ownMethods);
         } else if (Array.isArray(types)) {
             for (const accessorType of types) {
                 addToCollection(spy[accessorType]);
-                usePromiseLibrary(promiseLib, spy[accessorType]);
             }
         } else {
             addToCollection(spy);
-            usePromiseLibrary(promiseLib, spy);
         }
 
         return spy;
@@ -447,12 +431,12 @@ function Sandbox(opts = {}) {
 
     sandbox.spy = function spy() {
         const createdSpy = sinonSpy.apply(sinonSpy, arguments);
-        return commonPostInitSetup(arguments, createdSpy);
+        return commonPostInitSetup(arguments, createdSpy, false);
     };
 
     sandbox.stub = function stub() {
         const createdStub = sinonStub.apply(sinonStub, arguments);
-        return commonPostInitSetup(arguments, createdStub);
+        return commonPostInitSetup(arguments, createdStub, true);
     };
 
     // eslint-disable-next-line no-unused-vars
@@ -504,32 +488,6 @@ function Sandbox(opts = {}) {
         if (exception) {
             throw exception;
         }
-    };
-
-    sandbox.useFakeServer = function useFakeServer() {
-        const proto = sandbox.serverPrototype || fakeServer;
-
-        if (!proto || !proto.create) {
-            return null;
-        }
-
-        sandbox.server = proto.create();
-        addToCollection(sandbox.server);
-
-        return sandbox.server;
-    };
-
-    sandbox.useFakeXMLHttpRequest = function useFakeXMLHttpRequest() {
-        const xhr = fakeXhr.useFakeXMLHttpRequest();
-        addToCollection(xhr);
-        return xhr;
-    };
-
-    sandbox.usingPromise = function usingPromise(promiseLibrary) {
-        promiseLib = promiseLibrary;
-        collection.promiseLibrary = promiseLibrary;
-
-        return sandbox;
     };
 }
 

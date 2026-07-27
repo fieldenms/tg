@@ -140,6 +140,7 @@ public class OverlappingSequentialClosedPeriodsWithoutGapsTest extends AbstractD
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
         save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 12:00:00")).setFinishDate(date("2011-11-01 13:00:00")).setIncident("001"));
         save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 13:00:00")).setFinishDate(date("2011-11-01 15:00:00")).setIncident("002"));
     }

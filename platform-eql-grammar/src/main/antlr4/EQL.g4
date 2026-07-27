@@ -1,4 +1,4 @@
-// This grammar was generated. Timestamp: 2024-08-16T09:09:23.035716004+03:00[Europe/Kyiv]
+// This grammar was generated. Timestamp: 2026-04-16T13:54:27.531859656+03:00[Europe/Kyiv]
 
 grammar EQL;
 
@@ -54,7 +54,7 @@ likeOperator :
 ;
 
 comparisonOperand :
-      singleOperand # ComparisonOperand_Single
+      expr # ComparisonOperand_Expr
     | multiOperand # ComparisonOperand_Multi
 ;
 
@@ -72,8 +72,9 @@ quantifiedOperand :
     | token=ANY
 ;
 
-exprBody :
-      first=singleOperand (operators+=arithmeticalOperator rest+=singleOperand)*
+expr :
+      BEGINEXPR first=expr (operators+=arithmeticalOperator rest+=expr)* ENDEXPR # ExprCompound
+    | singleOperand # Expr_SingleOperand
 ;
 
 arithmeticalOperator :
@@ -91,15 +92,16 @@ singleOperand :
     | (token=PARAM | token=IPARAM) # Param
     | token=EXPR # SingleOperand_Expr
     | token=MODEL # SingleOperand_Model
-    | funcName=unaryFunctionName argument=singleOperand # UnaryFunction
-    | IFNULL nullable=singleOperand THEN other=singleOperand # IfNull
+    | funcName=unaryFunctionName argument=expr # UnaryFunction
+    | IFNULL nullable=expr THEN other=expr # IfNull
     | NOW # SingleOperand_Now
-    | COUNT unit=dateIntervalUnit BETWEEN endDate=singleOperand AND startDate=singleOperand # DateDiffInterval
-    | ADDTIMEINTERVALOF left=singleOperand unit=dateIntervalUnit TO right=singleOperand # DateAddInterval
-    | ROUND singleOperand to=TO # Round
-    | CONCAT operands+=singleOperand (WITH operands+=singleOperand)* END # Concat
-    | CASEWHEN whens+=condition THEN thens+=singleOperand (WHEN whens+=condition THEN thens+=singleOperand)* (OTHERWISE otherwiseOperand=singleOperand)? caseWhenEnd # CaseWhen
-    | BEGINEXPR exprBody ENDEXPR # Expr
+    | COUNT unit=dateIntervalUnit BETWEEN endDate=expr AND startDate=expr # DateDiffInterval
+    | ADDTIMEINTERVALOF left=expr unit=dateIntervalUnit TO right=expr # DateAddInterval
+    | ROUND expr to=TO # Round
+    | CEIL expr # Ceil
+    | FLOOR expr # Floor
+    | CONCAT operands+=expr (WITH operands+=expr)* END # Concat
+    | CASEWHEN whens+=condition THEN thens+=expr (WHEN whens+=condition THEN thens+=expr)* (OTHERWISE otherwiseOperand=expr)? caseWhenEnd # CaseWhen
 ;
 
 unaryFunctionName :
@@ -175,7 +177,7 @@ joinCondition :
 ;
 
 groupBy :
-      (GROUPBY operands+=singleOperand)+
+      (GROUPBY operands+=expr)+
 ;
 
 anyYield :
@@ -194,9 +196,10 @@ aliasedYield :
 
 yieldOperand :
       singleOperand # YieldOperand_SingleOperand
-    | BEGINYIELDEXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* ENDYIELDEXPR # YieldOperandExpr
+    | BEGINEXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* ENDEXPR # YieldOperandExpr
     | COUNTALL # YieldOperand_CountAll
-    | funcName=yieldOperandFunctionName argument=singleOperand # YieldOperandFunction
+    | funcName=yieldOperandFunctionName argument=expr # YieldOperandFunction
+    | CONCATOF argExpr=expr yieldOperandConcatOfOrderBy? SEPARATOR separator=yieldOperandConcatOfSeparator # YieldOperandConcatOf
 ;
 
 yieldOperandFunctionName :
@@ -208,6 +211,20 @@ yieldOperandFunctionName :
     | token=SUMOFDISTINCT
     | token=COUNTOFDISTINCT
     | token=AVGOFDISTINCT
+;
+
+yieldOperandConcatOfSeparator :
+      token=VAL
+    | token=PARAM
+;
+
+yieldOperandConcatOfOrderBy :
+      ORDERBY operands+=yieldOperandConcatOfOrderByOperand+
+;
+
+yieldOperandConcatOfOrderByOperand :
+      expr order # YieldOperandConcatOfOrderByOperand_Expr
+    | token=ORDER # YieldOperandConcatOfOrderByOperand_OrderingModel
 ;
 
 yieldAlias :
@@ -242,7 +259,7 @@ orderBy :
 ;
 
 orderByOperand :
-      singleOperand order # OrderByOperand_Single
+      expr order # OrderByOperand_Expr
     | yield=YIELD order # OrderByOperand_Yield
     | token=ORDER # OrderByOperand_OrderingModel
 ;
@@ -277,10 +294,11 @@ AVGOF : 'avgOf' ;
 AVGOFDISTINCT : 'avgOfDistinct' ;
 BEGIN : 'begin' ;
 BEGINEXPR : 'beginExpr' ;
-BEGINYIELDEXPR : 'beginYieldExpr' ;
 BETWEEN : 'between' ;
 CASEWHEN : 'caseWhen' ;
+CEIL : 'ceil' ;
 CONCAT : 'concat' ;
+CONCATOF : 'concatOf' ;
 COND : 'cond' ;
 CONDITION : 'condition' ;
 COUNT : 'count' ;
@@ -300,13 +318,13 @@ ENDASDECIMAL : 'endAsDecimal' ;
 ENDASINT : 'endAsInt' ;
 ENDASSTR : 'endAsStr' ;
 ENDEXPR : 'endExpr' ;
-ENDYIELDEXPR : 'endYieldExpr' ;
 EQ : 'eq' ;
 EXISTS : 'exists' ;
 EXISTSALLOF : 'existsAllOf' ;
 EXISTSANYOF : 'existsAnyOf' ;
 EXPR : 'expr' ;
 EXTPROP : 'extProp' ;
+FLOOR : 'floor' ;
 GE : 'ge' ;
 GROUPBY : 'groupBy' ;
 GT : 'gt' ;
@@ -367,6 +385,7 @@ ROUND : 'round' ;
 SECONDOF : 'secondOf' ;
 SECONDS : 'seconds' ;
 SELECT : 'select' ;
+SEPARATOR : 'separator' ;
 SUB : 'sub' ;
 SUMOF : 'sumOf' ;
 SUMOFDISTINCT : 'sumOfDistinct' ;

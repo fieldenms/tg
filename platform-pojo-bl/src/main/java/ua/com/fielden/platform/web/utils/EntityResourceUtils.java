@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.utils;
 
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
@@ -35,7 +37,6 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
@@ -66,6 +67,7 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isCollectional;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalTypeFromCriteriaType;
 import static ua.com.fielden.platform.types.RichText.VALIDATION_RESULT;
@@ -152,9 +154,8 @@ public class EntityResourceUtils {
     /**
      * Determines the version that is shipped with {@code modifiedPropertiesHolder}.
      */
-    public static long getVersion(final Map<String, Object> modifiedPropertiesHolder) {
-        final Object arrivedVersionVal = modifiedPropertiesHolder.get(AbstractEntity.VERSION);
-        return ((Integer) arrivedVersionVal).longValue();
+    public static OptionalLong maybeVersion(final Map<String, Object> modifiedPropertiesHolder) {
+        return modifiedPropertiesHolder.get(AbstractEntity.VERSION) instanceof Integer n ? OptionalLong.of(n.longValue()) : OptionalLong.empty();
     }
 
     /**
@@ -164,13 +165,16 @@ public class EntityResourceUtils {
     public static <M extends AbstractEntity<?>> M apply(
             final Map<String, Object> modifiedPropertiesHolder,
             final M entity,
+            final PropertyAssignmentErrorHandler errorHandler,
             final ICompanionObjectFinder coFinder)
     {
         final Class<M> type = (Class<M>) entity.getType();
-        final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
+        final boolean isEntityStale = entity.getVersion() > maybeVersion(modifiedPropertiesHolder).orElse(0);
         final boolean isCriteriaEntity = EntityQueryCriteria.class.isAssignableFrom(type);
 
-        final Set<String> touchedProps = unmodifiableSequencedSet(new LinkedHashSet<>((List<String>) modifiedPropertiesHolder.get("@@touchedProps")));
+        final Set<String> touchedProps = modifiedPropertiesHolder.containsKey("@@touchedProps")
+                ? unmodifiableSequencedSet(new LinkedHashSet<>((List<String>) modifiedPropertiesHolder.get("@@touchedProps")))
+                : Set.of();
 
         // iterate through untouched properties first:
         //  (the order of application does not really matter - untouched properties were really applied earlier through some definers, that originate from touched properties)
@@ -178,14 +182,18 @@ public class EntityResourceUtils {
             if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION) && !name.startsWith("@") /* custom properties disregarded */ && !touchedProps.contains(name)) {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) value;
                 // The 'modified' properties are marked using the existence of "val" sub-property.
-                if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                    applyModifiedPropertyValue(type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                    // logPropertyApplication("   Apply untouched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
-                } else { // this is unmodified property
-                    // IMPORTANT:
-                    // Untouched properties should not be applied, but validation for conflicts should be performed.
-                    validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                    // logPropertyApplication("Validate untouched unmodified", false, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                try {
+                    if (valAndOrigVal.containsKey("val")) { // this is a modified property
+                        applyModifiedPropertyValue(type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                        // logPropertyApplication("   Apply untouched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                    } else { // this is unmodified property
+                        // IMPORTANT:
+                        // Untouched properties should not be applied, but validation for conflicts should be performed.
+                        validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                        // logPropertyApplication("Validate untouched unmodified", false, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                    }
+                } catch (final RuntimeException e) {
+                    errorHandler.handle(entity, name, valAndOrigVal, e);
                 }
             }
         });
@@ -195,17 +203,21 @@ public class EntityResourceUtils {
         for (final String touchedProp : touchedProps) {
             final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(touchedProp);
             // The 'modified' properties are marked using the existence of "val" sub-property.
-            if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                applyModifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                // logPropertyApplication("   Apply   touched   modified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
-            } else { // this is unmodified property
-                // IMPORTANT:
-                // Unlike to the case of untouched properties, all touched properties should be applied,
-                //  even unmodified ones.
-                // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
-                //  to have the ACE handlers executed for all touched properties.
-                applyUnmodifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                // logPropertyApplication("   Apply   touched unmodified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+            try {
+                if (valAndOrigVal.containsKey("val")) { // this is a modified property
+                    applyModifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                    // logPropertyApplication("   Apply   touched   modified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                } else { // this is unmodified property
+                    // IMPORTANT:
+                    // Unlike to the case of untouched properties, all touched properties should be applied,
+                    //  even unmodified ones.
+                    // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
+                    //  to have the ACE handlers executed for all touched properties.
+                    applyUnmodifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                    // logPropertyApplication("   Apply   touched unmodified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                }
+            } catch (final RuntimeException e) {
+                errorHandler.handle(entity, touchedProp, valAndOrigVal, e);
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
@@ -217,6 +229,39 @@ public class EntityResourceUtils {
         disregardTouchedRequiredPropertiesWithEmptyValue(entity, touchedProps, isCriteriaEntity);
 
         return entity;
+    }
+
+    /// Handles errors that occur in the process of restoring property values and assigning them.
+    ///
+    /// Restoration refers to the conversion from the format used by [SavingInfoHolder#modifHolder].
+    ///
+    /// The default implementation is [#standard].
+    ///
+    public interface PropertyAssignmentErrorHandler {
+
+        /// Handles `error` that occurred during restoration and assignment of `value` to `property` in `entity`.
+        ///
+        /// @param value a value in unspecified format
+        ///
+        void handle(AbstractEntity<?> entity, String property, Object value, RuntimeException error);
+
+        /// Returns a handler that first calls this handler and then calls `handler`.
+        ///
+        default PropertyAssignmentErrorHandler and(final PropertyAssignmentErrorHandler handler) {
+            return (entity, property, value, error) -> {
+                this.handle(entity, property, value, error);
+                handler.handle(entity, property, value, error);
+            };
+        }
+
+        PropertyAssignmentErrorHandler throwing = (_, _, _, error) -> {throw error;};
+
+        PropertyAssignmentErrorHandler standard = throwing;
+
+        static String makeMessage(final AbstractEntity<?> entity, final String prop, final Object value) {
+            return "Failed to assign value [%s] to property [%s.%s].".formatted(value, entity.getType().getSimpleName(), prop);
+        }
+
     }
 
     /**
@@ -301,7 +346,7 @@ public class EntityResourceUtils {
                 return valueToBeApplied;
             }, () -> {
                 return applyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
-            }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+            }, type, name, entity, isEntityStale, isCriteriaEntity);
         } else {
             // in case where no application is needed (unmodified untouched) the value should be validated only
             validateAnd(() -> {
@@ -312,7 +357,7 @@ public class EntityResourceUtils {
                         : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), optActiveProp, coFinder);
             }, () -> {
                 return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
-            }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+            }, type, name, entity, isEntityStale, isCriteriaEntity);
         }
     }
 
@@ -331,10 +376,10 @@ public class EntityResourceUtils {
         if (isUnionEntityType(type)) {
             final List<Field> unionProps = unionProperties((Class<AbstractUnionEntity>) type);
             final Class<? extends AbstractEntity<?>> unionPropType = (Class<? extends AbstractEntity<?>>) unionProps.getFirst().getType();
-            final AbstractEntity<?> unionPropValue = newPlainEntity(mock(unionPropType), null).setDesc(searchString);
+            final AbstractEntity<?> unionPropValue = newPlainEntity(mock(unionPropType), null).set(DESC, searchString);
             return newPlainEntity(mock(type), null).set(unionProps.getFirst().getName(), unionPropValue);
         }
-        return newPlainEntity(mock(type), null).setDesc(searchString);
+        return newPlainEntity(mock(type), null).set(DESC, searchString);
     }
 
     /**
@@ -401,20 +446,26 @@ public class EntityResourceUtils {
             final Supplier<Object> calculateStaleNewValue,
             final Supplier<Object> calculateStaleOriginalValue,
             final Class<M> type, final String name,
-            final Map<String, Object> valAndOrigVal,
-            final M entity, final ICompanionObjectFinder coFinder,
+            final M entity,
             final boolean isEntityStale, final boolean isCriteriaEntity)
     {
         if (!isEntityStale) {
             performAction.run();
         } else {
             final Object staleOriginalValue = calculateStaleOriginalValue.get();
-            final Object freshValue = entity.get(name);
+            final Object rawFreshValue = entity.get(name);
+            // In case of non-null (instanceof covers this) entity-typed collectional property ...
+            final Object freshValue = rawFreshValue instanceof Collection<?> freshCollection && isEntityType(determinePropertyType(type, name))
+                // ... convert to a simplified List<String> to conform with 'staleOriginalValue' / 'staleNewValue'.
+                // See 'tg-entity-binder-behavior._extractModifiedPropertiesHolder.convert' function for more details.
+                // Also allow 'null' values because there are no restrictions on them.
+                ? freshCollection.stream().map(ent -> Objects.toString(ent, null)).toList()
+                : rawFreshValue;
             final Object staleNewValue = calculateStaleNewValue.get();
-            if (!isCriteriaEntity && EntityUtils.isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
+            if (!isCriteriaEntity && isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
                 // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction)
                 // or 2) has previously touched / untouched property value "recovered" to actual persisted value?
-                if (EntityUtils.equalsEx(staleNewValue, staleOriginalValue)) {
+                if (equalsEx(staleNewValue, staleOriginalValue)) {
                     logger.info(format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
                     entity.getProperty(name).setDomainValidationResult(Result.warning(entity, WARN_CONFLICT));
                 } else {
@@ -578,14 +629,15 @@ public class EntityResourceUtils {
         return propertyType;
     }
 
-    /**
-     * Converts a raw reflected value to a value that matches the property's type.
-     *
-     * @param type  type that owns the property
-     * @param reflectedValue  raw reflected value to be converted
-     * @param reflectedValueId  if a property is entity-typed, represent an ID of the entity-typed value returned from the client application
-     * @param optActiveProp  if a property has a union entity type, represents the active property's name in the entity-typed value
-     */
+    /// Converts a raw reflected value to a value that matches the property's type.
+    ///
+    /// **Maintenance note**: Keep the conversion logic in sync with [ua.com.fielden.platform.tiny.TinyHyperlinkDao#makeModifHolderPropObject].
+    ///
+    /// @param type  type that owns the property
+    /// @param reflectedValue  raw reflected value to be converted
+    /// @param reflectedValueId  if a property is entity-typed, represent an ID of the entity-typed value returned from the client application
+    /// @param optActiveProp  if a property has a union entity type, represents the active property's name in the entity-typed value
+    ///
     private static <M extends AbstractEntity<?>> Object convert(
             final Class<M> type, final String propertyName,
             final Object reflectedValue, final Optional<Long> reflectedValueId,
@@ -598,9 +650,11 @@ public class EntityResourceUtils {
         final Class<?> propertyType = determinePropertyType(type, propertyName);
 
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
-        if (EntityUtils.isEntityType(propertyType)) {
-            if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
-                throw new UnsupportedOperationException(format("Unsupported conversion to [%s + %s] from reflected value [%s]. Entity-typed collectional properties are not supported.", type.getSimpleName(), propertyName, reflectedValue));
+        if (isEntityType(propertyType)) {
+            if (isCollectional(type, propertyName)) {
+                // No conversion is needed for a collection with entity-typed elements.
+                // Such properties are never editable, so the returned value should never be used for assignment.
+                return reflectedValue;
             }
 
             final Class<AbstractEntity<?>> entityPropertyType = (Class<AbstractEntity<?>>) propertyType;
@@ -621,7 +675,7 @@ public class EntityResourceUtils {
                 }
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
-        } else if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
+        } else if (isCollectional(type, propertyName)) {
             final Class<?> collectionType = Finder.findFieldByName(type, propertyName).getType();
             final boolean isSet = Set.class.isAssignableFrom(collectionType);
             final boolean isList = List.class.isAssignableFrom(collectionType);
@@ -706,7 +760,7 @@ public class EntityResourceUtils {
             return extractLongValueFrom(reflectedValue);
         } else if (Class.class.isAssignableFrom(propertyType)) {
             try {
-                return forName((String) reflectedValue); // full class names for already registered server-side Class'es are supported
+                return ClassesRetriever.findClass((String) reflectedValue); // full class names for already registered server-side Class'es are supported
             } catch (final Exception ex) {
                 throw new EntityResourceUtilsException(format("Conversion to [%s@%s] from reflected value [%s] of type [%s] failed.", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()), ex);
             }

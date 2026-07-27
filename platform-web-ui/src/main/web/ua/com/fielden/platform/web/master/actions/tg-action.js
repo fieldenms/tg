@@ -95,7 +95,7 @@ const template = html`
         <span>[[shortDesc]]</span>
     </paper-button>
     <paper-fab id="fabButton" class="action-item" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!_isIcon(availableOptions, excludeNew, excludeClose, icon)]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
-    <tg-dropdown-switch id="dropdownButton" class="action-item" raised fragmented vertical-align="bottom" main-button-tooltip-text="[[_generateMainShortcutTooltip(shortcut)]]" dropdown-button-tooltip-text="Select an action" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(availableOptions, excludeNew, excludeClose, icon)]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-centre-view-change="_runOptionAction"></tg-dropdown-switch>
+    <tg-dropdown-switch id="dropdownButton" class="action-item" raised fragmented vertical-align="bottom" main-button-tooltip-text="[[_generateMainShortcutTooltip(shortcut)]]" dropdown-button-tooltip-text="Select an action" disabled="[[_optionButtonDisabled]]" activated="[[_optionButtonActive]]" hidden$="[[!_isOptionButton(availableOptions, excludeNew, excludeClose, icon)]]" views="[[_options]]" do-not-highlight-when-drop-down-opened make-drop-down-width-the-same-as-button change-current-view-on-select on-tg-switch-action-change="_changeActionOption" on-tg-switch-action-activate="_runOptionAction"></tg-dropdown-switch>
     <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
@@ -279,7 +279,7 @@ Polymer({
         },
 
         /**
-         * Indicates wheather the action is in progress.
+         * Indicates whether the action is in progress.
          */
         _working: {
             type: Boolean
@@ -409,13 +409,24 @@ Polymer({
         }).bind(this);
     },
 
-    _runOptionAction: function (e) {
+    _changeActionOption: function (e) {
         const itemIdx = e.detail;
         if (this._options && this._options[itemIdx]) {
             this._saveActionIndex(itemIdx);
+        }
+    },
+
+    _runOptionAction: function (e) {
+        const itemIdx = e.detail;
+        if (this._options && this._options[itemIdx]) {
             const closeAfterExecution = this._options[itemIdx].closeAfterExecution;
             const subRole = this._options[itemIdx].subRole;
             this.async(function () {
+                // This action could have become disabled during the delay above -- see '_asyncRun' for the rationale.
+                // No exemption for programmatic invocations is needed here, as an option can only be activated by the user.
+                if (this.hasAttribute('action-disabled')) {
+                    return;
+                }
                 this.run(closeAfterExecution, subRole);
             }, 100);
         }
@@ -519,6 +530,8 @@ Polymer({
 
     /* Timer callback that performs spinner activation. */
     _startSpinnerCallback: function () {
+        // The approach with using `display: none` ensure
+        // that the spinner gets hidden just before the button becomes enabled.
         this.$.spinner.style.display = null;
     },
 
@@ -569,7 +582,7 @@ Polymer({
     _afterExecution: function () {
         if (!this._continuationInProgress) {
             this._working = false;
-            // prevent not yet activated spinner from activating if any
+            // Clear timeout to prevent not yet activated spinner from activating.
             if (this._startSpinnerTimer) {
                 clearTimeout(this._startSpinnerTimer);
             }
@@ -577,6 +590,8 @@ Polymer({
             // do the super stuff
             console.log(this.shortDesc + ": after execution");
             this._innerEnabled = true;
+
+            // According to Jhou need restore twice due to 2 calls to `this.persistActiveElement` on lines 353 and 358.
             this.restoreActiveElement();
 
             // Make spinner invisible
@@ -590,6 +605,14 @@ Polymer({
         // it is critical to execute the actual logic that is intended for an on-tap action in async
         // with a relatively long delay to make sure that all required changes
         this.async(function () {
+            // A user-initiated action gets admitted only while enabled, but it could have become disabled during the delay above.
+            // For example, a retrieval or a saving, initiated meanwhile, disables the master and, with it, all of its actions.
+            // Running such an action would issue a request concurrent with the one already in progress.
+            // Programmatic invocations, which pass neither 'e' nor 'shortcut', are exempt.
+            // This is because developer-driven code may legitimately run a disabled action, such as saving an unmodified entity (see '_createSavingPromise' in 'tg-entity-master-behavior').
+            if ((e || shortcut) && this.hasAttribute('action-disabled')) {
+                return;
+            }
             let subRole = '';
             let closeAfterExecution = this.closeAfterExecution;
             if (shortcut && this._options) {

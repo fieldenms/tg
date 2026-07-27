@@ -1,11 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 
 @DenyIntrospection
 @CompanionObject(UnionEntityWithoutSecondDescTitleCo.class)
@@ -24,8 +20,9 @@ public class UnionEntityWithoutSecondDescTitle extends AbstractUnionEntity {
     }
 
     @Observable
-    public void setPropertyOne(final EntityOne propertyOne) {
+    public UnionEntityWithoutSecondDescTitle setPropertyOne(final EntityOne propertyOne) {
         this.propertyOne = propertyOne;
+        return this;
     }
 
     public EntityThree getPropertyThree() {
@@ -33,7 +30,9 @@ public class UnionEntityWithoutSecondDescTitle extends AbstractUnionEntity {
     }
 
     @Observable
-    public void setPropertyThree(final EntityThree propertyThree) {
+    public UnionEntityWithoutSecondDescTitle setPropertyThree(final EntityThree propertyThree) {
         this.propertyThree = propertyThree;
+        return this;
     }
+
 }

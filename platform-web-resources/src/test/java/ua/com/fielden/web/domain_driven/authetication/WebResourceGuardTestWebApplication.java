@@ -1,24 +1,16 @@
 package ua.com.fielden.web.domain_driven.authetication;
 
-import static java.lang.String.format;
-
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import org.restlet.Application;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
-
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
 
-/**
- * This is a web application specific to testing of {@link AbstractWebResourceGuard};
- *
- * @author TG Team
- *
- */
+/// This is a web application specific to testing of [AbstractWebResourceGuard].
+///
 class WebResourceGuardTestWebApplication extends Application {
 
     private final Injector injector;
@@ -43,7 +35,7 @@ class WebResourceGuardTestWebApplication extends Application {
         final Router router = new Router(getContext());
 
         // and add some other resource to be accessed
-        router.attach(format("/users/{username}/%s/{entity-id}", TgPerson.class.getSimpleName()), new TestResource());
+        router.attach("/users/{username}/%s/{entity-id}".formatted(TgPerson.class.getSimpleName()), new TestWebResource());
 
         // setup resource guard for the whole router
         final AbstractWebResourceGuard guard = new AbstractWebResourceGuard(getContext(), "tgdev.com", "/", injector) {

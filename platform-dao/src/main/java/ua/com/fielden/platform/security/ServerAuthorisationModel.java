@@ -43,7 +43,7 @@ public class ServerAuthorisationModel extends AbstractAuthorisationModel {
             return successful();
         } else {
             final var msg = "Permission denied due to token [%s] restriction.".formatted(shortDesc(token));
-            LOGGER.warn("[%s] %s".formatted(currUser, msg));
+            LOGGER.warn(() -> "[%s] %s".formatted(currUser, msg));
             return failure(msg);
         }
     }

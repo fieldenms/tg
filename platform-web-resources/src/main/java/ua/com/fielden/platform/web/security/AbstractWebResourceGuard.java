@@ -27,15 +27,15 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.sse.SseUtils;
 
-/**
- * This is a guard that is based on the new TG authentication scheme, developed as part of the Web UI initiative. It it used to restrict access to sensitive web resources.
- * <p>
- * This type is abstract. The only part that is abstract in it, is the way for obtaining current user. Applications and unit test may need to have different ways for determining
- * current users. Method {@link #getUser()} needs to be implemented to provide a currently logged in user.
- *
- * @author TG Team
- *
- */
+/// This is a guard that is based on the new TG authentication scheme, developed as part of the Web UI initiative.
+/// It is used to restrict access to sensitive web resources.
+///
+/// This type is abstract.
+/// The only part that is abstract in it is the method for identifying the current user.
+/// Applications and unit tests may need to have different ways of determining current users.
+///
+/// Method [#getUser(String)] needs to be implemented to identify the currently logged-in user, making a request.
+///
 public abstract class AbstractWebResourceGuard extends org.restlet.security.Authenticator {
     private final Logger logger = LogManager.getLogger(getClass());
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
@@ -102,7 +102,7 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
                 return false;
             }
 
-            // the provided authenticator was valid and a new cookie should be send back to the client
+            // the provided authenticator was valid and a new cookie should be sent back to the client
             assignAuthenticatingCookie(session.get().getUser(), constants.now(), session.get().getAuthenticator().get(), domainName, path, request, response);
 
         } catch (final Exception ex) {

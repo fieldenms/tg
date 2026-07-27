@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.processors.metamodel.models;
 
+import jakarta.annotation.Nonnull;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
 
-import javax.annotation.Nonnull;
 import java.util.Objects;
 
 import static java.lang.String.format;

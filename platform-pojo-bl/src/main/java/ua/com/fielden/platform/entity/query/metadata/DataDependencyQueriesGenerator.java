@@ -5,7 +5,6 @@ import ua.com.fielden.platform.data.generator.WithCreatedByUser;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -25,6 +24,7 @@ import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 
 /**
  * Provides static methods for generating EQL queries, which are used for inspecting references between entity instances.
@@ -163,7 +163,7 @@ public class DataDependencyQueriesGenerator {
             final ICompoundCondition0<? extends AbstractEntity<?>> queryToEnhance,
             final boolean activeOnly) {
         // The case for an activatable entity.
-        if (ActivatableAbstractEntity.class.isAssignableFrom(detailType)) {
+        if (isActivatableEntityType(detailType)) {
             return activeOnly
                    ? queryToEnhance.and().prop(ACTIVE).eq().val(true)
                    : queryToEnhance;

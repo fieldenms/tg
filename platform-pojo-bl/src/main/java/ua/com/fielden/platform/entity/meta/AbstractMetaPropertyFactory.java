@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.entity.meta;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.joda.time.DateTime;
@@ -46,7 +44,6 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     protected final FinalValidator[] notPersistedOnlyAndNullIsValueFinalValidator = new FinalValidator[]{new FinalValidator(false, true)};
     protected final FinalValidator[] persistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(true, false)};
     protected final FinalValidator[] persistedOnlyAndNullIsValueFinalValidator = new FinalValidator[]{new FinalValidator(true, true)};
-    protected final Cache<Class<? extends AbstractEntity<?>>, EntityExistsValidator<?>> entityExistsValidators = CacheBuilder.newBuilder().weakKeys().initialCapacity(300).concurrencyLevel(50).build();
     protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = new ConcurrentHashMap<>();
     protected final Map<Integer, MaxLengthValidator> maxLengthValidators = new ConcurrentHashMap<>();
     protected final Map<Integer, MaxValueValidator> maxValueValidators = new ConcurrentHashMap<>();
@@ -111,8 +108,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             case ENTITY_EXISTS -> new IBeforeChangeEventHandler[] { createEntityExists((EntityExists) annotation) };
             case FINAL -> createFinalValidator(entity, propertyName, (Final) annotation);
             case GREATER_OR_EQUAL -> new IBeforeChangeEventHandler[] { createGreaterOrEqualValidator(((GreaterOrEqual) annotation).value()) };
-            case LE_PROPETY -> new IBeforeChangeEventHandler[] { createLePropertyValidator(entity, propertyName, propertyType, ((LeProperty) annotation).value()) };
-            case GE_PROPETY -> new IBeforeChangeEventHandler[] { createGePropertyValidator(entity, propertyName, propertyType, ((GeProperty) annotation).value()) };
+            case LE_PROPETY -> new IBeforeChangeEventHandler[] { createLePropertyValidator(entity, propertyName, propertyType, ((LeProperty) annotation).value(), ((LeProperty) annotation).lt()) };
+            case GE_PROPETY -> new IBeforeChangeEventHandler[] { createGePropertyValidator(entity, propertyName, propertyType, ((GeProperty) annotation).value(), ((GeProperty) annotation).gt()) };
             case MAX -> {
                 if (Number.class.isAssignableFrom(propertyType) || double.class == propertyType || int.class == propertyType) {
                     yield new IBeforeChangeEventHandler[] { createMaxValueValidator(((Max) annotation).value()) };
@@ -432,27 +429,34 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         }
     }
 
-    private IBeforeChangeEventHandler<?> createGePropertyValidator(final AbstractEntity<?> entity,
-                                                                   final String upperBoundaryProperty,
-                                                                   final Class<?> upperBoundaryPropertyType,
-                                                                   final String[] lowerBoundaryProperties) {
+    private IBeforeChangeEventHandler<?> createGePropertyValidator(
+            final AbstractEntity<?> entity,
+            final String upperBoundaryProperty,
+            final Class<?> upperBoundaryPropertyType,
+            final String[] lowerBoundaryProperties,
+            final boolean[] gts) {
         return geRangeValidators
                 .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
                 .computeIfAbsent(upperBoundaryProperty,
                                  key -> injector.getInstance(GePropertyValidator.Factory.class)
                                          .create(lowerBoundaryProperties,
+                                                 gts,
                                                  injector.getInstance(RangeValidatorFunction.forPropertyType(upperBoundaryPropertyType))));
     }
 
-    private IBeforeChangeEventHandler<?> createLePropertyValidator(final AbstractEntity<?> entity,
-                                                                   final String lowerBoundaryProperty,
-                                                                   final Class<?> lowerBoundaryPropertyType,
-                                                                   final String[] upperBoundaryProperties) {
+    private IBeforeChangeEventHandler<?> createLePropertyValidator(
+            final AbstractEntity<?> entity,
+            final String lowerBoundaryProperty,
+            final Class<?> lowerBoundaryPropertyType,
+            final String[] upperBoundaryProperties,
+            final boolean[] lt)
+    {
         return leRangeValidators
                 .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
                 .computeIfAbsent(lowerBoundaryProperty,
                                  key -> injector.getInstance(LePropertyValidator.Factory.class)
                                          .create(upperBoundaryProperties,
+                                                 lt,
                                                  injector.getInstance(RangeValidatorFunction.forPropertyType(lowerBoundaryPropertyType))));
 
 

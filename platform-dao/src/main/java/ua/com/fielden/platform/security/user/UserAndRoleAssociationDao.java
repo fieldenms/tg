@@ -1,66 +1,52 @@
 package ua.com.fielden.platform.security.user;
 
-import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
-
-import java.util.Collection;
-import java.util.Set;
-
-import com.google.inject.Inject;
-
+import jakarta.inject.Inject;
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanDelete_Token;
+import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanSave_Token;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.utils.EntityUtils;
 
-/**
- * DbDriven implementation of the {@link UserAndRoleAssociationCo}
- * 
- * @author TG Team
- * 
- */
+import java.util.Optional;
+
+/// DAO implementation of the [UserAndRoleAssociationCo]
+///
 @EntityType(UserAndRoleAssociation.class)
 public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssociation> implements UserAndRoleAssociationCo {
 
+    public static final String ERR_SELF_CHANGING_ROLES = "Users are not permitted to modify their own role associations.";
+
+    private final IApplicationSettings appSettings;
+
     @Inject
-    protected UserAndRoleAssociationDao(final IFilter filter) {
-        super(filter);
+    protected UserAndRoleAssociationDao(final IApplicationSettings appSettings) {
+        this.appSettings = appSettings;
+    }
+
+    @Override
+    public UserAndRoleAssociation new_() {
+        return super.new_().setActive(true);
     }
 
     @Override
     @SessionRequired
     @Authorise(UserAndRoleAssociation_CanSave_Token.class)
-    public UserAndRoleAssociation save(UserAndRoleAssociation entity) {
-        return super.save(entity);
-    }
-
-    @Override
-    @SessionRequired
-    @Authorise(UserAndRoleAssociation_CanDelete_Token.class)
-    public void removeAssociation(final Set<UserAndRoleAssociation> associations) {
-        createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), associations).map(this::batchDelete);
-    }
-
-    @Override
-    @SessionRequired
-    @Authorise(UserAndRoleAssociation_CanDelete_Token.class)
-    public int batchDelete(final EntityResultQueryModel<UserAndRoleAssociation> model) {
-        return defaultBatchDelete(model);
-    }
-
-    @Override
-    @SessionRequired
-    @Authorise(UserAndRoleAssociation_CanDelete_Token.class)
-    public int batchDelete(final Collection<Long> entitiesIds) {
-        return defaultBatchDelete(entitiesIds);
+    public Either<Long, UserAndRoleAssociation> save(final UserAndRoleAssociation entity, final Optional<fetch<UserAndRoleAssociation>> maybeFetch) {
+        if (!appSettings.usersSelfEdit() && entity.isDirty() && EntityUtils.areEqual(getUser(), entity.getUser())) {
+            throw new SecurityException(ERR_SELF_CHANGING_ROLES);
+        }
+        return super.save(entity, maybeFetch);
     }
 
     @Override
     public IFetchProvider<UserAndRoleAssociation> createFetchProvider() {
         return FETCH_PROVIDER;
     }
+
 }

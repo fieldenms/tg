@@ -1,39 +1,34 @@
 package ua.com.fielden.platform.entity_centre.review;
 
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.StandaloneOrderBy;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.StandaloneOrderBy.IOrderingItem;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.StandaloneOrderBy.IOrderingItemCloseable;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.util.List;
 
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException.requireNotNullArgument;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.isPropertyAuthorised;
 
-/**
- * Utility class that is responsible for creating ordering models.
- * 
- * @author TG Team
- * 
- */
+/// Utility class that is responsible for creating ordering models.
+///
 public class DynamicOrderingBuilder {
 
-    /**
-     * Returns the ordering model for this query criteria.
-     * 
-     * @return
-     */
-    public static OrderingModel createOrderingModel(final Class<?> root, final List<Pair<String, Ordering>> orderedPairs) {
-        EntityCentreExecutionException.requireNotNullArgument(root, "root");
-        EntityCentreExecutionException.requireNotNullArgument(orderedPairs, "orderedPairs");
+    /// Returns the ordering model for this query criteria.
+    ///
+    public static OrderingModel createOrderingModel(final Class<?> root, final List<Pair<String, Ordering>> orderedPairsWithUnauthorised) {
+        requireNotNullArgument(root, "root");
+        requireNotNullArgument(orderedPairsWithUnauthorised, "orderedPairsWithUnauthorised");
+        final var orderedPairs = orderedPairsWithUnauthorised.stream()
+            .filter(pair -> isPropertyAuthorised(root, pair.getKey()))
+            .toList();
         IOrderingItemCloseable closeOrderable = null;
         for (final Pair<String, Ordering> orderPair : orderedPairs) {
-            final IOrderingItem orderingItem = closeOrderable == null ? orderBy() : closeOrderable;
-            final DynamicPropertyAnalyser analyser = new DynamicPropertyAnalyser(root, orderPair.getKey());
-            final StandaloneOrderBy.ISingleOperandOrderable part = orderingItem.yield(analyser.getCriteriaFullName());
-            closeOrderable = orderPair.getValue().equals(Ordering.ASCENDING) ? part.asc() : part.desc();
+            final var orderingItem = closeOrderable == null ? orderBy() : closeOrderable;
+            final var part = orderingItem.yield(new DynamicPropertyAnalyser(root, orderPair.getKey()).getCriteriaFullName());
+            closeOrderable = orderPair.getValue().equals(ASCENDING) ? part.asc() : part.desc();
         }
         return closeOrderable == null ? null : closeOrderable.model();
     }

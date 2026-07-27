@@ -19,7 +19,7 @@ public final class OrderToken extends AbstractParameterisedEqlToken {
 
     @Override
     public String parametersText() {
-        return getInstance().format(model.getTokenSource());
+        return getInstance().format(model.tokens());
     }
 
     @Override

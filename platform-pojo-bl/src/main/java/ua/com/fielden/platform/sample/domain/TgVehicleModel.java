@@ -1,23 +1,16 @@
 package ua.com.fielden.platform.sample.domain;
 
+import org.junit.Ignore;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.tokens.persistent.TgVehicleModel_CanRead_make_Token;
+import ua.com.fielden.platform.utils.Pair;
+
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import org.junit.Ignore;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Readonly;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
 @KeyType(String.class)
 @MapEntityTo
@@ -26,16 +19,25 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 @CompanionObject(ITgVehicleModel.class)
 public class TgVehicleModel extends AbstractEntity<String> {
 
+    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TgVehicleModel.class);
+    public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
+    public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
+
     @IsProperty
     @Required
     @MapTo
     @Title(value = "Test vehicle model", desc = "Test vehicle model")
+    @Authorise(TgVehicleModel_CanRead_make_Token.class)
     private TgVehicleMake make;
     
     @IsProperty
     @Calculated
     private Integer makeModelsCount;
     protected static final ExpressionModel makeModelsCount_ = expr().model(select(TgVehicleModel.class).where().prop("make").eq().extProp("make").yield().countAll().modelAsPrimitive()).model();
+
+    @IsProperty
+    @Title("Ordinary property")
+    private Integer ordinaryIntProp;
 
     @Observable
     protected TgVehicleModel setMakeModelsCount(final Integer makeModelsCount) {
@@ -46,10 +48,6 @@ public class TgVehicleModel extends AbstractEntity<String> {
     public Integer getMakeModelsCount() {
         return makeModelsCount;
     }
-    
-    @IsProperty
-    @Title("Ordinary property")
-    private Integer ordinaryIntProp;
 
     @Observable
     public TgVehicleModel setOrdinaryIntProp(final Integer ordinaryIntProp) {
@@ -71,9 +69,4 @@ public class TgVehicleModel extends AbstractEntity<String> {
         return make;
     }
 
-    /**
-     * Constructor for (@link EntityFactory}.
-     */
-    protected TgVehicleModel() {
-    }
 }

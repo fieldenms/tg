@@ -10,6 +10,9 @@ import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
 import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { openShareAction } from '/resources/reflection/tg-share-utils.js';
+import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
+import { UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
 
 /**
  * A local insertion point manager for the entity centre to manage detached or maximized insertion points.
@@ -682,7 +685,7 @@ const TgEntityCentreBehaviorImpl = {
         _resetAutocompleterState: Function,
 
         /**
-         * Function that returns Promise that starts on validate() call and fullfils iff this validation attempt gets successfully resolved.
+         * Function that returns Promise that starts on validate() call and fulfils iff this validation attempt gets successfully resolved.
          *
          * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
          * However, repeated invocation of this function will return new Promise in this case.
@@ -745,6 +748,21 @@ const TgEntityCentreBehaviorImpl = {
         return _buttonDisabled || embedded;
     },
 
+    /// Opens share action master with tiny URL and QR code for currently loaded centre configuration.
+    ///
+    _openShareAction: function () {
+        openShareAction(
+            this.$.selection_criteria._toastGreeting(),
+            this.uuid,
+            this._showDialog,
+            () => this._reflector.createContextHolder(
+                null, null, null,
+                null, null, null
+            ),
+            () => window.location.href
+        );
+    },
+
     _computeViewerDisabled: function (_buttonDisabled, _wasRun) {
         return _buttonDisabled || _wasRun !== "yes";
     },
@@ -804,20 +822,25 @@ const TgEntityCentreBehaviorImpl = {
         }
     },
 
+    /**
+     * Pushes the current page of run data into the EGI and synchronises centre-level `retrievedEntities` / `renderingHints`.
+     *
+     * The EGI side arrays are primed before `retrievedEntities` is assigned, so the single `egiModel` rebuild (triggered by the EGI `entities` assignment inside the `retrievedEntities` observer) consumes fresh values in one pass.
+     * Assigning them after `retrievedEntities` (as was done previously) made the rebuild read stale values and then triggered a redundant per-row refresh pass for each array.
+     * `renderingHints` is assigned the same array reference that was primed, so the EGI-forwarding observer dirty-checks it into a no-op.
+     */
     _setPageData: function (startIdx, endIdx) {
-        if (typeof startIdx === 'undefined') {
-            this.retrievedEntities = this.allFilteredEntities;
-            this.renderingHints = this.allFilteredRenderingHints;
-            this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices;
-            this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices;
-            this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices;
-        } else {
-            this.retrievedEntities = this.allFilteredEntities.slice(startIdx, endIdx);
-            this.renderingHints = this.allFilteredRenderingHints.slice(startIdx, endIdx);
-            this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices.slice(startIdx, endIdx);
-            this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices.slice(startIdx, endIdx);
-            this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices.slice(startIdx, endIdx);
-        }
+        const page = arr => typeof startIdx === 'undefined' ? arr : arr.slice(startIdx, endIdx);
+        const entities = page(this.allFilteredEntities);
+        const renderingHints = page(this.allFilteredRenderingHints);
+        this.$.egi.primeGridData({
+            renderingHints: renderingHints,
+            primaryActionIndices: page(this.allFilteredPrimaryActionIndices),
+            secondaryActionIndices: page(this.allFilteredSecondaryActionIndices),
+            propertyActionIndices: page(this.allFilteredPropertyActionIndices)
+        });
+        this.retrievedEntities = entities;
+        this.renderingHints = renderingHints;
     },
 
     _setPageNumber: function (number) {
@@ -898,16 +921,18 @@ const TgEntityCentreBehaviorImpl = {
                 }
                 const pageCapacity = result.resultConfig.pageCapacity;
                 this.$.selection_criteria.pageCapacity = pageCapacity;
+                // Must be assigned before allRetrievedEntities so that the dom-repeat over dynamicColumns propagates fresh property / keyProperty / valueProperty to <tg-property-column> elements before tg-egi-cell instances recompute their values from column metadata.
+                this.dynamicColumns = result.dynamicColumns;
                 this.allRenderingHints = result.renderingHints;
                 this.allPrimaryActionIndices = result.primaryActionIndices;
                 this.allSecondaryActionIndices = result.secondaryActionIndices;
                 this.allPropertyActionIndices = result.propertyActionIndices;
                 this.allRetrievedEntities = result.resultEntities;
-                this.dynamicColumns = result.dynamicColumns;
                 this.selectionCriteriaEntity = result.criteriaEntity;
                 this.$.egi.adjustColumnWidths(result.columnWidths);
                 this.$.egi.visibleRowsCount = result.resultConfig.visibleRowsCount;
                 this.$.egi.numberOfHeaderLines = result.resultConfig.numberOfHeaderLines;
+                this.$.egi.adjustColumnAvailability(result.resultConfig.availableColumns);
                 this.$.egi.adjustColumnsVisibility(result.resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
                 this.$.egi.adjustColumnsSorting(result.resultConfig.orderingConfig.map(propOrder => {
                    if (propOrder.property === "this") {
@@ -1160,7 +1185,7 @@ const TgEntityCentreBehaviorImpl = {
         /**
          * Adds event listener updates centre's view on dropdown switch custom event.
          */
-         self.addEventListener("tg-centre-view-change", function (e) {
+         self.addEventListener("tg-switch-action-change", function (e) {
             this._activateView(e.detail);
             tearDownEvent(e);
         }.bind(self));
@@ -1359,10 +1384,7 @@ const TgEntityCentreBehaviorImpl = {
             if (index < 0 || index >= this.allViews.length) {
                 this._showToastWithMessage(`There is no view with ${index}`);
             } else {
-                const canNotLeave = this.allViews[this._selectedView].canLeave();
-                if (canNotLeave) {
-                    this._showToastWithMessage(canNotLeave.msg);
-                } else {
+                this.allViews[this._selectedView].canLeave(LeaveReason.NAVIGATED).then(obj => {
                     this.allViews[this._selectedView].leave();
                     this._previousView = this._selectedView;
                     this._selectedView = index;
@@ -1370,7 +1392,12 @@ const TgEntityCentreBehaviorImpl = {
                         this.preferredView = this._selectedView;
                         this._preferredViewUpdaterAction._run();
                     }
-                }
+                }).catch(e => {
+                    if (e instanceof UnexpectedCustomError) {
+                        throw e;
+                    }
+                    e.msg && this._showToastWithMessage(e.msg);
+                });
             }   
         }, 100);
     },
@@ -1573,22 +1600,20 @@ const TgEntityCentreBehaviorImpl = {
      * This is due to the fact that most of these unsaved changes are actually saved (except the changes to the editor
      * for which tab-off wasn't actioned).
      */
-    canLeave: function () {
+    canLeave: async function (leaveReason = LeaveReason.CLOSED) {
         //First of all check whether egi is edit mode. If it's true then don't levae this centre otherwise keep check whether
         //insertion points can be left.
         if (this.$.egi.isEditing()) {
-            return {
+            throw {
                 msg: MSG_SAVE_OR_CANCEL
             };
         }
         // Check whether all insertion points can be left.
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         for (let insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
-            const canLeaveChild = insertionPoints[insPoIndex].canLeave();
-            if (canLeaveChild) {
-                return canLeaveChild;
-            }
+            await insertionPoints[insPoIndex].canLeave(leaveReason);
         }
+        return true;
     },
 
     /**

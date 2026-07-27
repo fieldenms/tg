@@ -115,6 +115,10 @@ public class LoginInitiateResetResource extends AbstractWebResource {
             LOGGER.fatal(ex);
             getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s.\"}", "There was an error when attempting to request a password reset.")));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+        } finally {
+            // This handler sets the current user to SU (above); clear it so a pooled worker thread does not retain it after the request.
+            // This resource is attached at the component level and is not covered by the application-level cleanup filter.
+            up.clearUser();
         }
     }
 

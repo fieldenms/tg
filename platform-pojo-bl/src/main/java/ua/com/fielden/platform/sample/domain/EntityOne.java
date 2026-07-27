@@ -1,13 +1,8 @@
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import java.math.BigDecimal;
 
@@ -17,6 +12,12 @@ import java.math.BigDecimal;
 @MapEntityTo
 public class EntityOne extends AbstractEntity<String> {
 
+    public enum Property implements IConvertableToPath {
+        stringProperty, bigDecimalProperty;
+
+        @Override public String toPath() { return name(); }
+    }
+
     @IsProperty
     @MapTo
     private String stringProperty;
@@ -24,6 +25,20 @@ public class EntityOne extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     private BigDecimal bigDecimalProperty;
+
+    @IsProperty
+    @MapTo
+    private EntityThree entityThree;
+
+    public EntityThree getEntityThree() {
+        return entityThree;
+    }
+
+    @Observable
+    public EntityOne setEntityThree(final EntityThree entityThree) {
+        this.entityThree = entityThree;
+        return this;
+    }
 
     public String getStringProperty() {
         return stringProperty;
@@ -43,6 +58,12 @@ public class EntityOne extends AbstractEntity<String> {
     public EntityOne setBigDecimalProperty(final BigDecimal bigDecimalProperty) {
         this.bigDecimalProperty = bigDecimalProperty;
         return this;
+    }
+
+    @Override
+    @Observable
+    public EntityOne setDesc(String desc) {
+        return super.setDesc(desc);
     }
 
 }

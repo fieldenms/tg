@@ -1,23 +1,14 @@
 package ua.com.fielden.platform.menu;
 
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.annotation.*;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
-
-/**
- * Functional entity to save invisibility for main menu items represented by {@link WebMenuItemInvisibility}.
- *
- * @author TG Team
- *
- */
+/// Functional entity to save invisibility for main menu items represented by [WebMenuItemInvisibility].
+///
 @KeyType(String.class)
 @KeyTitle("Save menu item key")
 @CompanionObject(IMenuSaveAction.class)

@@ -1,6 +1,14 @@
 package ua.com.fielden.platform.persistence.types;
 
-import static java.lang.String.format;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.usertype.UserType;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider.MissingSecurityTokenPlaceholder;
+import ua.com.fielden.platform.types.markers.ISecurityTokenType;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -8,24 +16,21 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.usertype.UserType;
-
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.exceptions.SecurityException;
-import ua.com.fielden.platform.types.markers.ISecurityTokenType;
-
-/**
- * Class that helps Hibernate to map {@link ISecurityToken} class into database.
- * 
- * @author TG Team
- */
+/// Class that helps Hibernate to map [ISecurityToken] class into database.
+///
+@Singleton
 public class SecurityTokenType implements UserType, ISecurityTokenType {
 
     public static final SecurityTokenType INSTANCE = new SecurityTokenType();
-    
+
     private static final int[] SQL_TYPES = { Types.VARCHAR };
+
+    /// A security token provider is required to locate token types by name.
+    /// It must be injected statically because Hibernate requires user types to have a public default constructor,
+    /// implying that they may be constructed reflectively, which disables instance-level injection.
+    ///
+    @Inject
+    private static ISecurityTokenProvider securityTokenProvider;
 
     @Override
     public int[] sqlTypes() {
@@ -40,24 +45,15 @@ public class SecurityTokenType implements UserType, ISecurityTokenType {
     @Override
     public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SharedSessionContractImplementor session, final Object owner) throws SQLException {
         final String name = resultSet.getString(names[0]);
-        Object result = null;
-        if (!resultSet.wasNull()) {
-            try {
-                result = Class.forName(name);
-            } catch (final ClassNotFoundException e) {
-                throw new SecurityException("Security token for value '" + name + "' could not be found");
-            }
-        }
-        return result;
+        final var maybeSecurityToken = securityTokenProvider.getTokenByName(name);
+        return maybeSecurityToken.isPresent() ? maybeSecurityToken.get() : MissingSecurityTokenPlaceholder.class;
     }
 
     @Override
     public Object instantiate(final Object argument, final EntityFactory factory) {
-        try {
-            return Class.forName((String) argument);
-        } catch (final Exception e) {
-            throw new SecurityException(format("Could not instantiate instance of [%s] with value [%s] due to: %s", SecurityTokenType.class.getName(), argument, e.getMessage()));
-        }
+        final var name = (String) argument;
+        final var maybeSecurityToken = securityTokenProvider.getTokenByName(name);
+        return maybeSecurityToken.isPresent() ? maybeSecurityToken.get() : MissingSecurityTokenPlaceholder.class;
     }
 
     @Override
@@ -109,4 +105,5 @@ public class SecurityTokenType implements UserType, ISecurityTokenType {
         }
         return x.equals(y);
     }
+
 }

@@ -1,5 +1,4 @@
 import { TgEntityMasterTemplateBehavior} from '/resources/master/tg-entity-master-template-behavior.js'
-import { TgAppConfig } from '/app/tg-app-config.js';
 import {_momentTz} from '/resources/reflection/tg-date-utils.js';
 
 const getTooltipValueForEntity = function (entity) {
@@ -58,7 +57,6 @@ const TgScatterPlotMasterBehaviorImpl = {
 
         this.actions = [...this._masterDom().querySelectorAll(".chart-action")];
 
-        this._appConfig = new TgAppConfig();
         this._click = this._click.bind(this);
         this._tooltip = this._tooltip.bind(this);
         this._getCategoryRange = this._getCategoryRange.bind(this);
@@ -118,7 +116,7 @@ const TgScatterPlotMasterBehaviorImpl = {
             if (this._reflector().isEntity(value)) {
                 value = getTooltipValueForEntity(value);
             } else {
-                value = this._reflector().tg_toString(value, entity.constructor.prototype.type.call(entity), prop, { display: true, locale: this._appConfig.locale });
+                value = this._reflector().tg_toString(value, entity.constructor.prototype.type.call(entity), prop, { display: true });
             }
             if (title && value) {
                 res += `<tr><td valign="top" style="padding-right:10px;">${title}:</td><td>${value}</td></tr>`;

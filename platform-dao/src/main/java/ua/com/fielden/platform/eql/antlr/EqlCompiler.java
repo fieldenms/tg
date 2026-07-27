@@ -1,15 +1,13 @@
 package ua.com.fielden.platform.eql.antlr;
 
-import org.antlr.v4.runtime.BaseErrorListener;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import ua.com.fielden.platform.eql.antlr.exceptions.EqlCompilationException;
 import ua.com.fielden.platform.eql.antlr.tokens.PropToken;
-import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 import ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+
+import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
@@ -111,14 +109,14 @@ public final class EqlCompiler {
     /**
      * Throws exception {@link EqlCompilationException} if parsing fails.
      *
-     * @param tokenSource  source of tokens representing an expression to compile
+     * @param tokens  source of tokens representing an expression to compile
      * @return  compilation result
      */
-    public EqlCompilationResult compile(final ListTokenSource tokenSource) {
-        final var tokenStream = new CommonTokenStream(tokenSource);
+    public EqlCompilationResult compile(final List<? extends Token> tokens) {
+        final var tokenStream = new CommonTokenStream(new ListTokenSource(tokens));
         final var parser = new EQLParser(tokenStream);
 
-        parser.addErrorListener(new ThrowingErrorListener(tokenSource));
+        parser.addErrorListener(new ThrowingErrorListener(tokens));
 
         // parsing stage, results in a complete parse tree
         final StartContext tree = parser.start();
@@ -132,24 +130,22 @@ public final class EqlCompiler {
                     """
                     Failed to compile an EQL expression.
                     Expression: %s
-                    Source: %s
                     Reason: %s
                     """.formatted(
-                            TokensFormatter.getInstance().format(tokenSource),
-                            requireNonNullElse(tokenSource.getSourceName(), "unknown"),
+                            TokensFormatter.getInstance().format(tokens),
                             requireNonNullElse(e.getLocalizedMessage(), "unknown")),
                     e);
         }
     }
 
     /**
-     * Similar to {@link #compile(ListTokenSource)} but also ensures that the result type matches the given one --
+     * Similar to {@link #compile(List)} but also ensures that the result type matches the given one --
      * if it doesn't, throws a runtime exception.
      */
-    public <T extends EqlCompilationResult> T compile(final ListTokenSource tokenSource, final Class<T> resultType) {
+    public <T extends EqlCompilationResult> T compile(final List<? extends Token> tokens, final Class<T> resultType) {
         requireNonNull(resultType, "resultType can't be null");
 
-        final EqlCompilationResult result = compile(tokenSource);
+        final EqlCompilationResult result = compile(tokens);
         if (resultType.isInstance(result)) {
             return (T) result;
         }
@@ -187,10 +183,10 @@ public final class EqlCompiler {
 
     private static final class ThrowingErrorListener extends BaseErrorListener {
 
-        private final ListTokenSource tokenSource;
+        private final List<? extends Token> tokens;
 
-        public ThrowingErrorListener(final ListTokenSource tokenSource) {
-            this.tokenSource = tokenSource;
+        public ThrowingErrorListener(final List<? extends Token> tokens) {
+            this.tokens = tokens;
         }
 
         @Override
@@ -202,12 +198,9 @@ public final class EqlCompiler {
                     """
                     Failed to parse an EQL expression.
                     Expression: %s
-                    Source: %s
                     Reason: %s
-                    """.formatted(
-                            TokensFormatter.getInstance().format(tokenSource),
-                            requireNonNullElse(tokenSource.getSourceName(), "unknown"),
-                            msg),
+                    """.formatted(TokensFormatter.getInstance().format(tokens),
+                                  msg),
                     e);
         }
 

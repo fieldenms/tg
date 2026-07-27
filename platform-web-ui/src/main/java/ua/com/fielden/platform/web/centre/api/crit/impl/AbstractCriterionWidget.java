@@ -1,26 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
-import static java.util.Optional.empty;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.critName;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.critOnlyWithMnemonics;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationInHierarchy;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
-import static ua.com.fielden.platform.utils.Pair.pair;
-
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -32,6 +11,19 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.Optional.empty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.*;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.critOnlyWithMnemonics;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationInHierarchy;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
  * The base implementation box for generic information for all criterion widgets.
@@ -169,6 +161,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         }
         attrs.put("id", "criterion_4_" + CriteriaReflector.critName(root, this.propertyName));
         attrs.put("validation-callback", "[[validate]]");
+        attrs.put("filterable", true);
         if (mnemonicsVisible) {
             attrs.put("mnemonics-visible", null);
         }

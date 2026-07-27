@@ -25,7 +25,6 @@ public class MasterEntityWithOneToOneAssociation extends AbstractEntity<String> 
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @MapTo
     @Title(value = "Property 1", desc = "Desc")
     private DetailEntityForOneToOneAssociationWithOneToManyAssociation one2oneAssociation;
 

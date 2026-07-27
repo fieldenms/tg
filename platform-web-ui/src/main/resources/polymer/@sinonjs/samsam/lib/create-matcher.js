@@ -4,7 +4,6 @@ var arrayProto = require("@sinonjs/commons").prototypes.array;
 var deepEqual = require("./deep-equal").use(createMatcher); // eslint-disable-line no-use-before-define
 var every = require("@sinonjs/commons").every;
 var functionName = require("@sinonjs/commons").functionName;
-var get = require("lodash.get");
 var iterableToString = require("./iterable-to-string");
 var objectProto = require("@sinonjs/commons").prototypes.object;
 var typeOf = require("@sinonjs/commons").typeOf;
@@ -28,7 +27,6 @@ var TYPE_MAP = require("./create-matcher/type-map")(createMatcher); // eslint-di
 
 /**
  * Creates a matcher object for the passed expectation
- *
  * @alias module:samsam.createMatcher
  * @param {*} expectation An expecttation
  * @param {string} message A message for the expectation
@@ -120,7 +118,7 @@ createMatcher.typeOf = function (type) {
 };
 
 createMatcher.instanceOf = function (type) {
-    /* istanbul ignore if */
+    /* c8 ignore start */
     if (
         typeof Symbol === "undefined" ||
         typeof Symbol.hasInstance === "undefined"
@@ -134,6 +132,7 @@ createMatcher.instanceOf = function (type) {
             "[Symbol.hasInstance]",
         );
     }
+    /* c8 ignore stop */
     return createMatcher(
         function (actual) {
             return actual instanceof type;
@@ -192,14 +191,15 @@ createMatcher.hasNested = function (property, value) {
     }
     message += ")";
     return createMatcher(function (actual) {
-        if (
-            actual === undefined ||
-            actual === null ||
-            get(actual, property) === undefined
-        ) {
-            return false;
+        const parts = property.split(/(?:\.|\[|\])+?/).filter(Boolean);
+        let current = actual;
+        for (const part of parts) {
+            current = current?.[part];
+            if (current === undefined) {
+                return false;
+            }
         }
-        return onlyProperty || deepEqual(get(actual, property), value);
+        return onlyProperty || deepEqual(current, value);
     }, message);
 };
 

@@ -104,6 +104,11 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
+    public Optional<TopLevelEntity> getEntityOptional(final QueryExecutionModel<TopLevelEntity, ?> model) {
+        return Optional.empty();
+    }
+
+    @Override
     public int count(final EntityResultQueryModel<TopLevelEntity> model, final Map<String, Object> paramValues) {
         return 0;
     }

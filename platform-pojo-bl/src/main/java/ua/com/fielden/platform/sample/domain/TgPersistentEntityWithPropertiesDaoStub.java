@@ -116,6 +116,11 @@ public class TgPersistentEntityWithPropertiesDaoStub implements ITgPersistentEnt
     }
 
     @Override
+    public Optional<TgPersistentEntityWithProperties> getEntityOptional(final QueryExecutionModel<TgPersistentEntityWithProperties, ?> model) {
+        return Optional.empty();
+    }
+
+    @Override
     public boolean entityExists(final TgPersistentEntityWithProperties entity) {
         return false;
     }

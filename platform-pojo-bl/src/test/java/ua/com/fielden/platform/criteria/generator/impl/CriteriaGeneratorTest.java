@@ -1,32 +1,7 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
-import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator.generateCriteriaType;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.critName;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.junit.Test;
-
 import com.google.inject.Injector;
-
+import org.junit.Test;
 import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.FirstParam;
 import ua.com.fielden.platform.criteria.enhanced.SecondParam;
@@ -37,13 +12,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DateOnly;
-import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.PersistentType;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
-import ua.com.fielden.platform.entity.annotation.TimeOnly;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
@@ -51,12 +20,26 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestIocModule;
-import ua.com.fielden.platform.sample.domain.crit_gen.LastLevelEntity;
-import ua.com.fielden.platform.sample.domain.crit_gen.TopLevelEntity;
+import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
+import ua.com.fielden.platform.sample.domain.crit_gen.*;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.util.*;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator.entityTitleAndDescForCriteria;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator.generateCriteriaType;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.*;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 public class CriteriaGeneratorTest {
     private final Injector injector = new ApplicationInjectorFactory().add(new CriteriaGeneratorTestIocModule()).getInjector();
@@ -584,47 +567,47 @@ public class CriteriaGeneratorTest {
     @Test
     public void critOnly_single_dateOnly_property_generates_dateOnly_criterion() {
         final String property = "datePropDateOnlySingle";
-        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, property)));
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, List.of(property), root), critName(root, property)));
     }
     
     @Test
     public void critOnly_multi_dateOnly_property_generates_left_and_right_dateOnly_criteria() {
         final String property = "datePropDateOnlyMulti";
-        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, from(property))));
-        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, to(property))));
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, List.of(property), root), critName(root, from(property))));
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, List.of(property), root), critName(root, to(property))));
     }
     
     @Test
     public void dateOnly_property_generates_left_and_right_dateOnly_criteria() {
         final String property = "datePropDateOnly";
-        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, from(property))));
-        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, asList(property), root), critName(root, to(property))));
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, List.of(property), root), critName(root, from(property))));
+        assertTrue(isPropertyAnnotationPresent(DateOnly.class, generateCriteriaType(root, List.of(property), root), critName(root, to(property))));
     }
     
     @Test
     public void critOnly_single_timeOnly_property_generates_timeOnly_criterion() {
         final String property = "datePropTimeOnlySingle";
-        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, property)));
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, List.of(property), root), critName(root, property)));
     }
     
     @Test
     public void critOnly_multi_timeOnly_property_generates_left_and_right_timeOnly_criteria() {
         final String property = "datePropTimeOnlyMulti";
-        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, from(property))));
-        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, to(property))));
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, List.of(property), root), critName(root, from(property))));
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, List.of(property), root), critName(root, to(property))));
     }
     
     @Test
     public void timeOnly_property_generates_left_and_right_timeOnly_criteria() {
         final String property = "datePropTimeOnly";
-        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, from(property))));
-        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, asList(property), root), critName(root, to(property))));
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, List.of(property), root), critName(root, from(property))));
+        assertTrue(isPropertyAnnotationPresent(TimeOnly.class, generateCriteriaType(root, List.of(property), root), critName(root, to(property))));
     }
     
     @Test
     public void critOnly_single_UTC_property_generates_UTC_criterion() {
         final String property = "datePropUtcSingle";
-        final PersistentType annotation = getPropertyAnnotation(PersistentType.class, generateCriteriaType(root, asList(property), root), critName(root, property));
+        final PersistentType annotation = getPropertyAnnotation(PersistentType.class, generateCriteriaType(root, List.of(property), root), critName(root, property));
         assertNotNull(annotation);
         assertEquals(IUtcDateTimeType.class, annotation.userType());
     }
@@ -632,7 +615,7 @@ public class CriteriaGeneratorTest {
     @Test
     public void critOnly_multi_UTC_property_generates_left_and_right_UTC_criteria() {
         final String property = "datePropUtcMulti";
-        final Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>>> criteriaType = generateCriteriaType(root, asList(property), root);
+        final Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>>> criteriaType = generateCriteriaType(root, List.of(property), root);
         final PersistentType fromAnnotation = getPropertyAnnotation(PersistentType.class, criteriaType, critName(root, from(property)));
         assertNotNull(fromAnnotation);
         assertEquals(IUtcDateTimeType.class, fromAnnotation.userType());
@@ -644,13 +627,47 @@ public class CriteriaGeneratorTest {
     @Test
     public void UTC_property_generates_left_and_right_UTC_criteria() {
         final String property = "datePropUtc";
-        final Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>>> criteriaType = generateCriteriaType(root, asList(property), root);
+        final Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>>> criteriaType = generateCriteriaType(root, List.of(property), root);
         final PersistentType fromAnnotation = getPropertyAnnotation(PersistentType.class, criteriaType, critName(root, from(property)));
         assertNotNull(fromAnnotation);
         assertEquals(IUtcDateTimeType.class, fromAnnotation.userType());
         final PersistentType toAnnotation = getPropertyAnnotation(PersistentType.class, criteriaType, critName(root, to(property)));
         assertNotNull(toAnnotation);
         assertEquals(IUtcDateTimeType.class, toAnnotation.userType());
+    }
+
+    @Test
+    public void generated_criteria_type_carries_the_root_entity_title() {
+        final Class<? extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, TopLevelEntity, IEntityDao<TopLevelEntity>>> criteriaType = generateCriteriaType(root, List.of("integerProp"), managedType);
+        // The generated criteria type must expose the root's title, so that validation messages read e.g. "... for entity [Top Level Entity]".
+        assertEquals(getEntityTitleAndDesc(root).getKey(), getEntityTitleAndDesc(criteriaType).getKey());
+        // It must no longer fall back to the former blanket title that used to be declared on CentreEntityQueryCriteriaToEnhance.
+        assertNotEquals("Centre Selection Criteria", getEntityTitleAndDesc(criteriaType).getKey());
+    }
+
+    @Test
+    public void criteria_title_of_a_non_synthetic_root_without_Ext_suffix_is_the_root_title_unchanged() {
+        assertEquals(getEntityTitleAndDesc(root).getKey(), entityTitleAndDescForCriteria(root).getKey());
+    }
+
+    @Test
+    public void criteria_title_of_a_non_synthetic_root_keeps_its_Ext_suffix() {
+        // The ` Ext` suffix is a convention of synthetic-based-on-persistent types only, so it must not be stripped for a non-synthetic type.
+        assertEquals("Non Synthetic Ext", entityTitleAndDescForCriteria(NonSyntheticEntityWithExtTitle.class).getKey());
+    }
+
+    @Test
+    public void criteria_title_of_a_synthetic_based_on_persistent_root_without_Ext_suffix_is_unchanged() {
+        // TgReVehicleModel is synthetic-based-on-persistent, but its (class-name-derived) title does not end with ` Ext`.
+        assertEquals(getEntityTitleAndDesc(TgReVehicleModel.class).getKey(), entityTitleAndDescForCriteria(TgReVehicleModel.class).getKey());
+    }
+
+    @Test
+    public void criteria_title_of_a_synthetic_based_on_persistent_root_has_its_Ext_suffix_stripped() {
+        final Pair<String, String> titleAndDesc = entityTitleAndDescForCriteria(SyntheticBasedOnPersistentEntityWithExtTitle.class);
+        assertEquals("Synthetic Vehicle Model", titleAndDesc.getKey());
+        // Only the trailing suffix is stripped from the title; the description is preserved as-is.
+        assertEquals("Test fixture for criteria title resolution.", titleAndDesc.getValue());
     }
 
 }

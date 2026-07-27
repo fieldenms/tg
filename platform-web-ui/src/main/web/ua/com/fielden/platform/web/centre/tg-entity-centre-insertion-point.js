@@ -33,6 +33,7 @@ import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation
 import '/resources/centre/tg-entity-centre-styles.js';
 import { tearDownEvent, getKeyEventTarget, getRelativePos, localStorageKeyForCentre, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
+import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 /**
  * Local storage keys for insertion point's custom user-driven states.
@@ -403,12 +404,11 @@ Polymer({
         },
 
         /**
-         * Indicates whether title bar can be dragged now.
+         * Indicates whether the title bar is currently draggable.
          * By default, all insertion points are not draggable.
          * They can become draggable if:
-         *  1. `enableDraggable` is true, aka `.withCustomisableLayout()` was used on parent Entity Centre
-         *  2. isTouchEnabled (see #2323)
-         *  3. see other conditions in _handleDraggable
+         *  1. `enableDraggable` is true (i.e., `.withCustomisableLayout()` was used on the parent Entity Centre), and
+         *  2. the additional conditions in `_handleDraggable` are met.
          */
         _titleBarDraggable: {
             type: Boolean,
@@ -477,6 +477,15 @@ Polymer({
         // 'z-index' management related settings:
         const clickEvent = isTouchEnabled() ? 'touchstart' : 'mousedown';
         this.addEventListener(clickEvent, this._onCaptureClick, true);
+        // Add a title bar event to determine whether the element is draggable.
+        // Use `useCapture = true` (capturing phase, not bubbling; see https://www.quirksmode.org/js/events_order.html)
+        // to ensure the event is dispatched before:
+        //   1. the start-drag event on the parent centre element (tg-entity-centre._startDrag → this.$.centreResultContainer.on-dragstart), and
+        //   2. the move event on this element (this.moveComponent → this.$.titleBar.on-track).
+        //
+        // Be careful to use the correct event type:
+        // On touch devices, use `touchstart`; on mouse-based devices, use `mousedown`.
+        this.$.titleBar.addEventListener(clickEvent, this._handleDraggable.bind(this), true);
         this._clearLocalStorage = this._createDoubleTapHandler("_lastResizerTap", (e) => {
             if (this.detachedView) {
                 this._removeProp(ST.DETACHED_VIEW_WIDTH);
@@ -489,15 +498,6 @@ Polymer({
             this._setDimension();
             this._setPosition();
         });
-        // Add title bar event to identify whether element is draggable or not.
-        //  Use 'useCapture = true' (capturing phase, not bubbling, see https://www.quirksmode.org/js/events_order.html) as a parameter to ensure event dispatching before
-        //   1. the start-drag event on parent centre element (tg-entity-centre._startDrag => this.$.centreResultContainer.on-dragstart) and
-        //   2. the move event on this element (this.moveComponent => this.$.titleBar.on-track)
-        if (!isTouchEnabled()) {
-            // Be careful when adding mousedown events (and other mouse events).
-            // On touch devices such events will also be generated on touch, unless we add 'touchstart' with `e => e.preventDefault()` handler.
-            this.$.titleBar.addEventListener("mousedown", this._handleDraggable.bind(this), true); // TODO remove !isTouchEnabled() check and use clickEvent ('touchstart') to enable D'n'D support in #2323
-        }
     },
 
     attached: function () {
@@ -685,10 +685,11 @@ Polymer({
     /**
      * @returns Checks whether this insertion point can be left.
      */
-    canLeave: function () {
+    canLeave: function (leaveReason = LeaveReason.CLOSED) {
         if (this._element && typeof this._element.canLeave === 'function') {
-            return this._element.canLeave();
+            return this._element.canLeave(leaveReason);
         }
+        return Promise.resolve(true);
     },
 
     /**
@@ -892,10 +893,11 @@ Polymer({
     },
 
     /**
-     * The method, that is used during Back button pressing (see tg-app-template).
+     * This method is executed when the Back button is pressed (see tg-app-template). It returns a resolved promise, since the dialog is always closed successfully.
      */
     closeDialog: function () {
         this._toggleMaximise();
+        return Promise.resolve();
     },
 
     /******************** minimise button related logic *************************/

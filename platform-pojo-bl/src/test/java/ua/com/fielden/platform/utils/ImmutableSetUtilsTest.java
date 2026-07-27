@@ -7,16 +7,18 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.utils.ImmutableSetUtils.insert;
-import static ua.com.fielden.platform.utils.ImmutableSetUtils.union;
+import static ua.com.fielden.platform.utils.ImmutableSetUtils.*;
 
 public class ImmutableSetUtilsTest {
 
     @Test
     public void insert_returns_a_set_with_all_elements_from_the_given_iterable_and_the_other_given_element() {
-        assertEquals(Set.of("a", "b", "c"), insert(Set.of("a", "b"), "c"));
-        assertEquals(Set.of("c"), insert(Set.of(), "c"));
-        assertEquals(Set.of("c"), insert(Set.of("c"), "c"));
+        final var a = new A();
+        final var b1 = new B();
+        final var b2 = new B();
+        assertEquals(Set.of(a, b1, b2), insert(Set.of(b1, b2), a));
+        assertEquals(Set.of(a), insert(Set.of(), a));
+        assertEquals(Set.of(b1), insert(Set.of(b1), b1));
     }
 
     @Test
@@ -34,6 +36,42 @@ public class ImmutableSetUtilsTest {
     }
 
     @Test
+    public void intersection_returns_elements_present_in_both_sets() {
+        assertEquals(Set.of("b"),
+                     intersection(Set.of("a", "b"), Set.of("b", "c")));
+        assertEquals(Set.of("b", "c"),
+                     intersection(Set.of("a", "b", "c"), Set.of("b", "c", "d")));
+    }
+
+    @Test
+    public void intersection_of_disjoint_sets_is_empty() {
+        assertEquals(Set.of(),
+                     intersection(Set.of("a", "b"), Set.of("c", "d")));
+    }
+
+    @Test
+    public void intersection_with_empty_set_is_empty() {
+        assertEquals(Set.of(),
+                     intersection(Set.of("a", "b"), Set.of()));
+        assertEquals(Set.of(),
+                     intersection(Set.of(), Set.of("a")));
+        assertEquals(Set.of(),
+                     intersection(Set.of(), Set.of()));
+    }
+
+    @Test
+    public void intersection_of_identical_sets_is_that_set() {
+        final var set = Set.of("a", "b", "c");
+        assertEquals(set, intersection(set, set));
+    }
+
+    @Test
+    public void intersection_of_equal_sets_returns_common_elements() {
+        assertEquals(Set.of("a", "b"),
+                     intersection(Set.of("a", "b"), Set.of("a", "b")));
+    }
+
+    @Test
     public void union_is_identity_for_equal_iterables() {
         final var set1 = Set.of("a", "b", "c");
         assertEquals(set1, union(set1, set1));
@@ -45,4 +83,6 @@ public class ImmutableSetUtilsTest {
         assertEquals(makeSet3.get(), union(makeSet3.get(), makeSet3.get()));
     }
 
+    class A {}
+    class B extends A {}
 }

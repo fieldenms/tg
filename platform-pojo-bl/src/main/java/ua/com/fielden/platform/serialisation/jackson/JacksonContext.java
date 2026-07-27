@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
-import java.util.HashMap;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
+
+import java.util.HashMap;
+import java.util.Optional;
 
 /**
  * Serves as thread local storage for serializers. A serializer instance can be used by multiple threads simultaneously, so should be thread safe. This class provides scratch
@@ -17,6 +18,8 @@ public class JacksonContext {
      * Controls the ability to exclude {@link AbstractEntity#ID} and {@link AbstractEntity#VERSION} properties during serialisation.
      */
     private boolean excludeIdAndVersion;
+
+    private PropertyDeserialisationErrorHandler propDeserialisationErrorHandler;
 
     /**
      * Stores an object in thread local storage. This allows serializers to easily make repeated use of objects that are not thread safe.
@@ -89,4 +92,19 @@ public class JacksonContext {
     public boolean excludeIdAndVersion() {
         return excludeIdAndVersion;
     }
+
+    public JacksonContext setPropDeserialisationErrorHandler(final PropertyDeserialisationErrorHandler handler) {
+        this.propDeserialisationErrorHandler = handler;
+        return this;
+    }
+
+    public JacksonContext removePropDeserialisationErrorHandler() {
+        this.propDeserialisationErrorHandler = null;
+        return this;
+    }
+
+    public Optional<PropertyDeserialisationErrorHandler> getPropDeserialisationErrorHandler() {
+        return Optional.ofNullable(this.propDeserialisationErrorHandler);
+    }
+
 }

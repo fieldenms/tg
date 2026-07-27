@@ -9,13 +9,16 @@ import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.activatable.test_entities.*;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolderDao;
 import ua.com.fielden.platform.entity.functional.centre.ICentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.ISavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolderDao;
+import ua.com.fielden.platform.entity.validation.exists.test_entities.*;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessCo;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessDao;
 import ua.com.fielden.platform.ioc.BasicWebServerIocModule;
@@ -26,26 +29,28 @@ import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
+import ua.com.fielden.platform.security.provider.SecurityTestIocModule;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.test.entities.*;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.annotations.AppUri;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
-/**
- * Serve IoC module for platform related testing.
- *
- * @author TG Team
- *
- */
+import static java.lang.String.format;
+
+/// Serve IoC module for platform related testing.
+///
 public class PlatformTestServerIocModule extends BasicWebServerIocModule {
 
     private static final Logger LOGGER = LogManager.getLogger(PlatformTestServerIocModule.class);
+
+    private final Properties props;
 
     public PlatformTestServerIocModule(
             final IApplicationDomainProvider applicationDomainProvider,
@@ -53,6 +58,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
             final Properties props)
     {
         super(applicationDomainProvider, domainEntityTypes, props);
+        this.props = props;
     }
 
     @Override
@@ -66,8 +72,13 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(Ticker.class).to(TickerForSessionCache.class);
         bind(IDates.class).to(DatesForTesting.class);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
+        bind(IApplicationSettings.class).to(ApplicationSettingsForTesting.class);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
+
+        install(new SecurityTestIocModule());
+
+        bindConstant().annotatedWith(AppUri.class).to(format("https://%s:%s%s", getProps().get("web.domain"), getProps().get("port"), getProps().get("web.path")));
     }
 
     @Override
@@ -97,6 +108,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(ITgCategory.class).to(TgCategoryDao.class);
         bind(ITgCategoryAttachment.class).to(TgCategoryAttachmentDao.class);
         bind(ITgVehicle.class).to(TgVehicleDao.class);
+        bind(AuditedEntityCo.class).to(AuditedEntityDao.class);
         bind(TgReVehicleWithHighPriceCo.class).to(TgReVehicleWithHighPriceDao.class);
         bind(TeNamedValuesVectorCo.class).to(TeNamedValuesVectorDao.class);
         bind(TeProductPriceCo.class).to(TeProductPriceDao.class);
@@ -136,7 +148,9 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(TgEntityWithManyPropTypesCo.class).to(TgEntityWithManyPropTypesDao.class);
         bind(IEntityOne.class).to(EntityOneDao.class);
         bind(IEntityTwo.class).to(EntityTwoDao.class);
+        bind(EntityThreeCo.class).to(EntityThreeDao.class);
         bind(IUnionEntity.class).to(UnionEntityDao.class);
+        bind(TgNoopActionCo.class).to(TgNoopActionDao.class);
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
@@ -180,6 +194,26 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(TgInventoryBinCo.class).to(TgInventoryBinDao.class);
         bind(TgInventoryIssueCo.class).to(TgInventoryIssueDao.class);
 
+        bind(UnionEntityDetailsCo.class).to(UnionEntityDetailsDao.class);
+
+        bind(UnionCo.class).to(UnionDao.class);
+        bind(Member1Co.class).to(Member1Dao.class);
+        bind(MemberDetailsCo.class).to(MemberDetailsDao.class);
+        bind(Member2Co.class).to(Member2Dao.class);
+        bind(Member3Co.class).to(Member3Dao.class);
+        bind(Member4Co.class).to(Member4Dao.class);
+        bind(Member5Co.class).to(Member5Dao.class);
+        bind(ActivatableUnionOwnerCo.class).to(ActivatableUnionOwnerDao.class);
+        bind(UnionOwnerCo.class).to(UnionOwnerDao.class);
+
+        bind(TestExists_UnionCo.class).to(TestExists_UnionDao.class);
+        bind(TestExists_Member1Co.class).to(TestExists_Member1Dao.class);
+        bind(TestExists_Member2Co.class).to(TestExists_Member2Dao.class);
+        bind(TestExists_Member3Co.class).to(TestExists_Member3Dao.class);
+        bind(TestExists_Member4Co.class).to(TestExists_Member4Dao.class);
+        bind(TestExists_ActivatableUnionOwnerCo.class).to(TestExists_ActivatableUnionOwnerDao.class);
+        bind(TestExists_UnionOwnerCo.class).to(TestExists_UnionOwnerDao.class);
+
         // FIXME the following approach should have been the correct one for binding companion objects,
         //       however, not all test domain entities actually have companions, hence manual binding...
         //       this should really be corrected at some stage
@@ -196,7 +230,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         return CacheBuilder.newBuilder()
                 // all authenticators should be evicted from the cache in 2 minutes time after that have been
                 // put into the cache
-                .expireAfterWrite(2, TimeUnit.MINUTES)
+                .expireAfterWrite(Duration.ofMinutes(2))
                 // the ticker controls the eviction time
                 // the injected instance is initialised with IUniversalConstants.now() as its start time
                 .ticker(ticker)

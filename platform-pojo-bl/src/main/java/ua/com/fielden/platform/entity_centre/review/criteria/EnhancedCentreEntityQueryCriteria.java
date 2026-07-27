@@ -73,6 +73,16 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner;
     private Function<Consumer<ICentreDomainTreeManagerAndEnhancer>, ICentreDomainTreeManagerAndEnhancer> centreAdjuster; // returns applied fresh centre
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster;
+    /// Applies the supplied mutation to the `SAVED` surrogate centre.
+    /// Used by [#adjustCentreSilently(Consumer)] alongside [#adjustCentre(Consumer)].
+    /// [#adjustCentre(Consumer)] covers `FRESH` and `PREVIOUSLY_RUN`; together they mutate all three surrogates identically.
+    /// That combination keeps the change invisible to dirty-state tracking.
+    /// The indicator stays black and SAVE stays disabled (if it was).
+    /// Used for housekeeping mutations that should not be perceived as user edits.
+    /// Examples: dynamic-column eviction sweep and `lastSeen` bumping.
+    /// See `CriteriaResource.refreshAndEvictDynamicEntries` for the canonical caller.
+    ///
+    private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreSilentAdjuster;
     private Supplier<Optional<String>> shareErrorSupplier;
     private CentreContextHolder centreContextHolder;
     private DeviceProfile device;
@@ -125,6 +135,22 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public ICentreDomainTreeManagerAndEnhancer adjustCentre(final Consumer<ICentreDomainTreeManagerAndEnhancer> consumer) {
         return centreAdjuster.apply(consumer);
+    }
+
+    public void setCentreSilentAdjuster(final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreSilentAdjuster) {
+        this.centreSilentAdjuster = centreSilentAdjuster;
+    }
+
+    /// Applies `consumer` silently to all three surrogate centres.
+    /// Neither indicator nor the SAVE button picks it up.
+    /// See the [#centreSilentAdjuster] field doc for the intended use.
+    ///
+    /// Reuses [#adjustCentre(Consumer)] for the `FRESH` and `PREVIOUSLY_RUN` mutation.
+    /// The silent adjuster lambda only needs to cover `SAVED`.
+    ///
+    public void adjustCentreSilently(final Consumer<ICentreDomainTreeManagerAndEnhancer> consumer) {
+        adjustCentre(consumer);
+        centreSilentAdjuster.accept(consumer);
     }
 
     public void setSavedCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> savedCentreSupplier) {

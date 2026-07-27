@@ -1,10 +1,9 @@
 package ua.com.fielden.platform.eql.meta.query;
 
-import java.util.Objects;
-
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.eql.meta.CalcPropInfo;
 
-import javax.annotation.Nullable;
+import java.util.Objects;
 
 /**
  * A structure that represents resolution-related info for a query source item of type {@code T} within a query source.

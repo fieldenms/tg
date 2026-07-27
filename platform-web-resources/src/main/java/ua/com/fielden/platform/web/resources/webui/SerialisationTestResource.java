@@ -33,6 +33,7 @@ import java.util.*;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
@@ -93,7 +94,7 @@ public class SerialisationTestResource extends AbstractWebResource {
         final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities = new IdentityHashMap<>();
         if (entities1 == null) {
             if (entities2 == null) {
-                return new Result(null, "okay");
+                return Result.successful("okay");
             } else {
                 return Result.failure(format("entities1 [%s] does not equal to entities2 [%s].", entities1, entities2));
             }
@@ -119,7 +120,7 @@ public class SerialisationTestResource extends AbstractWebResource {
                             return deepEquals;
                         }
                     }
-                    return new Result(null, "okay");
+                    return Result.successful("okay");
                 }
             }
         }
@@ -464,7 +465,7 @@ public class SerialisationTestResource extends AbstractWebResource {
 
         entity.beginInitialising();
         entity.setKey("GENERATED+UNINSTRUMENTED");
-        entity.setDesc("GENERATED+UNINSTRUMENTED desc");
+        entity.set(DESC, "GENERATED+UNINSTRUMENTED desc");
         entity.endInitialising();
         
         return entity;

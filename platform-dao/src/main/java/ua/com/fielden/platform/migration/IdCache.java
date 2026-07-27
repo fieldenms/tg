@@ -1,69 +1,46 @@
 package ua.com.fielden.platform.migration;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
-public class IdCache {
-    private final Map<Class<?>, Map<Object, Long>> cache = new HashMap<>();
-    private final ICompanionObjectFinder coFinder;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 
-    public IdCache(final ICompanionObjectFinder coFinder) {
-        this.coFinder = coFinder;
+/// A cache for entities.
+///
+/// Each entity type is associated with a cache that has type `Map<Object, Long>`.
+///
+/// Each cache key (`Object`) is the value of an entity key.
+/// * For simple keys, the cache key is the value of property `key`.
+/// * For composite keys with a single member, the cache key is the value of that member.
+/// * For composite keys with multiple members, the cache key is a list of values for those members.
+///
+/// Each cache value (`Long`) is an entity ID.
+///
+final class IdCache {
+
+    private final Map<Class<?>, Map<Object, Long>> cache;
+
+    IdCache() {
+        cache = new HashMap<>();
     }
 
-    protected void registerCacheForType(final Class<? extends AbstractEntity<?>> entityType) {
+    public Optional<Map<Object, Long>> cacheFor(final Class<? extends AbstractEntity<?>> entityType) {
+        return Optional.ofNullable(cache.get(entityType));
+    }
+
+    public Map<Object, Long> cacheFor(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final Supplier<? extends Map<Object, Long>> cacheSupplier)
+    {
+        return cache.computeIfAbsent(entityType, $ -> cacheSupplier.get());
+    }
+
+    public void registerCacheForType(final Class<? extends AbstractEntity<?>> entityType) {
         if (!cache.containsKey(entityType)) {
-            cache.put(entityType, new HashMap<Object, Long>());
+            cache.put(entityType, new HashMap<>());
         }
     }
 
-    protected Map<Object, Long> getCacheForType(final Class<? extends AbstractEntity<?>> entityType) {
-        if (!cache.containsKey(entityType)) {
-            cache.put(entityType, retrieveData(entityType));
-        }
-
-        return cache.get(entityType);
-    }
-
-    private Object prepareValueForCache(final AbstractEntity<?> entity, final List<String> fields) {
-        if (fields.size() == 1) {
-            return entity.get(fields.get(0));
-        } else {
-            final List<Object> result = new ArrayList<>();
-            for (final String field : fields) {
-                result.add(entity.get(field));
-            }
-            return result;
-        }
-    }
-
-    private <ET extends AbstractEntity<?>> Map<Object, Long> retrieveData(final Class<ET> entityType) {
-        final IEntityDao<ET> co = coFinder.find(entityType);
-
-        final Map<Object, Long> result = new HashMap<>();
-        final List<ET> entities;
-        try {
-            entities = co.getAllEntities(from(select(entityType).model()).model());
-        } catch (final Exception ex) {
-            System.out.println("Exception in retrieveData(" + entityType.getName() + ")");
-            throw ex;
-        }
-
-        final List<String> keyFields = MigrationUtils.keyPaths(entityType);
-
-        for (final AbstractEntity<?> abstractEntity : entities) {
-            result.put(prepareValueForCache(abstractEntity, keyFields), abstractEntity.getId());
-        }
-
-        return result;
-    }
 }

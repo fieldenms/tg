@@ -1,19 +1,18 @@
 package ua.com.fielden.platform.web.sse;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-
 import org.apache.logging.log4j.Logger;
-
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import ua.com.fielden.platform.rx.IObservableKind;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.sse.exceptions.SseException;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
  * A base class for custom event sources that are subscribed to the specified data streams (aka observable) and emit respective values to the client.
@@ -91,28 +90,27 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
         return stream;
     }
 
-    /**
-     * A method for converting values of type <code>T</code> that are received from the data stream to a string representation suitable for
-     * the <code>data</code> field of server-side eventing.
-     * <p>
-     * Short values can be represented as a single string without new lines.
-     * Long values should be represented as a single string with new lines embedded in the text to indicate split points for composing data entries of the message to be pushed out.
-     *
-     * @see https://developer.mozilla.org/en-US/docs/Server-sent_events/Using_server-sent_events#Event_stream_format
-     *
-     * @param event
-     * @return
-     */
+    /// A method for converting values of type `T` that are received from the data stream to a string representation suitable for
+    /// the `data` field of server-side eventing.
+    ///
+    /// Short values can be represented as a single string without new lines.
+    /// Long values should be represented as a single string with new lines embedded in the text to indicate split points for composing data entries of the message to be pushed out.
+    ///
+    /// Refer to the [event stream format](https://developer.mozilla.org/en-US/docs/Server-sent_events/Using_server-sent_events#Event_stream_format) for more details.
+    ///
     protected abstract Map<String, Object> eventToData(final T event);
 
-    /**
-     * Unsubscribes from a stream of events this event source was observing.
-     */
+    /// Unsubscribes from a stream of events this event source was observing.
+    ///
     @Override
     public void disconnect() {
         logger.debug("Client subscription is being disconnected.");
         if (subscription != null) {
-            subscription.unsubscribe();
+            try {
+                subscription.unsubscribe();
+            } catch (final Exception ex) {
+               logger.warn("Error while disconnecting form SSE subscription.", ex);
+            }
         }
     }
 

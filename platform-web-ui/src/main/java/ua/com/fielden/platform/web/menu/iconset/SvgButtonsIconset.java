@@ -5,8 +5,7 @@ import static java.lang.String.format;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 import ua.com.fielden.platform.svg.combining.IronIconsetUtility;
 
@@ -19,7 +18,7 @@ public class SvgButtonsIconset {
                 "</svg>";
         for (int index = 1; index <= 9; index++) { 
             try (OutputStream outputStream = new FileOutputStream(format("src/main/resources/images/collapse-expand/number%s.svg", index))) {
-                outputStream.write(numberSvgTemplate.replace('@', (index + "").charAt(0)).getBytes(Charsets.UTF_8));
+                outputStream.write(numberSvgTemplate.replace('@', (index + "").charAt(0)).getBytes(StandardCharsets.UTF_8));
             }
         }
         

@@ -339,4 +339,20 @@ public class CollectionUtilTest {
         assertEquals(List.of("a", "b", "a", "b"), concatList(List.of("a"), linkedSetOf("b", "a"), List.of("b")));
     }
 
+    @Test
+    public void partitionBy_returns_a_pair_of_empty_lists_for_an_empty_collection() {
+        assertEquals(t2(List.of(), List.of()), partitionBy(List.of(), x -> true));
+        assertEquals(t2(List.of(), List.of()), partitionBy(List.of(), x -> false));
+        assertEquals(t2(List.of(), List.of()), partitionBy(Set.of(), x -> true));
+        assertEquals(t2(List.of(), List.of()), partitionBy(Set.of(), x -> false));
+    }
+
+    @Test
+    public void partitionBy_returns_a_tupple_where_first_element_contains_all_collection_elements_satisfying_predicate_and_second_element_contains_the_rest() {
+        assertEquals(t2(List.of(1), List.of()), partitionBy(List.of(1), x -> x > 0));
+        assertEquals(t2(List.of(1, 2, 3), List.of()), partitionBy(List.of(1, 2, 3), x -> x > 0));
+        assertEquals(t2(List.of(), List.of(0)), partitionBy(List.of(0), x -> x > 0));
+        assertEquals(t2(List.of(1, 2), List.of(-1, -2)), partitionBy(List.of(-1, 1, -2, 2), x -> x > 0));
+    }
+
 }

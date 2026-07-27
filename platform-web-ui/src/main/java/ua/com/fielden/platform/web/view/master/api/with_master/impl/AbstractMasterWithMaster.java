@@ -1,15 +1,6 @@
 package ua.com.fielden.platform.web.view.master.api.with_master.impl;
 
-import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
@@ -19,6 +10,14 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
 public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> implements IMaster<T> {
 
@@ -65,14 +64,18 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         "   if (_currBindingEntity !== null) {\n" +
                         "       return " + getAttributes(embededMasterType, "_currBindingEntity", shouldRefreshParentCentreAfterSave) +
                         "   };\n" +
-                        "}).bind(this);\n")
+                        "}).bind(this);\n" +
+                        getAdditionalReadyCallbackCode())
                 .replace("//@attached-callback",
-                          "this.canLeave = function () {"
+                          "this.canLeave = async function (leaveReason) {"
                         + "    const embeddedMaster = this.$.loader.loadedElement;\n"
                         + "    if (embeddedMaster && embeddedMaster.classList.contains('canLeave')) {\n"
-                        + "        return embeddedMaster.canLeave();\n"
+                        + "        await embeddedMaster.canLeave(leaveReason);\n"
                         + "    }\n"
-                        + "    return undefined;\n"
+                        + "    if (this._reflector().findTypeByName(this.entityType).isCustomisableCanLeave()) {\n"
+                        + "        return this.customCanLeave(leaveReason);\n"
+                        + "    }\n"
+                        + "    return true;\n"
                         + "}.bind(this);\n"
                         + "this.addEventListener('after-load', " + getAfterLoadListener() + ");\n")
                 .replace("@prefDim", "null")
@@ -90,6 +93,17 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
     protected List<String> getAdditionalImports() {
         return new ArrayList<>();
     };
+
+    /**
+     * Returns additional JS code to be appended to the `ready` callback of this master.
+     * Both `this` and `self` refer to the master element at that point.
+     *
+     * This method is invoked from the constructor.
+     * Overriding implementations must return a constant, and must not depend on subclass state.
+     */
+    protected String getAdditionalReadyCallbackCode() {
+        return "";
+    }
 
     /**
      * Returns the implementation for the after load listener of embedded master.

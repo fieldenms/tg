@@ -10,6 +10,7 @@
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+    <script src="/resources/test-configuration.js"></script>
 </head>
 
 <body>
@@ -350,6 +351,43 @@
             test('[t] to todays date with time set to start of the day', function(done) {
                 const todayDate = moment().startOf("day");
                 correctlyApproximatesFromLocal(done, 't', todayDate.format('DD/MM/YYYY HH:mm'), todayDate.utc().format('YYYY-MM-DD HH:mm'), todayDate.valueOf());
+            });
+        });
+
+        suite('@TimeOnly UTC representation for', function () {
+            // Worked before changes for issue #2737 -- time with millis renders via 'LTS' (HH:mm:ss.SSS).
+            test('[1473057204015] to [06:33:24.015]', function () {
+                assert.strictEqual(_millisDateRepresentation(1473057204015, 'UTC', 'TIME'), '06:33:24.015');
+            });
+            // Fixed in #2737 -- time with seconds but no millis renders via 'HH:mm:ss'.
+            test('[1473057204000] to [06:33:24]', function () {
+                assert.strictEqual(_millisDateRepresentation(1473057204000, 'UTC', 'TIME'), '06:33:24');
+            });
+            // Fixed in #2737 -- time with no seconds and no millis renders via 'LT' (HH:mm).
+            test('[1473057180000] to [06:33]', function () {
+                assert.strictEqual(_millisDateRepresentation(1473057180000, 'UTC', 'TIME'), '06:33');
+            });
+        });
+
+        suite('@TimeOnly LOCAL representation for', function () {
+            // The local (non-UTC) path was never affected by #2737 -- it formats the moment token directly, without the 'timeZoneFormats' lookup.
+            // These cases guard the shared 'timeFormat()' branch logic (millis / seconds / neither) against future regressions.
+            // The zone is pinned to 'Australia/Melbourne' (UTC+10, no DST on 2016-09-05) so the rendered local times are deterministic.
+            let guess;
+            suiteSetup(() => { guess = moment.tz.guess; moment.tz.guess = (force) => 'Australia/Melbourne'; moment.tz.setDefault('Australia/Melbourne'); });
+            suiteTeardown(() => { moment.tz.guess = guess; moment.tz.setDefault(); });
+
+            // Time with millis renders via 'LTS' (HH:mm:ss.SSS).
+            test('[1473057204015] to [16:33:24.015]', function () {
+                assert.strictEqual(_millisDateRepresentation(1473057204015, null, 'TIME'), '16:33:24.015');
+            });
+            // Time with seconds but no millis renders via the millis-stripped 'LTS' (HH:mm:ss).
+            test('[1473057204000] to [16:33:24]', function () {
+                assert.strictEqual(_millisDateRepresentation(1473057204000, null, 'TIME'), '16:33:24');
+            });
+            // Time with no seconds and no millis renders via 'LT' (HH:mm).
+            test('[1473057180000] to [16:33]', function () {
+                assert.strictEqual(_millisDateRepresentation(1473057180000, null, 'TIME'), '16:33');
             });
         });
     </script>

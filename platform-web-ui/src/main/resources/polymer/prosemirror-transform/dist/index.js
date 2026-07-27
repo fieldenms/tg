@@ -711,10 +711,11 @@ class ReplaceStep extends Step {
         return new ReplaceStep(this.from, this.from + this.slice.size, doc.slice(this.from, this.to));
     }
     map(mapping) {
-        let from = mapping.mapResult(this.from, 1), to = mapping.mapResult(this.to, -1);
+        let to = mapping.mapResult(this.to, -1);
+        let from = this.from == this.to && ReplaceStep.MAP_BIAS < 0 ? to : mapping.mapResult(this.from, 1);
         if (from.deletedAcross && to.deletedAcross)
             return null;
-        return new ReplaceStep(from.pos, Math.max(from.pos, to.pos), this.slice);
+        return new ReplaceStep(from.pos, Math.max(from.pos, to.pos), this.slice, this.structure);
     }
     merge(other) {
         if (!(other instanceof ReplaceStep) || other.structure || this.structure)
@@ -750,6 +751,15 @@ class ReplaceStep extends Step {
         return new ReplaceStep(json.from, json.to, Slice.fromJSON(schema, json.slice), !!json.structure);
     }
 }
+/**
+By default, for backwards compatibility, an inserting step
+mapped over an insertion at that same position fill move after
+the inserted content. In a collaborative editing situation, that
+can make redone insertions appear in unexpected places. You can
+set this to -1 to make such mapping keep the step before the
+insertion instead.
+*/
+ReplaceStep.MAP_BIAS = 1;
 Step.jsonID("replace", ReplaceStep);
 /**
 Replace a part of the document with a slice of content, but
@@ -982,13 +992,17 @@ can be lifted. Will not go across
 function liftTarget(range) {
     let parent = range.parent;
     let content = parent.content.cutByIndex(range.startIndex, range.endIndex);
-    for (let depth = range.depth;; --depth) {
+    for (let depth = range.depth, contentBefore = 0, contentAfter = 0;; --depth) {
         let node = range.$from.node(depth);
-        let index = range.$from.index(depth), endIndex = range.$to.indexAfter(depth);
+        let index = range.$from.index(depth) + contentBefore, endIndex = range.$to.indexAfter(depth) - contentAfter;
         if (depth < range.depth && node.canReplace(index, endIndex, content))
             return depth;
         if (depth == 0 || node.type.spec.isolating || !canCut(node, index, endIndex))
             break;
+        if (index)
+            contentBefore = 1;
+        if (endIndex < node.childCount)
+            contentAfter = 1;
     }
     return null;
 }
@@ -1609,7 +1623,7 @@ function replaceRange(tr, from, to, slice) {
     let $from = tr.doc.resolve(from), $to = tr.doc.resolve(to);
     if (fitsTrivially($from, $to, slice))
         return tr.step(new ReplaceStep(from, to, slice));
-    let targetDepths = coveredDepths($from, tr.doc.resolve(to));
+    let targetDepths = coveredDepths($from, $to);
     // Can't replace the whole document, so remove 0 if it's present
     if (targetDepths[targetDepths.length - 1] == 0)
         targetDepths.pop();
@@ -1702,6 +1716,26 @@ function replaceRangeWith(tr, from, to, node) {
 }
 function deleteRange(tr, from, to) {
     let $from = tr.doc.resolve(from), $to = tr.doc.resolve(to);
+    // When the deleted range spans from the start of one textblock to
+    // the start of another one, move out of the start of both blocks.
+    if ($from.parent.isTextblock && $to.parent.isTextblock && $from.start() != $to.start() &&
+        $from.parentOffset == 0 && $to.parentOffset == 0) {
+        let shared = $from.sharedDepth(to), isolated = false;
+        for (let d = $from.depth; d > shared; d--)
+            if ($from.node(d).type.spec.isolating)
+                isolated = true;
+        for (let d = $to.depth; d > shared; d--)
+            if ($to.node(d).type.spec.isolating)
+                isolated = true;
+        if (!isolated) {
+            for (let d = $from.depth; d > 0 && from == $from.start(d); d--)
+                from = $from.before(d);
+            for (let d = $to.depth; d > 0 && to == $to.start(d); d--)
+                to = $to.before(d);
+            $from = tr.doc.resolve(from);
+            $to = tr.doc.resolve(to);
+        }
+    }
     let covered = coveredDepths($from, $to);
     for (let i = 0; i < covered.length; i++) {
         let depth = covered[i], last = i == covered.length - 1;
@@ -1912,6 +1946,27 @@ class Transform {
         return this.steps.length > 0;
     }
     /**
+    Return a single range, in post-transform document positions,
+    that covers all content changed by this transform. Returns null
+    if no replacements are made. Note that this will ignore changes
+    that add/remove marks without replacing the underlying content.
+    */
+    changedRange() {
+        let from = 1e9, to = -1e9;
+        for (let i = 0; i < this.mapping.maps.length; i++) {
+            let map = this.mapping.maps[i];
+            if (i) {
+                from = map.map(from, 1);
+                to = map.map(to, -1);
+            }
+            map.forEach((_f, _t, fromB, toB) => {
+                from = Math.min(from, fromB);
+                to = Math.max(to, toB);
+            });
+        }
+        return from == 1e9 ? null : { from, to };
+    }
+    /**
     @internal
     */
     addStep(step, doc) {
@@ -2061,19 +2116,26 @@ class Transform {
         return this;
     }
     /**
-    Remove a mark (or a mark of the given type) from the node at
+    Remove a mark (or all marks of the given type) from the node at
     position `pos`.
     */
     removeNodeMark(pos, mark) {
-        if (!(mark instanceof Mark)) {
-            let node = this.doc.nodeAt(pos);
-            if (!node)
-                throw new RangeError("No node at position " + pos);
-            mark = mark.isInSet(node.marks);
-            if (!mark)
-                return this;
+        let node = this.doc.nodeAt(pos);
+        if (!node)
+            throw new RangeError("No node at position " + pos);
+        if (mark instanceof Mark) {
+            if (mark.isInSet(node.marks))
+                this.step(new RemoveNodeMarkStep(pos, mark));
         }
-        this.step(new RemoveNodeMarkStep(pos, mark));
+        else {
+            let set = node.marks, found, steps = [];
+            while (found = mark.isInSet(set)) {
+                steps.push(new RemoveNodeMarkStep(pos, found));
+                set = found.removeFromSet(set);
+            }
+            for (let i = steps.length - 1; i >= 0; i--)
+                this.step(steps[i]);
+        }
         return this;
     }
     /**

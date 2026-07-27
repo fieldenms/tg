@@ -1,5 +1,6 @@
 del "package-lock.json"
 npm install --no-bin-links
+del "node_modules\.package-lock.json"
 node remove-symlinks.js node_modules
 mkdir node_modules\lib
 xcopy lib node_modules\lib /E /I /Q

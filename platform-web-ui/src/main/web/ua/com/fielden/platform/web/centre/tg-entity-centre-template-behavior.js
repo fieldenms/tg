@@ -2,6 +2,8 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behavior.js';
 import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
+import { TgLongTapHandlerBehaviour } from '/resources/components/tg-long-tap-handler-behaviour.js';
+import { getFirstEntityType, getParentAnd, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEntityCentreTemplateBehaviorImpl = {
 
@@ -30,6 +32,28 @@ const TgEntityCentreTemplateBehaviorImpl = {
             type: Boolean,
             value : false
         },
+
+        /**
+         * The minimum interval (in seconds) between automatic, SSE-driven refreshes -- the "refresh governor".
+         * The value gets generated from Entity Centre DSL configuration (withMinAutoRefreshInterval); undefined if not configured.
+         */
+        minAutoRefreshInterval: Number,
+
+        /**
+         * The moment (epoch millis) when the last data load completed or a refresh prompt was skipped.
+         * Determines expiry of the quiet window, imposed by minAutoRefreshInterval.
+         */
+        _lastRefreshTimestamp: {
+            type: Number,
+            value: 0
+        },
+
+        /* A timer ID for a pending refresh, deferred until the minAutoRefreshInterval window expires. */
+        _timerIdForDeferredRefresh: {
+            type: Number,
+            value: null
+        },
+
         /**
          * Represents the action that allows to open entity master for specified entity type.
          */
@@ -71,11 +95,9 @@ const TgEntityCentreTemplateBehaviorImpl = {
 
             if (!this._pendingRefresh) {
                 this._pendingRefresh = true;
-                if (this._visible && !this._isEgiEditing) {
-                    this.showRefreshToast();
-                }
+                this._promptOrDeferPendingRefresh();
             }
-            
+
         }.bind(this);
 
         /////////////////TgDelayedActionBehavior related properties//////////////////////
@@ -92,9 +114,15 @@ const TgEntityCentreTemplateBehaviorImpl = {
             }
         }.bind(this);
 
-        this.cancelHandler = function () {
+        this.cancelHandler = function (skippedByUser) {
             this._pendingRefresh = false;
             this._entitiesToRefresh = [];
+            this._cancelDeferredRefreshToast();
+            if (skippedByUser === true && this._minAutoRefreshIntervalConfigured()) {
+                // Skipping snoozes: a fresh quiet window starts, so that a subsequent SSE event does not re-prompt almost immediately.
+                // A programmatic cancellation (no argument) does not snooze -- it accompanies a data load, whose completion restarts the window anyway.
+                this._lastRefreshTimestamp = Date.now();
+            }
         }.bind(this);
         /////////////////////////////////////////////////////////////////////////////////
     },
@@ -115,9 +143,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
 
             if (anyViewVisibility && !this._visible) {
                 this._visible = true;
-                if (this._pendingRefresh && !this._isEgiEditing) {
-                    this.showRefreshToast();
-                }
+                this._showRefreshToastIfApplicable();
             } else if (!anyViewVisibility && this._visible) {
                 this._visible = false;
                 if (this._pendingRefresh && !this._isEgiEditing) {
@@ -142,9 +168,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
         });
         this.addEventListener("tg-egi-finish-editing", (event) => {
             this._isEgiEditing = false;
-            if (this._pendingRefresh && this._visible) {
-                this.showRefreshToast();
-            }
+            this._showRefreshToastIfApplicable();
         });
         /////////////////////////////////////////////////////////////////////////////////
 
@@ -191,14 +215,106 @@ const TgEntityCentreTemplateBehaviorImpl = {
     _isRunningChanged: function (newValue, oldValue) {
         if (newValue) {
             this.disableView();
+            // A started data load (Run, paging, refresh) supersedes a pending SSE-driven auto-refresh, and also SSE events that are still awaiting their delayed handling:
+            // all of them arrived before the load started, so the load delivers data at least as fresh as those events indicated.
+            // The auto-refresh gets cancelled and only the next SSE event can instigate it again.
+            this.cancelDataHandling();
+            this._cancelDeferredRefreshToast();
+            if (this._pendingRefresh) {
+                this._pendingRefresh = false;
+                this._entitiesToRefresh = [];
+                this.hideRefreshToast();
+            }
         } else {
             this.enableView();
+            if (oldValue === true) {
+                // A completed data load restarts the quiet window, imposed by minAutoRefreshInterval.
+                // A failed load passes here too (isRunning simply mirrors the runner request lifecycle) -- deliberately so:
+                // distinguishing failures is not worth the complexity, and the next SSE event re-prompts, bounding any resultant staleness.
+                this._lastRefreshTimestamp = Date.now();
+                this._cancelDeferredRefreshToast();
+                // Prompt for a refresh that became pending while the load was in progress, if any.
+                // Such SSE events are not superseded by the load -- their changes may have been committed after the load's query got executed.
+                // They are, however, subject to the freshly restarted quiet window.
+                this._promptOrDeferPendingRefresh();
+            }
         }
     },
 
-    confirm: function (message, buttons) {
+    /**
+     * Indicates whether the minimum auto-refresh interval (the refresh governor) is configured for this centre.
+     */
+    _minAutoRefreshIntervalConfigured: function () {
+        return typeof this.minAutoRefreshInterval === 'number' && this.minAutoRefreshInterval > 0;
+    },
+
+    /**
+     * Returns the number of milliseconds until the quiet window, imposed by minAutoRefreshInterval, expires.
+     * Returns 0 if the interval is not configured or the window has already expired.
+     */
+    _millisUntilAutoRefreshWindowExpiry: function () {
+        if (this._minAutoRefreshIntervalConfigured()) {
+            return Math.max(0, this._lastRefreshTimestamp + this.minAutoRefreshInterval * 1000 - Date.now());
+        }
+        return 0;
+    },
+
+    /**
+     * Prompts for a pending refresh, deferring the prompt until the quiet window (imposed by minAutoRefreshInterval) expires.
+     * A no-op if there is no pending refresh.
+     */
+    _promptOrDeferPendingRefresh: function () {
+        if (this._pendingRefresh) {
+            const deferBy = this._millisUntilAutoRefreshWindowExpiry();
+            if (deferBy > 0) {
+                this._deferRefreshToast(deferBy);
+            } else {
+                this._showRefreshToastIfApplicable();
+            }
+        }
+    },
+
+    /**
+     * Shows the refresh toast for a pending refresh, unless the centre is invisible, EGI is being edited, a data load is in progress or the refresh is deferred by the refresh governor.
+     * Each condition gets re-evaluated when it changes: the centre becomes visible, EGI editing finishes, the load completes or the deferral timer fires.
+     */
+    _showRefreshToastIfApplicable: function () {
+        if (this._pendingRefresh && this._visible && !this._isEgiEditing && !this.isRunning && !this._timerIdForDeferredRefresh) {
+            this.showRefreshToast();
+        }
+    },
+
+    /**
+     * Defers showing of the refresh toast (and thus the pending refresh) until the quiet window expires.
+     */
+    _deferRefreshToast: function (millis) {
+        if (!this._timerIdForDeferredRefresh) {
+            this._timerIdForDeferredRefresh = setTimeout(() => {
+                this._timerIdForDeferredRefresh = null;
+                this._showRefreshToastIfApplicable();
+            }, millis);
+        }
+    },
+
+    /**
+     * Cancels a deferred refresh timer, if any.
+     */
+    _cancelDeferredRefreshToast: function () {
+        if (this._timerIdForDeferredRefresh) {
+            clearTimeout(this._timerIdForDeferredRefresh);
+            this._timerIdForDeferredRefresh = null;
+        }
+    },
+
+    closeConfirmationDialog: function () {
         if (!this.$.egi.isEditing()) {
-            return this._dom()._confirmationDialog().showConfirmationDialog(message, buttons);
+            return this._dom().closeConfirmationDialog();
+        }
+    },
+
+    confirm: function (message, buttons, options) {
+        if (!this.$.egi.isEditing()) {
+            return this._dom()._confirmationDialog().showConfirmationDialog(message, buttons, options);
         }
         return this._saveOrCancelPromise();
     },
@@ -227,17 +343,21 @@ const TgEntityCentreTemplateBehaviorImpl = {
             action.entityTypeTitle = action.entityTypeTitle || navigationType;
             action._oldRestoreActionState = action.restoreActionState;
             action.restoreActionState = function () {
-                action._oldRestoreActionState();
-                this.$.egi.editEntity(null);
                 const master = action._masterReferenceForTesting;
-                if (master && master.$.menu) {
-                    master.$.menu.maintainPreviouslyOpenedMenuItem = false;
+                const dialog = master && getParentAnd(master, e => e.matches('tg-custom-action-dialog'));
+                if (!dialog || !dialog.opened) {
+                    action._oldRestoreActionState();
+                    this.$.egi.editEntity(null);
+                    const master = action._masterReferenceForTesting;
+                    if (master && master.$.menu) {
+                        master.$.menu.maintainPreviouslyOpenedMenuItem = false;
+                    }
+                    this.removeEventListener('tg-entity-centre-refreshed', action._updateNavigationProps);
+                    delete action.count;
+                    delete action.entInd;
+                    delete action.hasPrev;
+                    delete action.hasNext;
                 }
-                this.removeEventListener('tg-entity-centre-refreshed', action._updateNavigationProps);
-                delete action.count;
-                delete action.entInd;
-                delete action.hasPrev;
-                delete action.hasNext;
             }.bind(this);
             action._propertyHasValue = function (entity, chosenProperty) {
                 return typeof entity.get(chosenProperty) !== 'undefined' && entity.get(chosenProperty) !== null;
@@ -272,30 +392,64 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 }
                 return this.$.egi.filteredEntities.length;
             }.bind(this);
-            action._setEntityAndReload = function (entity, spinnerInvoked) {
+            action._setEntityAndReload = function (entity, spinnerInvoked, masterChangedCallback) {
                 if (entity) {
                     this.$.egi.editEntity(entity);
                     const master = action._masterReferenceForTesting;
                     if (master) {
                         master.fire('tg-action-navigation-invoked', {spinner: spinnerInvoked});
-                        master.savingContext = action._createContextHolderForAction();
-                        master.retrieve(master.savingContext).then(function(ironRequest) {
-                            if (action.modifyFunctionalEntity) {
-                                action.modifyFunctionalEntity(master._currBindingEntity, master, action);
-                            }
+                        const entityTypeObj = getFirstEntityType(entity, action.chosenProperty);
+                        const masterInfo = entityTypeObj.entityMaster();
+                        if (action.dynamicAction && !masterInfo) {
+                            const masterErrorMessage = `Could not find master for entity type: ${entityTypeObj.notEnhancedFullClassName()}.`
+                            action.toaster && action.toaster.openToastForError('Entity Master Error', masterErrorMessage, true);
+                            action._fireNavigationChangeEvent(true);
+                            master.fire('tg-error-happened', masterErrorMessage);
+                        } else if (action.dynamicAction && masterInfo && masterInfo.key.toUpperCase() !== master.tagName) {
                             if (master.$.menu) {
-                                master.$.menu.currentSection()._showBlockingPane();
-                                master.$.menu.maintainPreviouslyOpenedMenuItem = true;
+                                master.$.menu.maintainPreviouslyOpenedMenuItem = false;
                             }
-                            master.addEventListener('data-loaded-and-focused', action._restoreNavigationButtonState);
-                            master.addEventListener('tg-master-navigation-error', action._restoreNavigationButtonState);
-                            master.save().then(function(value) {}, function (error) {
+                            action._setEntityMasterInfo(masterInfo);
+                            if (masterChangedCallback) {
+                                masterChangedCallback(newMaster => {
+                                    if (newMaster.$.menu) {
+                                        newMaster.$.menu.maintainPreviouslyOpenedMenuItem = true;
+                                    }
+                                }).then(() => {
+                                    action._fireNavigationChangeEvent(false);
+                                }).catch(e => {
+                                    action._fireNavigationChangeEvent(true);
+                                })
+                            }
+                        } else {
+                            // Entity navigation: store Entity Master focus on Ctrl+arrow action.
+                            // Also force loosing of the focus to as early as possible to before actual transition starts.
+                            master._storeFocus && master._storeFocus() && deepestActiveElement().blur();
+                            master.savingContext = action._createContextHolderForAction();
+                            master.retrieve(master.savingContext).then(function(ironRequest) {
+                                // Entity navigation: restore Entity Master focus on Ctrl+arrow action.
+                                // On async execution, `tg-editor._outFocus` has already been completed and we can restore focus back.
+                                master._restoreFocus && master._restoreFocus();
+                                if (action.modifyFunctionalEntity) {
+                                    action.modifyFunctionalEntity(master._currBindingEntity, master, action);
+                                }
+                                if (master.$.menu) {
+                                    if (master.$.menu.currentSection()) { //current menu item section can be null if previous entity wasn't retrieved or any other error happened 
+                                        master.$.menu.currentSection()._showBlockingPane();
+                                    }
+                                    master.$.menu.maintainPreviouslyOpenedMenuItem = true;
+                                }
+                                master.addEventListener('data-loaded-and-focused', action._restoreNavigationButtonState);
+                                master.addEventListener('tg-master-navigation-error', action._restoreNavigationButtonState);
+                                master.save().then(() => {
+                                    action._fireNavigationChangeEvent(false);
+                                }).catch(() => {
+                                    action._fireNavigationChangeEvent(true);
+                                });
+                            }.bind(this), function (error) {
                                 action._fireNavigationChangeEvent(true);
                             }.bind(this));
-                        }.bind(this), function (error) {
-                            this.$.egi.editEntity(entity);
-                            action._fireNavigationChangeEvent(true);
-                        }.bind(this));
+                        }
                     }
                 }
             }.bind(this);
@@ -305,27 +459,27 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 master.removeEventListener('data-loaded-and-focused', action._restoreNavigationButtonState);
                 master.removeEventListener('tg-master-navigation-error', action._restoreNavigationButtonState);
             }.bind(this);
-            action.firstEntry = function() {
-                action._setEntityAndReload(action._findFirstEntity(), 'firstEntity');
+            action.firstEntry = function(masterChangeCallback) {
+                action._setEntityAndReload(action._findFirstEntity(), 'firstEntity', masterChangeCallback);
             }.bind(this);
-            action.previousEntry = function() {
+            action.previousEntry = function(masterChangeCallback) {
                 const entityIndex = this.$.egi.findFilteredEntityIndex(action.currentEntity());
                 if (entityIndex >= 0) {
-                    action._setEntityAndReload(action._findPreviousEntityTo(entityIndex), 'prevEntity');
+                    action._setEntityAndReload(action._findPreviousEntityTo(entityIndex), 'prevEntity', masterChangeCallback);
                 } else {
-                    action._setEntityAndReload(action._findFirstEntity(), 'prevEntity');
+                    action._setEntityAndReload(action._findFirstEntity(), 'prevEntity', masterChangeCallback);
                 }
             }.bind(this);
-            action.nextEntry = function() {
+            action.nextEntry = function(masterChangeCallback) {
                 const entityIndex = this.$.egi.findFilteredEntityIndex(action.currentEntity());
                 if (entityIndex >= 0) {
-                    action._setEntityAndReload(action._findNextEntityTo(entityIndex), 'nextEntity');
+                    action._setEntityAndReload(action._findNextEntityTo(entityIndex), 'nextEntity', masterChangeCallback);
                 } else {
-                    action._setEntityAndReload(action._findFirstEntity(), 'nextEntity');
+                    action._setEntityAndReload(action._findFirstEntity(), 'nextEntity', masterChangeCallback);
                 }
             }.bind(this);
-            action.lastEntry = function() {
-                action._setEntityAndReload(action._findLastEntity(), 'lastEntity');
+            action.lastEntry = function(masterChangeCallback) {
+                action._setEntityAndReload(action._findLastEntity(), 'lastEntity', masterChangeCallback);
             }.bind(this);
             action.hasPreviousEntry = function() {
                 const thisPageInd = this.$.egi.findFilteredEntityIndex(action.currentEntity());
@@ -335,7 +489,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 }
                 return action._countActualEntities() > 0;
             }.bind(this);
-            action.hasNextEntry = function(entitiesCount, entityIndex) {
+            action.hasNextEntry = function () {
                 const thisPageInd = this.$.egi.findFilteredEntityIndex(action.currentEntity());
                 if (thisPageInd >= 0) {
                     const lastEntity = action._findLastEntity();
@@ -356,9 +510,8 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 action.entInd = thisPageInd >= 0 ? pageNumber * pageCapacity + thisPageInd : action.entInd;
                 action.hasPrev  = action.hasPreviousEntry();
                 action.hasNext = action.hasNextEntry();
-                const master = action._masterReferenceForTesting;
-                if (master) {
-                    master.fire('tg-action-navigation-changed', {
+                if (action._masterReferenceForTesting) {
+                    action._masterReferenceForTesting.fire('tg-action-navigation-changed', {
                         hasPrev: action.hasPrev,
                         hasNext: action.hasNext,
                         count: action.count,
@@ -382,5 +535,6 @@ const TgEntityCentreTemplateBehaviorImpl = {
 export const TgEntityCentreTemplateBehavior = [
     TgEntityCentreBehavior,
     TgViewWithHelpBehavior,
+    TgLongTapHandlerBehaviour,
     TgEntityCentreTemplateBehaviorImpl
 ];

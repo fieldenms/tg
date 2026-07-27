@@ -1,16 +1,19 @@
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 @DenyIntrospection
 @CompanionObject(IUnionEntity.class)
 public class UnionEntity extends AbstractUnionEntity {
+
+    public enum Property implements IConvertableToPath {
+        propertyOne, propertyTwo;
+
+        @Override public String toPath() { return name(); }
+    }
 
     @Title(value = "Prop One", desc = "Desc")
     @IsProperty
@@ -20,6 +23,7 @@ public class UnionEntity extends AbstractUnionEntity {
     @Title(value = "Prop Two", desc = "Desc")
     @IsProperty
     @MapTo
+    @SkipEntityExistsValidation(skipNew = true)
     private EntityTwo propertyTwo;
 
     public EntityOne getPropertyOne() {

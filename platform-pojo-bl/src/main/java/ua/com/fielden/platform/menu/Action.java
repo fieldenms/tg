@@ -1,12 +1,7 @@
 package ua.com.fielden.platform.menu;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 
 /**
  * Entity that represents the action configuration that will be sent with main menu configuration.
@@ -298,4 +293,11 @@ public class Action extends AbstractEntity<String> {
     public String getUiRole() {
         return uiRole;
     }
+
+    @Override
+    @Observable
+    public Action setDesc(String desc) {
+        return super.setDesc(desc);
+    }
+
 }

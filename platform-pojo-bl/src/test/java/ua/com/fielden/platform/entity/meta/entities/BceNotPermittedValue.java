@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.entity.meta.entities;
 
-import java.lang.annotation.Annotation;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
+
+import java.lang.annotation.Annotation;
+import java.util.Set;
+
+import static ua.com.fielden.platform.error.Result.failure;
 
 public class BceNotPermittedValue implements IBeforeChangeEventHandler<String> {
     private String notPermittedValue = "failure";
@@ -13,7 +15,7 @@ public class BceNotPermittedValue implements IBeforeChangeEventHandler<String> {
     @Override
     public Result handle(final MetaProperty<String> property, final String newValue, final Set<Annotation> mutatorAnnotations) {
         if (notPermittedValue.equalsIgnoreCase(newValue)) {
-            return new Result(newValue, new IllegalArgumentException("The value is not permitted"));
+            return failure("The value is not permitted");
         }
         return Result.successful(newValue);
     }

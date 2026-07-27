@@ -1,13 +1,12 @@
 package ua.com.fielden.platform.processors.utils;
 
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 
-import javax.annotation.Nullable;
 import javax.lang.model.type.*;
 import javax.lang.model.util.TypeKindVisitor14;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.classForPrimitiveType;

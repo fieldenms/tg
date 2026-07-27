@@ -39,7 +39,7 @@ public abstract class AbstractFunctionalEntityToOpenCompoundMaster<K extends Abs
 
     @IsProperty(Object.class)
     @Title("Entity Presence")
-    private Map<String, Integer> entityPresence = new HashMap<>();
+    private final Map<String, Integer> entityPresence = new HashMap<>();
 
     @IsProperty
     @Title("Is Calculated?")

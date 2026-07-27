@@ -15,7 +15,7 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 const template = html`
-    <tg-paper-toast id="toast" text="[[_text]]" on-tap="_showMoreIfPossible" allow-click-through always-on-top duration="0">
+    <tg-paper-toast id="toast" text="[[_text]]" _has-more="[[_hasMore]]" on-tap="_showMoreIfPossible" allow-click-through always-on-top duration="0">
         <!-- TODO responsive-width="250px" -->
         <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
         <div id='btnMore' hidden$="[[_skipShowMore(_showProgress, _hasMore)]]" class="toast-btn" on-tap="_showMessageDlg">MORE</div>
@@ -54,6 +54,9 @@ Polymer({
             type: Boolean
         },
 
+        /**
+         * Indicates whether the toast has MORE button to show a dialog with expanded message.
+         */
         hasMore: {
             type: Boolean
         },
@@ -83,6 +86,10 @@ Polymer({
             type: Boolean
         },
 
+        /**
+         * Indicates whether the toast has MORE button to show a dialog with expanded message.
+         * This is already a committed value, actually used in UI ('hasMore' is only an intention, that may be discarded).
+         */
         _hasMore: {
             type: Boolean,
             observer: '_hasMoreChanged'
@@ -190,6 +197,11 @@ Polymer({
             this.getToastContainer().prepend(this.$.toast);
             this._showNewToast();
         } else if (previousToast.error === true && previousToast.opened && this.isCritical === false) { // discard new toast if existing toast is critical and new one is not; however if new one is critical -- do not discard it -- show overridden information
+            console.warn('    toast show: DISCARDED: text = ', this.text + ', critical = ' + this.isCritical);
+        }
+        // Discard new toast if existing toast is with MORE and new one is not.
+        // However if new one is with MORE -- do not discard it -- show overridden information.
+        else if (previousToast.error === false && previousToast.opened && this.isCritical === false && previousToast._hasMore && !this.hasMore) {
             console.warn('    toast show: DISCARDED: text = ', this.text + ', critical = ' + this.isCritical);
         } else {
             // '__dataHost' is used to detemine 'tg-toast' instance from 'previousToast' found on body (parent of 'previousToast' is body, that is why there is a need to use other accessing method).

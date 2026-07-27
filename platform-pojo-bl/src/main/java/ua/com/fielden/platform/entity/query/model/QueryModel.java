@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.entity.query.model;
 
+import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
-import ua.com.fielden.platform.utils.ToString;
 import ua.com.fielden.platform.utils.ToString.IFormat;
 import ua.com.fielden.platform.utils.ToString.IFormattable;
 
+import java.util.List;
 import java.util.Objects;
 
 import static java.lang.String.format;
@@ -17,7 +17,7 @@ public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractMo
     private final boolean yieldAll;
     private boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
 
-    public QueryModel(final ListTokenSource tokens, final Class<T> resultType, final boolean yieldAll) {
+    public QueryModel(final List<? extends Token> tokens, final Class<T> resultType, final boolean yieldAll) {
         super(tokens);
         this.resultType = resultType;
         this.yieldAll = yieldAll;

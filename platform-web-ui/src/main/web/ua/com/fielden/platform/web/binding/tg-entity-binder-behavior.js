@@ -1,7 +1,8 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
-import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
+import { processResponseErrorEvent } from '/resources/reflection/tg-ajax-utils.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
-import { resultMessages, openLink } from '/resources/reflection/tg-polymer-utils.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { checkLinkAndOpen, isSupportedLink } from '/resources/components/tg-link-opener.js';
 
 export const TgEntityBinderBehavior = {
 
@@ -306,7 +307,7 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
-         * Promise that starts on validate() call and fullfils iff this validation attempt gets successfully resolved.
+         * Promise that starts on validate() call and fulfils iff this validation attempt gets successfully resolved.
          * 
          * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
          * However, 'lastValidationAttemptPromise' property gets replaced in this case.
@@ -415,70 +416,73 @@ export const TgEntityBinderBehavior = {
     /* Returns a function that accepts an instance of Attachment to start the download of the associated file. The passed in attachment must not be null.*/
     mkDownloadAttachmentFunction: function () {
         return attachment => {
-            if (attachment.isPersisted()) {
-                const openAsHyperLink = attachment.title.toLowerCase().startsWith('https://') ||
-                                        attachment.title.toLowerCase().startsWith('http://') ||
-                                        attachment.title.toLowerCase().startsWith('ftp://') ||
-                                        attachment.title.toLowerCase().startsWith('ftps://') ||
-                                        attachment.title.toLowerCase().startsWith('mailto:');
-                if (openAsHyperLink === true) {
-                    openLink(attachment.title);
-                } else {
-                    const self = this;
-                    const url = '/download-attachment/' + attachment.id + '/' + attachment.sha1;
-                    // AJAX approach to the file download
-                    const xhr = new XMLHttpRequest();
-                    xhr.open("GET", url, true);
-                    xhr.responseType = 'blob';
-                    const tzHeader = _timeZoneHeader();
-                    for (const headerName in tzHeader) {
-                        xhr.setRequestHeader(headerName, tzHeader[headerName]);
-                    }
-                    xhr.onload = function (e) {
-                        if (xhr.status === 200) {
-                            console.log('File received', xhr.getResponseHeader('Content-Disposition'));
-                            const bySemicolon = xhr.getResponseHeader('Content-Disposition').split(';');
-                            const filename = bySemicolon.filter(part => part.includes('filename=')).map(part => part.split('=')[1])[0];
-                            if (filename) {
-                                // create a Blob object from the response and a URL for it
-                                const blob = new Blob([xhr.response]);
-                                const blobUrl = window.URL.createObjectURL(blob);
-                                // the blob URL can be used for the <a> element for the user to download/open the file
-                                const a = document.createElement("a");
-                                a.href = blobUrl;
-                                // let's perform decoding, followed by removal of leading and trailing double quotes if present
-                                // browsers replace double quotes with _ automatically, which may corrupt the file extension
-                                let trimmedFileName = decodeURIComponent(filename);
-                                if (trimmedFileName.startsWith('"')) {
-                                    trimmedFileName = trimmedFileName.substring(1);
-                                }
-                                if (trimmedFileName.endsWith('"')) {
-                                    trimmedFileName = trimmedFileName.substring(0, trimmedFileName.length - 1);
-                                }
-                                a.download = trimmedFileName;
-                                a.click();
-                                // release the reference to the file by revoking the Object URL
-                                window.URL.revokeObjectURL(blobUrl);
-                            }
-                        } else {
-                            console.error('Error occurred when trying to download the attachment.', 'Error code:', xhr.status);
-                            const reader = new FileReader();
-                            reader.onload = function () {
-                                const resultAsObj = JSON.parse(reader.result);
-                                const result = self._serialiser().deserialise(resultAsObj);
-                                self._openToastForErrorResult(result, true);
-                            }
-                            reader.readAsText(xhr.response);
+            return new Promise((resolve, reject) => {
+                if (attachment.isPersisted()) {
+                    if (isSupportedLink(attachment.title) === true) {
+                        checkLinkAndOpen(attachment.title);
+                        resolve(attachment.title);
+                    } else {
+                        const self = this;
+                        const url = '/download-attachment/' + attachment.id + '/' + attachment.sha1;
+                        // AJAX approach to the file download
+                        const xhr = new XMLHttpRequest();
+                        xhr.open("GET", url, true);
+                        xhr.responseType = 'blob';
+                        const tzHeader = _timeZoneHeader();
+                        for (const headerName in tzHeader) {
+                            xhr.setRequestHeader(headerName, tzHeader[headerName]);
                         }
-                    }.bind(self);
-                    xhr.onerror = function (e) {
-                        const msg = "Unknown error occurred when sending request to download the attachment.";
-                        console.error(msg, e);
-                        self._openToastForError(msg, msg + ' Request status: ' + xhr.status, true);
-                    }.bind(self);
-                    xhr.send();
+                        xhr.onload = function (e) {
+                            if (xhr.status === 200) {
+                                console.log('File received', xhr.getResponseHeader('Content-Disposition'));
+                                const bySemicolon = xhr.getResponseHeader('Content-Disposition').split(';');
+                                const filename = bySemicolon.filter(part => part.includes('filename=')).map(part => part.split('=')[1])[0];
+                                if (filename) {
+                                    // create a Blob object from the response and a URL for it
+                                    const blob = new Blob([xhr.response]);
+                                    const blobUrl = window.URL.createObjectURL(blob);
+                                    // the blob URL can be used for the <a> element for the user to download/open the file
+                                    const a = document.createElement("a");
+                                    a.href = blobUrl;
+                                    // let's perform decoding, followed by removal of leading and trailing double quotes if present
+                                    // browsers replace double quotes with _ automatically, which may corrupt the file extension
+                                    let trimmedFileName = decodeURIComponent(filename);
+                                    if (trimmedFileName.startsWith('"')) {
+                                        trimmedFileName = trimmedFileName.substring(1);
+                                    }
+                                    if (trimmedFileName.endsWith('"')) {
+                                        trimmedFileName = trimmedFileName.substring(0, trimmedFileName.length - 1);
+                                    }
+                                    a.download = trimmedFileName;
+                                    a.click();
+                                    // release the reference to the file by revoking the Object URL
+                                    window.URL.revokeObjectURL(blobUrl);
+                                    resolve(filename);
+                                } else {
+                                    reject("The response does not contain the filename to download");
+                                }
+                            } else {
+                                console.error('Error occurred when trying to download the attachment.', 'Error code:', xhr.status);
+                                const reader = new FileReader();
+                                reader.onload = function () {
+                                    const resultAsObj = JSON.parse(reader.result);
+                                    const result = self._serialiser().deserialise(resultAsObj);
+                                    self._openToastForErrorResult(result, true);
+                                    reject(result);
+                                }
+                                reader.readAsText(xhr.response);
+                            }
+                        }.bind(self);
+                        xhr.onerror = function (e) {
+                            const msg = "Unknown error occurred when sending request to download the attachment.";
+                            console.error(msg, e);
+                            self._openToastForError(msg, msg + ' Request status: ' + xhr.status, true);
+                            reject(msg);
+                        }.bind(self);
+                        xhr.send();
+                    }
                 }
-            }
+            });
         }
     },
 
@@ -558,12 +562,12 @@ export const TgEntityBinderBehavior = {
         }).bind(self);
 
         self._processError = (function (e, name, customErrorHandlerFor) {
-            processResponseError(e, this._reflector(), this._serialiser(), customErrorHandlerFor, this.toaster);
+            processResponseErrorEvent(e, this._reflector(), this._serialiser(), customErrorHandlerFor, this.toaster);
         }).bind(self);
 
         // callbacks, that will be bound by editor child elements:
         self.validate = (function () {
-            this.lastValidationAttemptPromise =  new Promise((resolve, reject) => {
+            this.lastValidationAttemptPromise = new Promise((resolve, reject) => {
                 const slf = this;
                 slf._validationCounter += 1;
                 console.log('validate initiated (', slf._validationCounter, ')');
@@ -585,8 +589,25 @@ export const TgEntityBinderBehavior = {
                     // IMPORTANT: no need to check whether the _hasModified(holder) === true -- because the error recovery should happen!
                     // (if the entity was not modified -- _validate(holder) will start the error recovery process)
                     slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
-                    slf._validationPromise.then(res => resolve(res)).catch(e => {}); // _validationPromise can be aborted (see abortValidationIfAny) and this is okay; catch handler is used to prevent 'Uncaught (in promise)' errors
+                    // '_validationPromise' can be aborted (see 'abortValidationIfAny') and this is okay.
+                    // The outer promise must resolve if '_validationPromise' resolves.
+                    // But we should also reject the outer promise on '_validationPromise' rejection.
+                    // Otherwise we will end-up with endless 'lastValidationAttemptPromise'.
+                    // And this will disrupt its usage after erroneous validation: copy / edit entity editor title actions will hang.
+                    // The same will happen for other actions, like criteria SAVE (see 'lastValidationAttemptPromise' usage).
+                    // So, resolve(slf._validationPromise) call will ensure proper resolve / reject for outer promise.
+                    resolve(slf._validationPromise);
                 }, 50);
+            }).catch(error => {
+                // One of the reasons for catch handler is to prevent 'Uncaught (in promise)' errors.
+                if (error.error && error.error.message && 'Request aborted.' === error.error.message) {
+                    // Skip this error from <iron-request>.
+                    // This means that 'lastValidationAttemptPromise' promise will be fulfilled.
+                } else {
+                    console.error('Error in lastValidationAttemptPromise: ', error);
+                    // Ensure 'lastValidationAttemptPromise' rejection on error.
+                    throw error;
+                }
             });
         }).bind(self);
 
@@ -896,10 +917,14 @@ export const TgEntityBinderBehavior = {
             modPropHolder['version'] = bindingEntity['version'];
             modPropHolder['@@touchedProps'] = bindingEntity['@@touchedProps'].names.slice(); // need to perform array copy because bindingEntity['@@touchedProps'].names is mutable array (see tg-reflector.setAndRegisterPropertyTouch/tg_convertPropertyValue for more details of how it can be mutated)
             
-            // function that converts arrays of entities to array of strings or otherwise return the same (or equal) value;
-            // this is needed to provide modifHolder with flatten 'val' and 'origVal' arrays that do not contain fully-fledged entities but rather string representations of those;
-            // this is because modifHolder deserialises as simple LinkedHashMap on server and inner values will not be deserialised as entities but rather as simple Java bean objects;
-            // also, we do not support conversion of array of entities on the server side -- such properties are immutable from client-side editor perspective (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions)
+            // Function that converts an array of entities to an array of strings, and returns the same (or equal) value otherwise.
+            // This is needed to provide `modifHolder` with flattened `val` and `origVal` arrays that do not contain
+            // fully-fledged entities, but rather their string representations.
+            // This is because `modifHolder` deserialises as a simple Map on the server, and inner values will not be
+            // deserialised as entities, but rather as simple Java bean objects.
+            // Also, we do support limited conversion of arrays of entities on the server (only for conflicting warning).
+            // Such properties are immutable from client-side editor perspective
+            // (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions).
             const convert = value => Array.isArray(value) ? value.map(el => self._reflector().tg_convert(el)) : value;
             
             bindingEntity.traverseProperties(function (propertyName) {
@@ -1114,6 +1139,7 @@ export const TgEntityBinderBehavior = {
             'pageCapacity', // export actions ('mime', 'fileName', 'data' props are not needed because post action success uses fully-fledged version of entity)
             'chosenIds', 'addedIds', 'removedIds', 'sortingVals', // collectional modification actions
             'visibleMenuItems', 'invisibleMenuItems', // menu visibility action (MenuSaveAction)
+            'leaveReason', //related to customisable canLeave
             'skipUi' // specialised property to control functional entity master appearance
         ].indexOf(propertyName) !== -1;
     },

@@ -1,62 +1,47 @@
 package ua.com.fielden.platform.eql.meta;
 
 import com.google.common.collect.Iterators;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.eql.dbschema.PropertyInlinerImpl;
-import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.meta.PropertyMetadataUtils;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
 
-import javax.annotation.Nullable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
-import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
-import static ua.com.fielden.platform.utils.EntityUtils.entityTypeHierarchy;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
-/**
- * Performs instant persistence of the Domain Metadata Model entities, generated for an application domain.
- *
- * @author TG Team
- *
- */
+/// Performs instant persistence of the Domain Metadata Model entities, generated for an application domain.
+///
 // TODO make this class injectable and replace static with instance methods (a breaking change)
 public class PersistDomainMetadataModel {
+
     final static String CRITERION = "[selection criterion]";
     final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_(_ID, KEY_, DESC_, DBTABLE_, ENTITYTYPEDESC_, ENTITY_, PROPSCOUNT_, _VERSION) VALUES(?, ?, ?, ?, ?, ?, ?, ?);";
     final static String DOMAINPROPERTY_INSERT_STMT = "INSERT INTO DOMAINPROPERTY_(_ID, NAME_, TITLE_, DESC_, HOLDER__DOMAINTYPE, HOLDER__DOMAINPROPERTY, DOMAINTYPE_, KEYINDEX_, REQUIRED_, DBCOLUMN_, POSITION_, _VERSION) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     final static String EXISTING_DATA_DELETE_STMT = "DELETE FROM DOMAINPROPERTY_; DELETE FROM DOMAINTYPE_;";
 
-    private static final Logger LOGGER = LogManager.getLogger(PersistDomainMetadataModel.class);
+    private static final Logger LOGGER = getLogger();
 
-    /**
-     * Synchronises persistent model of Domain Explorer entities with an actual application domain.
-     *
-     * @param entityTypes - domain entities to be included into metadata model entities data.
-     */
+    /// Generates and persists data for the Domain Explorer.
+    ///
+    /// @param entityTypes entity types to generate data for (typically, a list of all registered entity types).
+    ///
     public static void persist(
             final List<Class<? extends AbstractEntity<?>>> entityTypes,
             final IDomainMetadata domainMetadata,
-            final TransactionalExecution trEx) {
+            final TransactionalExecution trEx)
+    {
         LOGGER.info("Starting to save the domain metadata...");
         try {
             LOGGER.info("Removing old domain metadata records...");

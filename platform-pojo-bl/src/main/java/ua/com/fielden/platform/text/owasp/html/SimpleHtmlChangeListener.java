@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.text.owasp.html;
 
+import jakarta.annotation.Nullable;
 import org.owasp.html.HtmlChangeListener;
 import org.owasp.html.PolicyFactory;
-
-import javax.annotation.Nullable;
 
 /**
  * Base class for {@link HtmlChangeListener}s that require no context.

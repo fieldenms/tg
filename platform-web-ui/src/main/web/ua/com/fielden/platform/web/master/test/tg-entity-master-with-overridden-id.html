@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>entity-master retrieval tests for entity with @IsProperty on id (issue #2726)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+    <script src="/resources/test-configuration.js"></script>
+</head>
+
+<body>
+    <test-fixture id="MasterFixture">
+        <template>
+               <tg-TgEntityWithIsPropertyOverriddenId-master
+                id="master"
+                entity-type="ua.com.fielden.platform.sample.domain.TgEntityWithIsPropertyOverriddenId"
+                entity-id="new"
+                current-state="EDIT">
+            </tg-TgEntityWithIsPropertyOverriddenId-master>
+        </template>
+    </test-fixture>
+
+    <script type="module">
+
+        import '/master_ui/ua.com.fielden.platform.sample.domain.TgEntityWithIsPropertyOverriddenId';
+
+        suite('retrieval', function() {
+            let master;
+
+            setup(function() {
+                master = fixture('MasterFixture');
+            });
+
+            test('works for new entity', function(done) {
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    assert.strictEqual(entity.type().fullClassName(), 'ua.com.fielden.platform.sample.domain.TgEntityWithIsPropertyOverriddenId', 'The type of entity is not correct.');
+                    assert.strictEqual(entity.get('id'), null, 'The id of new entity should be null.');
+                    assert.strictEqual(entity.version, 0, 'The version of new entity should be 0.');
+                    assert.strictEqual(entity.get('key'), null, 'The key of new entity should be null.');
+
+                    done();
+                };
+
+                master.retrieve();
+            });
+
+            test('works for persisted entity (id populated correctly even though it is not exposed by the master)', function(done) {
+                // Identifier of the only persisted instance of this entity, populated last by PopulateDb (key `OID_KEY1`).
+                master.entityId = '147';
+
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    assert.strictEqual(entity.type().fullClassName(), 'ua.com.fielden.platform.sample.domain.TgEntityWithIsPropertyOverriddenId', 'The type of entity is not correct.');
+                    // The crux of issue #2726: `id` is annotated with `@IsProperty` on this entity,
+                    // and Hibernate-driven retrieval must still populate it with the persisted value.
+                    assert.strictEqual(entity.get('id'), 147, 'The id of the persisted entity should equal the one assigned by PopulateDb.');
+                    assert.strictEqual(entity.version, 0, 'The version of the persisted entity should be 0.');
+                    assert.strictEqual(entity.get('key'), 'OID_KEY1', 'The key of the persisted entity is not correct.');
+
+                    // Binding values match.
+                    assert.strictEqual(bindingEntity.get('key'), 'OID_KEY1', 'Binding `key` should match the persisted value.');
+
+                    done();
+                };
+
+                master.retrieve();
+            });
+        });
+    </script>
+</body>
+
+</html>

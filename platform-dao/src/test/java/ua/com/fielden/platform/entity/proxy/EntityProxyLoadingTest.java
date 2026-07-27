@@ -1,20 +1,6 @@
 package ua.com.fielden.platform.entity.proxy;
 
-import static javassist.util.proxy.ProxyFactory.isProxyClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
-import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
-import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
-
-import java.math.BigDecimal;
-import java.util.stream.Stream;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -28,6 +14,15 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
 
+import java.math.BigDecimal;
+import java.util.stream.Stream;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isLoadedByHibernate;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
+
 public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
     private final ITgBogie coBogie = co(TgBogie.class);
@@ -35,7 +30,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
     private final ITgWagon coWagon = co(TgWagon.class);
 
     private static void shouldNotBeProxy(Class<? extends AbstractEntity<?>> entityClass) {
-        assertFalse("Should not be proxy", isProxyClass(entityClass));
+        assertFalse("Should not be proxy", isLoadedByHibernate(entityClass));
     }
 
     private static void shouldBeProxy(final AbstractEntity<?> entity, final String propName) {
@@ -223,7 +218,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void properties_with_id_only_proxy_values_cannot_be_updated_with_non_null_values() {
+    public void properties_with_id_only_proxy_values_can_be_updated_with_non_null_values() {
         final ITgVehicle coVehicle = co$(TgVehicle.class);
         final TgVehicle vehicle = coVehicle.findByKey("CAR2");
 
@@ -237,9 +232,8 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         final TgOrgUnit5 station51 = co(TgOrgUnit5.class).getEntity(from(query).with(fetchAll(TgOrgUnit5.class)).model());
 
         final Either<Exception, TgVehicle> setStationResult = Try(() -> vehicle.setStation(station51));
-        assertTrue(setStationResult instanceof Left);
-        final Left<Exception, TgVehicle> setError = (Left<Exception, TgVehicle>) setStationResult;
-        assertTrue(setError.value() instanceof StrictProxyException);
+        assertTrue(setStationResult.isRight());
+        assertEquals(station51, setStationResult.asRight().value().getStation());
     }
 
     @Test
@@ -366,6 +360,29 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         assertFalse("sub-sub-properties of null are not proxied", isPropertyProxied(vehicle, "replacedBy.make.model"));
     }
 
+    @Test
+    public void isPropertyProxied_sub_props_of_not_null_components_are_not_proxied() {
+        final var car1 = coVehicle.findByKeyAndFetch(fetch(TgVehicle.class).with("price"), "CAR1");
+        assertNotNull(car1.getPrice());
+        shouldNotBeProxy(car1, "price.amount");
+
+        final var car2 = coVehicle.findByKeyAndFetch(fetch(TgVehicle.class).with("replacedBy", fetch(TgVehicle.class).with("price")), "CAR2");
+        assertNotNull(car2.getPrice());
+        shouldNotBeProxy(car2, "replacedBy.price.amount");
+    }
+
+    @Test
+    public void isPropertyProxied_sub_props_of_null_components_are_not_proxied() {
+        final var car3 = coVehicle.findByKeyAndFetch(fetch(TgVehicle.class).with("price"), "CAR3");
+        assertNull(car3.getPrice());
+        shouldNotBeProxy(car3, "price.amount");
+
+        final var car4 = coVehicle.findByKeyAndFetch(fetch(TgVehicle.class).with("replacedBy", fetch(TgVehicle.class).with("price")), "CAR4");
+        assertNotNull(car4.getReplacedBy());
+        assertNull(car4.getReplacedBy().getPrice());
+        shouldNotBeProxy(car4, "replacedBy.price.amount");
+    }
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
@@ -438,6 +455,8 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
         final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").setInitDate(date("2001-01-01 00:00:00")).setModel(m318).setPrice(new Money("20")).setPurchasePrice(new Money("10")).setActive(true).setLeased(false));
         final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")).setStation(orgUnit5).setReplacedBy(car1));
+        final var car3 = save(new_(TgVehicle.class, "CAR3", "CAR3 DESC").setModel(m316).setActive(true));
+        final var car4 = save(new_(TgVehicle.class, "CAR4", "CAR4 DESC").setReplacedBy(car3).setModel(m316).setActive(true));
 
         save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")).setFuelType(unleadedFuelType));
         save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")).setFuelType(petrolFuelType));

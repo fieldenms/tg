@@ -45,7 +45,7 @@ public class ModuleMenu extends AbstractEntity<String> implements IMenuManager {
 
     @IsProperty(ModuleMenuItem.class)
     @Title("Module menu")
-    private List<ModuleMenuItem> menu = new ArrayList<ModuleMenuItem>();
+    private final List<ModuleMenuItem> menu = new ArrayList<ModuleMenuItem>();
 
     @IsProperty
     @Title("Module view")
@@ -53,7 +53,7 @@ public class ModuleMenu extends AbstractEntity<String> implements IMenuManager {
 
     @IsProperty(Action.class)
     @Title("Actions")
-    private List<Action> actions = new ArrayList<>();
+    private final List<Action> actions = new ArrayList<>();
 
     @Observable
     public ModuleMenu setActions(final List<Action> actions) {

@@ -1,30 +1,22 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import org.apache.logging.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
+
+import java.util.Date;
+import java.util.Optional;
+
 import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
+import static java.util.Optional.*;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.joda.time.DateTimeZone.forID;
 import static org.joda.time.DateTimeZone.getDefault;
-import static org.joda.time.format.DateTimeFormat.forPattern;
-import static ua.com.fielden.platform.utils.EntityUtils.dateWithoutTimeFormat;
-
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.Date;
-import java.util.Optional;
-
-import org.apache.logging.log4j.Logger;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
-import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 
 /**
  * Default implementation of {@link IDates}, which uses a thread-local state for managing time-zone values specified in client requests.
@@ -43,12 +35,49 @@ public class DefaultDates implements IDates {
     private final Integer finYearStartMonth;
     private final ThreadLocal<DateTimeZone> threadLocalRequestTimeZone = new ThreadLocal<>();
 
+    private final String dateFormat;
+    private final String timeFormat;
+    private final String timeFormatWithMillis;
+    private final String dateFormatWeb;
+    private final String timeFormatWeb;
+    private final String timeFormatWebWithMillis;
+
+    public DefaultDates(
+            final @Named("independent.time.zone") boolean independentTimeZone,
+            final @Named("dates.weekStart") Integer weekStart,
+            final @Named("dates.finYearStartDay") Integer finYearStartDay,
+            final @Named("dates.finYearStartMonth") Integer finYearStartMonth)
+    {
+        this(independentTimeZone, weekStart, finYearStartDay, finYearStartMonth,
+             DEFAULT_DATE_FORMAT,
+             DEFAULT_TIME_FORMAT,
+             DEFAULT_TIME_FORMAT_WITH_MILLIS,
+             DEFAULT_DATE_FORMAT_WEB,
+             DEFAULT_TIME_FORMAT_WEB,
+             DEFAULT_TIME_FORMAT_WEB_WITH_MILLIS);
+    }
+
     @Inject
     public DefaultDates(
             final @Named("independent.time.zone") boolean independentTimeZone,
             final @Named("dates.weekStart") Integer weekStart,
             final @Named("dates.finYearStartDay") Integer finYearStartDay,
-            final @Named("dates.finYearStartMonth") Integer finYearStartMonth) {
+            final @Named("dates.finYearStartMonth") Integer finYearStartMonth,
+            // Date formats for both Web and Java side of things.
+            final @Named("dates.dateFormat") String dateFormat,
+            final @Named("dates.timeFormat") String timeFormat,
+            final @Named("dates.timeFormatWithMillis") String timeFormatWithMillis,
+            final @Named("dates.dateFormat.web") String dateFormatWeb,
+            final @Named("dates.timeFormat.web") String timeFormatWeb,
+            final @Named("dates.timeFormatWithMillis.web") String timeFormatWithMillisWeb)
+    {
+        this.dateFormat = dateFormat;
+        this.timeFormat = timeFormat;
+        this.timeFormatWithMillis = timeFormatWithMillis;
+        this.dateFormatWeb = dateFormatWeb;
+        this.timeFormatWeb = timeFormatWeb;
+        this.timeFormatWebWithMillis = timeFormatWithMillisWeb;
+
         // Let's validated weekStart, finYearStartDay and finYearStartMonth
         if (weekStart < 1 || weekStart > 7) {
             throw new ApplicationConfigurationException(format("Value [%s] is not acceptable for [dates.weekStart]. Expecting a number from 1 (Mon) to 7 (Sun).", weekStart));
@@ -148,18 +177,38 @@ public class DefaultDates implements IDates {
     }
 
     @Override
-    public String toString(final DateTime dateTime) {
-        return forPattern(dateWithoutTimeFormat + " hh:mm a").print(dateTime);
-    }
-
-    @Override
-    public String toString(final Date date) {
-        return toString(zoned(date));
-    }
-
-    @Override
     public Optional<DateTimeZone> requestTimeZone() {
         return ofNullable(threadLocalRequestTimeZone.get());
+    }
+
+    @Override
+    public String dateFormat() {
+        return dateFormat;
+    }
+
+    @Override
+    public String timeFormat() {
+        return timeFormat;
+    }
+
+    @Override
+    public String timeFormatWithMillis() {
+        return timeFormatWithMillis;
+    }
+
+    @Override
+    public String dateFormatWeb() {
+        return dateFormatWeb;
+    }
+
+    @Override
+    public String timeFormatWeb() {
+        return timeFormatWeb;
+    }
+
+    @Override
+    public String timeFormatWebWithMillis() {
+        return timeFormatWebWithMillis;
     }
 
 }

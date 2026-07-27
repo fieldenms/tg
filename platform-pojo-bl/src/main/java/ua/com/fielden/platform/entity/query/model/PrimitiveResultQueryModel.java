@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.query.model;
 
-import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
+import org.antlr.v4.runtime.Token;
+
+import java.util.List;
 
 /**
  * Models a query that returns a primitive result (as opposed to an entity result).
@@ -19,7 +21,7 @@ import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
  */
 public class PrimitiveResultQueryModel extends SingleResultQueryModel {
 
-    public PrimitiveResultQueryModel(final ListTokenSource tokens) {
+    public PrimitiveResultQueryModel(final List<? extends Token> tokens) {
         super(tokens, null, false);
     }
 

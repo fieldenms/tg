@@ -5,14 +5,16 @@ import com.fasterxml.jackson.core.type.ResolvedType;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.google.common.base.Charsets;
+import jakarta.inject.Inject;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.continuation.NeedMoreDataException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.error.ResultJsonDeserialiser;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
@@ -31,6 +33,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Modifier;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,19 +43,14 @@ import static com.fasterxml.jackson.databind.type.SimpleType.constructUnsafe;
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
-/**
- * The descendant of {@link ObjectMapper} with TG specific logic to correctly assign serialisers and recognise descendants of {@link AbstractEntity}. This covers correct
- * determination of the underlying entity type for dynamic CGLIB proxies.
- * <p>
- * All classes have to be registered at the server ({@link TgJackson}) and client ('tg-serialiser' web component) sides in the same order. To be more specific -- the 'type table'
- * at the server and client side should be identical (most likely should be send to the client during client application startup).
- *
- * @author TG Team
- *
- */
+/// A subclass of [ObjectMapper] with TG-specific logic to correctly assign serialisers and recognise subtypes of [AbstractEntity].
+/// This covers correct determination of the underlying entity type for dynamic CGLIB proxies.
+///
+/// All classes have to be registered at the server ([TgJackson]) and client (`tg-serialiser` web component) sides in the same order.
+/// Specifically, the "type table" at the server and client side should be identical (most likely should be sent to the client during client application startup).
+///
 public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
-    private static final long serialVersionUID = 8131371701442950310L;
-    private static final Logger logger = getLogger(TgJackson.class);
+    private static final Logger logger = getLogger();
 
     public static final String ERR_RESTRICTED_TYPE_SERIALISATION = "Type [%s] is not permitted for serialisation.";
     public static final String ERR_RESTRICTED_TYPE_DESERIALISATION = "Type [%s] is not permitted for deserialisation.";
@@ -65,6 +63,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     
     //private final LRUMap<?, ?> cachedFCAsToClear; EXPERIMENTAL
 
+    @Inject
     public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         this.module = new TgJacksonModule(this);
         this.factory = entityFactory;
@@ -99,6 +98,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.module.addDeserializer(RichText.class, new RichTextJsonDeserialiser(this));
 
         this.module.addSerializer(Result.class, new ResultJsonSerialiser(this));
+        this.module.addSerializer(NeedMoreDataException.class, new NeedMoreDataExceptionJsonSerialiser(this));
         this.module.addDeserializer(Result.class, new ResultJsonDeserialiser(this));
 
         this.module.addDeserializer(ArrayList.class, new ArrayListJsonDeserialiser(this, serialisationTypeEncoder));
@@ -132,26 +132,15 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             }
         }
     }
-    
-    /**
-     * This is very much an experimental attempt to remedy accumulation of generated types inside Jackson caches.
-     */
-    private void clearCaches() {
-//        getTypeFactory().clearCache();
+
+    /// This is very much an experimental attempt to remedy accumulation of generated types inside Jackson caches.
+    ///
+    /// Note that the original name of this method was `clearCaches` (`s` at the end), but since the update to Jackson `2.19.2` it started clashing with the method [ObjectMapper#clearCaches()].
+    private void clearCache() {
         TypeFactory.defaultInstance().clearCache();
         // flushing cache is a synchronized operation
         final DefaultSerializerProvider defaultSerializerProvider = (DefaultSerializerProvider) getSerializerProvider();
         defaultSerializerProvider.flushCachedSerializers();
-        // EXPERIMENTAL
-//        synchronized (this) {
-//            try {
-//                if (cachedFCAsToClear != null) {
-//                    cachedFCAsToClear.clear();
-//                }
-//            } catch (final Exception ex) {
-//                logger.error("Could not clear _cachedFCA.", ex);
-//            }
-//        }
     }
     
     /**
@@ -161,7 +150,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * @return
      */
     public EntityType registerNewEntityType(final Class<AbstractEntity<?>> newType) {
-        clearCaches();
+        clearCache();
         return new EntitySerialiser<AbstractEntity<?>>(newType, module, this, factory, entityTypeInfoGetter, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache).getEntityTypeInfo();
     }
     
@@ -236,10 +225,10 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         }
 
         try {
-            // logger.debug("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), Charsets.UTF_8) + "|.");
+            // logger.debug("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), StandardCharsets.UTF_8) + "|.");
             EntitySerialiser.getContext().reset();
-            final byte[] bytes = writeValueAsBytes(obj); // default encoding is Charsets.UTF_8
-            logger.debug("Serialised JSON = |" + new String(bytes, Charsets.UTF_8) + "|.");
+            final byte[] bytes = writeValueAsBytes(obj); // default encoding is StandardCharsets.UTF_8
+            logger.debug("Serialised JSON = |" + new String(bytes, StandardCharsets.UTF_8) + "|.");
 
             return bytes;
         } catch (final JsonProcessingException e) {

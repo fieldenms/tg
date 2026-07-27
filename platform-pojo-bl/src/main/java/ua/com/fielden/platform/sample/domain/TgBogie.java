@@ -1,15 +1,9 @@
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
+
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.MULTI;
 
 @KeyType(String.class)
 @MapEntityTo(autoConflictResolution = false)
@@ -17,6 +11,11 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle("Bogie")
 @CompanionObject(ITgBogie.class)
 public class TgBogie extends ActivatableAbstractEntity<String> {
+
+    public static final String
+            LOCATION = "location",
+            BOGIE_CLASS = "bogieClass",
+            LOCATION_CRIT = "locationCrit";
 
     @IsProperty
     @MapTo
@@ -27,6 +26,20 @@ public class TgBogie extends ActivatableAbstractEntity<String> {
     @MapTo
     @Title(value = "Bogies Class", desc = "A class of this bogies.")
     private TgBogieClass bogieClass;
+
+    @IsProperty
+    @CritOnly(MULTI)
+    private TgBogieLocation locationCrit;
+
+    @Observable
+    public TgBogie setLocationCrit(final TgBogieLocation locationCrit) {
+        this.locationCrit = locationCrit;
+        return this;
+    }
+
+    public TgBogieLocation getLocationCrit() {
+        return locationCrit;
+    }
 
     @Observable
     public TgBogie setBogieClass(final TgBogieClass bogieClass) {

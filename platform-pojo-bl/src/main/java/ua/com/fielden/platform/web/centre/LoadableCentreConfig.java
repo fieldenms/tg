@@ -1,16 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.validation.RestrictCommasValidator;
 import ua.com.fielden.platform.entity.validation.RestrictExtraWhitespaceValidator;
 import ua.com.fielden.platform.entity.validation.RestrictNonPrintableCharactersValidator;
@@ -146,6 +137,12 @@ public class LoadableCentreConfig extends AbstractEntity<String> {
 
     public String getKey() {
         return key;
+    }
+
+    @Override
+    @Observable
+    protected LoadableCentreConfig setDesc(String desc) {
+        return super.setDesc(desc);
     }
 
 }

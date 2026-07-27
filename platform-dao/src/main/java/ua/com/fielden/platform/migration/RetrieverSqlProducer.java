@@ -1,30 +1,37 @@
 package ua.com.fielden.platform.migration;
 
-import static java.util.stream.Collectors.joining;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import ua.com.fielden.platform.entity.AbstractEntity;
 
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import static java.util.stream.Collectors.joining;
 
-public class RetrieverSqlProducer {
+@Singleton
+final class RetrieverSqlProducer {
+
     private final static String SELECT = "\nSELECT ALL ";
     private final static String FROM = "\nFROM ";
     private final static String WHERE = "\nWHERE ";
     private final static String GROUP_BY = "\nGROUP BY ";
     private final static String ORDER_BY = "\nORDER BY ";
+
+    @Inject
+    RetrieverSqlProducer() {}
     
-    public static String getSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
+    public String getSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
         return getSql(retriever, true);
     }
 
-    public static String getSqlWithoutOrdering(final IRetriever<? extends AbstractEntity<?>> retriever) {
+    public String getSqlWithoutOrdering(final IRetriever<? extends AbstractEntity<?>> retriever) {
         return getSql(retriever, false);
     }
 	
-    private static String getSql(final IRetriever<? extends AbstractEntity<?>> retriever, final boolean withOrdering) {
+    private String getSql(final IRetriever<? extends AbstractEntity<?>> retriever, final boolean withOrdering) {
         final var sb = new StringBuilder();
         sb.append(allYieldsSql(retriever.resultFields()));
         sb.append(coreSql(retriever));
@@ -34,7 +41,7 @@ public class RetrieverSqlProducer {
         return sb.toString();
     }
 
-    public static String getKeyResultsOnlySql(final IRetriever<? extends AbstractEntity<?>> retriever, final List<String> keyProps) {
+    public String getKeyResultsOnlySql(final IRetriever<? extends AbstractEntity<?>> retriever, final List<String> keyProps) {
         final var sb = new StringBuilder();
         sb.append(allYieldsSql(getSpecifiedPropsYields(retriever, keyProps)));
         sb.append(coreSql(retriever));
@@ -59,8 +66,8 @@ public class RetrieverSqlProducer {
         return sb.toString();
     }
 
-    public static String allYieldsSql(final SortedMap<String, String> resultProps) {
-        return SELECT + resultProps.entrySet().stream().map(e -> e.getValue() + " \"" + e.getKey() + "\"").collect(joining(", "));
+    public String allYieldsSql(final SortedMap<String, String> resultProps) {
+        return SELECT + resultProps.entrySet().stream().map(e -> "%s \"%s\"".formatted(e.getValue(), e.getKey())).collect(joining(", "));
     }
 
     private static String fromSql(final IRetriever<? extends AbstractEntity<?>> retriever) {

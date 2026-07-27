@@ -1,17 +1,17 @@
 package ua.com.fielden.platform.web.test.server;
 
+import com.google.inject.Injector;
 import org.restlet.Context;
 import org.restlet.data.MediaType;
 import org.restlet.routing.Router;
-
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.attachment.AttachmentUploader;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.AbstractWebUiResources;
 import ua.com.fielden.platform.web.factories.webui.AttachmentDownloadResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileProcessingResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 
 /**
  * Custom {@link AbstractWebUiResources} descendant for Web UI Testing Server. Provided in order to configure entity centres, masters and other client specific stuff.
@@ -82,5 +82,11 @@ public class WebUiResources extends AbstractWebUiResources {
 
         // register attachment download resource
         router.attach("/download-attachment/{attachment-id}/{attachment-sha1}", new AttachmentDownloadResourceFactory(injector));
+
+        // serialisation testing resource
+        router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
+        // For egi example TODO remove later.
+        router.attach("/test/egi", new EgiExampleResourceFactory(injector));
+
     }
 }

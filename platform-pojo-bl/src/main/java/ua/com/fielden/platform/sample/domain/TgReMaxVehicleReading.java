@@ -9,6 +9,8 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
+/// A synthetic one-to-one association with [TgVehicle] that represents the maximum [reading][TgMeterReading] for a vehicle.
+///
 @KeyType(TgVehicle.class)
 @CompanionObject(TgReMaxVehicleReadingCo.class)
 public class TgReMaxVehicleReading extends AbstractEntity<TgVehicle> {

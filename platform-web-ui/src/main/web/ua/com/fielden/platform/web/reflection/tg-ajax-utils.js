@@ -1,10 +1,33 @@
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
-export function processResponseError (e, reflector, serialiser, customHandler, toaster) {
+/**
+ * Processes an error event fired by an iron request.
+ *
+ * @param {Event} e - the error event.
+ * @param {TgReflector} reflector
+ * @param {TgSerialiser} serialiser
+ * @param {Function} [customHandler] - a function that will be called with the processed error (a {Result} object or a {String} message).
+ * @param {Object} [toaster] - an object with functions to display a toast.
+ */
+export function processResponseErrorEvent (e, reflector, serialiser, customHandler, toaster) {
     tearDownEvent(e);
-    console.log('PROCESS ERROR', e.error);
-    const xhr = e.detail.request.xhr;
+    processResponseError(e.detail.request, e.error, reflector, serialiser, customHandler, toaster);
+}
+
+/**
+ * Processes an error that resulted from an iron request.
+ *
+ * @param {IronRequestElement} request
+ * @param {Error} error
+ * @param {TgReflector} reflector
+ * @param {TgSerialiser} serialiser
+ * @param {Function} [customHandler] - a function that will be called with the processed error (a {Result} object or a {String} message).
+ * @param {Object} [toaster] - an object with functions to display a toast.
+ */
+export function processResponseError (request, error, reflector, serialiser, customHandler, toaster) {
+    console.log('PROCESS ERROR', error);
+    const xhr = request.xhr;
     if (xhr.status === 500) { // internal server error, which could either be due to business rules or have some other cause due to a bug or db connectivity issue
         const deserialisedResult = serialiser.deserialise(xhr.response);
 
@@ -34,7 +57,7 @@ export function processResponseError (e, reflector, serialiser, customHandler, t
         // the server should not be reached, for example, due to a network failure, or
         // the request was aborted -- aborted requests should not report any errors to users
         console.warn('Server responded with error code ', xhr.status);
-        if (!e.detail.request.aborted) {
+        if (!request.aborted) {
             const [msgHeader, msgBody] = xhr.status === 0 // if status is 0 then it is most likely a network failure
                                          ? ['Could not process the request.', 'Please make sure your device is connected to the network.']
                                          : ['Unexpected error occurred.', `Error code [${xhr.status}]. Please contact support.`];

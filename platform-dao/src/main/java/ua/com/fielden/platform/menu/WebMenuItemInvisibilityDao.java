@@ -1,32 +1,22 @@
 package ua.com.fielden.platform.menu;
 
-import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-/**
- * DAO implementation for companion object {@link WebMenuItemInvisibilityCo}.
- *
- * @author Developers
- *
- */
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
+
+/// DAO implementation for companion object [WebMenuItemInvisibilityCo].
+///
 @EntityType(WebMenuItemInvisibility.class)
 public class WebMenuItemInvisibilityDao extends CommonEntityDao<WebMenuItemInvisibility> implements WebMenuItemInvisibilityCo {
-
-    @Inject
-    public WebMenuItemInvisibilityDao(final IFilter filter) {
-        super(filter);
-    }
 
     @Override
     @SessionRequired
@@ -54,5 +44,11 @@ public class WebMenuItemInvisibilityDao extends CommonEntityDao<WebMenuItemInvis
     @Override
     public void deleteAssociation(final Set<WebMenuItemInvisibility> associations) {
         createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), associations).map(this::batchDelete);
+    }
+
+    @Override
+    @SessionRequired
+    public int batchInsert(final Stream<WebMenuItemInvisibility> newEntities, final int batchSize) {
+        return super.defaultBatchInsert(newEntities, batchSize);
     }
 }

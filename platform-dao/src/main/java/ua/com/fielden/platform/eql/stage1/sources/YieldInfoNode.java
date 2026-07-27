@@ -1,10 +1,9 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
-import java.util.Map;
-
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.eql.meta.PropType;
 
-import javax.annotation.Nullable;
+import java.util.Map;
 
 /**
  * A structure used for representing yielded properties. It is used strictly for metadata generation needs.

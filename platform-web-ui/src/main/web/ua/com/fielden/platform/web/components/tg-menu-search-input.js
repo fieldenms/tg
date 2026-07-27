@@ -140,6 +140,12 @@ Polymer({
         this._showInput = false;
         const menuItemSelectedPath = menuList.getSelectedMenuItemPath();
         if (!this.cancelled && menuItemSelectedPath) {
+            // Fire a dedicated F3-search event in addition to the broader `menu-item-selected`.
+            // `tg-app-template` listens for this to record the upcoming URI change as F3-initiated.
+            // That lets `tg-view-with-menu._updatePage` restore the `configUuid` part of the URI for an Entity Centre.
+            // A separate event is used (rather than reusing `menu-item-selected`) so that the flag is set only for genuine F3 search transitions.
+            // In particular, it is never set for main-menu tile clicks, which also fire `menu-item-selected` via `tg-app-menu`.
+            this.fire("tg-menu-search-item-selected", menuItemSelectedPath);
             this.fire("menu-item-selected", menuItemSelectedPath);
             this._menuToSearch = "";
         }

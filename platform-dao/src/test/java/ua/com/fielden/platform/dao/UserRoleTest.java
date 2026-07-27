@@ -1,11 +1,6 @@
 package ua.com.fielden.platform.dao;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -14,12 +9,10 @@ import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
-/**
- * A test case for the {@link UserRole} persistence and retrieval.
- * 
- * @author TG Team
- * 
- */
+import static org.junit.Assert.*;
+
+/// A test case for the [UserRole] persistence and retrieval.
+///
 public class UserRoleTest extends AbstractDaoTestCase {
 
     @Test

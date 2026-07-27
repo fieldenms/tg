@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.processors.appdomain.RegisteredEntitiesCollector;
@@ -32,6 +31,7 @@ import java.util.stream.Stream;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.*;
 
 /**
@@ -440,7 +440,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
-                if (!elementFinder.isSameType(property.getType(), RichText.class)) {
+                if (!isSameType(property.getType(), RichText.class)) {
                     return Optional.empty();
                 }
 
@@ -459,7 +459,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
     }
 
     /**
-     * Union entity types cannot be used for property {@code key} and composite key members.
+     * Union entity types cannot be used for property {@code key}.
      */
     static final class UnionEntityTypedKeyVerifier extends AbstractEntityVerifier {
         UnionEntityTypedKeyVerifier(final ProcessingEnvironment processingEnv) {
@@ -467,11 +467,6 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
         }
 
         public static final String ERR_UNION_ENTITY_TYPED_SIMPLE_KEY = "Union entity types are unsupported for property [key].";
-        public static final String ERR_UNSUPPORTED_TYPE_FOR_PROPERTY = "Unsupported type for property [%s]. Union entity types are unsupported for key members.";
-
-        public static String errUnionEntityTypedKeyMember(final CharSequence propName) {
-            return ERR_UNSUPPORTED_TYPE_FOR_PROPERTY.formatted(propName);
-        }
 
         @Override
         protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
@@ -489,13 +484,8 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                     return empty();
                 }
 
-                if (entityFinder.isUnionEntityType(property.getType())) {
-                    if (property.getSimpleName().contentEquals("key")) {
-                        return of(new ViolatingElement(property.element(), Kind.ERROR, ERR_UNION_ENTITY_TYPED_SIMPLE_KEY));
-                    }
-                    else if (hasAnnotation(property.element(), CompositeKeyMember.class)) {
-                        return of(new ViolatingElement(property.element(), Kind.ERROR, errUnionEntityTypedKeyMember(property.getSimpleName())));
-                    }
+                if (property.getSimpleName().contentEquals(KEY) && entityFinder.isUnionEntityType(property.getType())) {
+                    return of(new ViolatingElement(property.element(), Kind.ERROR, ERR_UNION_ENTITY_TYPED_SIMPLE_KEY));
                 }
 
                 return empty();

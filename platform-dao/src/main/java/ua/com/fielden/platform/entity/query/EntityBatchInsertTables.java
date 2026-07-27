@@ -2,12 +2,12 @@ package ua.com.fielden.platform.entity.query;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion;
 import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.types.tuples.T2;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -42,7 +42,8 @@ final class EntityBatchInsertTables {
     }
 
     private static TableStructForBatchInsertion generateTableStructForBatchInsertion(
-            final IDomainMetadata domainMetadata, final EntityMetadata.Persistent entityMetadata)
+            final IDomainMetadata domainMetadata,
+            final EntityMetadata.Persistent entityMetadata)
     {
         // a way to do inner helper methods (avoids pollution of the outer class method namespace)
         class $ {

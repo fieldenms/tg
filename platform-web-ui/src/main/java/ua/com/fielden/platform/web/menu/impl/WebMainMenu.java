@@ -1,16 +1,17 @@
 package ua.com.fielden.platform.web.menu.impl;
 
-import static java.util.stream.Collectors.toList;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import ua.com.fielden.platform.menu.ModuleMenu;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.menu.module.impl.WebMenuModule;
 import ua.com.fielden.platform.web.minijs.JsCode;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toList;
 
 public class WebMainMenu {
 
@@ -52,4 +53,9 @@ public class WebMainMenu {
     JsCode createActionsObject() {
         return new JsCode(null);
     }
+
+    public Stream<EntityActionConfig> streamActionConfigs() {
+        return modules.stream().map(WebMenuModule::getActions).flatMap(List::stream);
+    }
+
 }

@@ -3,6 +3,7 @@
  */
 package ua.com.fielden.platform.basic.autocompleter;
 
+import org.jspecify.annotations.Nullable;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -37,7 +38,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
 
     public AbstractSearchEntityByKeyWithContext(final IEntityDao<T> companion) {
         this.companion = companion;
-        this.defaultFetchModel = companion == null ? null : fetchKeyAndDescOnly(companion.getEntityType());
+        this.defaultFetchModel = companion == null ? null : fetchKeyAndDescOnly(getEntityType());
     }
 
     /**
@@ -54,7 +55,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
 
         final ConditionModel keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
 
-        return hasDescProperty(companion.getEntityType()) ? cond().condition(keyCriteria).or().prop(DESC).iLike().val(searchString).model() : keyCriteria;
+        return hasDescProperty(getEntityType()) ? cond().condition(keyCriteria).or().prop(DESC).iLike().val(searchString).model() : keyCriteria;
     }
 
     /**
@@ -73,12 +74,12 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
      */
     protected OrderingModel makeOrderingModel(final String searchString) {
         final var prop = orderBy().prop(KEY);
-        return isNaturalOrderDescending(companion.getEntityType()) ? prop.desc().model() : prop.asc().model();
+        return isNaturalOrderDescending(getEntityType()) ? prop.desc().model() : prop.asc().model();
     }
 
     protected final OrderingModel composeOrderingModelForQuery(final String searchString) {
         return "%".equals(searchString) ? makeOrderingModel(searchString)
-                : orderBy().expr(makeSearchResultOrderingPriority(companion.getEntityType(), searchString)).asc().order(makeOrderingModel(searchString)).model();
+                : orderBy().expr(makeSearchResultOrderingPriority(getEntityType(), searchString)).asc().order(makeOrderingModel(searchString)).model();
     }
 
     @Override
@@ -95,7 +96,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
         final ConditionModel searchCriteria = makeSearchCriteriaModel(getContext(), searchString);
         final OrderingModel ordering = composeOrderingModelForQuery(searchString);
         final Map<String, Object> queryParams = fillParamsBasedOnContext(getContext());
-        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(companion.getEntityType(), searchCriteria, ordering, queryParams).with(fetch).model(), getPageSize() * dataPage);
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(getEntityType(), searchCriteria, ordering, queryParams).with(fetch).model(), getPageSize() * dataPage);
     }
 
     @Override
@@ -116,6 +117,12 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
     @Override
     public void setContext(final CONTEXT context) {
         this.context = context;
+    }
+
+    /// Returns the entity type for values of this value matcher.
+    ///
+    protected @Nullable Class<T> getEntityType() {
+        return companion == null ? null : companion.getEntityType();
     }
 
 }

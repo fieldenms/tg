@@ -1,17 +1,14 @@
 package ua.com.fielden.platform.menu;
 
-import static java.util.Collections.unmodifiableList;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.Observable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.Optional;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * Represents device-profile-specific application menu with tiles and actions on them.
@@ -25,7 +22,7 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
 
     @IsProperty(ModuleMenu.class)
     @Title("Menu")
-    private List<ModuleMenu> menu = new ArrayList<>();
+    private final List<ModuleMenu> menu = new ArrayList<>();
 
     @IsProperty
     @Title("Edit menu items")

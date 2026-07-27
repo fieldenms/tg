@@ -1,6 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgSseBehavior } from '/resources/sse/tg-sse-behavior.js';
-import {eventSource} from '/app/tg-app-config.js';
+import { eventSource } from '/resources/components/tg-event-source.js';
 import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgFileProcessingBehaviorImpl = {

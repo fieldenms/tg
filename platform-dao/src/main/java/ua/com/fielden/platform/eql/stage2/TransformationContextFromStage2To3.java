@@ -9,6 +9,7 @@ import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.DataForProp3;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.TreeResultBySources;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.HashMap;
@@ -23,6 +24,7 @@ public class TransformationContextFromStage2To3 {
     private final TreeResultBySources treeResultBySources;
     private final EqlTables eqlTables;
     private final DbVersion dbVersion;
+    private final IDomainMetadata domainMetadata;
     private final Map<Integer, ISource3> sourcesByIds = new HashMap<>();
     private final Map<String, Object> sqlParamValuesByNames = new HashMap<>();
     private final Map<Object, String> sqlParamNamesByValues = new HashMap<>();
@@ -32,15 +34,17 @@ public class TransformationContextFromStage2To3 {
     public TransformationContextFromStage2To3(
             final TreeResultBySources treeResultBySources,
             final EqlTables eqlTables,
-            final DbVersion dbVersion)
+            final DbVersion dbVersion,
+            final IDomainMetadata domainMetadata)
     {
-        this(treeResultBySources, eqlTables, dbVersion, emptyMap(), emptyMap(), emptyMap(), 0, 1);
+        this(treeResultBySources, eqlTables, dbVersion, domainMetadata, emptyMap(), emptyMap(), emptyMap(), 0, 1);
     }
 
     private TransformationContextFromStage2To3(
             final TreeResultBySources treeResultBySources,
             final EqlTables eqlTables,
             final DbVersion dbVersion,
+            final IDomainMetadata domainMetadata,
             final Map<Integer, ISource3> sourcesByIds,
             final Map<String, Object> sqlParamValuesByNames,
             final Map<Object, String> sqlParamNamesByValues,
@@ -50,6 +54,7 @@ public class TransformationContextFromStage2To3 {
         this.treeResultBySources = treeResultBySources;
         this.eqlTables = eqlTables;
         this.dbVersion = dbVersion;
+        this.domainMetadata = domainMetadata;
         this.sourcesByIds.putAll(sourcesByIds);
         this.sqlParamValuesByNames.putAll(sqlParamValuesByNames);
         this.sqlParamNamesByValues.putAll(sqlParamNamesByValues);
@@ -59,6 +64,10 @@ public class TransformationContextFromStage2To3 {
 
     public DbVersion dbVersion() {
         return dbVersion;
+    }
+
+    public IDomainMetadata domainMetadata() {
+        return domainMetadata;
     }
 
     public EqlTable getTable(final Class<? extends AbstractEntity<?>> sourceType) {
@@ -79,6 +88,7 @@ public class TransformationContextFromStage2To3 {
                     treeResultBySources,
                     eqlTables,
                     dbVersion,
+                    domainMetadata,
                     sourcesByIds,
                     sqlParamValuesByNames,
                     sqlParamNamesByValues,
@@ -102,6 +112,7 @@ public class TransformationContextFromStage2To3 {
                 treeResultBySources,
                 eqlTables,
                 dbVersion,
+                domainMetadata,
                 sourcesByIds,
                 sqlParamValuesByNames,
                 sqlParamNamesByValues,
@@ -114,6 +125,7 @@ public class TransformationContextFromStage2To3 {
                 treeResultBySources,
                 eqlTables,
                 dbVersion,
+                domainMetadata,
                 sourcesByIds,
                 sqlParamValuesByNames,
                 sqlParamNamesByValues,

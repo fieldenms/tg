@@ -1,25 +1,20 @@
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.sample.domain.ITgTimesheet;
-import ua.com.fielden.platform.sample.domain.TgTimesheet;
 
-import com.google.inject.Inject;
+import java.util.stream.Stream;
 
-/**
- * DAO for retrieving TgTimesheets.
- * 
- * @author TG Team
- * 
- */
+/// DAO for retrieving TgTimesheets.
+///
 @EntityType(TgTimesheet.class)
 public class TgTimesheetDao extends CommonEntityDao<TgTimesheet> implements ITgTimesheet {
 
-    @Inject
-    protected TgTimesheetDao(final IFilter filter) {
-        super(filter);
+    @Override
+    @SessionRequired
+    public int batchInsert(Stream<TgTimesheet> newEntities, int batchSize) {
+        return defaultBatchInsert(newEntities, batchSize);
     }
 
 }

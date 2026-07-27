@@ -1,27 +1,15 @@
 package ua.com.fielden.platform.sample.domain.crit_gen;
 
-import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.MULTI;
-import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 import java.util.Date;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.DateOnly;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.PersistentType;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.TimeOnly;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.MULTI;
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
 
 /**
  * Entity for testing purposes.
@@ -271,7 +259,6 @@ public class TopLevelEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(LastLevelEntity.class)
     public void setCritSingleEntity(final LastLevelEntity critSingleEntity) {
         this.critSingleEntity = critSingleEntity;
     }

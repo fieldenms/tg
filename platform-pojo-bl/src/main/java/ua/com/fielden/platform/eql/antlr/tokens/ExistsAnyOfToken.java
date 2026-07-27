@@ -23,7 +23,7 @@ public final class ExistsAnyOfToken extends AbstractParameterisedEqlToken {
     @Override
     public String parametersText() {
         return models.stream()
-                .map(m -> "(%s)".formatted(getInstance().format(m.getTokenSource())))
+                .map(m -> "(%s)".formatted(getInstance().format(m.tokens())))
                 .collect(joining(",\n", "\n", "\n"));
     }
 

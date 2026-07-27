@@ -1,18 +1,5 @@
 package ua.com.fielden.platform.test;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
-
-import java.lang.reflect.Field;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Session;
 import org.joda.time.DateTime;
@@ -20,33 +7,48 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
 import org.junit.Before;
-
+import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.data.IDomainDrivenData;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.utils.DbUtils;
 
-/**
- * This is a base class for all test cases in TG based applications.
- *
- * @author TG Team
- *
- */
+import java.lang.reflect.Field;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.function.Function;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
+
+/// This is a base class for all test cases in TG-based applications.
+///
 public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData, ISessionEnabled {
 
-    private DbCreator dbCreator;
-    private static ICompanionObjectFinder coFinder;
-    private static EntityFactory factory;
-    private static Function<Class<?>, Object> instantiator;
+    private static final String ERR_SAVE_WITH_FETCH_NOT_IMPLEMENTED =
+            "Save-with-fetch cannot be used because the companion for entity [%s] does not implement [" + ISaveWithFetch.class.getSimpleName() + "].";
+
+    public static final String
+            ERR_CANNOT_SAVE_NULL = "Null instances cannot be saved.",
+            ERR_MISSING_COMPANION = "Could not find companion implementation for [%s].",
+            ERR_PARSING_DATE = "Could not parse date [%s].",
+            ERR_INVALID_NUMBER_OF_KEY_VALUES = "Number of key values is %s but should be %s.",
+            ERR_MISSING_SESSION = "Session is missing, most likely, due to missing @SessionRequired annotation.";
 
     private static final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateFormat DATE_TIME_FORMAT_WITHOUT_SECONDS = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -54,20 +56,21 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     private static final DateFormat DATE_TIME_FORMAT_WITH_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
+    // The following three static fields are reflectively assigned only once, by the platform test runner.
+    private static ICompanionObjectFinder coFinder;
+    private static EntityFactory factory;
+    private static Function<Class<?>, Object> instantiator;
 
+    private DbCreator dbCreator;
     private Session session;
     private String transactionGuid;
 
-    /**
-     * Should be implemented in order to provide domain driven data population.
-     */
+    /// Should be implemented in order to provide domain driven data population.
+    ///
     protected abstract void populateDomain();
 
-    /**
-     * Should return a complete list of domain entity types.
-     *
-     * @return
-     */
+    /// Should return a complete list of domain entity types.
+    ///
     protected abstract List<Class<? extends AbstractEntity<?>>> domainEntityTypes();
 
     @Before
@@ -102,16 +105,33 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     @Override
     public <T extends AbstractEntity<?>> T save(final T instance) {
         if (instance == null) {
-            throw new DomainDriventTestException("Null instances cannot be saved.");
+            throw new DomainDrivenTestException(ERR_CANNOT_SAVE_NULL);
         }
         @SuppressWarnings("unchecked")
         final IEntityDao<T> pp = coFinder.find((Class<T>) instance.getType());
         if (pp == null) {
-            throw new DomainDriventTestException(format("Could not find companion implementation for [%s].", instance.getType().getSimpleName()));
+            throw new DomainDrivenTestException(ERR_MISSING_COMPANION.formatted(instance.getType().getSimpleName()));
         }
         return pp.save(instance);
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends AbstractEntity<?>> Either<Long, T> save(final T instance, final Optional<fetch<T>> maybeFetch) {
+        if (instance == null) {
+            throw new DomainDrivenTestException(ERR_CANNOT_SAVE_NULL);
+        }
+        final IEntityDao<T> pp = coFinder.find((Class<T>) instance.getType());
+        if (pp == null) {
+            throw new DomainDrivenTestException(ERR_MISSING_COMPANION.formatted(instance.getType().getSimpleName()));
+        }
+        if (pp instanceof ISaveWithFetch<?> it) {
+            return ((ISaveWithFetch<T>) it).save(instance, maybeFetch);
+        }
+        else {
+            throw new EntityCompanionException(ERR_SAVE_WITH_FETCH_NOT_IMPLEMENTED.formatted(instance.getType().getSimpleName()));
+        }
+    }
 
     private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> co$Cache = new HashMap<>();
     private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();
@@ -134,38 +154,36 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
 
     }
 
-    /**
-     * Converts a date string to a {@link Date} using system's default time zone.
-     * <p>
-     * Supported formats:
-     * <ul>
-     *     <li>yyyy-MM-dd</li>
-     *     <li>yyyy-MM-dd HH:mm</li>
-     *     <li>yyyy-MM-dd HH:mm:ss</li>
-     *     <li>yyyy-MM-dd HH:mm:ss.SSS</li>
-     * </ul>
-     */
+    /// Converts a date string to a [Date] using system's default time zone.
+    ///
+    /// Supported formats:
+    ///
+    /// - `yyyy-MM-dd`
+    /// - `yyyy-MM-dd HH:mm`
+    /// - `yyyy-MM-dd HH:mm:ss`
+    /// - `yyyy-MM-dd HH:mm:ss.SSS`
+    ///
     @Override
     public final Date date(final String dateTime) {
         try {
-            // has millis part?
+            // Has millis part?
             if (dateTime.indexOf('.') > 0) {
                 return DATE_TIME_FORMAT_WITH_MILLIS.parse(dateTime);
             }
-            // has time part without seconds?
+            // Has time part without seconds?
             else if (dateTime.lastIndexOf(":") == 13) {
                 return DATE_TIME_FORMAT_WITHOUT_SECONDS.parse(dateTime);
             }
-            // has time part without millis?
+            // Has time part without millis?
             else if (dateTime.indexOf(":") > 0) {
                 return DATE_TIME_FORMAT_WITHOUT_MILLIS.parse(dateTime);
             }
-            // otherwise, assume date without the time part
+            // Otherwise, assume the date without the time part.
             else {
                 return DATE_FORMAT.parse(dateTime);
             }
         } catch (ParseException e) {
-            throw new DomainDriventTestException(format("Could not parse date [%s].", dateTime));
+            throw new DomainDrivenTestException(ERR_PARSING_DATE.formatted(dateTime));
         }
     }
 
@@ -174,29 +192,19 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         return jodaFormatter.parseDateTime(dateTime);
     }
 
-    /**
-     * Instantiates a new entity with a non-composite key, the value for which is provided as the second argument, and description -- provided as the value for the third argument.
-     *
-     * @param entityClass
-     * @param key
-     * @param desc
-     * @return
-     */
+    /// Instantiates a new entity with a non-composite key, where the key value is provided as the second argument,
+    /// and the description is provided as the third argument.
+    ///
     @Override
     public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key, final String desc) {
         final T entity = new_(entityClass);
         entity.setKey(key);
-        entity.setDesc(desc);
+        entity.set(DESC, desc);
         return entity;
     }
 
-    /**
-     * Instantiates a new entity with a non-composite key, the value for which is provided as the second argument.
-     *
-     * @param entityClass
-     * @param key
-     * @return
-     */
+    /// Instantiates a new entity with a non-composite key, whose value is provided as the second argument.
+    ///
     @Override
     public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass, final K key) {
         final T entity = new_(entityClass);
@@ -204,14 +212,10 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         return entity;
     }
 
-    /**
-     * Instantiates a new entity with composite key, where composite key members are assigned based on the provide value. The order of values must match the order specified in key
-     * member definitions. An empty list of key values is permitted.
-     *
-     * @param entityClass
-     * @param keys
-     * @return
-     */
+    /// Instantiates a new entity with a composite key, where the key members are assigned based on the provided values.
+    /// The order of values must match the order defined in the key member definitions.
+    /// An empty list of key values is permitted.
+    ///
     @Override
     public <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys) {
         final T entity = new_(entityClass);
@@ -219,7 +223,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
             // setting composite key fields
             final List<Field> fieldList = Finder.getKeyMembers(entityClass);
             if (fieldList.size() != keys.length) {
-                throw new DomainDriventTestException(format("Number of key values is %s but should be %s", keys.length, fieldList.size()));
+                throw new DomainDrivenTestException(format(ERR_INVALID_NUMBER_OF_KEY_VALUES, keys.length, fieldList.size()));
             }
             for (int index = 0; index < fieldList.size(); index++) {
                 final Field keyField = fieldList.get(index);
@@ -230,23 +234,20 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         return entity;
     }
 
-    /**
-     * Instantiates a new entity based on the provided type only, which leads to creation of a completely empty instance without any of entity properties assigned.
-     *
-     * @param entityClass
-     * @return
-     */
+    /// Instantiates a new entity based solely on the provided type, resulting in a completely empty instance with no properties assigned.
+    ///
     @Override
     public <T extends AbstractEntity<K>, K extends Comparable<?>> T new_(final Class<T> entityClass) {
         final IEntityDao<T> co = co$(entityClass);
         return co != null ? co.new_() : factory.newEntity(entityClass);
     }
 
-    /////////////// @SessionRequired support ///////////////
+    //------------------------ @SessionRequired support ------------------------//
+
     @Override
     public Session getSession() {
         if (session == null) {
-            throw new DomainDriventTestException("Session is missing, most likely, due to missing @SessionRequired annotation.");
+            throw new DomainDrivenTestException(ERR_MISSING_SESSION);
         }
         return session;
     }
@@ -259,7 +260,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     @Override
     public String getTransactionGuid() {
         if (StringUtils.isEmpty(transactionGuid)) {
-            throw new DomainDriventTestException("Transaction GUID is missing.");
+            throw new DomainDrivenTestException("Transaction GUID is missing.");
         }
         return transactionGuid;
     }

@@ -1,35 +1,25 @@
 package ua.com.fielden.platform.migration;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
+import com.google.inject.Injector;
+import org.apache.logging.log4j.Logger;
+import org.hibernate.Transaction;
+import ua.com.fielden.platform.persistence.HibernateUtil;
+import ua.com.fielden.platform.security.user.IUser;
 
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
-import org.apache.logging.log4j.Logger;
-import org.hibernate.Transaction;
-
-import com.google.inject.Injector;
-
-import ua.com.fielden.platform.persistence.HibernateUtil;
-import ua.com.fielden.platform.security.user.IUser;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 public class MigrateDb {
 
     private static final Logger LOGGER = getLogger(MigrateDb.class);
+
     /**
      * Checks whether servicing structures exists, and creates them in case of non-existence.
-     *
-     * @param ddl
-     * @param conn
-     * @throws SQLException
-     * @throws Exception
      */
-    private static void checkAndCreate(final List<String> ddl, final HibernateUtil hiberUtil) throws SQLException {
+    private static void checkAndCreate(final List<String> ddl, final HibernateUtil hiberUtil) {
         final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
         hiberUtil.getSessionFactory().getCurrentSession().doWork(conn -> {
             for (final String sql : ddl) {
@@ -198,7 +188,7 @@ public class MigrateDb {
                 LOGGER.info(ddlStmt);
             }
         } else {
-            new DataMigrator(injector, hibernateUtil, cmdParams.containsKey(CmdParams.SKIP_VALIDATIONS), cmdParams.containsKey(CmdParams.DETAILS), limitToRetrievers);
+            new DataMigrator(injector, cmdParams.containsKey(CmdParams.SKIP_VALIDATIONS), cmdParams.containsKey(CmdParams.DETAILS), limitToRetrievers);
         }
         // reset passwords
         if (cmdParams.containsKey(CmdParams.RESET_PASSWORDS)) {

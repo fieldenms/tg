@@ -1,10 +1,18 @@
 package ua.com.fielden.platform.processors;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static javax.tools.Diagnostic.Kind.NOTE;
-import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.newBooleanOptionDescriptor;
-import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
+import com.google.common.base.Stopwatch;
+import com.squareup.javapoet.AnnotationSpec;
+import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
+import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
 
+import javax.annotation.processing.*;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
+import java.lang.annotation.Annotation;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -12,23 +20,11 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.Messager;
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-import javax.tools.Diagnostic;
-
-import com.google.common.base.Stopwatch;
-import com.squareup.javapoet.AnnotationSpec;
-
-import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
-import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static javax.tools.Diagnostic.Kind.NOTE;
+import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.newBooleanOptionDescriptor;
+import static ua.com.fielden.platform.processors.ProcessorOptionDescriptor.parseOptionFrom;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.findAnnotationMirror;
 
 /**
  * An abstract platform-level annotation processor to be extended by specific implementations.
@@ -204,6 +200,20 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
      */
     protected void printMandatoryWarning(final String msg, final Object... args) {
         messager.printMessage(Diagnostic.Kind.MANDATORY_WARNING, msg.formatted(args));
+    }
+
+    /// Prints a message on the first annotation of type `annotType` that is present on `element`.
+    /// If no such annotation is present, the message is printed on `element` itself.
+    ///
+    protected void printMessageOn(
+            final Diagnostic.Kind kind,
+            final CharSequence message,
+            final Element element,
+            final Class<? extends Annotation> annotType)
+    {
+        findAnnotationMirror(element, annotType)
+                .ifPresentOrElse(am -> messager.printMessage(kind, message, element, am),
+                                 () -> messager.printMessage(kind, message, element));
     }
 
     /**

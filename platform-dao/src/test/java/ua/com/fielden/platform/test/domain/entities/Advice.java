@@ -1,18 +1,20 @@
 package ua.com.fielden.platform.test.domain.entities;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.error.Result;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
 
 /**
  * RMA advice business entity.
@@ -246,9 +248,9 @@ public class Advice extends AbstractEntity<Long> {
 
         // checks if the carrier is specified if not IsRoad
         if (!isRoad() && getCarrier() == null) {
-            return new Result(this, new IllegalArgumentException("Either advice should be marked 'road' or carrier specified."));
+            return failure("Either advice should be marked 'road' or carrier specified.");
         } else if (isRoad() && getCarrier() != null) {
-            return new Result(this, new IllegalArgumentException("Road and carrier cannot be specified simultaneously."));
+            return failure("Road and carrier cannot be specified simultaneously.");
         }
 
         // checks if the aggregated positions are valid. All the positions have to be valid
@@ -265,13 +267,13 @@ public class Advice extends AbstractEntity<Long> {
             final Rotable rotable = position.getRotable();
             if (rotable != null) {
                 if (rotables.contains(rotable)) {
-                    return new Result(this, new IllegalArgumentException("Rotable " + rotable.getKey() + " is a duplicate."));
+                    return failure("Rotable " + rotable.getKey() + " is a duplicate.");
                 }
                 rotables.add(rotable);
             }
         }
 
-        return new Result(this, "Advice " + this + " is valid.");
+        return successful();
     }
 
     /**

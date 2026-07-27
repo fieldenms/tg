@@ -1,12 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.entities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 
 /**
  * Entity class used for testing.
@@ -33,4 +28,9 @@ public class Entity1WithEntity2 extends AbstractEntity<String> {
         return prop;
     }
 
+    @Override
+    @Observable
+    public Entity1WithEntity2 setDesc(String desc) {
+        return super.setDesc(desc);
+    }
 }

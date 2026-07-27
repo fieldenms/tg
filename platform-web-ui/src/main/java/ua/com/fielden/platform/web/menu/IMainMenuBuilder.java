@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.web.menu;
 
 
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+
+import java.util.stream.Stream;
+
 /**
  * An API entry point for building application's main menu.
  *
@@ -16,4 +20,9 @@ public interface IMainMenuBuilder {
      * @return
      */
     IModuleConfig addModule(String title);
+
+    /// Creates a stream of all action configurations in this main menu.
+    ///
+    Stream<EntityActionConfig> streamActionConfigs();
+
 }

@@ -1,10 +1,14 @@
 package ua.com.fielden.platform.serialisation.api.impl;
 
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 
+/// A fallback implementation to be used when Web UI modules are not available or necessary.
+///
+@Singleton
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
 
     @Override

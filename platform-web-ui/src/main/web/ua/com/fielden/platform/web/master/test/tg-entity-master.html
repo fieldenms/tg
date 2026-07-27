@@ -10,6 +10,7 @@
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+    <script src="/resources/test-configuration.js"></script>
 </head>
 
 <body>
@@ -1286,7 +1287,7 @@
                     savingCount += 1;
                     
                     if (savingCount > 1) {
-                        throw 'More than one (' + savingCount + ') saving request has been fullfilled.';
+                        throw 'More than one (' + savingCount + ') saving request has been fulfilled.';
                     }
                 }).bind(master);
                 

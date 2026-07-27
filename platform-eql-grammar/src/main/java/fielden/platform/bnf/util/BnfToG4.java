@@ -2,8 +2,8 @@ package fielden.platform.bnf.util;
 
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.*;
-import fielden.platform.bnf.Optional;
 import fielden.platform.bnf.*;
+import fielden.platform.bnf.Optional;
 import fielden.platform.eql.CanonicalEqlGrammar;
 import fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal;
 import org.antlr.v4.runtime.CommonToken;
@@ -24,8 +24,8 @@ import static com.squareup.javapoet.MethodSpec.constructorBuilder;
 import static fielden.platform.bnf.Metadata.*;
 import static fielden.platform.bnf.Rule.isSingleAltRule;
 import static fielden.platform.bnf.util.BnfUtils.removeUnused;
-import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.*;
-import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.*;
+import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.Select;
+import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.SelectFrom;
 import static java.util.Comparator.comparing;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
@@ -67,7 +67,6 @@ public class BnfToG4 {
                 .compose(RuleInliner.inlineRules)
                 .compose(labelTokens)
                 .compose(stripParameters)
-                .compose(transformYieldOperandExpr)
                 .compose(transformSelect)
                 .apply(bnf);
         this.grammarName = grammarName;
@@ -327,37 +326,6 @@ public class BnfToG4 {
                 specialize(Select).into(SelectFrom).
                 annotate(Select, inline())
                 );
-    };
-
-    /**
-     * Transforms the {@link CanonicalEqlGrammar.EqlVariable#YieldOperandExpr} rule to prevent ambiguities in the generated
-     * ANTLR grammar.
-     * <p>
-     * Yield operands can be said to <i>extend</i> regular single operands. This gives rise to an interesting case:
-     * yielded expressions (delimited by {@link EqlTerminal#beginExpr} & {@link EqlTerminal#endExpr})
-     * can contain the whole set of yield operands, not just single operands (see {@link CanonicalEqlGrammar.EqlVariable#YieldOperandExpr}).
-     * Therefore, we need a separate rule for yielded expressions. However, if it used the same pair of delimiters
-     * (i.e., {@code beginExpr} & {@code endExpr}), an ambiguity would occur: is this a single operand or a yield operand?
-     * This could be resolved with ANTLR's semantic predicates, but introducing a new pair of delimiters (the chosen
-     * approach) is much simpler.
-     * <p>
-     * <b>N.B.</b>: {@link EqlTerminal#endYieldExpr} was introduced for the sake of consistency, we could have used
-     * {@link EqlTerminal#beginYieldExpr} ... {@code endExpr} as well.
-     * On the ANTLR grammar level all {@linkplain EqlTerminal#select selects} are equal as there is
-     * no information about token parameters, thus there is no need to distinguish {@linkplain CanonicalEqlGrammar.EqlVariable#SourcelessSelect sourceless selects}
-     * (which would also introduce ambiguity and slow down the parser).
-     */
-    private static final GrammarTransformer transformYieldOperandExpr = bnf -> {
-        return bnf.transformRule(YieldOperandExpr, rule -> {
-            return ((Derivation) rule).recMap(term -> {
-                if (term.normalize() == beginExpr) {
-                    return beginYieldExpr;
-                } else if (term.normalize() == endExpr) {
-                    return endYieldExpr;
-                }
-                return term;
-            });
-        });
     };
 
     private static final GrammarTransformer stripParameters = bnf -> {

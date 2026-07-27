@@ -1,28 +1,19 @@
 package ua.com.fielden.platform.test.entities;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.PersistentType;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.sample.domain.EntityOne;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.sample.domain.UnionEntityDetails;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.IMoneyType;
-import ua.com.fielden.platform.types.markers.IMoneyWithTaxAmountType;
-import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
-import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAmountType;
-import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAndExTaxAmountType;
-import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
+import ua.com.fielden.platform.types.markers.*;
+
+import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * An entity for testing purposes, which contains properties with all possible types.
@@ -36,6 +27,12 @@ import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 @CompanionObject(TgEntityWithManyPropTypesCo.class)
 public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
 
+    public enum Property implements IConvertableToPath {
+        unionEntityDetails;
+
+        @Override public String toPath() { return name(); }
+    }
+
     @IsProperty
     @MapTo
     private EntityOne entityProp;
@@ -43,6 +40,26 @@ public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     private UnionEntity unionProp;
+
+    @IsProperty
+    @MapTo
+    @SkipEntityExistsValidation
+    private UnionEntity unionProp2;
+
+    @IsProperty
+    @MapTo
+    @SkipEntityExistsValidation(skipActiveOnly = true, skipNew = false)
+    private UnionEntity unionProp3;
+
+    @IsProperty
+    @MapTo
+    @SkipEntityExistsValidation(skipActiveOnly = false, skipNew = true)
+    private UnionEntity unionProp4;
+
+    @IsProperty
+    @MapTo
+    @SkipEntityExistsValidation(skipActiveOnly = true, skipNew = true)
+    private UnionEntity unionProp5;
 
     @IsProperty
     @MapTo
@@ -113,6 +130,20 @@ public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
     @MapTo
     @PersistentType(userType = ISimplyMoneyWithTaxAndExTaxAmountType.class)
     private Money simplyMoneyWithTaxAndExTaxAmountTypeProp;
+
+    @IsProperty
+    @MapTo
+    private UnionEntityDetails unionEntityDetails;
+
+    public UnionEntityDetails getUnionEntityDetails() {
+        return unionEntityDetails;
+    }
+
+    @Observable
+    public TgEntityWithManyPropTypes setUnionEntityDetails(final UnionEntityDetails unionEntityDetails) {
+        this.unionEntityDetails = unionEntityDetails;
+        return this;
+    }
 
     @Observable
     public TgEntityWithManyPropTypes setSimpleMoneyTypeProp(final Money simpleMoneyTypeProp) {
@@ -232,6 +263,46 @@ public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
 
     public Class<?> getClassProperty() {
         return classProperty;
+    }
+
+    public UnionEntity getUnionProp5() {
+        return unionProp5;
+    }
+
+    @Observable
+    public TgEntityWithManyPropTypes setUnionProp5(final UnionEntity unionProp5) {
+        this.unionProp5 = unionProp5;
+        return this;
+    }
+
+    public UnionEntity getUnionProp4() {
+        return unionProp4;
+    }
+
+    @Observable
+    public TgEntityWithManyPropTypes setUnionProp4(final UnionEntity unionProp4) {
+        this.unionProp4 = unionProp4;
+        return this;
+    }
+
+    public UnionEntity getUnionProp3() {
+        return unionProp3;
+    }
+
+    @Observable
+    public TgEntityWithManyPropTypes setUnionProp3(final UnionEntity unionProp3) {
+        this.unionProp3 = unionProp3;
+        return this;
+    }
+
+    public UnionEntity getUnionProp2() {
+        return unionProp2;
+    }
+
+    @Observable
+    public TgEntityWithManyPropTypes setUnionProp2(final UnionEntity unionProp2) {
+        this.unionProp2 = unionProp2;
+        return this;
     }
 
     @Observable

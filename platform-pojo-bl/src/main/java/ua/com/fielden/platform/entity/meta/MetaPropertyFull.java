@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.meta;
 
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -17,10 +18,10 @@ import ua.com.fielden.platform.error.Informative;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -34,7 +35,6 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.*;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
@@ -221,7 +221,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             // refresh REQUIRED validation result if REQUIRED validation annotation pair exists
             final Map<IBeforeChangeEventHandler<T>, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
             if (requiredHandler != null && requiredHandler.size() == 1) {
-                setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), new Result(getEntity(), "Requiredness updated by successful result."));
+                setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), successful());
             }
             // process all registered validators (that have its own annotations)
             return processValidators(newValue, applicableValidationAnnotations);
@@ -281,7 +281,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         if (assigned) {
             return validate(getLastAttemptedValue(), validationAnnotations, ignoreRequiredness);
         }
-        return Result.successful(this);
+        return successful(this);
     }
 
     /**
@@ -319,7 +319,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
                 }
             }
         }
-        return new Result(this, "Validated successfully.");
+        return successful();
     }
 
     /**
@@ -905,7 +905,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
                 // in this case we only need to rely on the last attempted value -- if it null then there was no attempt to assign any boolean value
                 if ((((getValue() == null || isBoolean(type)) && getLastAttemptedValue() == null)) ||
                     findValidationResult(ValidationAnnotation.REQUIRED).map(Result::isSuccessful).orElse(true)) {
-                    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
+                    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), successful());
                 } else { // otherwise, it is necessary to enforce reassignment of the last attempted value to trigger revalidation
                     setEnforceMutator(true);
                     try {
@@ -949,13 +949,16 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         }
     }
 
-    /**
-     * Entities of type {@link AbstractFunctionalEntityForCollectionModification} need to be able to relax requiredness for their keys.
-     *
-     * @return
-     */
+    /// Cases where requiredness may be relaxed even though the property is required by definition.
+    ///
+    /// - `AbstractFunctionalEntityForCollectionModification.key`.
+    /// - `AbstractEntity.id` — an `@IsProperty`-overridden `id` with `@CompositeKeyMember` (no `@Optional`)
+    ///   is `requiredByDefinition=true`, but the `id` column is auto-assigned by the database on save and is never edited from the UI or set in model code.
+    ///   Relaxing it is safe (and is what [AbstractEntity#initProperty] and [EntityJsonDeserialiser#deserialiseMetaProperty] both need to do).
+    ///
     private boolean requirednessExceptionRule() {
-        return AbstractEntity.KEY.equals(name) && AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(entity.getType());
+        return AbstractEntity.KEY.equals(name) && AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(entity.getType())
+            || AbstractEntity.ID.equals(name);
     }
 
     @Override

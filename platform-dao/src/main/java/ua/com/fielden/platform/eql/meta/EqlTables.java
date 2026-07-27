@@ -2,11 +2,11 @@ package ua.com.fielden.platform.eql.meta;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;

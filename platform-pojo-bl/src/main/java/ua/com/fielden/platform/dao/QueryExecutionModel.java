@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.dao;
 
 import com.google.common.collect.ImmutableMap;
+import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -10,7 +11,6 @@ import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.utils.ToString.IFormat;
 import ua.com.fielden.platform.utils.ToString.IFormattable;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;

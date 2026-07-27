@@ -24,6 +24,33 @@ public class ParsingComparisonExpressionsTest {
     }
 
     @Test
+    public void trivial_boolean_eq_comparison() throws RecognitionException, SequenceRecognitionFailed {
+        final Token[] tokens = new ExpressionLexer("true = false").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
+        assertEquals("Incorrectly formed AST", "(= true false)", ast.treeToString());
+    }
+
+    @Test
+    public void trivial_boolean_ne_comparison() throws RecognitionException, SequenceRecognitionFailed {
+        final Token[] tokens = new ExpressionLexer("true <> false").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
+        assertEquals("Incorrectly formed AST", "(<> true false)", ast.treeToString());
+    }
+
+    @Test
+    public void trivial_boolean_ge_comparison() throws RecognitionException, SequenceRecognitionFailed {
+        final Token[] tokens = new ExpressionLexer("true > false").tokenize();
+        final ExpressionParser parser = new ExpressionParser(tokens);
+        final AstNode ast = parser.parse();
+        assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
+        assertEquals("Incorrectly formed AST", "(> true false)", ast.treeToString());
+    }
+
+    @Test
     public void trivial_le_comparison() throws RecognitionException, SequenceRecognitionFailed {
         final Token[] tokens = new ExpressionLexer("1 >= 2").tokenize();
         final ExpressionParser parser = new ExpressionParser(tokens);

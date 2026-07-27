@@ -1,11 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static ua.com.fielden.platform.web.PrefDim.mkDim;
-
-import java.util.Optional;
-
 import com.google.inject.Injector;
-
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.producers.UserAndRoleAssociationProducer;
 import ua.com.fielden.platform.web.PrefDim.Unit;
@@ -17,12 +12,15 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
-/**
- * {@link UserAndRoleAssociation} Web UI configuration.
- *
- * @author TG Team
- *
- */
+import java.util.Optional;
+
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.security.user.UserAndRoleAssociation.USER;
+import static ua.com.fielden.platform.security.user.UserAndRoleAssociation.USER_ROLE;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
+
+/// [UserAndRoleAssociation] Web UI configuration.
+///
 public class UserAndRoleAssociationWebUiConfig {
 
     public final EntityMaster<UserAndRoleAssociation> master;
@@ -36,25 +34,22 @@ public class UserAndRoleAssociationWebUiConfig {
         builder.register(master);
     }
 
-    /**
-     * Creates entity master for {@link UserAndRoleAssociation}.
-     *
-     * @param injector
-     * @return created entity master
-     */
+    /// Creates entity master for [UserAndRoleAssociation].
+    ///
     private EntityMaster<UserAndRoleAssociation> createMaster(final Injector injector) {
-        final String layout = LayoutComposer.mkGridForMasterFitWidth(2, 1);
+        final String layout = LayoutComposer.mkGridForMasterFitWidth(3, 1);
 
         final IMaster<UserAndRoleAssociation> masterConfig = new SimpleMasterBuilder<UserAndRoleAssociation>().forEntity(UserAndRoleAssociation.class)
-                .addProp("user").asAutocompleter().also()
-                .addProp("userRole").asAutocompleter().also()
+                .addProp(USER).asAutocompleter().also()
+                .addProp(USER_ROLE).asAutocompleter().also()
+                .addProp(ACTIVE).asCheckbox().also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel changes if any and refresh.")
                 .addAction(MasterActions.SAVE).shortDesc("Save").longDesc("Save changes.")
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkActionLayoutForMaster())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
-                .withDimensions(mkDim(380, 240, Unit.PX))
+                .withDimensions(mkDim(380, 305, Unit.PX))
                 .done();
 
         return new EntityMaster<>(UserAndRoleAssociation.class, UserAndRoleAssociationProducer.class, masterConfig, injector);

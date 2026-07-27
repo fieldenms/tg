@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.user;
 
+import org.junit.After;
 import org.junit.Test;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
@@ -12,6 +13,7 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
+import ua.com.fielden.platform.test.ioc.ApplicationSettingsForTesting;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -21,22 +23,96 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.security.user.User.*;
+import static ua.com.fielden.platform.security.user.UserDao.ERR_SELF_EDITING;
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
 import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MUNUTES;
 
-/**
- * A test case to cover basic user validations.
- *
- * @author TG Team
- *
- */
+/// A test case to cover basic user validations.
+///
 public class UserTestCase extends AbstractDaoTestCase {
 
     private final IUser coUser = co$(User.class);
     private final UserSecretCo coUserSecret = co$(UserSecret.class);
+
+    @After
+    public void tearDown() {
+        final ApplicationSettingsForTesting settings = (ApplicationSettingsForTesting) getInstance(IApplicationSettings.class);
+        settings.setUsersSelfEdit(true);
+    }
+
+    @Test
+    public void new_active_user_can_be_saved_with_empty_fetch() {
+        final var newUser = new_(User.class, "USER_TEST")
+                .setActive(true)
+                .setBase(true)
+                .setEmail("USER_TEST@company.com");
+        assertThatCode(() -> coUser.save(newUser, Optional.empty())).doesNotThrowAnyException();
+    }
+
+    @Test
+    public void existing_inactive_user_without_password_can_be_activated_by_saving_with_empty_fetch() {
+        final var user = coUser.save(new_(User.class, "USER_TEST")
+                                             .setActive(false)
+                                             .setBase(true)
+                                             .setEmail("USER_TEST@company.com"));
+        user.setActive(true);
+        assertThatCode(() -> coUser.save(user, Optional.empty())).doesNotThrowAnyException();
+    }
+
+    @Test
+    public void users_cannot_save_changes_to_their_own_record_if_self_editing_is_not_permitted() {
+        final ApplicationSettingsForTesting settings = (ApplicationSettingsForTesting) getInstance(IApplicationSettings.class);
+        settings.setUsersSelfEdit(false);
+
+        final UserDao co$User = co$(User.class);
+        assertThat(co$User.getUser()).isNotNull();
+        assertThat(co$User.getUser().getKey()).isEqualTo(UNIT_TEST_USER);
+
+        final var selfUser = co$User.findByKeyAndFetch(IUser.FETCH_MODEL, UNIT_TEST_USER);
+        selfUser.setEmail("some@domain.com");
+        assertThat(selfUser.isDirty()).isTrue();
+
+        assertThatThrownBy(() -> co$User.save(selfUser)).hasMessage(ERR_SELF_EDITING);
+    }
+
+    @Test
+    public void users_can_save_their_own_record_in_case_of_no_changes_even_if_self_editing_is_not_permitted() {
+        final ApplicationSettingsForTesting settings = (ApplicationSettingsForTesting) getInstance(IApplicationSettings.class);
+        settings.setUsersSelfEdit(false);
+
+        final UserDao co$User = co$(User.class);
+        assertThat(co$User.getUser()).isNotNull();
+        assertThat(co$User.getUser().getKey()).isEqualTo(UNIT_TEST_USER);
+
+        final var selfUser = co$User.findByKeyAndFetch(IUser.FETCH_MODEL, UNIT_TEST_USER);
+        assertThat(selfUser.isDirty()).isFalse();
+
+        assertThatCode(() -> co$User.save(selfUser)).doesNotThrowAnyException();
+    }
+
+    @Test
+    public void users_can_change_their_own_record_if_self_editing_is_permitted() {
+        final UserDao co$User = co$(User.class);
+        assertThat(co$User.getUser()).isNotNull();
+        assertThat(co$User.getUser().getKey()).isEqualTo(UNIT_TEST_USER);
+
+        final var selfUser = co$User.findByKeyAndFetch(IUser.FETCH_MODEL, UNIT_TEST_USER);
+        final var newEmailAddress = "some@domain.com";
+        selfUser.setEmail(newEmailAddress);
+        assertThat(selfUser.isDirty()).isTrue();
+
+        final var selfUserAfterSave = co$User.save(selfUser);
+        assertThat(selfUserAfterSave.getEmail()).isEqualTo(newEmailAddress);
+    }
 
     @Test
     public void username_does_not_permit_password_reset_UUID_separator() {
@@ -59,9 +135,9 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void propety_email_in_user_is_defined_with_almost_unique_validator() {
+    public void property_email_in_user_is_defined_with_almost_unique_validator() {
         final User user1 = coUser.findByKey("USER1");
-        final MetaProperty<String> emailProp = user1.getProperty("email");
+        final MetaProperty<String> emailProp = user1.getProperty(EMAIL);
         assertTrue(emailProp.getValidationAnnotations().stream().filter(a -> a instanceof BeforeChange).flatMap(a -> Stream.of(((BeforeChange) a).value())).anyMatch(handler -> handler.value().isAssignableFrom(UserAlmostUniqueEmailValidator.class)));
     }
     
@@ -76,8 +152,8 @@ public class UserTestCase extends AbstractDaoTestCase {
         user6.setEmail("user5@company.com");
         assertFalse(user6.isBase());
         assertFalse(user6.isValid().isSuccessful());
-        assertFalse(user6.getProperty("email").isValid());
-        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user5@company.com", "email", User.class.getName()), user6.getProperty("email").getFirstFailure().getMessage());
+        assertFalse(user6.getProperty(EMAIL).isValid());
+        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user5@company.com", EMAIL, User.class.getName()), user6.getProperty(EMAIL).getFirstFailure().getMessage());
     }
 
     @Test
@@ -91,7 +167,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         user2.setEmail("user1@company.com");
         assertTrue(user2.isBase());
         assertTrue(user2.isValid().isSuccessful());
-        assertTrue(user2.getProperty("email").isValid());
+        assertTrue(user2.getProperty(EMAIL).isValid());
         assertEquals("user1@company.com", user2.getEmail());
     }
 
@@ -107,13 +183,13 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertTrue(user2.isBase());
         
         assertTrue(user2.isValid().isSuccessful());
-        assertTrue(user2.getProperty("email").isValid());
+        assertTrue(user2.getProperty(EMAIL).isValid());
         assertEquals("user1@company.com", user2.getEmail());
         
         user2.setBase(false);
         assertFalse(user2.isValid().isSuccessful());
-        assertFalse(user2.getProperty("email").isValid());
-        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user1@company.com", "email", User.class.getName()), user2.getProperty("email").getFirstFailure().getMessage());
+        assertFalse(user2.getProperty(EMAIL).isValid());
+        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user1@company.com", EMAIL, User.class.getName()), user2.getProperty(EMAIL).getFirstFailure().getMessage());
     }
 
     @Test
@@ -127,8 +203,8 @@ public class UserTestCase extends AbstractDaoTestCase {
         user1.setEmail("user5@company.com");
         assertTrue(user1.isBase());
         assertFalse(user1.isValid().isSuccessful());
-        assertFalse(user1.getProperty("email").isValid());
-        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user5@company.com", "email", User.class.getName()), user1.getProperty("email").getFirstFailure().getMessage());
+        assertFalse(user1.getProperty(EMAIL).isValid());
+        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user5@company.com", EMAIL, User.class.getName()), user1.getProperty(EMAIL).getFirstFailure().getMessage());
     }
 
     @Test
@@ -142,8 +218,8 @@ public class UserTestCase extends AbstractDaoTestCase {
         user5.setEmail("user1@company.com");
         assertFalse(user5.isBase());
         assertFalse(user5.isValid().isSuccessful());
-        assertFalse(user5.getProperty("email").isValid());
-        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user1@company.com", "email", User.class.getName()), user5.getProperty("email").getFirstFailure().getMessage());
+        assertFalse(user5.getProperty(EMAIL).isValid());
+        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user1@company.com", EMAIL, User.class.getName()), user5.getProperty(EMAIL).getFirstFailure().getMessage());
     }
 
     @Test
@@ -157,8 +233,8 @@ public class UserTestCase extends AbstractDaoTestCase {
         user5.setEmail("user1@company.com");
         assertFalse(user5.isBase());
         assertFalse(user5.isValid().isSuccessful());
-        assertFalse(user5.getProperty("email").isValid());
-        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user1@company.com", "email", User.class.getName()), user5.getProperty("email").getFirstFailure().getMessage());
+        assertFalse(user5.getProperty(EMAIL).isValid());
+        assertEquals(format(UserAlmostUniqueEmailValidator.validationErrorTemplate, "user1@company.com", EMAIL, User.class.getName()), user5.getProperty(EMAIL).getFirstFailure().getMessage());
         
         user5.setBase(true);
         assertTrue(user5.isBase());
@@ -182,23 +258,23 @@ public class UserTestCase extends AbstractDaoTestCase {
         final User user1 = coUser.findByKey("USER1");
         
         user1.setEmail("user1@");
-        assertFalse(user1.getProperty("email").isValid());
-        assertEquals(format(EmailValidator.validationErrorTemplate, "user1@", "email", "User") ,user1.getProperty("email").getFirstFailure().getMessage());
+        assertFalse(user1.getProperty(EMAIL).isValid());
+        assertEquals(format(EmailValidator.validationErrorTemplate, "user1@", EMAIL, "User") ,user1.getProperty(EMAIL).getFirstFailure().getMessage());
         
         user1.setEmail("@company.com");
-        assertFalse(user1.getProperty("email").isValid());
-        assertEquals(format(EmailValidator.validationErrorTemplate, "@company.com", "email", "User") ,user1.getProperty("email").getFirstFailure().getMessage());
+        assertFalse(user1.getProperty(EMAIL).isValid());
+        assertEquals(format(EmailValidator.validationErrorTemplate, "@company.com", EMAIL, "User") ,user1.getProperty(EMAIL).getFirstFailure().getMessage());
 
         user1.setEmail("user1@company . com");
-        assertFalse(user1.getProperty("email").isValid());
-        assertEquals(format(EmailValidator.validationErrorTemplate, "user1@company . com", "email", "User") ,user1.getProperty("email").getFirstFailure().getMessage());
+        assertFalse(user1.getProperty(EMAIL).isValid());
+        assertEquals(format(EmailValidator.validationErrorTemplate, "user1@company . com", EMAIL, "User") ,user1.getProperty(EMAIL).getFirstFailure().getMessage());
         
         user1.setEmail("user1@company@la.com");
-        assertFalse(user1.getProperty("email").isValid());
-        assertEquals(format(EmailValidator.validationErrorTemplate, "user1@company@la.com", "email", "User") ,user1.getProperty("email").getFirstFailure().getMessage());
+        assertFalse(user1.getProperty(EMAIL).isValid());
+        assertEquals(format(EmailValidator.validationErrorTemplate, "user1@company@la.com", EMAIL, "User") ,user1.getProperty(EMAIL).getFirstFailure().getMessage());
         
         user1.setEmail("user1@company.com");
-        assertTrue(user1.getProperty("email").isValid());
+        assertTrue(user1.getProperty(EMAIL).isValid());
     }
 
     @Test
@@ -347,24 +423,25 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
     
     @Test
-    public void curren_user_has_no_sensitive_information_retrieved_by_default() {
+    public void current_user_has_no_sensitive_information_retrieved_by_default() {
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUsername(up.getUser().getKey(), co$(User.class)); // refresh the user
 
         final User currUser = up.getUser();
         assertTrue(currUser.isInstrumented());
         assertFalse(currUser.getProperty(KEY).isProxy());
-        assertTrue(currUser.getProperty("email").isProxy());
-        assertFalse(currUser.getProperty("active").isProxy());
-        assertFalse(currUser.getProperty("base").isProxy());
-        assertFalse(currUser.getProperty("basedOnUser").isProxy());
-        assertFalse(currUser.getProperty("roles").isProxy());
+        assertTrue(currUser.getProperty(EMAIL).isProxy());
+        assertFalse(currUser.getProperty(ACTIVE).isProxy());
+        assertFalse(currUser.getProperty(BASE).isProxy());
+        assertFalse(currUser.getProperty(BASED_ON_USER).isProxy());
+        assertFalse(currUser.getProperty(ACTIVE_ROLES).isProxy());
+        assertFalse(currUser.getProperty(INACTIVE_ROLES).isProxy());
     }
 
     @Test
     public void findUser_returns_a_user_with_expected_fetch_model() {
         final User user5 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER5");
-        assertTrue(user5.getProperty("basedOnUser").isValid());
+        assertTrue(user5.getProperty(BASED_ON_USER).isValid());
         assertEquals("USER1", user5.getBasedOnUser().getKey());
         
         final User baseUser3 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER3");
@@ -374,10 +451,10 @@ public class UserTestCase extends AbstractDaoTestCase {
         final User user5Again = coUser.findUser("USER5"); 
         assertTrue(user5Again.isInstrumented());
         assertFalse(user5Again.getProperty(KEY).isProxy());
-        assertTrue(user5Again.getProperty("email").isProxy());
-        assertFalse(user5Again.getProperty("active").isProxy());
-        assertFalse(user5Again.getProperty("base").isProxy());
-        assertFalse(user5Again.getProperty("basedOnUser").isProxy());
+        assertTrue(user5Again.getProperty(EMAIL).isProxy());
+        assertFalse(user5Again.getProperty(ACTIVE).isProxy());
+        assertFalse(user5Again.getProperty(BASE).isProxy());
+        assertFalse(user5Again.getProperty(BASED_ON_USER).isProxy());
         assertTrue(user5Again.getBasedOnUser().isIdOnlyProxy());
         assertEquals(user5Again.getBasedOnUser().getId(), baseUser3.getId());
     }
@@ -426,7 +503,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         final User user1 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER1");
         user1.setBase(false);
         
-        assertTrue(user1.getProperty("basedOnUser").isRequired());
+        assertTrue(user1.getProperty(BASED_ON_USER).isRequired());
         
         final User user3 = coUser.findByKey("USER2");
         user1.setBasedOnUser(user3);
@@ -439,10 +516,10 @@ public class UserTestCase extends AbstractDaoTestCase {
     @Test
     public void if_base_prop_is_set_to_true_then_prop_basedOnUser_becomes_not_required_and_its_value_is_removed() {
         final User user5 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER5");
-        assertTrue(user5.getProperty("basedOnUser").isRequired());
+        assertTrue(user5.getProperty(BASED_ON_USER).isRequired());
         assertNotNull(user5.getBasedOnUser());
         user5.setBase(true);
-        assertFalse(user5.getProperty("basedOnUser").isRequired());
+        assertFalse(user5.getProperty(BASED_ON_USER).isRequired());
         assertNull(user5.getBasedOnUser());
         
         final User user5saved = save(user5);
@@ -454,9 +531,9 @@ public class UserTestCase extends AbstractDaoTestCase {
         final User unitTestUser = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), User.system_users.UNIT_TEST_USER);
         assertNotNull(unitTestUser);
         assertTrue(unitTestUser.isBase());
-        assertTrue(unitTestUser.getProperty("base").isValid());
+        assertTrue(unitTestUser.getProperty(BASE).isValid());
         unitTestUser.setBase(false);
-        assertFalse(unitTestUser.getProperty("base").isValid());
+        assertFalse(unitTestUser.getProperty(BASE).isValid());
         assertTrue(unitTestUser.isBase());
     }
 
@@ -464,11 +541,11 @@ public class UserTestCase extends AbstractDaoTestCase {
     public void baseUser_cannot_be_assigned_to_itself() {
         final User user1 = coUser.findByKeyAndFetch(IUser.FETCH_PROVIDER.fetchModel(), "USER1");
         assertTrue(user1.isBase());
-        assertTrue(user1.getProperty("basedOnUser").isValid());
+        assertTrue(user1.getProperty(BASED_ON_USER).isValid());
         user1.setBasedOnUser(coUser.findByKeyAndFetch(IUser.FETCH_PROVIDER.fetchModel(), "USER1"));
         
-        assertFalse(user1.getProperty("basedOnUser").isValid());
-        assertEquals(UserBaseOnUserValidator.SELF_REFERENCE_IS_NOT_PERMITTED, user1.getProperty("basedOnUser").getFirstFailure().getMessage());
+        assertFalse(user1.getProperty(BASED_ON_USER).isValid());
+        assertEquals(UserBaseOnUserValidator.SELF_REFERENCE_IS_NOT_PERMITTED, user1.getProperty(BASED_ON_USER).getFirstFailure().getMessage());
     }
 
     @Test
@@ -476,30 +553,30 @@ public class UserTestCase extends AbstractDaoTestCase {
         final User unitTestUser = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), User.system_users.UNIT_TEST_USER);
         assertNotNull(unitTestUser);
         assertNull(unitTestUser.getBasedOnUser());
-        assertTrue(unitTestUser.getProperty("basedOnUser").isValid());
+        assertTrue(unitTestUser.getProperty(BASED_ON_USER).isValid());
         final User user3 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER3");
         unitTestUser.setBasedOnUser(user3);
-        assertFalse(unitTestUser.getProperty("basedOnUser").isValid());
+        assertFalse(unitTestUser.getProperty(BASED_ON_USER).isValid());
         assertNull(unitTestUser.getBasedOnUser());
-        assertEquals(format(UserBaseOnUserValidator.SYSTEM_BUILT_IN_ACCOUNTS_CANNOT_HAVE_BASED_ON_USER, unitTestUser.getKey()), unitTestUser.getProperty("basedOnUser").getFirstFailure().getMessage());
+        assertEquals(format(UserBaseOnUserValidator.SYSTEM_BUILT_IN_ACCOUNTS_CANNOT_HAVE_BASED_ON_USER, unitTestUser.getKey()), unitTestUser.getProperty(BASED_ON_USER).getFirstFailure().getMessage());
     }
 
     @Test
     public void only_a_base_user_can_be_set_as_basedOnUser() {
         final User user5 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER5");
-        assertTrue(user5.getProperty("basedOnUser").isValid());
+        assertTrue(user5.getProperty(BASED_ON_USER).isValid());
         assertEquals("USER1", user5.getBasedOnUser().getKey());
         
         final User nonbaseUser6 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER6");
         user5.setBasedOnUser(nonbaseUser6);
-        assertFalse(user5.getProperty("basedOnUser").isValid());
+        assertFalse(user5.getProperty(BASED_ON_USER).isValid());
         assertEquals("USER1", user5.getBasedOnUser().getKey());
-        assertEquals(format(UserBaseOnUserValidator.ONLY_BASE_USER_CAN_BE_USED_FOR_INHERITANCE, nonbaseUser6.getKey()), user5.getProperty("basedOnUser").getFirstFailure().getMessage());
+        assertEquals(format(UserBaseOnUserValidator.ONLY_BASE_USER_CAN_BE_USED_FOR_INHERITANCE, nonbaseUser6.getKey()), user5.getProperty(BASED_ON_USER).getFirstFailure().getMessage());
         
         final User baseUser3 = coUser.findByKeyAndFetch(co$(User.class).getFetchProvider().fetchModel(), "USER3");
         user5.setBasedOnUser(baseUser3);
         final User savedUser5 = save(user5);
-        assertTrue(savedUser5.getProperty("basedOnUser").isValid());
+        assertTrue(savedUser5.getProperty(BASED_ON_USER).isValid());
         assertEquals("USER3", savedUser5.getBasedOnUser().getKey());
     }
 
@@ -565,7 +642,7 @@ public class UserTestCase extends AbstractDaoTestCase {
            coUser.save(user3_1.setActive(false));
            fail("Saving invalid user should have failed.");
         } catch (final Exception ex) {
-            
+            assertTrue(ex.getMessage().startsWith("User [USER3] has 1 active dependency."));
         }
     }
 

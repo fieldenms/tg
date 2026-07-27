@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.eql.retrieval.records;
 
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
-
-import javax.annotation.Nullable;
 
 /**
  * A data container for representation of column-level data in {@link EntityTree entity tree}.

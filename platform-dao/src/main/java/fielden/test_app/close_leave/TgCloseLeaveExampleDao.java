@@ -61,7 +61,7 @@ public class TgCloseLeaveExampleDao extends CommonEntityDao<TgCloseLeaveExample>
         if (!wasPersisted) {
             // Also create and save an instance of detail entity
             final ITgCloseLeaveExampleDetail coDetail = co$(TgCloseLeaveExampleDetail.class);
-            final TgCloseLeaveExampleDetail detailEntity = (TgCloseLeaveExampleDetail) coDetail.new_().setKey(savedEntity).setDesc(savedEntity.getKey() + " detail");
+            final TgCloseLeaveExampleDetail detailEntity = coDetail.new_().setKey(savedEntity).setDesc(savedEntity.getKey() + " detail");
             coDetail.save(detailEntity);
         }
         return savedEntity;

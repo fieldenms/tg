@@ -1,31 +1,37 @@
 package ua.com.fielden.platform.dao;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.companion.*;
+import ua.com.fielden.platform.continuation.NeedMoreData;
+import ua.com.fielden.platform.continuation.NeedMoreDataStorage;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.handlers.IAfterSave;
+import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.IDbVersionProvider;
-import ua.com.fielden.platform.entity.query.IEntityFetcher;
-import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.ioc.session.SessionInterceptor;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -39,29 +45,27 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.utils.Lazy.lazyProvider;
 import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 
-/**
- * This is a base class for db-aware implementations of entity companions.
- * <p>
- * Method injection is used to free subclasses from the burden of declaring a huge constructor that only needs to call {@code super}.
- *
- * @author TG Team
- *
- * @param <T> entity type
- */
+/// Base class for database-aware implementations of entity companions.
+/// It is suitable for companions for both persistent and action entities.
+///
+/// Method injection is used to spare subclasses from declaring large constructors that merely delegate to `super`.
+/// This approach also improves evolvability, allowing changes in a backward-compatible manner.
+///
 public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends AbstractEntityReader<T> implements IEntityDao<T>, ISessionEnabled, ICanReadUninstrumented {
 
-    private final Logger logger = getLogger(this.getClass());
+    private final Logger logger = getLogger();
 
     // *** INJECTABLE FIELDS
     private IDbVersionProvider dbVersionProvider;
@@ -72,6 +76,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private EntityFactory entityFactory;
     private IEntityFetcher entityFetcher;
     private Supplier<DeleteOperations<T>> deleteOps;
+    private EntityBatchInsertOperation.Factory batchInsertOpsFactory;
     private Supplier<PersistentEntitySaver<T>> entitySaver;
     // ***
 
@@ -114,6 +119,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Inject
     protected void setDeleteOpsFactory(final Provider<DeleteOperations.Factory> deleteOpsFactory) {
         deleteOps = lazyProvider(() -> deleteOpsFactory.get().create(this, this::getSession, entityType));
+    }
+
+    @Inject
+    protected void setBatchInsertOpsFactory(final EntityBatchInsertOperation.Factory batchInsertOpsFactory) {
+        this.batchInsertOpsFactory = batchInsertOpsFactory;
     }
 
     @Inject
@@ -211,11 +221,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return getEntitiesOnPage(query, null, null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /// {@inheritDoc}
+    ///
+    /// @deprecated See [IPersistentEntityMutator#quickSave(AbstractEntity)].
+    /// 
     @Override
     @SessionRequired
+    @Deprecated(forRemoval = true)
     public long quickSave(final T entity) {
         if (hasSaveOverridden == null) {
             hasSaveOverridden = isMethodOverriddenOrDeclared(CommonEntityDao.class, getClass(), "save", getEntityType());
@@ -240,45 +252,65 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
 
+    /// ### Save-with-fetch as an alternative
+    /// For persistent entity types, it is generally recommended to implement save-with-fetch instead of this method, as
+    /// it provides control over refetching which may be used to improve performance.
+    ///
+    /// Once save-with-fetch is implemented, this method (the ordinary save) **must not be called within save-with-fetch**,
+    /// as it may lead to non-termination.
+    /// Specifically, calls to `save(entity)` must be replaced with calls to save-with-fetch (both `this` and `super` calls).
+    /// Note that this does not apply to external calls.
+    /// For example, it is valid to call `PersonCo.save(person)` outside of `PersonCo` and `PersonDao` even if save-with-fetch
+    /// is implemented for `Person`.
+    ///
+    /// Refactoring hint:
+    /// ```
+    /// var savedEntity = super.save(entity);
+    /// // Is equivalent to
+    /// var savedEntity = super.save(entity, Optional.of(FetchModelReconstructor.reconstruct(entity))).asRight().value();
+    /// ```
+    /// Note that such a refactoring is applicable only to persistent entities, as it is an error to use [FetchModelReconstructor] with non-persistent entities.
+    /// In general, it is unnecessary to call `super.save` with non-persistent entities.
+    ///
     @Override
     @SessionRequired
     public T save(final T entity) {
         if (entity == null) {
             throw new EntityCompanionException(format("Null entity of type [%s] cannot be saved.", entityType.getName()));
-        } else if (!entity.isPersistent()) {
+        }
+        if (this instanceof ISaveWithFetch<?> it) {
+            return ((ISaveWithFetch<T>) it)
+                    .save(entity, Optional.of(entity.isPersistent() ? FetchModelReconstructor.reconstruct(entity) : fetch(getEntityType())))
+                    .asRight().value();
+        }
+        if (!entity.isPersistent()) {
             return entity;
         } else {
             return entitySaver.get().save(entity);
         }
     }
 
-    /**
-     * Experimental API with the potential to replace {@link #save(AbstractEntity)} if proven superior in practice.
-     * <p>
-     * This method could be used as an alternative to {@link #quickSave(AbstractEntity)} by passing in an empty instance of {@code Optional<fetch<T>>}.
-     * The right way to go about it, would be to override this method and place all the logic into this method instead of the potentially overridden {@link #save(AbstractEntity)},
-     * and simply call it from {@link #save(AbstractEntity)} with the appropriate fetch model.
-     * This way would guarantee a single path for validation and other related logic when saving entities.
-     * <p>
-     * The return type {@code Either<Long, T>} represents either an entity id (left) or an entity instance (right).
-     * Passing an empty instance of {@code Optional<fetch<T>>} should always skip refetching and return the left result (i.e. id) – this is analogous to {@link #quickSave(AbstractEntity)}.
-     *
-     * @param entity
-     * @param maybeFetch
-     * @return
-     */
+    /// The core implementation of [ISaveWithFetch#save(AbstractEntity, Optional)].
+    ///
+    /// This method does not override [ISaveWithFetch#save(AbstractEntity, Optional)].
+    /// Companion interfaces are expected to extend [ISaveWithFetch] and delegate to this method via `super` to perform the actual saving.
+    ///
+    /// @see ISaveWithFetch#save(AbstractEntity, Optional)
+    ///
     @SessionRequired
     protected Either<Long, T> save(final T entity, final Optional<fetch<T>> maybeFetch) {
+        if (!entity.isPersistent()) {
+            return maybeFetch.isPresent() ? right(entity) : left(entity.getId());
+        }
         // if maybeFetch is empty then we skip re-fetching
         final boolean skipRefetching = !maybeFetch.isPresent();
         final T2<Long, T> result = entitySaver.get().coreSave(entity, skipRefetching, maybeFetch);
         return skipRefetching ? left(result._1) : right(result._2);
     }
 
-    /**
-     * Returns an open session, if present. Otherwise, throws {@link EntityCompanionException} exception.
-     * @return
-     */
+    /// Returns an open session, if present.
+    /// Otherwise, throws [EntityCompanionException] exception.
+    ///
     @Override
     public Session getSession() {
         if (session == null) {
@@ -289,13 +321,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return session;
     }
 
-    /**
-     * Returns a session instances without any checks.
-     * It is intended mainly for testing purposes to ensure correctness of the session state after various db operations.
-     *
-     * @return
-     */
-    public Session getSessionUnsafe() {
+    /// Returns a session instances without any checks.
+    /// It is intended mainly for testing purposes to ensure correctness of the session state after various db operations.
+    ///
+    public @Nullable Session getSessionUnsafe() {
         return session;
     }
 
@@ -418,66 +447,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return $instrumented$;
     }
 
-    ////////////////////////////////////////////////////////////////
-    //////// Continuation related structures and methods ///////////
-    ////////////////////////////////////////////////////////////////
-    // a map to hold the "more data" gathered by means of continuations
-    private final Map<String, IContinuationData> moreData = new HashMap<>();
-    // indicates whether continuations are supported to provide "more data" in the caller's context
+    //-------------------------------------------------------------------//
+    //--------------------- Continuation related methods ----------------//
+    //-------------------------------------------------------------------//
+
+    // Indicates whether continuations are supported to provide "more data" in the caller's context.
     private boolean continuationSupported = false;
-
-    /**
-     * Replaces any previously provided "more data" with new "more data".
-     * This is a bulk operation that is mainly needed for the infrastructural integration.
-     *
-     * @param moreData
-     */
-    public CommonEntityDao<T> setMoreData(final Map<String, IContinuationData> moreData) {
-        clearMoreData();
-        this.moreData.putAll(moreData);
-        return this;
-    }
-
-    /**
-     * A convenient method to set a single "more data" instance for a given key.
-     * Mostly useful for unit tests.
-     *
-     * @param key
-     * @param moreData
-     * @return
-     */
-    public CommonEntityDao<T> setMoreData(final String key, final IContinuationData moreData) {
-        this.moreData.put(key, moreData);
-        return this;
-    }
-
-    /**
-     * Clears continuations in this companion object.
-     */
-    public void clearMoreData() {
-        this.moreData.clear();
-    }
-
-    /**
-     * A convenient way to obtain "more data" by key. An empty optional is return if there was no "more data" found.
-     *
-     * @param key -- companion object property that identifies continuation
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public <E extends IContinuationData> Optional<E> moreData(final String key) {
-        return Optional.ofNullable((E) this.moreData.get(key));
-    }
-
-    /**
-     * A convenient way to obtain all "more data" by keys.
-     *
-     * @return
-     */
-    public Map<String, IContinuationData> moreData() {
-        return Collections.unmodifiableMap(moreData);
-    }
-
     public CommonEntityDao<T> setContinuationSupported(final boolean supported) {
         this.continuationSupported = supported;
         return this;
@@ -487,15 +462,65 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return this.continuationSupported;
     }
 
-    ////////////////////////////////////////////////////////////////
-    //////////////////// Before and After save methods /////////////
-    ////////////////////////////////////////////////////////////////
-    /**
-     * A method for assigning a value to a domain specific transactional property. This method does nothing by default, and should be overridden by companion objects in order to
-     * provide domain specific behaviour.
-     *
-     * @param prop
-     */
+    /// A convenient method to set a single "more data" instance for a given key.
+    /// Mostly useful for unit tests.
+    ///
+    public CommonEntityDao<T> setMoreData(final String key, final IContinuationData moreData) {
+        NeedMoreDataStorage.putMoreData(key, moreData);
+        return this;
+    }
+
+    /// A convenient way to obtain “more data” by key.
+    /// Returns an empty optional if no corresponding data is found.
+    ///
+    /// @param key a companion object property that identifies the continuation
+    /// @return an optional containing the requested data if found; otherwise, empty
+    ///
+    public <E extends IContinuationData> Optional<E> moreData(final String key) {
+        return NeedMoreDataStorage.moreData(key);
+    }
+
+    /// A convenient way to obtain all "more data" by keys.
+    ///
+    public Map<String, IContinuationData> moreData() {
+        return NeedMoreDataStorage.moreData();
+    }
+
+    /// A convenient helper for creating unique values for [NeedMoreData] keys.
+    /// Use this method when defining keys for continuation data in a consistent,
+    /// type-safe manner suitable for storage in the continuation context.
+    ///
+    /// This method is intended for initialising static constants that represent
+    /// continuation-data keys.
+    ///
+    /// For example:
+    /// ```java
+    /// public static final String
+    ///     MDK_CERTIFICATION = mkMoreDataKey(CertificationValidation.class);
+    /// ```
+    ///
+    /// @param moreDataType the type of the continuation data.
+    /// @return a newly generated continuation-data key
+    ///
+    public static String moreDataKey(final Class<? extends IContinuationData> moreDataType) {
+        try {
+            final var fullClassName = Thread.currentThread().getStackTrace()[2].getClassName();
+            final var simpleName = fullClassName.substring(fullClassName.lastIndexOf('.') + 1);
+            return simpleName + "-" + moreDataType.getSimpleName();
+        } catch (final Exception ex) {
+            // A fallback just in case.
+            return UUID.randomUUID().toString();
+        }
+    }
+
+    //-------------------------------------------------------------------//
+    //------------------ Before and After save methods ------------------//
+    //-------------------------------------------------------------------//
+
+    /// A method for assigning a value to a domain specific transactional property.
+    /// This method does nothing by default, and should be overridden by companion objects in order to
+    /// provide domain specific behaviour.
+    ///
     protected void assignBeforeSave(final MetaProperty<?> prop) {
 
     }
@@ -515,106 +540,69 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     }
 
-    ////////////////////////////////////////////////////////////
-    /////////////// block of default delete methods ////////////
-    ////////////////////////////////////////////////////////////
+    //-------------------------------------------------------------------//
+    //---------------- Block of default delete methods ------------------//
+    //-------------------------------------------------------------------//
 
-    /**
-     * A convenient default implementation for entity deletion, which should be used when overriding method {@link #delete(T)}.
-     *
-     * @param entity
-     */
+    /// A convenient default implementation for entity deletion, which should be used when overriding method [#delete(T)].
+    ///
     @SessionRequired
     protected void defaultDelete(final T entity) {
         deleteOps.get().defaultDelete(entity);
     }
 
-    /**
-     * A convenient default implementation for deletion of entities specified by provided query model and parameters, which could be empty.
-     *
-     * @param model
-     * @param paramValues
-     */
+    /// A convenient default implementation for deletion of entities specified by provided query model and parameters, which could be empty.
+    ///
     @SessionRequired
     protected void defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         deleteOps.get().defaultDelete(model, paramValues);
     }
 
-    /**
-     * The same as {@link #defaultDelete(EntityResultQueryModel, Map)}, but with empty parameters.
-     *
-     * @param model
-     */
+    /// The same as [#defaultDelete(EntityResultQueryModel,Map)], but with empty parameters.
+    ///
     @SessionRequired
     protected void defaultDelete(final EntityResultQueryModel<T> model) {
         deleteOps.get().defaultDelete(model);
     }
 
-    /**
-     * A convenient default implementation for batch deletion of entities specified by provided query model and parameters, which could be empty.
-     *
-     * @param model
-     * @param paramValues
-     * @return
-     */
+    /// A convenient default implementation for batch deletion of entities specified by provided query model and parameters, which could be empty.
+    ///
     @SessionRequired
     protected int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         return deleteOps.get().defaultBatchDelete(model, paramValues);
     }
 
-    /**
-     * The same as {@link #defaultBatchDelete(EntityResultQueryModel, Map)}, but with empty parameters.
-     *
-     * @param model
-     * @return
-     */
+    /// The same as [#defaultBatchDelete(EntityResultQueryModel,Map)], but with empty parameters.
+    ///
     @SessionRequired
     protected int defaultBatchDelete(final EntityResultQueryModel<T> model) {
         return deleteOps.get().defaultBatchDelete(model);
     }
 
-    /**
-     * Batch deletion of entities in the provided list.
-     *
-     * @param entities
-     * @return
-     */
+    /// Batch deletion of entities in the provided list.
+    ///
     @SessionRequired
     protected int defaultBatchDelete(final List<? extends AbstractEntity<?>> entities) {
-        return batchDelete(entities.stream().map(e -> e.getId()).collect(Collectors.toList()));
+        return batchDelete(entities.stream().map(AbstractEntity::getId).toList());
     }
 
-    /**
-     * Batch deletion of entities by their ID values.
-     *
-     * @param entitiesIds
-     * @return
-     */
+    /// Batch deletion of entities by their ID values.
+    ///
     @SessionRequired
     protected int defaultBatchDelete(final Collection<Long> entitiesIds) {
         return deleteOps.get().defaultBatchDelete(entitiesIds);
     }
 
-    /**
-     * A more generic version of batch deletion of entities {@link #defaultBatchDelete(Collection)} that accepts a property name and a collection of ID values.
-     * Those entities that have the specified property matching any of those ID values get deleted.
-     *
-     * @param propName
-     * @param entitiesIds
-     * @return
-     */
+    /// A more generic version of batch deletion of entities [#defaultBatchDelete(Collection)] that accepts a property name and a collection of ID values.
+    /// Those entities that have the specified property matching any of those ID values get deleted.
+    ///
     @SessionRequired
     protected int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
         return deleteOps.get().defaultBatchDeleteByPropertyValues(propName, entitiesIds);
     }
 
-    /**
-     * The same as {@link #defaultBatchDeleteByPropertyValues(String, Collection)}, but for a list of entities.
-     *
-     * @param propName
-     * @param propEntities
-     * @return
-     */
+    /// The same as [#defaultBatchDeleteByPropertyValues(String,Collection)], but for a list of entities.
+    ///
     @SessionRequired
     protected <E extends AbstractEntity<?>> int defaultBatchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
         return deleteOps.get().defaultBatchDeleteByPropertyValues(propName, propEntities);
@@ -638,15 +626,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return fetchProvider;
     }
 
-    /**
-     * Creates fetch provider for this entity companion.
-     * <p>
-     * Should be overridden to provide custom fetch provider.
-     *
-     * @return
-     */
+    /// Creates a fetch provider for this entity companion.
+    ///
+    /// Override this method to provide a custom fetch provider.
+    ///
     protected IFetchProvider<T> createFetchProvider() {
-        // provides a very minimalistic version of fetch provider by default (only id and version are included)
+        // Provides a very minimalistic version of fetch provider by default (only id and version are included).
         return EntityUtils.fetch(getEntityType());
     }
 
@@ -654,15 +639,64 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return entityFactory;
     }
 
-    /**
-     * Instantiates an instrumented new entity of the type for which this object is a companion.
-     * The default entity constructor, which should be protected, is used for instantiation.
-     *
-     * @return
-     */
+    /// Instantiates an instrumented new entity of the type for which this object is a companion.
+    /// The default entity constructor, which should be protected, is used for instantiation.
+    ///
     @Override
     public T new_() {
         return entityFactory.newEntity(getEntityType());
+    }
+
+    /// Provides the default implementation for batch insertion of new entities.
+    ///
+    /// This method serves as the standard implementation for batch insertion operations in entity companions.
+    /// It handles the common logic required for efficiently inserting multiple new entities into the database
+    /// while ensuring data integrity and applying necessary pre-save operations.
+    ///
+    /// The method performs the following operations for each entity:
+    /// - Auto-populates required properties for new entities (creation timestamps, user info, etc.).
+    /// - Validates each entity before insertion.
+    /// - Processes entities in batches according to the specified batch size.
+    ///
+    /// If validation fails for any entity, a runtime exception is thrown and the entire batch operation is rolled back.
+    ///
+    /// **Important:**
+    /// - Batch insertion is not suitable in many cases and should be used with care.
+    ///   Attempts to batch insert *active* activatable entities throws [InvalidArgumentException].
+    /// - This method should be called in the scope of an open session.
+    ///   Otherwise, [EntityCompanionException] is thrown.
+    ///
+    /// @param newEntities a stream of new entities to be inserted
+    /// @param batchSize   the number of entities to process in each database batch operation;
+    ///                    larger values improve throughput but increase memory usage
+    ///
+    /// @return the total count of successfully inserted entities
+    ///
+    /// @see EntityBatchInsertOperation#batchInsert for the underlying batch insertion mechanism
+    ///
+    protected int defaultBatchInsert(final Stream<T> newEntities, final int batchSize) {
+        // Call getSession() to make sure defaultBatchInsert is called in the scope of an open session.
+        // If not, this call throws exception.
+        getSession();
+
+        // If there is an open session, batch insertion cat be attempted.
+        final var ops = batchInsertOpsFactory.create(() -> new TransactionalExecution(userProvider, this::getSession));
+        final var saver = entitySaver.get();
+        return ops.batchInsert(newEntities.filter(Objects::nonNull).peek(entity -> {
+            // Do not permit batch insertion for active activatbles.
+            if (entity instanceof ActivatableAbstractEntity<?> ae && ae.isActive()) {
+                throw new InvalidArgumentException("Batch insertion of active activatable entities [%s] is not supported.".formatted(entity.getType().getSimpleName()));
+            }
+
+            // Autopopulated entity props.
+            if (entity instanceof AbstractPersistentEntity<?> persistentEntity) {
+                saver.assignCreationInfoForNew(persistentEntity);
+            }
+            saver.assignPropsBeforeSaveForNew(entity);
+
+            // Validate and throw if invalid.
+            entity.isValid().ifFailure(Result::throwRuntime);
+        }), batchSize);
     }
 
 }

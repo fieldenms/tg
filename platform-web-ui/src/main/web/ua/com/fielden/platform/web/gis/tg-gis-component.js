@@ -12,7 +12,6 @@ import { Controls, leafletDrawStylesName, leafletControlloadingStylesName, leafl
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import '/resources/gis/leaflet/subgroup/leaflet-subgroup-lib.js';
 import { TgReflector, _isEntity } from '/app/tg-reflector.js';
-import { TgAppConfig } from '/app/tg-app-config.js';
 import { RunActions } from '/resources/centre/tg-selection-criteria-behavior.js';
 import { createStyleModule } from '/resources/polymer/lib/tg-style-utils.js';
 
@@ -67,7 +66,6 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     const self = this;
     tgMap._gisComponent = self;
     this._reflector = new TgReflector();
-    this._appConfig = new TgAppConfig();
 
     appendStylesTo(tgMap,
         leafletStylesName,
@@ -658,7 +656,7 @@ GisComponent.prototype.createPopupContent = function (feature) {
         }
         
         this.additionalPopupProps().forEach(property => {
-            const entryValue = this._reflector.tg_toString(entity.get(property), entity.constructor.prototype.type.call(entity), property, { display: true, locale: this._appConfig.locale });
+            const entryValue = this._reflector.tg_toString(entity.get(property), entity.constructor.prototype.type.call(entity), property, { display: true });
             extendPopupText({ value: entryValue, dotNotation: property, title: self.titleFor(entity, property) });
         });
     }

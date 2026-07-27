@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.sample.domain.compound.master.menu.actions;
 
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -17,10 +17,9 @@ import ua.com.fielden.platform.utils.Pair;
 @KeyType(TgCompoundEntity.class)
 @CompanionObject(ITgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem.class)
 @EntityTitle("Tg Compound Entity Master Tg Compound Entity Child Menu Item")
-public class TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem extends AbstractFunctionalEntityForCompoundMenuItem<TgCompoundEntity> {
+public class TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem extends AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave<TgCompoundEntity> {
 
     private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
-
 }

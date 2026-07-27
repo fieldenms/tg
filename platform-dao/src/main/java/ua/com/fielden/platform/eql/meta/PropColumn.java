@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
+
 import java.util.Objects;
 
 public class PropColumn {

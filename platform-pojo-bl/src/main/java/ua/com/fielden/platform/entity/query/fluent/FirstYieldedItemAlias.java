@@ -27,12 +27,12 @@ abstract class FirstYieldedItemAlias<T> //
 
     @Override
     public <ET extends AbstractEntity<?>> EntityResultQueryModel<ET> modelAsEntity(final Class<ET> entityType) {
-        return new EntityResultQueryModel<ET>(builder.modelAsEntity(entityType).getTokenSource(), entityType, builder.isYieldAll());
+        return new EntityResultQueryModel<ET>(builder.modelAsEntity(entityType).getTokens(), entityType, builder.isYieldAll());
     }
 
     @Override
     public PrimitiveResultQueryModel modelAsPrimitive() {
-        return new PrimitiveResultQueryModel(builder.modelAsPrimitive().getTokenSource());
+        return new PrimitiveResultQueryModel(builder.modelAsPrimitive().getTokens());
     }
 
     @Override

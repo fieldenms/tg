@@ -7,7 +7,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 
-import { openLink } from '/resources/reflection/tg-polymer-utils.js';
+import { checkLinkAndOpen, isSupportedLink, MAILTO_PROTOCOL, ERR_UNSUPPORTED_PROTOCOL } from '/resources/components/tg-link-opener.js';
 
 const additionalTemplate = html`
     <style>
@@ -34,13 +34,11 @@ const customInputTemplate = html`
             on-focus="_onFocus"
             on-blur="_outFocus"
             disabled$="[[_disabled]]"
-            tooltip-text$="[[_getTooltip(_editingValue)]]"
+            tooltip-text$="[[_getTooltip(_editingValue, _scanAvailable)]]"
             autocomplete="off"/>
     </iron-input>`;
 const customIconButtonsTemplate = html`<paper-icon-button on-tap="_openLink" icon="open-in-browser" class="open-button custom-icon-buttons" tabIndex="-1" tooltip-text="Open link"></paper-icon-button>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
-
-const MAILTO_PREFIX = 'mailto:';
 
 export class TgHyperlinkEditor extends TgEditor {
 
@@ -55,10 +53,8 @@ export class TgHyperlinkEditor extends TgEditor {
         if (strValue === '') {
             return null;
         } else {
-            if ((strValue.startsWith('https://') || strValue.startsWith('http://') ||
-                    strValue.startsWith('ftp://') || strValue.startsWith('ftps://') ||
-                    strValue.startsWith(MAILTO_PREFIX)) === false) {
-                throw "One of http, https, ftp, ftps or mailto hyperlink protocols is expected.";
+            if (!isSupportedLink(strValue)) {
+                throw ERR_UNSUPPORTED_PROTOCOL;
             }
 
             return {
@@ -72,7 +68,7 @@ export class TgHyperlinkEditor extends TgEditor {
      */
     _openLink () {
         if (this._acceptedValue) {
-            openLink(this._acceptedValue.value);
+            checkLinkAndOpen(this._acceptedValue.value);
         }
     }
 
@@ -88,7 +84,7 @@ export class TgHyperlinkEditor extends TgEditor {
 
     _trimAndPrependProtocol (editingValue) {
         const strValue = editingValue.trim();
-        if (strValue === '' || strValue.includes('://') || strValue.includes(MAILTO_PREFIX)) {
+        if (strValue === '' || strValue.includes('://') || strValue.includes(MAILTO_PROTOCOL)) {
             return strValue;
         } else {
             return `https://${strValue}`;

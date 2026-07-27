@@ -1,22 +1,13 @@
 package ua.com.fielden.platform.entity.validation.test_entities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.Dependent;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.validation.test_entities.definers.MakeProp1NotRequired;
 import ua.com.fielden.platform.entity.validation.test_entities.definers.MakeProp1Required;
-/**
- * Entity with properties that change their requiredness dynamically.
- *
- * @author TG Team
- */
+
+/// Entity with properties that change their requiredness dynamically.
+///
 @KeyType(String.class)
 @CompanionObject(EntityWithDynamicRequirednessCo.class)
 @MapEntityTo
@@ -69,6 +60,38 @@ public class EntityWithDynamicRequiredness extends AbstractEntity<String> {
     @Title(value = "Prop 8", desc = "Boolean property that is mutually exclusive with Prop 7 and Prop 8.")
     @AfterChange(EntityWithDynamicRequirednessEitherOrDefiner.class)
     private boolean prop8;
+
+    @IsProperty
+    @MapTo
+    @Unique
+    @Title("Unique boolean")
+    private boolean uniqueBoolean;
+
+    @IsProperty
+    @MapTo
+    @Unique
+    @Title("Unique String")
+    private String uniqueString;
+
+    public String getUniqueString() {
+        return uniqueString;
+    }
+
+    @Observable
+    public EntityWithDynamicRequiredness setUniqueString(final String uniqueString) {
+        this.uniqueString = uniqueString;
+        return this;
+    }
+
+    public boolean getUniqueBoolean() {
+        return uniqueBoolean;
+    }
+
+    @Observable
+    public EntityWithDynamicRequiredness setUniqueBoolean(final boolean uniqueBoolean) {
+        this.uniqueBoolean = uniqueBoolean;
+        return this;
+    }
 
     @Observable
     public EntityWithDynamicRequiredness setProp8(final boolean prop8) {

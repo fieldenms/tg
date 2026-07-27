@@ -18,4 +18,8 @@ public class StrictProxyException extends RuntimeException {
         super(msg);
     }
 
+    public StrictProxyException(final String msg, final Throwable cause) {
+        super(msg, cause);
+    }
+
 }

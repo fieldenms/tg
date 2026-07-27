@@ -42,6 +42,7 @@ import java.util.stream.Stream;
 import static java.math.RoundingMode.HALF_EVEN;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
@@ -158,12 +159,15 @@ public class EntityUtilsTest {
     @Test
     public void collectional_properties_are_correctly_identifiable() {
         final List<Field> collectionalProperties = getCollectionalProperties(User.class);
-        assertEquals(1, collectionalProperties.size());
+        assertEquals(2, collectionalProperties.size());
 
-        final Field userRolesField = collectionalProperties.get(0);
-        assertEquals("Incorrect field name", "roles", userRolesField.getName());
-        assertEquals("Incorrect collectional entity class", UserAndRoleAssociation.class, AnnotationReflector.getAnnotation(userRolesField, IsProperty.class).value());
-        assertEquals("Incorrect collectional entity link property", "user", AnnotationReflector.getAnnotation(userRolesField, IsProperty.class).linkProperty());
+        final Field fActiveRoles = collectionalProperties.get(0);
+        assertEquals("Incorrect field name", "activeRoles", fActiveRoles.getName());
+        assertEquals("Incorrect collectional entity class", SynUserAndRoleAssociationActive.class, AnnotationReflector.getAnnotation(fActiveRoles, IsProperty.class).value());
+
+        final Field fInactiveRoles = collectionalProperties.get(1);
+        assertEquals("Incorrect field name", "inactiveRoles", fInactiveRoles.getName());
+        assertEquals("Incorrect collectional entity class", SynUserAndRoleAssociationInactive.class, AnnotationReflector.getAnnotation(fInactiveRoles, IsProperty.class).value());
     }
 
     @Test
@@ -649,10 +653,34 @@ public class EntityUtilsTest {
     }
 
     @Test
+    public void toString_converts_dates_to_strings_with_both_date_and_time_components_where_time_contains_seconds_and_millis_if_either_seconds_or_millis_are_present() {
+        final var dateWithMinutes = new DateTime("2025-11-23T22:05").toDate();
+        assertEquals("23/11/2025 22:05", EntityUtils.toString(dateWithMinutes));
+
+        final var dateWithSeconds = new DateTime("2025-11-23T22:05:19").toDate();
+        assertEquals("23/11/2025 22:05:19.000", EntityUtils.toString(dateWithSeconds));
+
+        final var dateWithMillis = new DateTime("2025-11-23T22:05:00.900").toDate();
+        assertEquals("23/11/2025 22:05:00.900", EntityUtils.toString(dateWithMillis));
+    }
+
+    @Test
     public void only_a_specific_subset_of_platform_level_entities_have_introspection_allowed() {
-        final LinkedHashSet<Class<? extends AbstractEntity<?>>> expected = linkedSetOf(Attachment.class, DomainExplorer.class, DashboardRefreshFrequency.class, DashboardRefreshFrequencyUnit.class, KeyNumber.class, User.class, ReUser.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class, UserDefinableHelp.class);
         final LinkedHashSet<Class<? extends AbstractEntity<?>>> filtered = PlatformDomainTypes.types.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toCollection(LinkedHashSet::new));
-        assertEquals(expected, filtered);
+        assertThat(filtered).containsExactlyInAnyOrder(
+                Attachment.class,
+                DomainExplorer.class,
+                DashboardRefreshFrequency.class,
+                DashboardRefreshFrequencyUnit.class,
+                KeyNumber.class,
+                User.class,
+                ReUser.class,
+                UserRole.class,
+                UserAndRoleAssociation.class,
+                SynUserAndRoleAssociationActive.class,
+                SynUserAndRoleAssociationInactive.class,
+                SecurityRoleAssociation.class,
+                UserDefinableHelp.class);
     }
 
     @Test
@@ -716,6 +744,83 @@ public class EntityUtilsTest {
                      entityTypeHierarchy(TgReVehicleModel.class, true).toList());
         assertEquals(List.of(TgReVehicleModel.class, TgVehicleModel.class),
                      entityTypeHierarchy(TgReVehicleModel.class, false).toList());
+    }
+
+    @Test
+    public void isActivatableEntityType_returns_true_for_activatable_persistent_entities() {
+        // TgPerson extends ActivatableAbstractEntity and is persistent.
+        assertTrue(isActivatableEntityType(TgPerson.class));
+    }
+
+    @Test
+    public void isActivatableEntityType_returns_false_for_non_activatable_persistent_entities() {
+        // TgAuthor is persistent but does not extend ActivatableAbstractEntity.
+        assertFalse(isActivatableEntityType(TgAuthor.class));
+    }
+
+    @Test
+    public void isActivatableEntityType_returns_false_for_non_activatable_synthetic_entities() {
+        assertFalse(isActivatableEntityType(TgAverageFuelUsage.class));
+    }
+
+    @Test
+    public void isActivatableEntityType_returns_true_for_synthetic_based_on_activatable_persistent_entities() {
+        // TgReActivatableVehicleModel extends activatable persistent TgActivatableVehicleModel.
+        assertTrue(isActivatableEntityType(TgReActivatableVehicleModel.class));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_true_for_activatable_persistent_entities() {
+        // TgPerson extends ActivatableAbstractEntity and is persistent.
+        assertTrue(isActivatablePersistentEntityType(TgPerson.class));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_false_for_non_activatable_persistent_entities() {
+        // TgAuthor is persistent but does not extend ActivatableAbstractEntity.
+        assertFalse(isActivatablePersistentEntityType(TgAuthor.class));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_false_for_non_activatable_synthetic_entities() {
+        assertFalse(isActivatablePersistentEntityType(TgAverageFuelUsage.class));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_false_for_synthetic_based_on_activatable_persistent_entities() {
+        // TgReActivatableVehicleModel extends activatable persistent TgActivatableVehicleModel.
+        assertFalse(isActivatablePersistentEntityType(TgReActivatableVehicleModel.class));
+    }
+
+    @Test
+    public void isActivatableEntityType_returns_false_for_union_entities() {
+        // Union entities are never considered activatable.
+        assertFalse(isActivatableEntityType(UnionEntity.class));
+    }
+
+    @Test
+    public void isActivatableEntityType_returns_false_for_null_input() {
+        assertFalse(isActivatableEntityType(null));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_false_for_null_input() {
+        assertFalse(isActivatablePersistentEntityType(null));
+    }
+
+    @Test
+    public void isOneToOne_returns_false_for_entity_with_simple_key() {
+        assertFalse(isOneToOne(TgVehicle.class));
+    }
+
+    @Test
+    public void isOneToOne_returns_false_for_null_entity_type() {
+        assertFalse(isOneToOne(null));
+    }
+
+    @Test
+    public void isOneToOne_returns_true_for_entity_with_entity_key() {
+        assertTrue(isOneToOne(TgVehicleFinDetails.class));
     }
 
     /**

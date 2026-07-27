@@ -3,7 +3,7 @@
     <parent>
         <groupId>fielden</groupId>
         <artifactId>platform-parent</artifactId>
-        <version>2.0.2-SNAPSHOT</version>
+        <version>2.6.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>platform-pojo-bl</artifactId>
@@ -16,12 +16,14 @@
     </description>
 
     <properties>
-        <jackson.version>2.15.0</jackson.version>
-        <log4j.version>2.23.1</log4j.version>
-        <guava.version>33.2.1-jre</guava.version>
-        <poi.verstion>5.4.1</poi.verstion>
+        <jackson.version>2.22.1</jackson.version>
+        <jackson.annotations.version>2.22</jackson.annotations.version>
+        <guava.version>33.6.0-jre</guava.version>
+        <poi.verstion>5.5.1</poi.verstion>
         <xalan.version>2.7.3</xalan.version>
         <guice.version>7.0.0</guice.version>
+        <asm.version>9.10.1</asm.version><!-- Required to override the outdated dependency in Guice. -->
+        <qrcodegen.version>1.8.0</qrcodegen.version>
     </properties>
 
     <dependencies>
@@ -29,6 +31,13 @@
             <groupId>fielden</groupId>
             <artifactId>platform-annotations</artifactId>
             <version>${project.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api -->
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>3.0.0</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
@@ -39,9 +48,20 @@
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
-              <artifactId>guice</artifactId>
-              <version>${guice.version}</version>
+            <artifactId>guice</artifactId>
+            <version>${guice.version}</version>
+            <!-- Classifier "classes" unshades the Guice dependency,
+                 which makes using explicit dependency on ASM below replace the original dependency in Guice.
+                 This is as per suggestion https://github.com/google/guice/issues/1926#issuecomment-3991531593
+                  -->
+            <classifier>classes</classifier>
         </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>${asm.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.google.inject.extensions</groupId>
             <artifactId>guice-assistedinject</artifactId>
@@ -52,14 +72,14 @@
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
-            <version>2.12.2</version>
+            <version>2.14.2</version>
         </dependency>
 
         <!-- Jackson dependencies -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>${jackson.version}</version>
+            <version>${jackson.annotations.version}</version>
         </dependency>
 
         <dependency>
@@ -83,25 +103,16 @@
             <version>1.3.8</version>
         </dependency>
 
-        <!-- ByteBuddy is high level Java API that has a potential to replace the direct use of ASM in TG.
-             But its current role to replace Javassist for creation of proxied entity instances. -->
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
-            <version>1.14.12</version>
-        </dependency>
-        <!-- This is the same dependency as for Hibernate 5.2.17.Final -->
-        <dependency>
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>3.24.0-GA</version>
         </dependency>
 
         <!-- Password strength estimation -->
         <dependency>
             <groupId>com.nulab-inc</groupId>
             <artifactId>zxcvbn</artifactId>
-            <version>1.1.1</version>
+            <version>1.9.0</version>
         </dependency>
 
         <!-- Java Mail, which is now Jakarta Mail -->
@@ -109,19 +120,26 @@
         <dependency>
             <groupId>jakarta.mail</groupId>
             <artifactId>jakarta.mail-api</artifactId>
-            <version>2.0.0</version>
+            <version>2.1.5</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.sun.mail/jakarta.mail -->
+        <!-- https://mvnrepository.com/artifact/jakarta.activation/jakarta.activation-api -->
         <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>jakarta.mail</artifactId>
-            <version>2.0.0</version>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
+            <version>2.1.4</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.sun.activation/jakarta.activation -->
+        <!-- https://mvnrepository.com/artifact/org.eclipse.angus/angus-mail -->
         <dependency>
-            <groupId>com.sun.activation</groupId>
-            <artifactId>jakarta.activation</artifactId>
-            <version>2.0.0</version>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>angus-mail</artifactId>
+            <version>2.0.5</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.eclipse.angus/angus-activation -->
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>angus-activation</artifactId>
+            <version>2.0.3</version>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
@@ -134,18 +152,13 @@
         <dependency>
             <groupId>com.graphql-java</groupId>
             <artifactId>graphql-java</artifactId>
-            <version>22.1</version>
+            <version>26.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.graphql-java</groupId>
-            <artifactId>graphql-java-extended-scalars</artifactId>
-            <version>22.0</version>
         </dependency>
 
         <dependency>
@@ -157,30 +170,46 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>${poi.verstion}</version>
+            <exclusions>
+                <!-- Tika's parser modules require poi-ooxml-full, which is a strict superset of poi-ooxml-lite.
+                     Exactly one of the two may be on the classpath, as per POI's own guidance,
+                     so poi-ooxml-lite is excluded in favour of poi-ooxml-full, declared below. -->
+                <exclusion>
+                    <groupId>org.apache.poi</groupId>
+                    <artifactId>poi-ooxml-lite</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Declared explicitly, rather than relying on Tika to supply it transitively,
+             to keep the OOXML schema classes bound to {poi.verstion} and independent of Tika. -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml-full</artifactId>
+            <version>${poi.verstion}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-compress -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
-            <version>1.27.1</version>
+            <version>1.28.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.17.0</version>
+            <version>3.20.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-text -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
-            <version>1.13.0</version>
+            <version>1.14.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.tika/tika-core -->
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
-            <version>3.1.0</version>
+            <version>3.3.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -192,7 +221,7 @@
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-parsers-standard-package</artifactId>
-            <version>3.1.0</version>
+            <version>3.3.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -204,18 +233,21 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>${log4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>${log4j.version}</version>
         </dependency>
-         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
-            <version>${log4j.version}</version>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+
 
         <dependency>
             <groupId>xerces</groupId>
@@ -241,39 +273,59 @@
         <dependency>
             <groupId>commons-validator</groupId>
             <artifactId>commons-validator</artifactId>
-            <version>1.9.0</version>
+            <version>1.10.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.18.0</version>
+            <version>2.22.0</version>
         </dependency>
         <dependency>
             <groupId>org.commonmark</groupId>
             <artifactId>commonmark</artifactId>
-            <version>0.24.0</version>
+            <version>0.29.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
             <artifactId>owasp-java-html-sanitizer</artifactId>
-            <version>20240325.1</version>
+            <version>20260313.1</version>
         </dependency>
 
         <dependency>
             <!-- jsoup HTML parser library @ https://jsoup.org/ -->
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.18.1</version>
+            <version>1.22.2</version>
         </dependency>
+
+      <!-- https://mvnrepository.com/artifact/com.google.testing.compile/compile-testing -->
+      <dependency>
+        <groupId>com.google.testing.compile</groupId>
+        <artifactId>compile-testing</artifactId>
+        <version>0.23.0</version>
+        <scope>test</scope>
+      </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.assertj/assertj-core -->
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>${assertj.version}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- https://www.nayuki.io/page/qr-code-generator-library-->
+        <dependency>
+            <groupId>io.nayuki</groupId>
+            <artifactId>qrcodegen</artifactId>
+            <version>${qrcodegen.version}</version>
         </dependency>
 
     </dependencies>
@@ -308,6 +360,26 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>audit-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <!-- The location of generated audit sources. -->
+                                <source>src/audit/java/</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

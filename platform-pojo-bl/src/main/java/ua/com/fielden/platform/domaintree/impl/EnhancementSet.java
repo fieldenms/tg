@@ -1,17 +1,14 @@
 package ua.com.fielden.platform.domaintree.impl;
 
-import java.util.HashSet;
-
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.Pair;
 
-/**
- * A set of properties (pairs root+propertyName). This set will correctly handle "enhanced" root types. It can be used with enhanced types, but inner mechanism will "persist" not
- * enhanced ones.
- * 
- * @author TG Team
- * 
- */
+import java.util.HashSet;
+
+/// A set of properties, represented as pairs `(root, property)`.
+/// This set will correctly handle enhanced root types.
+/// Its methods accept enhanced types as arguments, but the contents of the set are always the original types.
+///
 public class EnhancementSet extends HashSet<Pair<Class<?>, String>> {
     private static final long serialVersionUID = 7773953570321667258L;
 
@@ -20,20 +17,25 @@ public class EnhancementSet extends HashSet<Pair<Class<?>, String>> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean contains(final Object key) {
-        final Pair<Class<?>, String> key1 = (Pair<Class<?>, String>) key;
-        final Class<?> originalType = DynamicEntityClassLoader.getOriginalType(key1.getKey());
-        return super.contains(new Pair<Class<?>, String>(originalType, key1.getValue()));
+        return super.contains(updateWithOriginalType((Pair<Class<?>, String>) key));
     }
 
     @Override
     public boolean add(final Pair<Class<?>, String> key) {
-        return super.add(new Pair<Class<?>, String>(DynamicEntityClassLoader.getOriginalType(key.getKey()), key.getValue()));
+        return super.add(updateWithOriginalType(key));
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean remove(final Object key) {
-        final Pair<Class<?>, String> key1 = (Pair<Class<?>, String>) key;
-        return super.remove(new Pair<Class<?>, String>(DynamicEntityClassLoader.getOriginalType(key1.getKey()), key1.getValue()));
+        return super.remove(updateWithOriginalType((Pair<Class<?>, String>) key));
     }
+
+    private static Pair<Class<?>, String> updateWithOriginalType(final Pair<Class<?>, String> pair) {
+        final Class<?> originalType = DynamicEntityClassLoader.getOriginalType(pair.getKey());
+        return originalType.equals(pair.getKey()) ? pair : new Pair<>(originalType, pair.getValue());
+    }
+
 }

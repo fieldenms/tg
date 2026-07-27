@@ -1,14 +1,18 @@
 package ua.com.fielden.platform.utils;
 
-import static org.joda.time.DateTimeZone.getDefault;
-
-import java.util.Date;
-import java.util.Optional;
-
+import com.google.inject.ImplementedBy;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.google.inject.ImplementedBy;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Date;
+import java.util.Optional;
+
+import static org.joda.time.DateTimeZone.getDefault;
 
 /**
  * Contract for time-zone-aware date handling.
@@ -33,6 +37,18 @@ public interface IDates {
      * @return
      */
     int finYearStartMonth();
+
+
+    /// Determines the financial year (FY) for the given `date`.
+    ///
+    /// If the financial year spans two calendar years, the ending year is returned.
+    ///
+    /// For example, for an FY from `01-Jul-2025` to `30-Jun-2026`,
+    /// the value `2026` would be returned for the date `03-Nov-2025`.
+    ///
+    default int finYearForDate(LocalDate date) {
+        return DateUtils.finYearForDate(finYearStartDay(), finYearStartMonth(), date);
+    }
 
     /**
      * Returns the number of the day that is a start of the week (1 - Monday, ..., 7 - Sunday)
@@ -76,24 +92,91 @@ public interface IDates {
         return new DateTime(date);
     }
 
-    /**
-     * Converts moment in time to string in user's time-zone.
-     *
-     * @param date
-     * @return
-     */
-    default String toString(final Date date) {
-        return EntityUtils.toString(date);
+    //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    //:::::::::::::: Date and Time formatting ::::::::::::::::::::::::::
+    //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    String DEFAULT_DATE_FORMAT = "dd/MM/yyyy";
+    String DEFAULT_TIME_FORMAT = "HH:mm";
+    String DEFAULT_TIME_FORMAT_WITH_MILLIS = "HH:mm:ss.SSS";
+    String DEFAULT_DATE_FORMAT_WEB = "DD/MM/YYYY";
+    String DEFAULT_TIME_FORMAT_WEB = "HH:mm";
+    String DEFAULT_TIME_FORMAT_WEB_WITH_MILLIS = "HH:mm:ss.SSS";
+
+    default String dateFormat() {
+        return DEFAULT_DATE_FORMAT;
     }
 
-    /**
-     * Converts zoned representation of moment in time to string.
-     *
-     * @param dateTime
-     * @return
-     */
+    default String timeFormat() {
+        return DEFAULT_TIME_FORMAT;
+    }
+
+    default String timeFormatWithMillis() {
+        return DEFAULT_TIME_FORMAT_WITH_MILLIS;
+    }
+
+    default String dateFormatWeb() {
+        return DEFAULT_DATE_FORMAT_WEB;
+    }
+
+    default String timeFormatWeb() {
+        return DEFAULT_TIME_FORMAT_WEB;
+    }
+
+    default String timeFormatWebWithMillis() {
+        return DEFAULT_TIME_FORMAT_WEB_WITH_MILLIS;
+    }
+
+    /// Converts `date` to string in the default time zone.
+    ///
+    /// Uses [#toStringAsTimeOnly(Date)] to format the time component.
+    ///
+    /// Empty string is return if `date` is `null`.
+    ///
+    default String toString(final Date date) {
+        if (date == null) {
+            return "";
+        }
+        else {
+            return toStringAsDateOnly(date) + " " + toStringAsTimeOnly(date);
+        }
+    }
+
+    /// Converts `dateTime` to string in the default time zone.
+    ///
+    /// See [#toString(Date)] for more details.
+    ///
     default String toString(final DateTime dateTime) {
-        return EntityUtils.toString(dateTime);
+        return dateTime == null ? "" : toString(dateTime.toDate());
+    }
+
+    /// Converts `date` to a string disregarding the time component.
+    ///
+    default String toStringAsDateOnly(final Date date) {
+        return date == null ? "" : new SimpleDateFormat(dateFormat()).format(date);
+    }
+
+    /// Converts `date` to a string disregarding the date component.
+    ///
+    /// If the time component includes seconds or millis the [#timeFormatWithMillis()] is used for formatting.
+    /// Otherwise, [#timeFormat()] is used instead.
+    ///
+    /// The default time zone is assumed here.
+    ///
+    default String toStringAsTimeOnly(final Date date) {
+        if (date == null) {
+            return  "";
+        }
+        else {
+            final Instant instant = date.toInstant();
+            final ZonedDateTime zdt = instant.atZone(ZoneId.systemDefault());
+
+            boolean hasMillis = (instant.toEpochMilli() % 1000) != 0;
+            boolean hasSeconds = zdt.getSecond() != 0;
+            return hasSeconds || hasMillis
+                   ? new SimpleDateFormat(timeFormatWithMillis()).format(date)
+                   : new SimpleDateFormat(timeFormat()).format(date);
+        }
     }
 
 }

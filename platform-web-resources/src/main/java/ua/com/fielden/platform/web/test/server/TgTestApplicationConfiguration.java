@@ -9,7 +9,6 @@ import ua.com.fielden.platform.web.factories.webui.LoginCompleteResetResourceFac
 import ua.com.fielden.platform.web.factories.webui.LoginInitiateResetResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LoginResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LogoutResourceFactory;
-import ua.com.fielden.platform.web.resources.OldVersionResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.LoginCompleteResetResource;
 import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource;
@@ -52,9 +51,6 @@ public class TgTestApplicationConfiguration extends Component {
             // ///// Create a component with an HTTP server connector ///////
             // //////////////////////////////////////////////////////////////
             // Attach applications to the default host
-            final OldVersionResource oldVersionResource = new OldVersionResource(serverRestUtil);
-            getDefaultHost().attach("/v0", oldVersionResource);
-
             // application configuration
             final IWebUiConfig webApp = injector.getInstance(IWebUiConfig.class);
             // attach system resources, which should be beyond the version scope

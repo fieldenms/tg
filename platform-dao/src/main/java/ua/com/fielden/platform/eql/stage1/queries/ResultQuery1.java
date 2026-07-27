@@ -100,6 +100,9 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
         final boolean isNotTopFetch = retrievalModel != null && !retrievalModel.isTopLevel();
         final var enhancedYields = mainSource.querySourceInfo().getProps().values().stream()
                 // Narrow down the set of yields to those included in the fetch model.
+                // NOTE: If `retrievalModel` is null and the result type is a union entity, this code may add yields for common properties, which will fail during instantiation.
+                //       However, this is unlikely to occur in practice.
+                //       `retrievalModel` may be null only in low-level platform code that should know what it is doing.
                 .filter(level1Prop -> retrievalModel == null || retrievalModel.containsProp(level1Prop.name))
                 // prop -> stream of prop path components
                 .flatMap(level1Prop -> {
@@ -173,7 +176,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
     private static EnhancedYields finaliseYields(final Yields2 originalYields, final EnhancedYields enhancedYields) {
         // TODO: Need to enhance this implementation if a more generic support for write-only components/properties is to be developed.
         //       At this stage only RichText.searchText is handled by removing it from yields, if it was added implicitly.
-        //       RichText.searchText shod not be removed if it is yielded explicitly.
+        //       RichText.searchText should not be removed if it is yielded explicitly.
         //       This is an optimisation in line with the write-only nature of searchText to avoid its retrieval from a database.
         //       Please also refer to HibernateMappingsGenerator where searchText is mapped to be read as NULL when retrieval happens using Hibernate.
         //

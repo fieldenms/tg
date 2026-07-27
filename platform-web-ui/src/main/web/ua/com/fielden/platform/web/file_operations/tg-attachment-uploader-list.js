@@ -357,10 +357,10 @@ Polymer({
 
     /* Provides a reason why the attachment uploader list cannot be left... */
     canLeave: function () {
-        return {
+        return Promise.reject({
             imperative: true,
             msg: 'Uploading is still in progress...'
-        }
+        });
     },
 
     /* Ensures that shasow style is applied/removed depending on the size of the component. */

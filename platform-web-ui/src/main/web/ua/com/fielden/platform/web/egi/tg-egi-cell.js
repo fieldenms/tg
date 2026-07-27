@@ -4,7 +4,10 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
+
+import '/resources/polymer/@polymer/polymer/lib/elements/dom-if.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -16,6 +19,10 @@ import { simplifyRichText } from '/resources/components/rich-text/tg-rich-text-u
 export const EGI_CELL_PADDING = "0.6rem";
 export const EGI_CELL_PADDING_TEMPLATE = html`0.6rem`;
 
+// The overflow button at the bottom of the template is stamped via dom-if (rather than always stamped and toggled with hidden$) so that a cell whose column has no multi-group property actions never instantiates a paper-icon-button.
+// An EGI renders as a non-virtualized dom-repeat of tg-egi-cell (one instance per row per column), so an always-stamped per-cell paper-icon-button would boot tens of thousands of elements on a large centre — a significant, purely wasted rendering cost, since almost all cells keep it hidden.
+// _hasOverflow depends only on column configuration (stable per column), so dom-if stamps the button once for the columns that need it and never for those that do not.
+// This explanation lives outside the html literal deliberately — a comment inside would be cloned as a comment node into every stamped cell instance.
 const template = html`
     <style>
         :host {
@@ -26,7 +33,16 @@ const template = html`
         }
         .value-container {
             @apply --layout-relative;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-top: 4px;
+            padding-bottom: 4px;
+            white-space: pre-wrap;
         }
+        .value-container:not([word-wrap]) {
+            white-space: nowrap;
+        }
+
         .cell-background {
             @apply --layout-fit;
         }
@@ -36,11 +52,6 @@ const template = html`
         .table-icon {
             --iron-icon-width: 1.3rem;
             --iron-icon-height: 1.3rem;
-        }
-        .truncate {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
         .unordered-list:not(:first-child),
         .ordered-list:not(:first-child) {
@@ -113,11 +124,21 @@ const template = html`
             font-family: courier, monospace;
             padding: 0 3px;
         }
+        .overflow-button {
+            height: 1.6rem;
+            width: 1.6rem;
+            padding: 2px;
+            flex: 0 0 auto;
+            margin-left: 4px;
+        }
     </style>
     <div class="cell-background" style$="[[_backgroundRendHints]]" modified$="[[_modified]]"></div>
     <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" icon="[[_value]]"></iron-icon>
-    <a class="truncate" hidden$="[[!_isHyperlinkProp(_hostComponent, _entity, column)]]" href$="[[_value]]" style$="[[_foregroundRendHints]]">[[_value]]</a>
-    <div class="truncate value-container" hidden$="[[!_isNotBooleanOrHyperlinkProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" inner-h-t-m-l="[[_value]]"></div>`;
+    <a class="value-container" hidden$="[[!_isHyperlinkProp(_hostComponent, _entity, column)]]" href$="[[_value]]" target="_blank" style$="[[_foregroundRendHints]]">[[_value]]</a>
+    <div class="value-container" word-wrap$="[[column.wordWrap]]" hidden$="[[!_isNotBooleanOrHyperlinkProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" inner-h-t-m-l="[[_value]]"></div>
+    <template is="dom-if" if="[[_hasOverflow(column)]]">
+        <paper-icon-button id="dropdownAction" class="overflow-button" icon="more-vert" on-tap="_openOverflow" tooltip-text="Opens list of available actions"></paper-icon-button>
+    </template>`;
 
 Polymer({
 
@@ -317,6 +338,26 @@ Polymer({
     //Utility methods
 
     _isProperty: function (column) {
-        return column && typeof column.property !== 'undefined' && column.property !== null; 
+        return column && typeof column.property !== 'undefined' && column.property !== null;
+    },
+
+    /**
+     * Returns true when the column has more than one property-action group — in that case the cell shows a triple-dot overflow button next to the value.
+     * Cell tap still runs the first group's currently-selected sub-action; the overflow button exposes the rest via the shared dropdown.
+     */
+    _hasOverflow: function (column) {
+        return column && column.customActions && column.customActions.length > 1;
+    },
+
+    /**
+     * Opens the shared EGI dropdown with this column's property-action groups, positioned next to the overflow button.
+     * Stops event propagation so the click does not also fire the cell-tap (which would re-run the first action).
+     * The overflow button is stamped inside a dom-if, so it is resolved via `$$` rather than the static `this.$` map (dynamic node ids are not registered in `this.$`).
+     */
+    _openOverflow: function (e) {
+        e.stopPropagation();
+        if (this._hostComponent && this._entity && this.column) {
+            this._hostComponent._openDropDownForPropertyActions(this._entity, this.column, this.$$('#dropdownAction'));
+        }
     }
 });

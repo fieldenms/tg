@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.operands;
 
+import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -15,7 +16,6 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.ToString;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -38,6 +38,13 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
 
     @Override
     public Prop2 transform(final TransformationContextFromStage1To2 context) {
+        final var prop2 = transformBase(context);
+        return AppendIdToUnionTypedProp1.INSTANCE.apply(this, prop2, context).orElse(prop2);
+    }
+
+    /// An alternative to [#transform(TransformationContextFromStage1To2)] that does not apply [AppendIdToUnionTypedProp1].
+    ///
+    public Prop2 transformBase(final TransformationContextFromStage1To2 context) {
         return context.sourcesForNestedQueries.stream()
                 .skip(external ? 1 : 0)
                 .map(item -> resolveProp(item, this))
@@ -49,6 +56,7 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
                 .findFirst()
                 .orElseThrow(() -> new EqlStage1ProcessingException(ERR_CANNOT_RESOLVE_PROPERTY.formatted(propPath)));
     }
+
     /**
      * If the given path ends with a component type that has a single property, appends that property onto the path.
      * Otherwise, returns the given path.

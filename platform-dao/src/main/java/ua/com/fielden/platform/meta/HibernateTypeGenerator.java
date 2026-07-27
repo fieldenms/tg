@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.meta;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -8,7 +9,6 @@ import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
@@ -104,8 +104,7 @@ class HibernateTypeGenerator {
                                            atPersistentType));
                         }
                     }).orElseGet(() -> {
-                        // this helps us get the raw class of parameterized types such as PropertyDescriptor
-                        final Class<?> klass = classFrom(typeMetadata.javaType());
+                        final Class<?> klass = typeMetadata.javaType();
                         if (klass != null) {
                             return hibernateTypeMappings.getHibernateType(klass)
                                     // trying to mimic hibernate logic when no type has been specified - use hibernate's map of defaults

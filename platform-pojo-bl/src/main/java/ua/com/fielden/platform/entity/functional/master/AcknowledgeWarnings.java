@@ -16,12 +16,8 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
-/** 
- * An entity representing warnings that may occur during editing of entities and need to be explicitly acknowledged by users.
- * 
- * @author TG Team
- *
- */
+/// An entity representing warnings that may occur during editing of entities and need to be explicitly acknowledged by users.
+///
 @KeyType(NoKey.class)
 @CompanionObject(AcknowledgeWarningsCo.class)
 @EntityTitle(value = "Acknowledge warnings", desc = "Acknowledge warnings of the current initiating entity")
@@ -29,7 +25,7 @@ public class AcknowledgeWarnings extends AbstractFunctionalEntityWithCentreConte
     
     @IsProperty(PropertyWarning.class)
     @Title(value = "Warnings", desc = "A list of user property warnings")
-    private Set<PropertyWarning> warnings = new LinkedHashSet<PropertyWarning>();
+    private final Set<PropertyWarning> warnings = new LinkedHashSet<PropertyWarning>();
 
     public AcknowledgeWarnings() {
         setKey(NO_KEY);

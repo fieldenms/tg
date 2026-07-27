@@ -3,35 +3,29 @@
  */
 package ua.com.fielden.platform.basic.autocompleter;
 
-import static java.util.Collections.emptyMap;
-import static ua.com.fielden.platform.basic.ValueMatcherUtils.createCommonQueryBuilderForFindMatches;
-import static ua.com.fielden.platform.basic.ValueMatcherUtils.createRelaxedSearchByKeyCriteriaModel;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.IContextDecomposer.decompose;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
-import static ua.com.fielden.platform.utils.EntityUtils.isNaturalOrderDescending;
+import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
+import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
+import ua.com.fielden.platform.web.centre.CentreContext;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
-import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
-import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.StandaloneOrderBy.ISingleOperandOrderable;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionCompoundCondition;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.ConditionModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
-import ua.com.fielden.platform.web.centre.CentreContext;
+import static java.util.Collections.emptyMap;
+import static ua.com.fielden.platform.basic.ValueMatcherUtils.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.IContextDecomposer.decompose;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
+import static ua.com.fielden.platform.utils.EntityUtils.isNaturalOrderDescending;
 
 /**
  * Key based value matcher, which supports entity centre context assignment.
@@ -52,16 +46,14 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
         this.defaultFetchModel = maybeCompanion.map(co -> fetchKeyAndDescOnly(co.getEntityType())).orElse(null);
     }
 
-    /**
-     * This method may be overridden to create a different EQL condition model for search criteria.
-     *
-     * @param context
-     * @param searchString
-     * @return
-     */
+    /// Makes standard condition for querying Entity Centre entity editor values.
+    /// Takes into account 'active only' option.
+    ///
+    ///  This method may be overridden to create a different EQL condition model for search criteria.
+    ///
     protected ConditionModel makeSearchCriteriaModel(final CentreContext<T, ?> context, final String searchString) {
         final boolean wideSearch = "%".equals(searchString);
-        final IStandAloneConditionCompoundCondition<AbstractEntity<?>> initialCond = decompose(context).autocompleteActiveOnly() ? cond().prop(ACTIVE).eq().val(true) : cond().val(1).eq().val(1);
+        final var initialCond = decompose(context).autocompleteActiveOnly() ? createActiveOnlyCondition((Class<AbstractEntity<?>>) getEntityType()) : cond().val(1).eq().val(1);
         return (wideSearch ? initialCond : initialCond.and().condition(keyAndDescConditionFrom(searchString))).model();
     }
 
@@ -72,10 +64,8 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
      * @return
      */
     protected ConditionModel keyAndDescConditionFrom(final String searchString) {
-        final ConditionModel keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
-        final Class<T> entityType = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER).getEntityType();
-
-        return hasDescProperty(entityType) ? cond().condition(keyCriteria).or().prop(DESC).iLike().val(searchString).model() : keyCriteria;
+        final var keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
+        return hasDescProperty(getEntityType()) ? cond().condition(keyCriteria).or().prop(DESC).iLike().val(searchString).model() : keyCriteria;
     }
 
     /**
@@ -93,9 +83,8 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
      * @return alternative ordering model
      */
     protected OrderingModel makeOrderingModel(final String searchString) {
-        final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
-        final ISingleOperandOrderable prop = orderBy().prop(KEY);
-        return isNaturalOrderDescending(companion.getEntityType()) ? prop.desc().model() : prop.asc().model();
+        final var prop = orderBy().prop(KEY);
+        return isNaturalOrderDescending(getEntityType()) ? prop.desc().model() : prop.asc().model();
     }
 
     protected final OrderingModel composeOrderingModelForQuery(final String searchString, final Class<T> entityType) {
@@ -105,14 +94,12 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
 
     @Override
     public List<T> findMatches(final String searchString) {
-        final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
-        return findMatches(searchString, companion, defaultFetchModel, 1);
+        return findMatches(searchString, getCompanion(), defaultFetchModel, 1);
     }
 
     @Override
     public List<T> findMatchesWithModel(final String searchString, final int dataPage) {
-        final IEntityDao<T> companion = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
-        return findMatches(searchString, companion, getFetch(), dataPage);
+        return findMatches(searchString, getCompanion(), getFetch(), dataPage);
     }
 
     private List<T> findMatches(final String searchString, final IEntityDao<T> companion, final fetch<T> fetch, final int dataPage) {
@@ -141,6 +128,20 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
     public AbstractSearchEntityByKeyWithCentreContext<T> setContext(final CentreContext<T, ?> context) {
         this.context = context;
         return this;
+    }
+
+    /// Returns companion for values of this value matcher.
+    /// Usage of this method requires companion. If it is missing, it throws an exception.
+    ///
+    protected IEntityDao<T> getCompanion() {
+        return maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER);
+    }
+
+    /// Returns the entity type for values of this value matcher.
+    /// Usage of this method requires companion. If it is missing, it throws an exception.
+    ///
+    protected Class<T> getEntityType() {
+        return getCompanion().getEntityType();
     }
 
 }

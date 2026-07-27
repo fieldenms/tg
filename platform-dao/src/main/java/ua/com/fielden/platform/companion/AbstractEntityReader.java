@@ -168,23 +168,12 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         return result == 1;
     }
 
-    /**
-     * Returns a stream of entities that match the provided query.
-     * <p>
-     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
-     */
     @Override
     @SessionRequired
     public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel) {
         return stream(queryModel, 100);
     }
 
-    /**
-     * Returns a stream of entities that match the provided query. 
-     * Argument <code>fetchSize</code> provides a hint how many rows should be fetched in a batch at the time of scrolling.
-     * <p>
-     * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
-     */
     @Override
     @SessionRequired
     public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel, final int fetchSize) {
@@ -265,6 +254,14 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
             throw new UnexpectedNumberOfReturnedEntities(ERR_MORE_THAN_ONE_ENTITY.formatted(data.size()));
         }
         return data.size() == 1 ? data.get(0) : null;
+    }
+
+    @Override
+    @SessionRequired
+    public Optional<T> getEntityOptional(final QueryExecutionModel<T, ?> model) {
+        final var qem = !instrumented() ? model.lightweight() : model;
+        final List<T> data = getFirstEntities(qem, 2);
+        return data.size() == 1 ? Optional.of(data.getFirst()) : Optional.empty();
     }
 
     /**

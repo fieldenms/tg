@@ -1,27 +1,16 @@
 package ua.com.fielden.platform.ui.config;
 
-import java.util.Date;
-
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.validation.RestrictCommasValidator;
 import ua.com.fielden.platform.entity.validation.RestrictExtraWhitespaceValidator;
 import ua.com.fielden.platform.entity.validation.RestrictNonPrintableCharactersValidator;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.definers.EntityCentreConfigDashboardableDefiner;
+
+import java.util.Date;
 
 /**
  * A type designed for storing entity centres in a binary format, which can be used for storing configurations in databases, files etc.
@@ -213,6 +202,12 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     @Observable
     public EntityCentreConfig setConfigBody(final byte[] configBody) {
         return (EntityCentreConfig) super.setConfigBody(configBody);
+    }
+
+    @Override
+    @Observable
+    public EntityCentreConfig setDesc(String desc) {
+        return super.setDesc(desc);
     }
 
 }

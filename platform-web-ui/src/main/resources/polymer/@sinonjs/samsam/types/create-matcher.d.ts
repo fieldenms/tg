@@ -1,7 +1,6 @@
 export = createMatcher;
 /**
  * Creates a matcher object for the passed expectation
- *
  * @alias module:samsam.createMatcher
  * @param {*} expectation An expecttation
  * @param {string} message A message for the expectation

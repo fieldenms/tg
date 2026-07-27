@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.web.sse;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.ServletOutputStream;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,10 +15,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.ServletOutputStream;
-
-import org.apache.logging.log4j.Logger;
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
  * Event source emitter represents a connection to a web client for pushing SSE events to that client. It other words, this is just a pipe through which all SSE messages get sent

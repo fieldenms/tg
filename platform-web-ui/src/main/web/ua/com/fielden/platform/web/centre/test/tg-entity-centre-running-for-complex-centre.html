@@ -10,6 +10,7 @@
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+    <script src="/resources/test-configuration.js"></script>
 </head>
 
 <body>
@@ -184,10 +185,10 @@
                                 embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
                                     embeddedMaster.save().then(function () {
                                         const acknowledgeWarningsAction = embeddedMaster.shadowRoot.querySelector('tg-ui-action[continuation-property="_acknowledgedForTheFirstTime"]');
-                                        acknowledgeWarningsAction._masterReferenceForTestingChanged = function (newValue) {
-                                            // EntityEditAction modifHolder should be present as parent context for masterEntity of acknowledge warnings action
-                                            assert.ok(newValue.savingContext.masterEntity.centreContextHolder.masterEntity.modifHolder.entityId);
-                                            newValue.save().then(function () {
+                                        acknowledgeWarningsAction.modifyFunctionalEntity = (bindingEntity, testMaster, action) => {
+											// EntityEditAction modifHolder should be present as parent context for masterEntity of acknowledge warnings action.
+                                            assert.ok(testMaster.savingContext.masterEntity.centreContextHolder.masterEntity.modifHolder.entityId);
+                                            testMaster.save().then(function () {
                                                 done();
                                             });
                                         };

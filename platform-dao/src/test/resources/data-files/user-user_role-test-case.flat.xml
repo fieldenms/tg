@@ -30,16 +30,16 @@
 	<USER_ROLE_ASSOCIATION _ID="7" _VERSION="0" ID_CRAFT="4" ID_USER_ROLE="7"/>
 	<USER_ROLE_ASSOCIATION _ID="8" _VERSION="0" ID_CRAFT="4" ID_USER_ROLE="8"/>
 	
-	<SECURITY_ROLE_ASSOCIATION _ID="1" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.FirstLevelSecurityToken1" ID_USER_ROLE="1"/>
-	<SECURITY_ROLE_ASSOCIATION _ID="2" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.FirstLevelSecurityToken1" ID_USER_ROLE="2"/>
-	<SECURITY_ROLE_ASSOCIATION _ID="3" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.FirstLevelSecurityToken2" ID_USER_ROLE="3"/>
-	<SECURITY_ROLE_ASSOCIATION _ID="4" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.FirstLevelSecurityToken2" ID_USER_ROLE="4"/>
-	<SECURITY_ROLE_ASSOCIATION _ID="5" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.SecondLevelSecurityToken1" ID_USER_ROLE="5"/>
-	<SECURITY_ROLE_ASSOCIATION _ID="6" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.SecondLevelSecurityToken1" ID_USER_ROLE="6"/>
-	<SECURITY_ROLE_ASSOCIATION _ID="7" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.SecondLevelSecurityToken2" ID_USER_ROLE="7"/>
-	<SECURITY_ROLE_ASSOCIATION _ID="8" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.SecondLevelSecurityToken2" ID_USER_ROLE="8"/>
-	<SECURITY_ROLE_ASSOCIATION _ID="9" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.ThirdLevelSecurityToken1" ID_USER_ROLE="1"/>
-	<SECURITY_ROLE_ASSOCIATION _ID="10" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.ThirdLevelSecurityToken1" ID_USER_ROLE="2"/>
-	<SECURITY_ROLE_ASSOCIATION _ID="11" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.ThirdLevelSecurityToken2" ID_USER_ROLE="3"/>
-	<SECURITY_ROLE_ASSOCIATION _ID="12" _VERSION="0" TOKEN="ua.com.fielden.platform.dao.ThirdLevelSecurityToken2" ID_USER_ROLE="4"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="1" _VERSION="0" TOKEN="ua.com.fielden.platform.security.tokens.FirstLevelSecurityToken1" ID_USER_ROLE="1"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="2" _VERSION="0" TOKEN="ua.com.fielden.platform.security.tokens.FirstLevelSecurityToken1" ID_USER_ROLE="2"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="3" _VERSION="0" TOKEN="ua.com.fielden.platform.security.tokens.FirstLevelSecurityToken2" ID_USER_ROLE="3"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="4" _VERSION="0" TOKEN="ua.com.fielden.platform.security.tokens.FirstLevelSecurityToken2" ID_USER_ROLE="4"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="5" _VERSION="0" TOKEN="ua.com.fielden.platform.security.tokens.SecondLevelSecurityToken1" ID_USER_ROLE="5"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="6" _VERSION="0" TOKEN="ua.com.fielden.platform.security.tokens.SecondLevelSecurityToken1" ID_USER_ROLE="6"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="7" _VERSION="0" TOKEN="ua.com.fielden.platform.security.tokens.SecondLevelSecurityToken2" ID_USER_ROLE="7"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="8" _VERSION="0" TOKEN="ua.com.fielden.platform.security.tokens.SecondLevelSecurityToken2" ID_USER_ROLE="8"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="9" _VERSION="0" TOKEN="ua.com.fielden.platform.security.tokens.ThirdLevelSecurityToken1" ID_USER_ROLE="1"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="10" _VERSION="0" TOKEN="ua.com.fielden.platform.security.tokens.ThirdLevelSecurityToken1" ID_USER_ROLE="2"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="11" _VERSION="0" TOKEN="ua.com.fielden.platform.security.tokens.ThirdLevelSecurityToken2" ID_USER_ROLE="3"/>
+	<SECURITY_ROLE_ASSOCIATION _ID="12" _VERSION="0" TOKEN="ua.com.fielden.platform.security.tokens.ThirdLevelSecurityToken2" ID_USER_ROLE="4"/>
 </dataset>

@@ -7,7 +7,7 @@ import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/cla
 
 import '/resources/editors/tg-singleline-text-editor.js';
 import '/resources/editors/tg-hyperlink-editor.js';
-import { tearDownEvent, createDummyBindingEntity} from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, createStubBindingEntity} from '/resources/reflection/tg-polymer-utils.js';
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
@@ -76,7 +76,7 @@ export class TgLinkDialog extends mixinBehaviors([TgTooltipBehavior], PolymerEle
     constructor() {
         super();
         this._reflector = new TgReflector();
-        this._entity = createDummyBindingEntity(
+        this._entity = createStubBindingEntity('LinkDialogEntity',
             {'urlProp': {value: {value: ''}, editable: true}},
             (name) => {
                 return {

@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.centre;
 
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -106,5 +108,11 @@ public abstract class AbstractCentreConfigCommitAction extends AbstractCentreCon
     public String getTitle() {
         return title;
     }
-    
+
+    @Override
+    @Observable
+    public AbstractCentreConfigCommitAction setDesc(final String desc) {
+        return super.setDesc(desc);
+    }
+
 }

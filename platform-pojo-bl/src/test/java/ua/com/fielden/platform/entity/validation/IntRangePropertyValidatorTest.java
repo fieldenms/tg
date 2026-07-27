@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithRangeProperties;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
@@ -15,12 +16,8 @@ import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 
 import com.google.inject.Injector;
 
-/**
- * A test case for validation of range properties.
- * 
- * @author TG Team
- * 
- */
+/// A test case for validation of range properties.
+///
 public class IntRangePropertyValidatorTest {
 
     private final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
@@ -73,6 +70,44 @@ public class IntRangePropertyValidatorTest {
 
         assertEquals("Incorrect value", Integer.valueOf(6), entity.getFromInt());
         assertEquals("Incorrect value", Integer.valueOf(12), entity.getToInt());
+    }
+
+    @Test
+    public void strict_less_than_is_enforced_for_LeProperty_with_lt() {
+        final EntityWithRangeProperties entity = factory.newByKey(EntityWithRangeProperties.class, "key");
+
+        final MetaProperty<Integer> mpFromIntStrict = entity.getProperty("fromIntStrict");
+        final MetaProperty<Integer> mpToIntStrict = entity.getProperty("toIntStrict");
+
+        entity.setFromIntStrict(16);
+        entity.setToIntStrict(17);
+
+        assertTrue(mpFromIntStrict.isValid());
+        assertTrue(mpToIntStrict.isValid());
+
+        entity.setFromIntStrict(17);
+        assertFalse(mpFromIntStrict.isValid());
+
+        assertEquals("From Int Strict cannot be greater or equal to To Int Strict.", mpFromIntStrict.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void strict_greater_than_is_enforced_for_GeProperty_with_gt() {
+        final EntityWithRangeProperties entity = factory.newByKey(EntityWithRangeProperties.class, "key");
+
+        final MetaProperty<Integer> mpFromIntStrict = entity.getProperty("fromIntStrict");
+        final MetaProperty<Integer> mpToIntStrict = entity.getProperty("toIntStrict");
+
+        entity.setFromIntStrict(16);
+        entity.setToIntStrict(17);
+
+        assertTrue(mpFromIntStrict.isValid());
+        assertTrue(mpToIntStrict.isValid());
+
+        entity.setToIntStrict(16);
+        assertFalse(mpToIntStrict.isValid());
+
+        assertEquals("To Int Strict cannot be less or equal to From Int Strict.", mpToIntStrict.getFirstFailure().getMessage());
     }
 
 }

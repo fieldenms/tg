@@ -107,6 +107,11 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
+    public Optional<LastLevelEntity> getEntityOptional(final QueryExecutionModel<LastLevelEntity, ?> model) {
+        return Optional.empty();
+    }
+
+    @Override
     public int count(final EntityResultQueryModel<LastLevelEntity> model, final Map<String, Object> paramValues) {
         return 0;
     }
