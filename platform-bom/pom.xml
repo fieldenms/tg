@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- This module deliberately has no parent.
+
+         Importing a POM with <scope>import</scope> splices in that POM's *effective*
+         dependencyManagement. If this BOM inherited from platform-parent, the platform's
+         internal third-party pins (log4j, slf4j, byte-buddy, assertj) would become part of
+         its effective managed set, and every consumer importing this BOM would silently
+         inherit them.
+
+         Being parentless also means this module inherits nothing else: no distributionManagement
+         (declared below), no junit "provided" dependency, and none of the parent's plugin
+         executions. That last point matters: the parent's enforcer rules require
+         "databaseUri.prefix" and "fork.count", which would otherwise make a plain
+         `mvn install -pl platform-bom` fail. 
+         -->
+    <groupId>fielden</groupId>
+    <artifactId>platform-bom</artifactId>
+    <version>2.5.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Trident Genesis Platform BOM</name>
+    <description>
+        Bill of materials for the Trident Genesis platform. It pins the versions of all published
+        platform artifacts so that an end project can manage them from a single coordinate instead
+        of repeating the platform version on every dependency.
+
+        Import it into the end project's own dependencyManagement with type "pom" and scope "import",
+        then declare platform dependencies without a version. Managed versions override transitive
+        resolution unconditionally, so a platform artifact that is pulled in transitively cannot
+        drift away from the version declared here.
+    </description>
+    <url>https://github.com/fieldenms/tg</url>
+    <inceptionYear>2008</inceptionYear>
+    <organization>
+        <name>Fielden Management Services</name>
+        <url>http://www.fielden.com.au/</url>
+    </organization>
+
+    <!-- Entries carry coordinates and version only.
+
+         A managed <scope> or <exclusions> propagates to importers, where it is hard to account for
+         from the outside. The test-jars are the exception: "test" is the only sensible scope for
+         them, so managing it saves every consumer from repeating it.
+
+         Note that an artifact is managed per groupId:artifactId:type:classifier. The main JAR and
+         the test-jar of the same module are distinct keys, as is a classified artifact such as the
+         annotation processors' uber JAR; each needs its own entry, or it falls back to Maven's
+         nearest-wins resolution.
+
+         Internal modules are intentionally not listed here:
+         platform-annotation-processors-test, platform-benchmark, platform-eql-grammar.
+     -->
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>platform-annotations</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>platform-annotation-processors</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- The uber JAR bundles the processors' own dependencies and declares them in
+                 META-INF/services; it is the artifact to put on an annotation processor path.
+                 The main ("lib") JAR above is the one to use as a regular dependency. -->
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>platform-annotation-processors</artifactId>
+                <version>${project.version}</version>
+                <classifier>uber</classifier>
+            </dependency>
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>platform-pojo-bl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>platform-pojo-bl</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>platform-dao</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>platform-dao</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>platform-web-ui</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>platform-web-ui</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>platform-web-resources</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>platform-db-evolution</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/fieldenms/tg/issues</url>
+    </issueManagement>
+
+    <!-- Not inherited, because this module has no parent. Must stay in sync with platform-parent. -->
+    <distributionManagement>
+        <repository>
+            <id>github-tg</id>
+            <name>GitHub fieldenms Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/fieldenms/tg</url>
+        </repository>
+        <snapshotRepository>
+            <id>github-tg</id>
+            <name>GitHub fieldenms Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/fieldenms/tg</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <scm>
+        <connection>scm:git:git@github.com:fieldenms/tg.git</connection>
+        <url>scm:git:git@github.com:fieldenms/tg.git</url>
+        <developerConnection>scm:git:git@github.com:fieldenms/tg.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+</project>

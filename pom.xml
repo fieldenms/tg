@@ -30,6 +30,7 @@
     </properties>
 
     <modules>
+        <module>platform-bom</module>
         <module>platform-annotation-processors</module>
         <module>platform-annotation-processors-test</module>
         <module>platform-annotations</module>
