@@ -3,6 +3,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
+import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -24,6 +25,13 @@ const template = html`
             @apply --layout-centre-justified;
             @apply --layout-flex;
         }
+        .reload-button {
+            height: 28px;
+            padding: 2px 8px;
+            margin: 0 4px;
+            color: var(--paper-grey-700);
+            font-weight: 500;
+        }
         .close-button {
             width: 22px;
             height: 22px;
@@ -38,7 +46,8 @@ const template = html`
         }
     </style>
     <div class="mesage-panel">[[messageText]]</div>
-    <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button" icon="icons:cancel"  on-tap="_closeMessage" tooltip-text="Close Message"></paper-icon-button>`;
+    <paper-button hidden="[[!showReload]]" class="reload-button" on-tap="_reloadPage">Reload</paper-button>
+    <paper-icon-button class="close-button" icon="icons:cancel" on-tap="_closeMessage" tooltip-text="Close Message"></paper-icon-button>`;
 
 template.setAttribute('strip-whitespace', '');
 
@@ -109,25 +118,31 @@ Polymer({
     is: "tg-message-panel",
 
     properties: {
-        isRecomendedClient: {
-            type: Boolean,
-        },
-
+        // Indicates whether the user has dismissed the current message.
         closed: {
             type: Boolean,
+            value: false
         },
 
+        // The text displayed by the panel; while empty the panel stays hidden.
         messageText: {
-            type: String
+            type: String,
+            value: ""
+        },
+
+        // Whether the Reload button is displayed; enabled for the application-update message.
+        showReload: {
+            type: Boolean,
+            value: false
         }
     },
 
-    observers: ["_shoudDisplayMsg(isRecomendedClient, closed)"],
+    observers: ["_updateVisibility(messageText, closed)"],
 
     ready: function () {
-        this.isRecomendedClient = isMobile.any() || isDesktop.isSafari() || isDesktop.isChrome() || isDesktop.isFirefox();
-        this.closed = this.isRecomendedClient;
-        if (!this.isRecomendedClient) {
+        // Warn when the browser is not one of the recommended clients.
+        const isRecommendedClient = isMobile.any() || isDesktop.isSafari() || isDesktop.isChrome() || isDesktop.isFirefox();
+        if (!isRecommendedClient) {
             if (isDesktop.isIE()) {
                 this.messageText = "Application cannot be opened in Internet Explorer. A Chromium based browser is recommended.";
                 this.style.backgroundColor = "#FF8A80";
@@ -138,12 +153,26 @@ Polymer({
         }
     },
 
+    /// Displays a dismissible yellow banner prompting the user to reload after a newer application version has been deployed.
+    ///
+    showUpdateMessage: function (version) {
+        this.messageText = `A new application version (${version}) is available. Please reload to update.`;
+        // Yellow warning colour, matching the browser-recommendation warning.
+        this.style.backgroundColor = "#FFFF8D";
+        this.showReload = true;
+        this.closed = false;
+    },
+
+    _reloadPage: function (e) {
+        window.location.reload();
+    },
+
     _closeMessage: function (e) {
         this.closed = true;
     },
 
-    _shoudDisplayMsg: function (isRecomendedClient, closed) {
-        if (isRecomendedClient || closed) {
+    _updateVisibility: function (messageText, closed) {
+        if (!messageText || closed) {
             this.setAttribute("hidden", true);
         } else {
             this.removeAttribute("hidden");

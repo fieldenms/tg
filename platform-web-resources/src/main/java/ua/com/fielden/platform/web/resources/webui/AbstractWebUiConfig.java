@@ -150,7 +150,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.independentTimeZone = independentTimeZone;
         this.masterActionOptions = masterActionOptions.orElse(ALL_OFF).name();
         this.webUiBuilder = new WebUiBuilder(this);
-        this.dispatchingEmitter = new EventSourceDispatchingEmitter();
+        this.dispatchingEmitter = new EventSourceDispatchingEmitter(this::appVersion);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 logger.info("Closing Event Source Dispatching Emitter with all registered emitters...");

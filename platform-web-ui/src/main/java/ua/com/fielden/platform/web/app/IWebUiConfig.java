@@ -226,6 +226,16 @@ public interface IWebUiConfig extends IMenuRetriever {
     ///
     String title();
 
+    /// Returns the application version identifier, used to detect that a newer application version has been deployed.
+    /// The client compares the version it was loaded with against the current server version, announced upon SSE (re)connection.
+    /// Then client prompts the user to reload when versions differ.
+    ///
+    default String appVersion() {
+        /// TODO By default this is the application `title()`, which by convention encodes the application version.
+        /// TODO Override this once application versioning becomes a first-class concept.
+        return title();
+    }
+
     /// Returns the URI of the “idea” action.
     ///
     String ideaUri();

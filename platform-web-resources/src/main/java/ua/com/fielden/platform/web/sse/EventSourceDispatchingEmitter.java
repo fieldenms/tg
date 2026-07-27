@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.web.sse;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
+import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.web.sse.exceptions.SseException;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -15,12 +16,12 @@ import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-import org.apache.logging.log4j.Logger;
-
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.web.sse.exceptions.SseException;
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.apache.tika.utils.StringUtils.isBlank;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 /**
  * {@link IEventSourceEmitter} implementation that acts as a dispatching emitter, which dispatches events to registered emitters.
@@ -42,6 +43,11 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
 
     private static final Logger LOGGER = getLogger(EventSourceDispatchingEmitter.class);
 
+    /// The name of the SSE event used to announce the current application version to a client upon establishing a connection.
+    /// The client (see `tg-event-source.js`) listens for an event with this exact name.
+    ///
+    public static final String APP_VERSION_EVENT_NAME = "application-version";
+
     /**
      * A register of emitters. The key is a pair of user id and a client SSE id.
      * {@link ConcurrentHashMap} is used as the register to support the concurrent nature of such register.
@@ -54,6 +60,19 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
      * This is required to ensure that no new emitters get registered and no new events are dispatched if the dispatcher was already closed or is being closed.
      */
     private final AtomicBoolean isActive = new AtomicBoolean(true);
+
+    /// Supplies the current application version, announced to each client upon establishing an SSE connection.
+    /// A client uses this to detect that a newer application version has been deployed since it was loaded.
+    ///
+    private final Supplier<String> appVersionSupplier;
+
+    /// Creates a dispatching emitter.
+    ///
+    /// @param appVersionSupplier supplier of String-based version to be announced to each client upon establishing an SSE connection
+    ///
+    public EventSourceDispatchingEmitter(final Supplier<String> appVersionSupplier) {
+        this.appVersionSupplier = appVersionSupplier;
+    }
 
     /**
      * A helper function that creates a register key from {@code user} and {@code sseUid}.
@@ -98,11 +117,35 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
     public Result registerEmitter(final User user, final String sseUid, final Supplier<IEventSourceEmitter> emitterFactory) {
         LOGGER.info(format("Registering event emitter for web client [%s, %s].", user, sseUid));
         if (isActive.get()) {
-            final IEventSourceEmitter emitter = register.computeIfAbsent(key(user, sseUid), argNotUsed -> emitterFactory.get());
+            // `computeIfAbsent` runs its mapping function only for a previously unseen client, i.e., a new or re-established connection.
+            // The application version is announced only for such new emitters.
+            final var isNewEmitter = new MutableBoolean(false);
+            final var emitter = register.computeIfAbsent(key(user, sseUid), argNotUsed -> {
+                isNewEmitter.setTrue();
+                return emitterFactory.get();
+            });
+            if (isNewEmitter.isTrue()) {
+                announceAppVersion(emitter);
+            }
             logRegisterSize();
             return successful(emitter);
         }
         return failure("The dispatcher is inactive and no new emitters can be registered.");
+    }
+
+    /// Announces the current application version, if any, to `emitter`.
+    /// This lets a client detect that a newer application version has been deployed since it was loaded, and prompt the user to reload.
+    ///
+    private void announceAppVersion(final IEventSourceEmitter emitter) {
+        final var appVersion = appVersionSupplier.get();
+        if (!isBlank(appVersion)) {
+            try {
+                emitter.event(APP_VERSION_EVENT_NAME, appVersion);
+            } catch (final IOException ex) {
+                // A failure here is non-critical: the client will receive the announcement upon its next (re)connection.
+                LOGGER.warn(format("Could not announce application version [%s] to a newly connected SSE client.", appVersion), ex);
+            }
+        }
     }
 
     @Override

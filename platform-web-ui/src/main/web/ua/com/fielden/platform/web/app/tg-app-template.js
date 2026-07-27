@@ -50,7 +50,7 @@ const template = html`
     <tg-global-error-handler id="errorHandler" toaster="[[toaster]]"></tg-global-error-handler>
     <app-location id="location" no-decode dwell-time="-1" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></app-location>
     <app-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></app-route>
-    <tg-message-panel></tg-message-panel>
+    <tg-message-panel id="msgPanel"></tg-message-panel>
     <iron-ajax id="entityReconstructor" headers="[[_headers]]" method="GET" handle-as="json" reject-with-request></iron-ajax>
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
@@ -821,6 +821,10 @@ Polymer({
 
         //Add click event listener to handle click on links
         window.addEventListener('click', this._checkURL.bind(this));
+
+        // Listen for the server-pushed application-version announcement, dispatched on `window` by `tg-event-source.js`.
+        // When the server reports a version different from the one this client was loaded with, the user is prompted to reload.
+        window.addEventListener('tg-application-version', event => this._handleAppVersionAnnouncement(event.detail && event.detail.version));
     },
 
     attached: function () {
@@ -852,6 +856,17 @@ Polymer({
     
     detached: function () {
         window.removeEventListener("beforeunload", this._checkWhetherCanLeave);
+    },
+
+    /// Prompts the user to reload when the server reports an application version different from the one this client was loaded with.
+    /// Guarded so that both versions must be known, must actually differ, and the user is prompted only once per newly reported version.
+    ///
+    _handleAppVersionAnnouncement: function (serverAppVersion) {
+        const bootAppVersion = window.TG_APP?.appVersion;
+        if (serverAppVersion && bootAppVersion && serverAppVersion !== bootAppVersion && serverAppVersion !== this._notifiedAppVersion) {
+            this._notifiedAppVersion = serverAppVersion;
+            this.$.msgPanel.showUpdateMessage(serverAppVersion);
+        }
     },
     
     /**
