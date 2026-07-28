@@ -122,7 +122,7 @@ addEventListener('install', event => {
     //   (See https://w3c.github.io/ServiceWorker/#activate 8.1 and 8.2).
     // In case of some browser implementation deficiencies, clients.claim() should also additionally enforce that.
     // But clients.claim() is not strictly required (see it's usage below for more details on the reason why it is needed).
-    skipWaiting();
+    skipWaiting(); // progressing service worker to 'activating' state and further - no need to 'waitUntil' here
 });
 
 addEventListener('activate', event => {
@@ -130,7 +130,7 @@ addEventListener('activate', event => {
     // This is the case for the very first time 'index.html' loading.
     // However we can enforce service worker to take full control as soon as first activation performs.
     // This makes immediate caching of 'index.html' dependencies possible.
-    clients.claim();
+    event.waitUntil(clients.claim()); // wait for the promise to settle and only then allow service worker to dispose
 });
 
 addEventListener('fetch', function (event) {
