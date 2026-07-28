@@ -71,7 +71,7 @@ const cacheIfSuccessful = function (response, checksumRequest, checksumResponse,
         // as well as the cache consuming the response, we need to clone it so we have two streams.
         return cache.put(url, response.clone()).then(function() { // cache response; it should not fail (otherwise bad response will be returned)
             return checksumCache.put(checksumRequest, checksumResponse).then(function () { // cache checksum; it should not fail (otherwise bad response will be returned)
-                if (urlObj.pathname === '/') { // main index.html file has been re-cached after a change (or cached for the first time)
+                if (urlObj.pathname === '/') { // main 'index.html' file has been re-cached after a change (or cached for the first time)
                     event.waitUntil( // insist to keep service worker alive until the following promise completes
                         cleanUp(url, cache).catch(error => { // start cleaning up redundant resources
                             console.warn(`Cleaning up failed with error [${error}].`, error);
@@ -98,11 +98,25 @@ const getTextFrom = function (response) {
     }
 };
 
+self.addEventListener('install', event => {
+    // New updated service worker can be installed, but not yet activated until the page will be closed / opened again.
+    // Currently, even 'Hard reload' or 'Empty cache and hard reload' in Chrome does not insist on service worker update.
+    // Actually, these actions do nothing - not even installing an updated service worker (unlike Normal Reload, Ctrl+R).
+    // So, new updated service worker gets installed and keeps being in 'waiting to activate' state.
+    // This is because the previous service worker already controls 'index.html' and by default new service worker is not activated.
+    // We want to take control immediately for all pages, because every change to service worker are backward compatible.
+    // Practically skipWaiting() enforces control on every tab / window already opened.
+    //   (See https://w3c.github.io/ServiceWorker/#activate 8.1 and 8.2).
+    // In case of some browser implementation deficiencies, clients.claim() should also additionally enforce that.
+    // But clients.claim() is not strictly required (see it's usage below for more details on the reason why it is needed).
+    self.skipWaiting();
+});
+
 self.addEventListener('activate', event => {
     // By default the page's fetches will not go through service worker if it was not fetched through service worker.
-    // This is the case for the very first time index.html loading.
+    // This is the case for the very first time 'index.html' loading.
     // However we can enforce service worker to take full control as soon as first activation performs.
-    // This makes [immediate caching of index.html dependencies] possible.
+    // This makes immediate caching of 'index.html' dependencies possible.
     clients.claim();
 });
 
