@@ -6,7 +6,6 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IDates;
@@ -41,8 +40,7 @@ public class AppIndexResource extends AbstractWebResource {
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final IWebResourceLoader webResourceLoader;
-    private final ICriteriaGenerator criteriaGenerator;
-    
+
     /**
      * Creates {@link AppIndexResource} instance.
      *
@@ -56,15 +54,13 @@ public class AppIndexResource extends AbstractWebResource {
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
             final IDates dates,
-            final ICriteriaGenerator criteriaGenerator,
-            final Context context, 
+            final Context context,
             final Request request, 
             final Response response) {
         super(context, request, response, deviceProvider, dates);
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
         this.webResourceLoader = webResourceLoader;
-        this.criteriaGenerator = criteriaGenerator;
     }
 
     @Get
