@@ -126,6 +126,11 @@ public class WebResourceLoader implements IWebResourceLoader {
         return webUiConfig.checksum(resourceUri);
     }
 
+    @Override
+    public String resourcesList() {
+        return webUiConfig.resourcesList();
+    }
+
     /// Generates 'tg-reflector' resource with type table containing master configurations.
     ///
     /// @param webUiConfig a WebUI configuration containing information about all entity masters

@@ -147,6 +147,10 @@ public interface IWebUiConfig extends IMenuRetriever {
     ///
     Optional<String> checksum(final String resourceURI);
 
+    /// Loads list of '/resources/*' paths for deployment mode of an application.
+    ///
+    String resourcesList();
+
     /// Returns the set of actions used for centre configuration sharing.
     ///
     List<EntityActionConfig> centreConfigShareActions();

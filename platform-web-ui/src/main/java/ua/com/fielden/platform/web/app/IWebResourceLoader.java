@@ -47,5 +47,9 @@ public interface IWebResourceLoader {
      * @return
      */
     Optional<String> checksum(final String resourceUri);
-    
+
+    /// Loads list of '/resources/*' paths for deployment mode of an application.
+    ///
+    String resourcesList();
+
 }

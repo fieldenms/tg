@@ -14,9 +14,12 @@ import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
+import java.io.ByteArrayInputStream;
 import java.lang.management.ManagementFactory;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.restlet.data.MediaType.TEXT_HTML;
+import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 
 /**
@@ -66,6 +69,9 @@ public class AppIndexResource extends AbstractWebResource {
             //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
+        }
+        if (getReference().getRemainingPart().endsWith("?resources=true")) {
+            return encodedRepresentation(new ByteArrayInputStream(webResourceLoader.resourcesList().getBytes(UTF_8)), TEXT_HTML);
         }
         return createRepresentation(webResourceLoader, TEXT_HTML, "/app/tg-app-index.html", getReference().getRemainingPart());
     }
