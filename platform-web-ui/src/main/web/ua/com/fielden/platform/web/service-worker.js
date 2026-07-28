@@ -28,24 +28,21 @@ const ROOT_PATH = '/';
 const STARTUP_RESOURCES_PATH = '/resources/startup-resources-vulcanized.js';
 
 /// Determines whether request 'pathName' represents static resource.
-/// That is, such resource that does not change between releases.
+/// That is, a deployment resource with a checksum, that can only change on releases.
+/// These are exactly the paths of 'checksums.json', as served by 'RESOURCES_URL_SUFFIX' request.
 ///
-/// Please note that for deployment mode only '/', '/forgotten' and '/resources/...' are needed.
-/// However, we have listed all possible resources here to avoid the change to service worker later.
-///
-/// Note: '/app' is also needed for deployment mode, because of yet generated '/app/tg-app-index.html'.
-/// However, it is only different between deployment and development mode.
-/// The difference is in SW code and in the import of main [non-]vulcanised file.
-/// The deployment version of the file does not often change between releases (only vulcanised file itself does).
+/// Everything else bypasses service worker and is always served as fresh as a server makes it.
+/// This is essential for dynamic '/app/configuration' with its up-to-date application parameters (see #2567).
+/// Generated '/app/...', '/master_ui/...' and '/centre_ui/...' resources are vulcanised into 'STARTUP_RESOURCES_PATH'.
+/// So, in deployment mode, they are never requested separately.
+/// '/custom_view/...' resources are not vulcanised, however they have no checksums and were never cacheable.
 ///
 function isStatic(pathName, method) {
-    return 'GET' === method && (pathName === '/' ||
+    return 'GET' === method && (
+        pathName === ROOT_PATH ||
         pathName === '/forgotten' ||
-        pathName.startsWith('/resources/') ||
-        pathName.startsWith('/app/') ||
-        pathName.startsWith('/centre_ui/') ||
-        pathName.startsWith('/master_ui/') ||
-        pathName.startsWith('/custom_view/'));
+        pathName.startsWith('/resources/')
+    );
 }
 
 /// Creates a response indicating that client application is stale and is needed to be refreshed fully.
