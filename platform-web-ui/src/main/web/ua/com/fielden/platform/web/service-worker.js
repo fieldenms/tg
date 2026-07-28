@@ -55,35 +55,48 @@ function createGETRequest (url) {
 }
 
 /**
- * Creates Promise for 'cache' entry by it's 'url'.
+ * Creates Promise for 'cache' entry deletion by it's 'url'.
+ * Warns about unsuccessful deletion or when resources was not found for deletion ('deleted' === false).
  */
 function deleteCacheEntry (url, cache) {
     return cache.delete(url).then(
         deleted => {
             if (!deleted) {
-                console.warn(`Cached resource [${url}] was not deleted.`); // do not blow up response if for some reason deletion was not successful; but it should be successful
+                console.warn(`Cached resource [${url}] was not deleted.`);
             }
             return deleted;
         },
         error => {
             console.warn(`Cached resource [${url}] was not deleted. Error: [${error}].`);
-            return Promise.reject(error); // preserve rejection
+            // Preserve rejection as in original 'cache.delete' promise.
+            return Promise.reject(error);
         }
     );
 }
 
-function cleanUp (url, cache) {
+/**
+ * Asynchronously cleans up Cache Storage by removing redundant '/resources/*' entries, not present on a server.
+ * It does so by loading a set of present server resources and comparing it with Cache Storage entries.
+ * Missing server resources will be deleted from both 'cache' and 'checksumCache'.
+ */
+function cleanUp (url, cache, checksumCache) {
+    // Create special request against root '/' (aka 'index.html') to load paths of current '/resources/*'.
     const serverResourcesRequest = createGETRequest(url + '?resources=true');
-    return fetch(serverResourcesRequest).then(serverResourcesResponse => { // fetch resources; it should not fail (otherwise bad response will be returned)
+    // Fetch the request and get text from a response.
+    return fetch(serverResourcesRequest).then(serverResourcesResponse => {
         return getTextFrom(serverResourcesResponse).then(serverResourcesStr => {
+            // Create a set of '/resources/*' paths from a string, returned by a server.
             const serverResources = new Set(serverResourcesStr.split('|'));
+            // Find all 'cache' entries...
             return cache.keys().then(requests => {
                 return Promise.all(
+                    // ... and filter out those not present on a server;
                     requests.filter(request => {
                         const pathName = createURL(request.url).pathname;
                         return pathName.startsWith('/resources/') && !serverResources.has(pathName);
                     })
                     .map(request => request.url)
+                    // Remove found entries from both caches.
                     .map(url => deleteCacheEntry(url, cache)
                         .then(deleted => deleteCacheEntry(url + '?checksum=true', checksumCache))
                     )
@@ -96,16 +109,25 @@ function cleanUp (url, cache) {
 /**
  * Caches the specified 'response' and its checksum ('checksumResponse') in case where they are both successful.
  * Returns promise resolving to 'response'.
+ *
+ * Also initiates 'cleanUp' for changed '/' resource.
  */
 function cacheIfSuccessful (response, checksumRequest, checksumResponse, url, cache, checksumCache, urlObj, event) {
-    if (isResponseSuccessful(response)) { // cache response if it is successful; 'checksumResponse' is successful at this stage
-        // IMPORTANT: Clone the response. A response is a stream and because we want the browser to consume the response
-        // as well as the cache consuming the response, we need to clone it so we have two streams.
-        return cache.put(url, response.clone()).then(() => { // cache response; it should not fail (otherwise bad response will be returned)
-            return checksumCache.put(checksumRequest, checksumResponse).then(() => { // cache checksum; it should not fail (otherwise bad response will be returned)
-                if (urlObj.pathname === '/') { // main 'index.html' file has been re-cached after a change (or cached for the first time)
-                    event.waitUntil( // insist to keep service worker alive until the following promise completes
-                        cleanUp(url, cache).catch(error => { // start cleaning up redundant resources
+    // Cache response if it is successful; 'checksumResponse' is successful at this stage.
+    if (isResponseSuccessful(response)) {
+        // IMPORTANT: Clone the response. We need to clone it so we have two streams.
+        // First stream is for the browser to consume the response.
+        // Second is for a cache consuming the response.
+        // Cache response; it should not fail (otherwise bad response will be returned):
+        return cache.put(url, response.clone()).then(() => {
+            // Cache checksum; it should not fail (otherwise bad response will be returned):
+            return checksumCache.put(checksumRequest, checksumResponse).then(() => {
+                // Main 'index.html' file has been re-cached after a change (or cached for the first time):
+                if (urlObj.pathname === '/') {
+                    // Insist to keep service worker alive until 'cleanUp' promise completes:
+                    event.waitUntil(
+                        // Clean up redundant resources:
+                        cleanUp(url, cache, checksumCache).catch(error => {
                             console.warn(`Cleaning up failed with error [${error}].`, error);
                         })
                     );
@@ -114,7 +136,9 @@ function cacheIfSuccessful (response, checksumRequest, checksumResponse, url, ca
             });
         });
     }
-    return Promise.resolve(response); // do not blow up response if for some reason response was not successful; just return it as if the request was not intercepted by service worker
+    // Do not blow up response if for some reason response was not successful.
+    // Just return it as if the request was not intercepted by service worker.
+    return Promise.resolve(response);
 }
 
 /**
