@@ -18,7 +18,7 @@ const RESOURCES_URL_SUFFIX = '?resources=true';
 /**
  * Delimiter for resource paths.
  */
-const RESOURCES_DELIMITER = '|';
+const RESOURCES_DELIMITER = '\n';
 
 /**
  * Determines whether request 'pathName' represents static resource, i.e. such resource that does not change between releases.
