@@ -128,7 +128,8 @@ public class QuerySourceInfoProvider {
                                                      .flatMap(Set::stream)
                                                      .filter(EntityUtils::isSyntheticEntityType)
                                                      .collect(toSet()));
-        // Topological sorting will uncover any circular dependencies by throwing an exception.
+        // Topological sorting will not help uncover cyclic dependencies here.
+        // A cycle will cause a StackOverflowError earlier, during compilation of synthetic models.
         try {
             for (final var seType : sortTopologically(seDependencies)) {
                 try {
@@ -140,14 +141,12 @@ public class QuerySourceInfoProvider {
                     throw new EqlMetadataGenerationException(msg, ex);
                 }
             }
-        } catch (final TopologicalSortException $) {
-            final var msg = "There are cyclic dependencies between synthetic entities. All dependencies:\n" +
-                            seDependencies.entrySet().stream()
-                                    .map(entry -> "%s depends on [%s]".formatted(entry.getKey().getSimpleName(),
-                                                                                 CollectionUtil.toString(entry.getValue(), Class::getSimpleName, ", ")))
-                                    .collect(joining("\n"));
-            LOGGER.error(msg);
-            throw new EqlMetadataGenerationException(msg);
+        } catch (final TopologicalSortException topoEx) {
+            final var msg = format("There are cyclic dependencies between synthetic entities: %s",
+                                   CollectionUtil.toString(topoEx.cycle(), it -> ((Class<?>) it).getSimpleName(), " -> "));
+            final var ex = new EqlMetadataGenerationException(msg);
+            LOGGER.error(ex);
+            throw ex;
         }
         // All modelled query source infos have been created.
     }
