@@ -8,12 +8,11 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage3.operands.Expression3;
+import ua.com.fielden.platform.eql.stage2.IPropPathResolver.Resolution;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
@@ -29,6 +28,8 @@ import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 import static ua.com.fielden.platform.eql.meta.PropType.propType;
+import static ua.com.fielden.platform.eql.stage3.operands.Expression3.simplify;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 /**
@@ -72,14 +73,11 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
 
     @Override
     public TransformationResultFromStage2To3<ISingleOperand3> transform(final TransformationContextFromStage2To3 context) {
-        if (lastPart().hasExpression()) {
-            final Expression2 expr2 = context.resolveExpression(source.id(), propPath);
-            final TransformationResultFromStage2To3<Expression3> exprTr = expr2.transform(context);
-            return new TransformationResultFromStage2To3<>(exprTr.item.isSingleOperandExpression() ? exprTr.item.firstOperand : exprTr.item, exprTr.updatedContext);
-        } else {
-            final T2<String, ISource3> resolution = context.resolve(source.id(), propPath);
-            return new TransformationResultFromStage2To3<>(new Prop3(resolution._1, resolution._2, type), context);
-        }
+        return switch (context.propResolutions().resolutions().get(t2(source.id(), propPath))) {
+            case Resolution.Column it -> new TransformationResultFromStage2To3<>(new Prop3(it.prop(), context.getSource(it.sourceId()), type), context);
+            case Resolution.Expr it -> (TransformationResultFromStage2To3<ISingleOperand3>) simplify(it.expr().transform(context));
+            case null -> throw new EqlStage2ProcessingException("Could not resolve property [%s] against source [%s].".formatted(propPath, source));
+        };
     }
 
     @Override
