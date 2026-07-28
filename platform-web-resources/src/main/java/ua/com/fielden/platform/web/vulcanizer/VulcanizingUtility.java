@@ -192,7 +192,6 @@ public class VulcanizingUtility {
                 "/resources/gis/leaflet/images/marker-shadow.png",
                 "/resources/gis/leaflet/controlloading/images/control-loading.gif",
                 "/resources/gis/leaflet/draw/images/spritesheet-2x.png",
-                "/resources/gis/leaflet/draw/images/spritesheet-2x.png",
                 "/resources/gis/leaflet/draw/images/spritesheet.svg",
                 "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.eot",
                 "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.svg",
