@@ -1,23 +1,18 @@
-/**
- * The name for resources cache.
- */
+/// The name for resources cache.
+///
 const CACHE_NAME = 'tg-deployment-cache';
-/**
- * The name for separate cache of resource checksums.
- */
+/// The name for separate cache of resource checksums.
+///
 const CHECKSUM_CACHE_NAME = 'tg-deployment-cache-checksums';
 
-/**
- * Suffix for checksum request URL.
- */
+/// Suffix for checksum request URL.
+///
 const CHECKSUM_URL_SUFFIX = '?checksum=true';
-/**
- * Suffix for resource paths request URL.
- */
+/// Suffix for resource paths request URL.
+///
 const RESOURCES_URL_SUFFIX = '?resources=true';
-/**
- * Delimiter for resource paths.
- */
+/// Delimiter for resource paths.
+///
 const RESOURCES_DELIMITER = '\n';
 
 /// Path of the root resource (aka 'index.html').
@@ -32,16 +27,17 @@ const ROOT_PATH = '/';
 ///
 const STARTUP_RESOURCES_PATH = '/resources/startup-resources-vulcanized.js';
 
-/**
- * Determines whether request 'pathName' represents static resource, i.e. such resource that does not change between releases.
- * 
- * Please note that for deployment mode only '/', '/forgotten' and '/resources/...' are needed.
- * However, we have listed all possible resources here to avoid the change to service worker later.
- * 
- * Note: '/app' is also needed for deployment mode, because of yet generated '/app/tg-app-index.html'.
- *       However, it is only different between deployment and development mode (SW code and import of main [non-]vulcanised file).
- *       The deployment version of the file does not often change between releases (only vulcanised file itself does).
- */
+/// Determines whether request 'pathName' represents static resource.
+/// That is, such resource that does not change between releases.
+///
+/// Please note that for deployment mode only '/', '/forgotten' and '/resources/...' are needed.
+/// However, we have listed all possible resources here to avoid the change to service worker later.
+///
+/// Note: '/app' is also needed for deployment mode, because of yet generated '/app/tg-app-index.html'.
+/// However, it is only different between deployment and development mode.
+/// The difference is in SW code and in the import of main [non-]vulcanised file.
+/// The deployment version of the file does not often change between releases (only vulcanised file itself does).
+///
 function isStatic(pathName, method) {
     return 'GET' === method && (pathName === '/' ||
         pathName === '/forgotten' ||
@@ -52,40 +48,35 @@ function isStatic(pathName, method) {
         pathName.startsWith('/custom_view/'));
 }
 
-/**
- * Creates a response indicating that client application is stale and is needed to be refreshed fully.
- */
+/// Creates a response indicating that client application is stale and is needed to be refreshed fully.
+///
 function staleResponse() {
     console.info(`The client app is stale now.`);
     return new Response('STALE', {status: 412, statusText: 'BAD', headers: {'Content-Type': 'text/plain'}});
 }
 
-/**
- * Indicates whether the 'response' is successful.
- */
+/// Indicates whether the 'response' is successful.
+///
 function isResponseSuccessful(response) {
     return response && response.ok;
 }
 
-/**
- * Creates an URL object from 'requestUrl' string.
- */
+/// Creates an URL object from 'requestUrl' string.
+///
 function createURL(requestUrl) {
     return new URL(requestUrl);
 }
 
-/**
- * Creates GET Request object from 'url'.
- */
+/// Creates GET Request object from 'url'.
+///
 function createGETRequest(url) {
     // GET is the default 'method', but make it a little bit more explicit.
     return new Request(url, { method: 'GET' });
 }
 
-/**
- * Creates a 'Promise' for 'cache' entry deletion by it's 'url'.
- * Warns about unsuccessful deletion or if the resource was not found ('deleted' === false).
- */
+/// Creates a 'Promise' for 'cache' entry deletion by it's 'url'.
+/// Warns about unsuccessful deletion or if the resource was not found ('deleted' === false).
+///
 function deleteCacheEntry(url, cache) {
     return cache.delete(url).then(
         deleted => {
@@ -102,11 +93,12 @@ function deleteCacheEntry(url, cache) {
     );
 }
 
-/**
- * Creates a 'Promise' for redundant 'url' resource deletion, assuming its presence in both 'cache' and 'checksumCache'.
- * Warns about some unusual deletion problems and shows informational message for easier inspection.
- * Use Chrome 'Default levels' (Info, Warnings, Errors) and unchecked 'Selected context only' and checked 'Preserve log'.
- */
+/// Creates a 'Promise' for redundant 'url' resource deletion.
+/// Its presence in both 'cache' and 'checksumCache' is assumed.
+/// Warns about some unusual deletion problems and shows informational message for easier inspection.
+/// Use Chrome 'Default levels' (Info, Warnings, Errors).
+/// Also, uncheck 'Selected context only' and check 'Preserve log'.
+///
 function deleteRedundantResource(url, cache, checksumCache) {
     // Shows informational message on 'url' resource deletion from a server and, consequently, from a Cache Storage.
     console.info(`The resource at [${url}] has been deleted on the server. It will be removed from the cache.`);
@@ -118,7 +110,8 @@ function deleteRedundantResource(url, cache, checksumCache) {
 /// It does so by loading a set of present server resources and comparing it with Cache Storage entries.
 /// Missing server resources will be deleted from both 'cache' and 'checksumCache'.
 ///
-/// Resource paths are always requested against 'ROOT_PATH' of 'origin' -- no matter which resource has induced the cleaning up.
+/// Resource paths are always requested against 'ROOT_PATH' of 'origin'.
+/// It does not matter which resource has induced the cleaning up.
 ///
 function cleanUp(origin, cache, checksumCache) {
     console.info(`Starting cleanup of redundant resources...`);
@@ -153,13 +146,15 @@ function cacheIfSuccessful(response, checksumRequest, checksumResponse, url, cac
         // IMPORTANT: Clone the response. We need to clone it so we have two streams.
         // First stream is for the browser to consume the response.
         // Second is for a cache consuming the response.
-        // Cache response; it should not fail (otherwise net::ERR_CACHE_* will be returned; see chrome://network-errors/):
+        // Cache response; it should not fail.
+        // Otherwise net::ERR_CACHE_* will be returned (see chrome://network-errors/):
         return cache.put(url, response.clone()).then(() => {
             // Cache checksum; it should not fail (otherwise - net::ERR_CACHE_*):
             return checksumCache.put(checksumRequest, checksumResponse).then(() => {
                 if (urlObj.pathname === STARTUP_RESOURCES_PATH) {
                     // The vulcanised file with all client-side application resources has been re-cached after a change.
-                    // It is requested exactly once per client app load and it is the only resource that reliably changes on every release.
+                    // It is requested exactly once per client app load.
+                    // Also, it is the only resource that changes often (mostly on every release).
                     // Start cleaning up of Cache Storage asynchronously.
                     // Insist to keep service worker alive until 'cleanUp' promise completes:
                     event.waitUntil(
@@ -169,7 +164,8 @@ function cacheIfSuccessful(response, checksumRequest, checksumResponse, url, cac
                         })
                     );
                 }
-                // Return response quite soon after 'checksumResponse' is inside the Cache Storage (no clean up blocking).
+                // Return response quite soon after 'checksumResponse' is inside the Cache Storage.
+                // Clean up does not block it.
                 return response;
             });
         });
@@ -179,14 +175,13 @@ function cacheIfSuccessful(response, checksumRequest, checksumResponse, url, cac
     return Promise.resolve(response);
 }
 
-/**
- * Returns promise resolving to response text if successful, otherwise returns rejection promise containing unsuccessful response.
- * 
- * @param response 
- */
+/// Returns promise resolving to response text if successful.
+/// Otherwise, returns rejection promise containing unsuccessful response.
+///
 function getTextFrom(response) {
     if (isResponseSuccessful(response)) {
-        return response.clone().text(); // perform cloning here to leave original 'response' stream unaffected
+        // Perform cloning here to leave original 'response' stream unaffected.
+        return response.clone().text();
     } else {
         return Promise.reject(response);
     }
@@ -194,16 +189,22 @@ function getTextFrom(response) {
 
 addEventListener('install', event => {
     // New updated service worker can be installed, but not yet activated until the page will be closed / opened again.
-    // Currently, even 'Hard reload' or 'Empty cache and hard reload' in Chrome does not insist on service worker update.
-    // Actually, these actions do nothing - not even installing an updated service worker (unlike Normal Reload, Ctrl+R).
+    // Currently, even 'Hard reload' or 'Empty cache and hard reload' in Chrome does not insist on that update.
+    // Actually, these actions do nothing.
+    // They do not even install an updated service worker (unlike Normal Reload, Ctrl+R).
     // So, new updated service worker gets installed and keeps being in 'waiting to activate' state.
-    // This is because the previous service worker already controls 'index.html' and by default new service worker is not activated.
-    // We want to take control immediately for all pages, because every change to service worker are backward compatible.
+    // This is because the previous service worker already controls 'index.html'.
+    // And by default new service worker is not activated.
+    // We want to take control immediately for all pages.
+    // This is because every change to service worker is backward compatible.
     // Practically skipWaiting() enforces control on every tab / window already opened.
     //   (See https://w3c.github.io/ServiceWorker/#activate 8.1 and 8.2).
     // In case of some browser implementation deficiencies, clients.claim() should also additionally enforce that.
-    // But clients.claim() is not strictly required (see it's usage below for more details on the reason why it is needed).
-    skipWaiting(); // progressing service worker to 'activating' state and further - no need to 'waitUntil' here
+    // But clients.claim() is not strictly required.
+    // See its usage below for more details on the reason why it is needed.
+    // Progressing service worker to 'activating' state and further.
+    // There is no need to 'waitUntil' here.
+    skipWaiting();
 });
 
 addEventListener('activate', event => {
@@ -211,7 +212,8 @@ addEventListener('activate', event => {
     // This is the case for the very first time 'index.html' loading.
     // However we can enforce service worker to take full control as soon as first activation performs.
     // This makes immediate caching of 'index.html' dependencies possible.
-    event.waitUntil(clients.claim()); // wait for the promise to settle and only then allow service worker to dispose
+    // Wait for the promise to settle and only then allow service worker to dispose.
+    event.waitUntil(clients.claim());
 });
 
 addEventListener('fetch', event => {
@@ -221,7 +223,8 @@ addEventListener('fetch', event => {
     if (isStatic(urlObj.pathname, request.method)) {
         // 'respondWith' will insist on service worker to live until the promise will be resolved.
         event.respondWith(
-            // Open the main cache; it should not fail (otherwise net::ERR_CACHE_* will be returned; see chrome://network-errors/).
+            // Open the main cache; it should not fail.
+            // Otherwise net::ERR_CACHE_* will be returned (see chrome://network-errors/).
             caches.open(CACHE_NAME).then(cache => {
                 // 'request.url' may contain '#' / '?' parts -- use only 'origin' and 'pathname'.
                 const url = urlObj.origin + urlObj.pathname;
@@ -232,13 +235,15 @@ addEventListener('fetch', event => {
                     return cache.match(url).then(cachedResponse => {
                         // Open the checksum cache; it should not fail (otherwise - net::ERR_*).
                         return caches.open(CHECKSUM_CACHE_NAME).then(checksumCache => {
-                            // Match resource's checksum in the checksum cache; it should not fail (otherwise - net::ERR_*).
+                            // Match resource's checksum in the checksum cache.
+                            // It should not fail (otherwise - net::ERR_*).
                             return checksumCache.match(url + CHECKSUM_URL_SUFFIX).then(cachedChecksumResponse => {
                                 // Get checksum text; checksum response should be successful (otherwise - net::ERR_*).
                                 return getTextFrom(serverChecksumResponse).then(serverChecksum => {
                                     if (cachedResponse && cachedChecksumResponse) {
                                         // Cached entry exists and it has a proper checksum too.
-                                        // 'cachedChecksumResponse' is always successful, because only successful 'checksumResponse' can be cached.
+                                        // 'cachedChecksumResponse' is always successful.
+                                        // This is because only successful 'checksumResponse' can be cached.
                                         return cachedChecksumResponse.text().then(cachedChecksum => {
                                             if (!serverChecksum) {
                                                 return deleteRedundantResource(url, cache, checksumCache).then(_ => staleResponse());
@@ -249,12 +254,14 @@ addEventListener('fetch', event => {
                                                 });
                                             } else {
                                                 // 'serverChecksum' === 'cachedChecksum'.
-                                                // Resource is the same on the server and in the client cache. Just return it.
+                                                // Resource is the same on the server and in the client cache.
+                                                // Just return it.
                                                 return cachedResponse;
                                             }
                                         });
                                     } else {
-                                        // There is no cached entry (or for some reason it is incomplete, e.g. without a checksum).
+                                        // There is no cached entry.
+                                        // Or, for some reason, it is incomplete (e.g. without a checksum).
                                         if (!serverChecksum) {
                                             return staleResponse();
                                         } else {
@@ -271,10 +278,11 @@ addEventListener('fetch', event => {
                                     if (serverChecksumResponseError instanceof Response && !isResponseSuccessful(serverChecksumResponseError) &&
                                         (serverChecksumResponseError.status === 403 || serverChecksumResponseError.status === 503)) {
                                         // Server checksum response is Forbidden (403) or Service Unavailable (503).
-                                        // In this case we need to respond with redirection response to a login resource.
+                                        // In this case we need to respond with a redirection to a login resource.
                                         return Response.redirect(url + 'login/');
                                     } else {
-                                        // Re-throw the error in other cases as if there was no 'onRejected' clause here.
+                                        // Re-throw the error in other cases.
+                                        // Behave as if there was no 'onRejected' clause here.
                                         // This would lead to promise rejection.
                                         throw serverChecksumResponseError;
                                     }

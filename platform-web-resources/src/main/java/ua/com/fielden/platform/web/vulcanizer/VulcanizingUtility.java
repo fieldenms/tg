@@ -38,12 +38,8 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.FILE_APP_INDEX_HTML;
 import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.FILE_APP_LOGIN_INITIATE_RESET_HTML;
 
-/**
- * A set of utilities to facilitate Web UI application vulcanization.
- *
- * @author TG Team
- *
- */
+/// A set of utilities to facilitate Web UI application vulcanization.
+///
 public class VulcanizingUtility {
     /// Name of the vulcanised file with all client-side application resources.
     /// It gets referenced from `index.html` (see `AbstractWebUiConfig.genAppIndex`).
@@ -51,7 +47,7 @@ public class VulcanizingUtility {
     public static final String STARTUP_RESOURCES_VULCANIZED = "startup-resources-vulcanized";
 
     /// Path of [#STARTUP_RESOURCES_VULCANIZED] file, as requested by a client.
-    /// This is the only deployment resource that reliably changes on every release.
+    /// This is the only deployment resource that changes often (mostly on every release).
     /// That is why `service-worker.js` mirrors this path (as `STARTUP_RESOURCES_PATH`) to induce clearing of redundant resources.
     ///
     public static final String FILE_STARTUP_RESOURCES_VULCANIZED_JS = "/resources/" + STARTUP_RESOURCES_VULCANIZED + ".js";
