@@ -26,8 +26,9 @@ const RESOURCES_DELIMITER = '\n';
  * Please note that for deployment mode only '/', '/forgotten' and '/resources/...' are needed.
  * However, we have listed all possible resources here to avoid the change to service worker later.
  * 
- * @param pathName
- * @param method
+ * Note: '/app' is also needed for deployment mode, because of yet generated '/app/tg-app-index.html'.
+ *       However, it is only different between deployment and development mode (SW code and import of main [non-]vulcanised file).
+ *       The deployment version of the file does not often change between releases (only vulcanised file itself does).
  */
 function isStatic(pathName, method) {
     return 'GET' === method && (pathName === '/' ||
