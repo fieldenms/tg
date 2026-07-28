@@ -8,6 +8,19 @@ const CACHE_NAME = 'tg-deployment-cache';
 const CHECKSUM_CACHE_NAME = 'tg-deployment-cache-checksums';
 
 /**
+ * Suffix for checksum request URL.
+ */
+const CHECKSUM_URL_SUFFIX = '?checksum=true';
+/**
+ * Suffix for resource paths request URL.
+ */
+const RESOURCES_URL_SUFFIX = '?resources=true';
+/**
+ * Delimiter for resource paths.
+ */
+const RESOURCES_DELIMITER = '|';
+
+/**
  * Determines whether request 'pathName' represents static resource, i.e. such resource that does not change between releases.
  * 
  * Please note that for deployment mode only '/', '/forgotten' and '/resources/...' are needed.
@@ -27,21 +40,22 @@ function isStatic(pathName, method) {
 }
 
 /**
- * Creates response indicating that client application is stale and is needed to be refreshed fully.
+ * Creates a response indicating that client application is stale and is needed to be refreshed fully.
  */
 function staleResponse() {
+    console.info(`The client app is stale now.`);
     return new Response('STALE', {status: 412, statusText: 'BAD', headers: {'Content-Type': 'text/plain'}});
 }
 
 /**
- * Indicates whether response is successful.
+ * Indicates whether the 'response' is successful.
  */
 function isResponseSuccessful(response) {
     return response && response.ok;
 }
 
 /**
- * Creates URL object from 'requestUrl' string.
+ * Creates an URL object from 'requestUrl' string.
  */
 function createURL(requestUrl) {
     return new URL(requestUrl);
@@ -51,23 +65,24 @@ function createURL(requestUrl) {
  * Creates GET Request object from 'url'.
  */
 function createGETRequest(url) {
+    // GET is the default 'method', but make it a little bit more explicit.
     return new Request(url, { method: 'GET' });
 }
 
 /**
- * Creates Promise for 'cache' entry deletion by it's 'url'.
- * Warns about unsuccessful deletion or when resources was not found for deletion ('deleted' === false).
+ * Creates a 'Promise' for 'cache' entry deletion by it's 'url'.
+ * Warns about unsuccessful deletion or if the resource was not found ('deleted' === false).
  */
 function deleteCacheEntry(url, cache) {
     return cache.delete(url).then(
         deleted => {
             if (!deleted) {
-                console.warn(`Cached resource [${url}] was not deleted.`);
+                console.warn(`The cached resource at [${url}] was not deleted. It was likely deleted manually earlier.`);
             }
             return deleted;
         },
         error => {
-            console.warn(`Cached resource [${url}] was not deleted. Error: [${error}].`);
+            console.warn(`The cached resource at [${url}] was not deleted. Error:`, error);
             // Preserve rejection as in original 'cache.delete' promise.
             return Promise.reject(error);
         }
@@ -75,31 +90,38 @@ function deleteCacheEntry(url, cache) {
 }
 
 /**
- * Asynchronously cleans up Cache Storage by removing redundant '/resources/*' entries, not present on a server.
+ * Creates a 'Promise' for redundant 'url' resource deletion, assuming its presence in both 'cache' and 'checksumCache'.
+ * Warns about some unusual deletion problems and shows informational message for easier inspection.
+ * Use Chrome 'Default levels' (Info, Warnings, Errors) and unchecked 'Selected context only' and checked 'Preserve log'.
+ */
+function deleteRedundantResource(url, cache, checksumCache) {
+    // Shows informational message on 'url' resource deletion from a server and, consequently, from a Cache Storage.
+    console.info(`The resource at [${url}] has been deleted on the server. It will be removed from the cache.`);
+    return deleteCacheEntry(url, cache)
+        .then(_ => deleteCacheEntry(url + CHECKSUM_URL_SUFFIX, checksumCache));
+}
+
+/**
+ * Asynchronously cleans up Cache Storage by removing redundant entries, not present on a server.
  * It does so by loading a set of present server resources and comparing it with Cache Storage entries.
  * Missing server resources will be deleted from both 'cache' and 'checksumCache'.
  */
 function cleanUp(url, cache, checksumCache) {
-    // Create special request against root '/' (aka 'index.html') to load paths of current '/resources/*'.
-    const serverResourcesRequest = createGETRequest(url + '?resources=true');
+    console.info(`Starting cleanup of redundant resources...`);
+    // Create special request against root '/' (aka 'index.html') to load paths of current resources.
+    const serverResourcesRequest = createGETRequest(url + RESOURCES_URL_SUFFIX);
     // Fetch the request and get text from a response.
     return fetch(serverResourcesRequest).then(serverResourcesResponse => {
         return getTextFrom(serverResourcesResponse).then(serverResourcesStr => {
-            // Create a set of '/resources/*' paths from a string, returned by a server.
-            const serverResources = new Set(serverResourcesStr.split('|'));
+            // Create a set of resource paths from a string, returned by a server.
+            const serverResources = new Set(serverResourcesStr.split(RESOURCES_DELIMITER));
             // Find all 'cache' entries...
             return cache.keys().then(requests => {
                 return Promise.all(
                     // ... and filter out those not present on a server;
-                    requests.filter(request => {
-                        const pathName = createURL(request.url).pathname;
-                        return !serverResources.has(pathName);
-                    })
-                    .map(request => request.url)
+                    requests.filter(request => !serverResources.has(createURL(request.url).pathname))
                     // Remove found entries from both caches.
-                    .map(url => deleteCacheEntry(url, cache)
-                        .then(deleted => deleteCacheEntry(url + '?checksum=true', checksumCache))
-                    )
+                    .map(request => deleteRedundantResource(request.url, cache, checksumCache))
                 );
             });
         });
@@ -118,25 +140,27 @@ function cacheIfSuccessful(response, checksumRequest, checksumResponse, url, cac
         // IMPORTANT: Clone the response. We need to clone it so we have two streams.
         // First stream is for the browser to consume the response.
         // Second is for a cache consuming the response.
-        // Cache response; it should not fail (otherwise bad response will be returned):
+        // Cache response; it should not fail (otherwise net::ERR_CACHE_* will be returned; see chrome://network-errors/):
         return cache.put(url, response.clone()).then(() => {
-            // Cache checksum; it should not fail (otherwise bad response will be returned):
+            // Cache checksum; it should not fail (otherwise - net::ERR_CACHE_*):
             return checksumCache.put(checksumRequest, checksumResponse).then(() => {
-                // Main 'index.html' file has been re-cached after a change (or cached for the first time):
                 if (urlObj.pathname === '/') {
+                    // Main 'index.html' file has been re-cached after a change (or cached for the first time).
+                    // Start cleaning up of Cache Storage asynchronously.
                     // Insist to keep service worker alive until 'cleanUp' promise completes:
                     event.waitUntil(
-                        // Clean up redundant resources:
+                        // Actual clean up of redundant resources:
                         cleanUp(url, cache, checksumCache).catch(error => {
-                            console.warn(`Cleaning up failed with error [${error}].`, error);
+                            console.warn(`Cleanup failed with error:`, error);
                         })
                     );
                 }
+                // Return response quite soon after 'checksumResponse' is inside the Cache Storage (no clean up blocking).
                 return response;
             });
         });
     }
-    // Do not blow up response if for some reason response was not successful.
+    // Do not blow up response if for some reason it was not successful.
     // Just return it as if the request was not intercepted by service worker.
     return Promise.resolve(response);
 }
@@ -179,51 +203,66 @@ addEventListener('activate', event => {
 addEventListener('fetch', event => {
     const request = event.request;
     const urlObj = createURL(request.url);
-    if (isStatic(urlObj.pathname, request.method)) { // only consider intercepting for static resources
+    // Only consider intercepting of static resources.
+    if (isStatic(urlObj.pathname, request.method)) {
+        // 'respondWith' will insist on service worker to live until the promise will be resolved.
         event.respondWith(
-            caches.open(CACHE_NAME).then(cache => { // open main cache; it should not fail (otherwise bad response will be returned)
+            // Open the main cache; it should not fail (otherwise net::ERR_CACHE_* will be returned; see chrome://network-errors/).
+            caches.open(CACHE_NAME).then(cache => {
                 // 'request.url' may contain '#' / '?' parts -- use only 'origin' and 'pathname'.
                 const url = urlObj.origin + urlObj.pathname;
-                const serverChecksumRequest = createGETRequest(url + '?checksum=true');
-                return fetch(serverChecksumRequest).then(serverChecksumResponse => { // fetch checksum for the intercepted resource; it should not fail (otherwise bad response will be returned)
-                    return cache.match(url).then(cachedResponse => { // match resource in main cache; it should not fail (otherwise bad response will be returned)
-                        return caches.open(CHECKSUM_CACHE_NAME).then(checksumCache => { // open checksum cache; it should not fail (otherwise bad response will be returned)
-                            return checksumCache.match(url + '?checksum=true').then(cachedChecksumResponse => { // match resource's checksum in checksum cache; it should not fail (otherwise bad response will be returned)
-                                return getTextFrom(serverChecksumResponse).then(serverChecksum => { // get checksum text; checksum response should be successful (otherwise bad response will be returned)
-                                    if (cachedResponse && cachedChecksumResponse) { // cached entry exists and it has proper checksum too
-                                        return cachedChecksumResponse.text().then(cachedChecksum => { // cachedChecksumResponse always is successful, because only successful checksumResponse can be cached
-                                            if (!serverChecksum) { // resource has been deleted on server
-                                                console.warn(`Resource ${url} has been deleted on server.`);
-                                                return deleteCacheEntry(url, cache)
-                                                    .then(deleted => deleteCacheEntry(url + '?checksum=true', checksumCache))
-                                                    .then(deleted => staleResponse());
-                                            } else if (serverChecksum !== cachedChecksum) { // resource has been modified on server
-                                                console.warn(`Resource ${url} has been modified on server. CachedChecksum ${cachedChecksum} vs serverChecksum ${serverChecksum}. MODIFIED RESOURCE WILL BE RE-CACHED.`);
+                const serverChecksumRequest = createGETRequest(url + CHECKSUM_URL_SUFFIX);
+                // Fetch checksum for the intercepted resource; it should not fail (otherwise - net::ERR_*).
+                return fetch(serverChecksumRequest).then(serverChecksumResponse => {
+                    // Match resource in the main cache; it should not fail (otherwise - net::ERR_*).
+                    return cache.match(url).then(cachedResponse => {
+                        // Open the checksum cache; it should not fail (otherwise - net::ERR_*).
+                        return caches.open(CHECKSUM_CACHE_NAME).then(checksumCache => {
+                            // Match resource's checksum in the checksum cache; it should not fail (otherwise - net::ERR_*).
+                            return checksumCache.match(url + CHECKSUM_URL_SUFFIX).then(cachedChecksumResponse => {
+                                // Get checksum text; checksum response should be successful (otherwise - net::ERR_*).
+                                return getTextFrom(serverChecksumResponse).then(serverChecksum => {
+                                    if (cachedResponse && cachedChecksumResponse) {
+                                        // Cached entry exists and it has a proper checksum too.
+                                        // 'cachedChecksumResponse' is always successful, because only successful 'checksumResponse' can be cached.
+                                        return cachedChecksumResponse.text().then(cachedChecksum => {
+                                            if (!serverChecksum) {
+                                                return deleteRedundantResource(url, cache, checksumCache).then(_ => staleResponse());
+                                            } else if (serverChecksum !== cachedChecksum) {
+                                                console.info(`The resource at [${url}] has been modified on the server. CachedChecksum ${cachedChecksum} vs serverChecksum ${serverChecksum}. The modified resource will be re-cached.`);
                                                 return fetch(url).then(fetchedResponse => {
                                                     return cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponse, url, cache, checksumCache, urlObj, event);
                                                 });
-                                            } else { // serverChecksum === cachedChecksum; resource is the same on server and in client cache
+                                            } else {
+                                                // 'serverChecksum' === 'cachedChecksum'.
+                                                // Resource is the same on the server and in the client cache. Just return it.
                                                 return cachedResponse;
                                             }
                                         });
-                                    } else { // there is no cached entry
-                                        if (!serverChecksum) { // resource has been deleted on server
-                                            console.warn(`Resource ${url} has been deleted on server.`);
+                                    } else {
+                                        // There is no cached entry (or for some reason it is incomplete, e.g. without a checksum).
+                                        if (!serverChecksum) {
                                             return staleResponse();
-                                        } else { // resource exists on server
-                                            console.warn(`Resource ${url} exists on server. ServerChecksum ${serverChecksum}. NEW RESOURCE WILL BE CACHED.`);
+                                        } else {
+                                            console.info(`The resource at [${url}] exists on the server. ServerChecksum ${serverChecksum}. The new resource will be cached.`);
                                             return fetch(url).then(fetchedResponse => {
                                                 return cacheIfSuccessful(fetchedResponse, serverChecksumRequest, serverChecksumResponse, url, cache, checksumCache, urlObj, event);
                                             });
                                         }
                                     }
-                                }, serverChecksumResponseError => { // it is very important not to chain catch clause but to use onRejected callback; this is because we need to process errors only from getTextFrom(...) promise and not from getTextFrom(...).then(...) promise.
+                                // It is very important not to chain catch clause but to use 'onRejected' callback.
+                                // This is because we need to process errors only from getTextFrom(...) promise;
+                                //   (i.e. not from getTextFrom(...).then(...) promise).
+                                }, serverChecksumResponseError => {
                                     if (serverChecksumResponseError instanceof Response && !isResponseSuccessful(serverChecksumResponseError) &&
                                         (serverChecksumResponseError.status === 403 || serverChecksumResponseError.status === 503)) {
-                                        // If server checksum response is Forbidden (403) or Service Unavailable (503) then we need to respond with redirection response to a login resource.
+                                        // Server checksum response is Forbidden (403) or Service Unavailable (503).
+                                        // In this case we need to respond with redirection response to a login resource.
                                         return Response.redirect(url + 'login/');
                                     } else {
-                                        throw serverChecksumResponseError; // rethrow the error in other cases as if there was no onRejected clause here; this would lead to promise rejection
+                                        // Re-throw the error in other cases as if there was no 'onRejected' clause here.
+                                        // This would lead to promise rejection.
+                                        throw serverChecksumResponseError;
                                     }
                                 });
                             });
@@ -232,5 +271,7 @@ addEventListener('fetch', event => {
                 });
             })
         )
-    } // all non-static resources should be bypassed by service worker, just ignoring them in 'fetch' event; this will trigger default logic
+    }
+    // Else: all non-static resources should be bypassed by service worker - just ignoring them in 'fetch' event.
+    // This will trigger the default logic.
 });

@@ -34,6 +34,8 @@ import static ua.com.fielden.platform.web.resources.webui.FileResource.createRep
 public class AppIndexResource extends AbstractWebResource {
     public static final String BINDING_PATH = "/";
     public static final String FILE_APP_INDEX_HTML = "/app/tg-app-index.html";
+    private static final String RESOURCES_URL_SUFFIX = "?resources=true";
+    private static final String RESOURCES_DELIMITER = "|";
 
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
@@ -74,8 +76,8 @@ public class AppIndexResource extends AbstractWebResource {
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
         }
-        if (getReference().getRemainingPart().endsWith("?resources=true")) {
-            return encodedRepresentation(new ByteArrayInputStream(join("|", webResourceLoader.deploymentResourcePaths()).getBytes(UTF_8)), TEXT_HTML);
+        if (getReference().getRemainingPart().endsWith(RESOURCES_URL_SUFFIX)) {
+            return encodedRepresentation(new ByteArrayInputStream(join(RESOURCES_DELIMITER, webResourceLoader.deploymentResourcePaths()).getBytes(UTF_8)), TEXT_HTML);
         }
         return createRepresentation(webResourceLoader, TEXT_HTML, FILE_APP_INDEX_HTML, getReference().getRemainingPart());
     }
