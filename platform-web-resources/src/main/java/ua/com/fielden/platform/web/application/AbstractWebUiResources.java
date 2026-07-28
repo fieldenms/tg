@@ -23,6 +23,7 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.*;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.AppIndexResource;
 import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
 
 /// Represents a web application that is running on the server.
@@ -93,7 +94,7 @@ public abstract class AbstractWebUiResources extends Application {
         // Attach application configuration resource.
         guardedRouter.attach("/app/configuration", new ApplicationConfigurationResourceFactory(webApp, injector));
         // Attach main application resource.
-        guardedRouter.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates, injector.getInstance(ICriteriaGenerator.class)));
+        guardedRouter.attach(AppIndexResource.BINDING_PATH, new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates, injector.getInstance(ICriteriaGenerator.class)));
         guardedRouter.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider, dates));
         guardedRouter.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(webResourceLoader, deviceProvider, dates));
         guardedRouter.attach("/app/tg-app-actions.js", new TgAppActionsResourceFactory(webResourceLoader, deviceProvider, dates));

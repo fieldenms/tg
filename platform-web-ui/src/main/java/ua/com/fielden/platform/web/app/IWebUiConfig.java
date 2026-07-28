@@ -147,9 +147,10 @@ public interface IWebUiConfig extends IMenuRetriever {
     ///
     Optional<String> checksum(final String resourceURI);
 
-    /// Loads list of '/resources/*' paths for deployment mode of an application.
+    /// Returns a set of resource paths for deployment mode of an application.
+    /// All these resources are cached through a Service Worker on a client.
     ///
-    String resourcesList();
+    SequencedSet<String> deploymentResourcePaths();
 
     /// Returns the set of actions used for centre configuration sharing.
     ///

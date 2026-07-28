@@ -43,7 +43,9 @@ import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
 import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.*;
+import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.FILE_APP_INDEX_HTML;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
+import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.FILE_APP_LOGIN_INITIATE_RESET_HTML;
 
 /// [IWebResourceLoader] implementation.
 ///
@@ -88,11 +90,11 @@ public class WebResourceLoader implements IWebResourceLoader {
 
         if ("/app/application-startup-resources.js".equalsIgnoreCase(resourceUri)) {
             return getApplicationStartupResourcesSource(webUiConfig);
-        } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceUri)) {
+        } else if (FILE_APP_INDEX_HTML.equalsIgnoreCase(resourceUri)) {
             return injectServiceWorkerScriptInto(webUiConfig.genAppIndex());
         } else if ("/app/logout.html".equalsIgnoreCase(resourceUri)) {
             return getFileSource("/resources/logout.html", webUiConfig.resourcePaths()).map(src -> StringUtils.replace(src, "@title", "Logout"));
-        } else if ("/app/login-initiate-reset.html".equalsIgnoreCase(resourceUri)) {
+        } else if (FILE_APP_LOGIN_INITIATE_RESET_HTML.equalsIgnoreCase(resourceUri)) {
             return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths()).map(src -> StringUtils.replace(src, "@title", "Login Reset Request"));
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceUri)) {
             return ofNullable(webUiConfig.genWebUiPreferences());
@@ -127,8 +129,8 @@ public class WebResourceLoader implements IWebResourceLoader {
     }
 
     @Override
-    public String resourcesList() {
-        return webUiConfig.resourcesList();
+    public SequencedSet<String> deploymentResourcePaths() {
+        return webUiConfig.deploymentResourcePaths();
     }
 
     /// Generates 'tg-reflector' resource with type table containing master configurations.

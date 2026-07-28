@@ -17,6 +17,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import java.io.ByteArrayInputStream;
 import java.lang.management.ManagementFactory;
 
+import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.restlet.data.MediaType.TEXT_HTML;
 import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
@@ -31,6 +32,9 @@ import static ua.com.fielden.platform.web.resources.webui.FileResource.createRep
  *
  */
 public class AppIndexResource extends AbstractWebResource {
+    public static final String BINDING_PATH = "/";
+    public static final String FILE_APP_INDEX_HTML = "/app/tg-app-index.html";
+
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final IWebResourceLoader webResourceLoader;
@@ -71,9 +75,9 @@ public class AppIndexResource extends AbstractWebResource {
             webUiConfig.initConfiguration();
         }
         if (getReference().getRemainingPart().endsWith("?resources=true")) {
-            return encodedRepresentation(new ByteArrayInputStream(webResourceLoader.resourcesList().getBytes(UTF_8)), TEXT_HTML);
+            return encodedRepresentation(new ByteArrayInputStream(join("|", webResourceLoader.deploymentResourcePaths()).getBytes(UTF_8)), TEXT_HTML);
         }
-        return createRepresentation(webResourceLoader, TEXT_HTML, "/app/tg-app-index.html", getReference().getRemainingPart());
+        return createRepresentation(webResourceLoader, TEXT_HTML, FILE_APP_INDEX_HTML, getReference().getRemainingPart());
     }
 
     /**
