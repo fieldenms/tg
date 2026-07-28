@@ -77,6 +77,7 @@ import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.FILE_
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_OWN_COPY_MSG;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.FILE_APP_LOGIN_INITIATE_RESET_HTML;
+import static ua.com.fielden.platform.web.vulcanizer.VulcanizingUtility.STARTUP_RESOURCES_VULCANIZED;
 import static ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions.ALL_OFF;
 
 /**
@@ -321,7 +322,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         if (isDevelopmentWorkflow(this.workflow)) {
             return indexSource.replace("@startupResources", "startup-resources-origin");
         } else {
-            return indexSource.replace("@startupResources", "startup-resources-vulcanized");
+            return indexSource.replace("@startupResources", STARTUP_RESOURCES_VULCANIZED);
         }
 
     }

@@ -45,8 +45,19 @@ import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetReso
  *
  */
 public class VulcanizingUtility {
+    /// Name of the vulcanised file with all client-side application resources.
+    /// It gets referenced from `index.html` (see `AbstractWebUiConfig.genAppIndex`).
+    ///
+    public static final String STARTUP_RESOURCES_VULCANIZED = "startup-resources-vulcanized";
+
+    /// Path of [#STARTUP_RESOURCES_VULCANIZED] file, as requested by a client.
+    /// This is the only deployment resource that reliably changes on every release.
+    /// That is why `service-worker.js` mirrors this path (as `STARTUP_RESOURCES_PATH`) to induce clearing of redundant resources.
+    ///
+    public static final String FILE_STARTUP_RESOURCES_VULCANIZED_JS = "/resources/" + STARTUP_RESOURCES_VULCANIZED + ".js";
+
     private static final Logger LOGGER = getLogger(VulcanizingUtility.class);
-    
+
     public static String[] unixCommands(final String action) {
         return new String[] {"/bin/bash", action + "-script.bat"};
     }
@@ -151,7 +162,7 @@ public class VulcanizingUtility {
             final List<String> allExternalResources = listOf(
                 FILE_APP_INDEX_HTML, // '/', see AppIndexResource.BINDING_PATH
                 "/resources/app/tg-app-resource-loader.js",
-                "/resources/startup-resources-vulcanized.js",
+                FILE_STARTUP_RESOURCES_VULCANIZED_JS,
                 "/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js",
                 "/resources/polymer/web-animations-js/web-animations-next-lite.min.js",
                 "/resources/filesaver/FileSaver.min.js",

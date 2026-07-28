@@ -20,6 +20,18 @@ const RESOURCES_URL_SUFFIX = '?resources=true';
  */
 const RESOURCES_DELIMITER = '\n';
 
+/// Path of the root resource (aka 'index.html').
+/// It also serves the paths of all deployment resources (see 'RESOURCES_URL_SUFFIX').
+/// Server-side counterpart is 'AppIndexResource.BINDING_PATH'.
+///
+const ROOT_PATH = '/';
+/// Path of the vulcanised file with all client-side application resources.
+/// This is the only deployment resource that reliably changes on every release.
+/// That is why its re-caching induces clearing of redundant resources.
+/// Server-side counterpart is 'VulcanizingUtility.FILE_STARTUP_RESOURCES_VULCANIZED_JS'.
+///
+const STARTUP_RESOURCES_PATH = '/resources/startup-resources-vulcanized.js';
+
 /**
  * Determines whether request 'pathName' represents static resource, i.e. such resource that does not change between releases.
  * 
@@ -102,15 +114,16 @@ function deleteRedundantResource(url, cache, checksumCache) {
         .then(_ => deleteCacheEntry(url + CHECKSUM_URL_SUFFIX, checksumCache));
 }
 
-/**
- * Asynchronously cleans up Cache Storage by removing redundant entries, not present on a server.
- * It does so by loading a set of present server resources and comparing it with Cache Storage entries.
- * Missing server resources will be deleted from both 'cache' and 'checksumCache'.
- */
-function cleanUp(url, cache, checksumCache) {
+/// Asynchronously cleans up Cache Storage by removing redundant entries, not present on a server.
+/// It does so by loading a set of present server resources and comparing it with Cache Storage entries.
+/// Missing server resources will be deleted from both 'cache' and 'checksumCache'.
+///
+/// Resource paths are always requested against 'ROOT_PATH' of 'origin' -- no matter which resource has induced the cleaning up.
+///
+function cleanUp(origin, cache, checksumCache) {
     console.info(`Starting cleanup of redundant resources...`);
     // Create special request against root '/' (aka 'index.html') to load paths of current resources.
-    const serverResourcesRequest = createGETRequest(url + RESOURCES_URL_SUFFIX);
+    const serverResourcesRequest = createGETRequest(origin + ROOT_PATH + RESOURCES_URL_SUFFIX);
     // Fetch the request and get text from a response.
     return fetch(serverResourcesRequest).then(serverResourcesResponse => {
         return getTextFrom(serverResourcesResponse).then(serverResourcesStr => {
@@ -129,12 +142,11 @@ function cleanUp(url, cache, checksumCache) {
     });
 }
 
-/**
- * Caches the specified 'response' and its checksum ('checksumResponse') in case where they are both successful.
- * Returns promise resolving to 'response'.
- *
- * Also initiates 'cleanUp' for changed '/' resource.
- */
+/// Caches the specified 'response' and its checksum ('checksumResponse') in case where they are both successful.
+/// Returns promise resolving to 'response'.
+///
+/// Also initiates 'cleanUp' for changed 'STARTUP_RESOURCES_PATH' resource.
+///
 function cacheIfSuccessful(response, checksumRequest, checksumResponse, url, cache, checksumCache, urlObj, event) {
     // Cache response if it is successful; 'checksumResponse' is successful at this stage.
     if (isResponseSuccessful(response)) {
@@ -145,13 +157,14 @@ function cacheIfSuccessful(response, checksumRequest, checksumResponse, url, cac
         return cache.put(url, response.clone()).then(() => {
             // Cache checksum; it should not fail (otherwise - net::ERR_CACHE_*):
             return checksumCache.put(checksumRequest, checksumResponse).then(() => {
-                if (urlObj.pathname === '/') {
-                    // Main 'index.html' file has been re-cached after a change (or cached for the first time).
+                if (urlObj.pathname === STARTUP_RESOURCES_PATH) {
+                    // The vulcanised file with all client-side application resources has been re-cached after a change.
+                    // It is requested exactly once per client app load and it is the only resource that reliably changes on every release.
                     // Start cleaning up of Cache Storage asynchronously.
                     // Insist to keep service worker alive until 'cleanUp' promise completes:
                     event.waitUntil(
                         // Actual clean up of redundant resources:
-                        cleanUp(url, cache, checksumCache).catch(error => {
+                        cleanUp(urlObj.origin, cache, checksumCache).catch(error => {
                             console.warn(`Cleanup failed with error:`, error);
                         })
                     );
