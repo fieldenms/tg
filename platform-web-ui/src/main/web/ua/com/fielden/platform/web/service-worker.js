@@ -54,21 +54,40 @@ function createGETRequest (url) {
     return new Request(url, { method: 'GET' });
 }
 
+/**
+ * Creates Promise for 'cache' entry by it's 'url'.
+ */
+function deleteCacheEntry (url, cache) {
+    return cache.delete(url).then(
+        deleted => {
+            if (!deleted) {
+                console.warn(`Cached resource [${url}] was not deleted.`); // do not blow up response if for some reason deletion was not successful; but it should be successful
+            }
+            return deleted;
+        },
+        error => {
+            console.warn(`Cached resource [${url}] was not deleted. Error: [${error}].`);
+            return Promise.reject(error); // preserve rejection
+        }
+    );
+}
+
 function cleanUp (url, cache) {
     const serverResourcesRequest = createGETRequest(url + '?resources=true');
     return fetch(serverResourcesRequest).then(serverResourcesResponse => { // fetch resources; it should not fail (otherwise bad response will be returned)
         return getTextFrom(serverResourcesResponse).then(serverResourcesStr => {
             const serverResources = new Set(serverResourcesStr.split('|'));
-            console.warn(`Resources [${[...serverResources].join(', ')}].`);
             return cache.keys().then(requests => {
-                for (const request of requests) {
-                    console.warn(`CACHED ${request.url}`);
-                    const requestPathname = createURL(request.url).pathname;
-                    if (requestPathname.startsWith('/resources/') /*&& !serverResources.has(requestPathname)*/) {
-                        console.warn(`CACHED, TO BE DELETED ${request.url}`);
-                    }
-                }
-                return serverResources;
+                return Promise.all(
+                    requests.filter(request => {
+                        const pathName = createURL(request.url).pathname;
+                        return pathName.startsWith('/resources/') && !serverResources.has(pathName);
+                    })
+                    .map(request => request.url)
+                    .map(url => deleteCacheEntry(url, cache)
+                        .then(deleted => deleteCacheEntry(url + '?checksum=true', checksumCache))
+                    )
+                );
             });
         });
     });
@@ -151,12 +170,9 @@ addEventListener('fetch', event => {
                                         return cachedChecksumResponse.text().then(cachedChecksum => { // cachedChecksumResponse always is successful, because only successful checksumResponse can be cached
                                             if (!serverChecksum) { // resource has been deleted on server
                                                 console.warn(`Resource ${url} has been deleted on server.`);
-                                                return cache.delete(url).then(deleted => {
-                                                    if (!deleted) {
-                                                        console.warn(`Cached resource [${url}] was not deleted.`); // do not blow up response if for some reason deletion was not successful; but it should be successful
-                                                    }
-                                                    return staleResponse();
-                                                });
+                                                return deleteCacheEntry(url, cache)
+                                                    .then(deleted => deleteCacheEntry(url + '?checksum=true', checksumCache))
+                                                    .then(deleted => staleResponse());
                                             } else if (serverChecksum !== cachedChecksum) { // resource has been modified on server
                                                 console.warn(`Resource ${url} has been modified on server. CachedChecksum ${cachedChecksum} vs serverChecksum ${serverChecksum}. MODIFIED RESOURCE WILL BE RE-CACHED.`);
                                                 return fetch(url).then(fetchedResponse => {
