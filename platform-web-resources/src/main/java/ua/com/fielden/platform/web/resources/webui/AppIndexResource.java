@@ -76,9 +76,11 @@ public class AppIndexResource extends AbstractWebResource {
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
         }
+        // Handle special Service Worker '?resources=true' GET request against `AppIndexResource` (aka '/').
         if (getReference().getRemainingPart().endsWith(RESOURCES_URL_SUFFIX)) {
             return encodedRepresentation(new ByteArrayInputStream(join(RESOURCES_DELIMITER, webResourceLoader.deploymentResourcePaths()).getBytes(UTF_8)), TEXT_HTML);
         }
+        // Handle actual `AppIndexResource` generated file (see 'index.html').
         return createRepresentation(webResourceLoader, TEXT_HTML, FILE_APP_INDEX_HTML, getReference().getRemainingPart());
     }
 
