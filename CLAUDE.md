@@ -53,6 +53,7 @@ The platform targets **Java 25**:
 | `platform-db-evolution` | Database migration and evolution tools |
 | `platform-eql-grammar` | ANTLR-based EQL parser and compiler |
 | `platform-benchmark` | Performance benchmarking tools |
+| `platform-bom` | Bill of materials pinning the versions of all published platform artifacts, for end projects to import |
 
 LaTeX documentation in `platform-doc/`.
 
