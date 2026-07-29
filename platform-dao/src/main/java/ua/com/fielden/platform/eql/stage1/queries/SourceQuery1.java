@@ -60,12 +60,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableFromSt
 
     @Override
     public SourceQuery2 transform(final TransformationContextFromStage1To2 context) {
-        final TransformationContextFromStage1To2 localContext = isCorrelated
-                ? context
-                : context.isForCalcProp
-                        ? TransformationContextFromStage1To2.forCalcPropContext(context)
-                        : TransformationContextFromStage1To2.forMainContext(context);
-
+        final var localContext = isCorrelated ? context : TransformationContextFromStage1To2.mkContext(context);
         final var queryComponents = maybeJoinRoot.map(joinRoot -> transformQueryComponents(localContext, joinRoot))
                 .orElseGet(() -> transformSourceless(localContext));
         return new SourceQuery2(queryComponents, resultType);

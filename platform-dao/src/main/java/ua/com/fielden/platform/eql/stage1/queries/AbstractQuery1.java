@@ -155,7 +155,7 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
             return originalConditions;
         }
 
-        final TransformationContextFromStage1To2 localContext = TransformationContextFromStage1To2.forMainContext(context).cloneWithAdded(mainSource);
+        final TransformationContextFromStage1To2 localContext = TransformationContextFromStage1To2.mkContext(context).cloneWithAdded(mainSource);
         final Conditions2 udfConditions2 = udfConditions.transform(localContext);
 
         if (originalConditions.ignore()) {

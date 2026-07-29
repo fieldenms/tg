@@ -241,7 +241,7 @@ public class QuerySourceInfoProvider {
     /// Only properties that are present in SE yields are preserved.
     ///
     private <T extends AbstractEntity<?>> QuerySourceInfo<?> generateModelledQuerySourceInfoForSyntheticType(final Class<? extends AbstractEntity<?>> entityType, final List<SourceQuery1> queries) {
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(this, domainMetadata);
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.mkContext(this, domainMetadata);
         final List<SourceQuery2> transformedQueries = queries.stream().map(m -> m.transform(context)).collect(toList());
         return produceQuerySourceInfoForEntityType(transformedQueries, entityType, true /*isComprehensive*/);
     }

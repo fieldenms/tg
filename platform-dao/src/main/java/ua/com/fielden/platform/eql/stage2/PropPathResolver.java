@@ -172,8 +172,7 @@ public class PropPathResolver implements IPropPathResolver {
             if (!(lastItem instanceof QuerySourceItemForEntityType<?> lastItemEntityTyped)) {
                 throw new InvalidStateException("Expected property [%s] to be entity-typed. Source: %s".formatted(leftProp, leftSrc));
             }
-            // TODO isPartOfCalcProp seems to be unused.
-            final var rightSrc = new Source2BasedOnPersistentType(lastItemEntityTyped.querySourceInfo, gen.nextSourceId(), false /*isExplicit*/, false /* isPartOfCalcProp */);
+            final var rightSrc = new Source2BasedOnPersistentType(lastItemEntityTyped.querySourceInfo, gen.nextSourceId(), false /*isExplicit*/);
             return expand(leftSrc, leftProp, acc, gen).map((leftOn, acc1) -> {
                 final var joinType = isNonNullable(leftSrc, leftProp) ? JoinType.IJ : JoinType.LJ;
                 final var join = new JoinNode(leftSrc, rightSrc, leftOn, joinType);
@@ -216,7 +215,7 @@ public class PropPathResolver implements IPropPathResolver {
 
     private Expression2 compile(final ISource2<?> source, final ExpressionModel model, final QueryModelToStage1Transformer gen) {
         final Expression1 exp1 = new EqlCompiler(gen).compile(model.tokens(), EqlCompilationResult.StandaloneExpression.class).model();
-        final var context = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider, domainMetadata).cloneWithAdded(source);
+        final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata).cloneWithAdded(source);
         return exp1.transform(context);
     }
 

@@ -112,7 +112,7 @@ public final class EqlQueryTransformer {
         final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
 
-        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider, domainMetadata);
+        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata);
         final ResultQuery2 query2 = query1.transform(context1);
 
         final var context2 = new TransformationContextFromStage2To3(

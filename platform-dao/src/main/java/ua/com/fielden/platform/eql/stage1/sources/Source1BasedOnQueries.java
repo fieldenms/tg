@@ -61,7 +61,7 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
     public Source2BasedOnQueries transform(final TransformationContextFromStage1To2 context) {
         final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toImmutableList());
         final QuerySourceInfo<?> ei = obtainQuerySourceInfo(context, transformedQueries, sourceType(), isSyntheticEntity);
-        return new Source2BasedOnQueries(transformedQueries, alias, id, ei, isSyntheticEntity, true, context.isForCalcProp);
+        return new Source2BasedOnQueries(transformedQueries, alias, id, ei, isSyntheticEntity, true);
     }
 
     private static QuerySourceInfo<?> obtainQuerySourceInfo(

@@ -79,7 +79,7 @@ public class DependentCalcPropsVerifier {
     private Map<String, Set<String>> dependencyGraph(final QuerySourceInfo<?> querySourceInfo) {
         // TODO Use Source2BasedOnQueries for synthetic entity types.
         final var gen = new QueryModelToStage1Transformer();
-        final var source = new Source2BasedOnPersistentType(querySourceInfo, gen.nextSourceId(), true, true);
+        final var source = new Source2BasedOnPersistentType(querySourceInfo, gen.nextSourceId(), true);
 
         final Map<String, Set<String>> graph = calculatedProperties(querySourceInfo)
                 .collect(toMap(T2::_1, t2 -> directDeps(source, t2, querySourceInfo, gen).collect(toCollection(HashSet::new))));
@@ -106,7 +106,7 @@ public class DependentCalcPropsVerifier {
     {
         try {
             final var exp1 = new EqlCompiler(gen).compile(calcProp._2().tokens(), EqlCompilationResult.StandaloneExpression.class).model();
-            final var context = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider, domainMetadata).cloneWithAdded(source);
+            final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata).cloneWithAdded(source);
             final var exp2 = exp1.transform(context);
             return exp2.collectProps()
                     .stream()
