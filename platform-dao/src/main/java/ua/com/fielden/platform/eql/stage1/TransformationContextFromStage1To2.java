@@ -1,102 +1,86 @@
 package ua.com.fielden.platform.eql.stage1;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ImmutableListUtils;
 
 import java.util.List;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
+// TODO Decouple injected dependencies from state.
 
-/**
- * A helper construct to assist with Prop1 to Prop2 transformation (aka property resolution).
- * Its core idea is to maintain a stack of query sources that get accumulated during the query transformation process.
- * The stack of query source is searched for property attribution -- the source that a property belongs to.
- * In case of more than one matching source or no source, an exception is thrown.
- *
- * @author TG Team
- */
-public final class TransformationContextFromStage1To2 {
-    private static final Logger LOGGER = getLogger(TransformationContextFromStage1To2.class);
-    private static boolean SHOW_INTERNALS = false;
+/// Context for stage 1->2 transformation.
+///
+/// @param sourcesStack  a stack of sources; the first element is the top and corresponds to the directly enclosing query.
+///     E.g., `select(X).join(Y).where().model(select(Z)...)` produces `[[Z], [X, Y]]`.
+///     This stack is used for property resolution -- determining the source that a property belongs to.
+///
+public record TransformationContextFromStage1To2 (
+        QuerySourceInfoProvider querySourceInfoProvider,
+        IDomainMetadata domainMetadata,
+        List<List<ISource2<?>>> sourcesStack)
+{
 
-    public final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries; // in reverse order -- the first list is for the deepest nested query
-    public final QuerySourceInfoProvider querySourceInfoProvider;
-    public final IDomainMetadata domainMetadata;
-
-    private TransformationContextFromStage1To2(
+    /// Creates a context with `sources` as the sources stack.
+    ///
+    public static TransformationContextFromStage1To2 mkContext(
             final QuerySourceInfoProvider querySourceInfoProvider,
-            final IDomainMetadata domainMetadata)
+            final IDomainMetadata domainMetadata,
+            final List<List<ISource2<?>>> sources)
     {
-        this(querySourceInfoProvider, domainMetadata, ImmutableList.of());
+        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, ImmutableList.copyOf(sources));
     }
 
+    /// Creates an empty context.
+    ///
     public static TransformationContextFromStage1To2 mkContext(
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IDomainMetadata domainMetadata)
     {
-        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata);
+        return mkContext(querySourceInfoProvider, domainMetadata, List.of());
     }
 
-    public static TransformationContextFromStage1To2 mkContext(final TransformationContextFromStage1To2 context) {
-        return mkContext(context.querySourceInfoProvider, context.domainMetadata);
+    /// Pushes the given source on top of the sources stack: `newStack = [s] + oldStack`.
+    ///
+    public TransformationContextFromStage1To2 pushSource(final ISource2<?> s) {
+        return pushSources(ImmutableList.of(s));
     }
 
-    public static void showInternals() {
-        SHOW_INTERNALS = true;
+    /// Pushes the given sources on top of the sources stack: `newStack = ss + oldStack`.
+    ///
+    public TransformationContextFromStage1To2 pushSources(final Iterable<ISource2<?>> ss) {
+        final var newSources = ImmutableListUtils.prepend(ImmutableList.copyOf(ss), sourcesStack);
+        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, newSources);
     }
 
-    public static void hideInternals() {
-        SHOW_INTERNALS = false;
+    /// Overwrites the sources stack.
+    ///
+    public TransformationContextFromStage1To2 setSourcesStack(final Iterable<List<ISource2<?>>> stack) {
+        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, ImmutableList.copyOf(stack));
     }
 
-    private TransformationContextFromStage1To2(
-            final QuerySourceInfoProvider querySourceInfoProvider,
-            final IDomainMetadata domainMetadata,
-            final List<List<ISource2<? extends ISource3>>> sourcesForNestedQueries)
-    {
-        this.querySourceInfoProvider = querySourceInfoProvider;
-        this.sourcesForNestedQueries = sourcesForNestedQueries;
-        this.domainMetadata = domainMetadata;
-        if (SHOW_INTERNALS) {
-            LOGGER.info(toString());
+    /// Returns the sources on top of the stack.
+    ///
+    public List<ISource2<?>> peekSources() {
+        if (sourcesStack.isEmpty()) {
+            throw new EqlStage1ProcessingException("The sources stack is empty.");
         }
-    }
-
-    public TransformationContextFromStage1To2 cloneWithAdded(final ISource2<? extends ISource3> transformedSource) {
-        final var newSourcesForNestedQueries = ImmutableList. <List<ISource2<? extends ISource3>>> builder()
-                .add(ImmutableList.of(transformedSource))
-                .addAll(sourcesForNestedQueries) // all lists within added list are already unmodifiable
-                .build();
-        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, newSourcesForNestedQueries);
-    }
-
-    public TransformationContextFromStage1To2 cloneWithAdded(final List<ISource2<? extends ISource3>> leftNodeSources, final List<ISource2<? extends ISource3>> rightNodeSources) {
-        final var newSourcesForNestedQueries = ImmutableList. <List<ISource2<? extends ISource3>>> builder()
-                .add(ImmutableList. <ISource2<? extends ISource3>> builder().addAll(leftNodeSources).addAll(rightNodeSources).build())
-                .addAll(sourcesForNestedQueries) // all lists within added list are already unmodifiable
-                .build();
-        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, newSourcesForNestedQueries);
-    }
-
-    public List<ISource2<? extends ISource3>> getCurrentLevelSources() {
-        return sourcesForNestedQueries.get(0);
+        return sourcesStack.getFirst();
     }
 
     @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer();
 
-        int level = sourcesForNestedQueries.size();
+        int level = sourcesStack.size();
 
-        sb.append("TransformationContext1 " + hashCode() + ":\n");
-        for (final List<ISource2<? extends ISource3>> levelSources : sourcesForNestedQueries) {
-            sb.append("  Level: " + level + (level == sourcesForNestedQueries.size() ? " (innermost)" : (level == 1 ? " (outermost)" : "")) + "\n");
+        sb.append("TransformationContext1 " + System.identityHashCode(this) + ":\n");
+        for (final List<ISource2<?>> levelSources : sourcesStack) {
+            sb.append("  Level: " + level + (level == sourcesStack.size() ? " (innermost)" : (level == 1 ? " (outermost)" : "")) + "\n");
             level = level - 1;
-            for (final ISource2<? extends ISource3> src : levelSources) {
+            for (final ISource2<?> src : levelSources) {
                 sb.append("    " + src.sourceType().getSimpleName() + (src.alias() != null ? " (" + src.alias() + ")" : "") + " -- " + src.getClass().getSimpleName() +  "\n");
             }
         }

@@ -106,7 +106,7 @@ public class DependentCalcPropsVerifier {
     {
         try {
             final var exp1 = new EqlCompiler(gen).compile(calcProp._2().tokens(), EqlCompilationResult.StandaloneExpression.class).model();
-            final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata).cloneWithAdded(source);
+            final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata, List.of(List.of(source)));
             final var exp2 = exp1.transform(context);
             return exp2.collectProps()
                     .stream()

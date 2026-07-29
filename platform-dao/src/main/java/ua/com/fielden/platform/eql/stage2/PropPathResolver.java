@@ -215,7 +215,7 @@ public class PropPathResolver implements IPropPathResolver {
 
     private Expression2 compile(final ISource2<?> source, final ExpressionModel model, final QueryModelToStage1Transformer gen) {
         final Expression1 exp1 = new EqlCompiler(gen).compile(model.tokens(), EqlCompilationResult.StandaloneExpression.class).model();
-        final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata).cloneWithAdded(source);
+        final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata, List.of(List.of(source)));
         return exp1.transform(context);
     }
 

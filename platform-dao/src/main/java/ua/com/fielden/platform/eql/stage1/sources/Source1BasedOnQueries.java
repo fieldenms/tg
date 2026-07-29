@@ -71,9 +71,9 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
             final boolean isSyntheticEntity)
     {
         if (isSyntheticEntity || (sourceType != EntityAggregates.class && allGenerated(models))) {
-            return context.querySourceInfoProvider.getModelledQuerySourceInfo(sourceType);
+            return context.querySourceInfoProvider().getModelledQuerySourceInfo(sourceType);
         } else {
-            return context.querySourceInfoProvider.produceQuerySourceInfoForEntityType(models, sourceType, false);
+            return context.querySourceInfoProvider().produceQuerySourceInfoForEntityType(models, sourceType, false);
         }
     }
 
