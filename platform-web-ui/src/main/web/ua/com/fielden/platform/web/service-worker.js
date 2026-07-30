@@ -103,6 +103,18 @@ function deleteRedundantResource(url, cache, checksumCache) {
         .then(_ => deleteCacheEntry(url + CHECKSUM_URL_SUFFIX, checksumCache));
 }
 
+/// Indicates whether 'serverResources' is a plausible list of deployment resources.
+///
+/// Cleaning up is induced exclusively by re-caching of 'STARTUP_RESOURCES_PATH', which a server has just served together with its checksum.
+/// So that path must be among the resources that the very same server reports as deployed.
+/// If it is not, then the response did not come from 'AppIndexResource'.
+/// For example, it may be a login or an error page, returned with a 200 status by something sitting in front of a server.
+/// Deleting on such a response would clear the whole Cache Storage, because no cached path would match.
+///
+function isResourceListPlausible(serverResources) {
+    return serverResources.has(STARTUP_RESOURCES_PATH);
+}
+
 /// Asynchronously cleans up Cache Storage by removing redundant entries, not present on a server.
 /// It does so by loading a set of present server resources and comparing it with Cache Storage entries.
 /// Missing server resources will be deleted from both 'cache' and 'checksumCache'.
@@ -113,12 +125,18 @@ function deleteRedundantResource(url, cache, checksumCache) {
 function cleanUp(origin, cache, checksumCache) {
     console.info(`Starting cleanup of redundant resources...`);
     // Create special request against root '/' (aka 'index.html') to load paths of current resources.
-    const serverResourcesRequest = createGETRequest(origin + ROOT_PATH + RESOURCES_URL_SUFFIX);
+    const serverResourcesUrl = origin + ROOT_PATH + RESOURCES_URL_SUFFIX;
+    const serverResourcesRequest = createGETRequest(serverResourcesUrl);
     // Fetch the request and get text from a response.
     return fetch(serverResourcesRequest).then(serverResourcesResponse => {
         return getTextFrom(serverResourcesResponse).then(serverResourcesStr => {
             // Create a set of resource paths from a string, returned by a server.
             const serverResources = new Set(serverResourcesStr.split(RESOURCES_DELIMITER));
+            // Never delete anything unless the response is an actual list of deployment resources.
+            if (!isResourceListPlausible(serverResources)) {
+                console.warn(`Skipping cleanup: [${serverResourcesUrl}] did not return a list of deployment resources.`);
+                return;
+            }
             // Find all 'cache' entries...
             return cache.keys().then(requests => {
                 return Promise.all(
