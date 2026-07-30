@@ -64,6 +64,14 @@ function createURL(requestUrl) {
     return new URL(requestUrl);
 }
 
+/// Returns the path of 'request', i.e. its URL without 'origin' and without any '?' / '#' parts.
+/// Both caches are keyed by such paths -- 'checksumCache' just adds 'CHECKSUM_URL_SUFFIX' on top.
+/// So this is what an entry of either cache can be matched against the deployment resources by.
+///
+function pathNameOf(request) {
+    return createURL(request.url).pathname;
+}
+
 /// Creates GET Request object from 'url'.
 ///
 function createGETRequest(url) {
@@ -103,6 +111,15 @@ function deleteRedundantResource(url, cache, checksumCache) {
         .then(_ => deleteCacheEntry(url + CHECKSUM_URL_SUFFIX, checksumCache));
 }
 
+/// Creates a 'Promise' for deletion of a redundant checksum at 'url', left in 'checksumCache' without its resource.
+/// This happens where 'deleteRedundantResource' has deleted a resource, but did not get to its checksum -- e.g. the deletion has failed or service worker was terminated in between.
+/// An older service worker could have left such a checksum behind too.
+///
+function deleteOrphanedChecksum(url, checksumCache) {
+    console.info(`The checksum at [${url}] has been left without its resource. It will be removed from the cache.`);
+    return deleteCacheEntry(url, checksumCache);
+}
+
 /// Indicates whether 'serverResources' is a plausible list of deployment resources.
 ///
 /// Cleaning up is induced exclusively by re-caching of 'STARTUP_RESOURCES_PATH', which a server has just served together with its checksum.
@@ -118,6 +135,11 @@ function isResourceListPlausible(serverResources) {
 /// Asynchronously cleans up Cache Storage by removing redundant entries, not present on a server.
 /// It does so by loading a set of present server resources and comparing it with Cache Storage entries.
 /// Missing server resources will be deleted from both 'cache' and 'checksumCache'.
+///
+/// 'checksumCache' is swept on its own too, not just through 'cache'.
+/// Otherwise a checksum, whose resource is already gone, would never be reached again:
+/// its path is not on a server, so nothing would ever request it, and no 'cache' entry would point at it either.
+/// Checksums of resources that are still deployed are deliberately left alone -- those self-heal, because the next request for such a resource re-caches both entries (see 'cacheIfSuccessful').
 ///
 /// Resource paths are always requested against 'ROOT_PATH' of 'origin'.
 /// It does not matter which resource has induced the cleaning up.
@@ -137,14 +159,21 @@ function cleanUp(origin, cache, checksumCache) {
                 console.warn(`Skipping cleanup: [${serverResourcesUrl}] did not return a list of deployment resources.`);
                 return;
             }
-            // Find all 'cache' entries...
-            return cache.keys().then(requests => {
-                return Promise.all(
-                    // ... and filter out those not present on a server;
-                    requests.filter(request => !serverResources.has(createURL(request.url).pathname))
-                    // Remove found entries from both caches.
-                    .map(request => deleteRedundantResource(request.url, cache, checksumCache))
-                );
+            // An entry of either cache is redundant if its path is not present on a server.
+            const isRedundant = request => !serverResources.has(pathNameOf(request));
+            // Find all entries of both caches...
+            return Promise.all([cache.keys(), checksumCache.keys()]).then(([resourceRequests, checksumRequests]) => {
+                // ... and filter out the redundant resources;
+                const redundantResources = resourceRequests.filter(isRedundant);
+                // 'deleteRedundantResource' removes a resource together with its checksum, so those checksums are already covered.
+                const coveredPaths = new Set(redundantResources.map(pathNameOf));
+                return Promise.all([
+                    // Remove redundant resources from both caches.
+                    ...redundantResources.map(request => deleteRedundantResource(request.url, cache, checksumCache)),
+                    // Remove redundant checksums that are left in 'checksumCache' on their own.
+                    ...checksumRequests.filter(request => isRedundant(request) && !coveredPaths.has(pathNameOf(request)))
+                        .map(request => deleteOrphanedChecksum(request.url, checksumCache))
+                ]);
             });
         });
     });
