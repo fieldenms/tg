@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
+import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.RESOURCES_URL_SUFFIX;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.CHECKSUM_URL_SUFFIX;
 import static ua.com.fielden.platform.web.resources.webui.LoginResource.BINDING_PATH;
 
@@ -125,8 +126,12 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
      */
     protected void redirectGetToLoginOrForbid(final Request request, final Response response) {
         // GET requests can be redirected to the login resource, which takes care of both RSO and SSO workflows.
-        // Need to forbid requests from SW containing "?checksum=true", which is specifically used to redirect to /login from the client side.
-        if (Method.GET.equals(request.getMethod()) && !request.getResourceRef().toString().contains(CHECKSUM_URL_SUFFIX)) {
+        // However, requests from a Service Worker must be forbidden rather than redirected.
+        // This is because a Service Worker follows redirects, and would take the resulting login page for the requested payload.
+        // "?checksum=true" is specifically used to redirect to /login from the client side.
+        // "?resources=true" carries the list of deployment resources; a login page in its stead would make every cached resource look redundant, clearing the whole Cache Storage.
+        final String resourceRef = request.getResourceRef().toString();
+        if (Method.GET.equals(request.getMethod()) && !resourceRef.contains(CHECKSUM_URL_SUFFIX) && !resourceRef.contains(RESOURCES_URL_SUFFIX)) {
             response.redirectTemporary(BINDING_PATH);
         } else {
             forbid(response);

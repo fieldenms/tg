@@ -34,7 +34,13 @@ import static ua.com.fielden.platform.web.resources.webui.FileResource.createRep
 public class AppIndexResource extends AbstractWebResource {
     public static final String BINDING_PATH = "/";
     public static final String FILE_APP_INDEX_HTML = "/app/tg-app-index.html";
-    private static final String RESOURCES_URL_SUFFIX = "?resources=true";
+
+    /// Suffix for the Service Worker request that asks for the paths of all deployment resources.
+    /// Requests with this suffix must never be redirected to the login resource by `AbstractWebResourceGuard`.
+    /// Otherwise, a login page would be taken for the list of deployment resources, making every cached resource look redundant.
+    ///
+    public static final String RESOURCES_URL_SUFFIX = "?resources=true";
+
     private static final String RESOURCES_DELIMITER = "\n";
 
     private final IWebUiConfig webUiConfig;
