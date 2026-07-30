@@ -261,7 +261,11 @@ addEventListener('fetch', event => {
                                         // This is because only successful 'checksumResponse' can be cached.
                                         return cachedChecksumResponse.text().then(cachedChecksum => {
                                             if (!serverChecksum) {
-                                                return deleteRedundantResource(url, cache, checksumCache).then(_ => staleResponse());
+                                                // Respond as stale regardless of whether the deletion has succeeded.
+                                                // 'deleteCacheEntry' preserves the rejection of 'cache.delete', having warned about it already.
+                                                // Letting that rejection through would fail the whole 'respondWith' promise with net::ERR_FAILED,
+                                                // instead of informing a client that it is stale and is needed to be refreshed fully.
+                                                return deleteRedundantResource(url, cache, checksumCache).then(_ => staleResponse(), _ => staleResponse());
                                             } else if (serverChecksum !== cachedChecksum) {
                                                 console.info(`The resource at [${url}] has been modified on the server. CachedChecksum ${cachedChecksum} vs serverChecksum ${serverChecksum}. The modified resource will be re-cached.`);
                                                 return fetch(url).then(fetchedResponse => {
