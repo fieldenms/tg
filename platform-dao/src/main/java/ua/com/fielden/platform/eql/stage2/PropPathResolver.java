@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.eql.stage2;
 
 import com.google.common.collect.ImmutableList;
+import io.vavr.collection.HashMap;
+import io.vavr.collection.LinkedHashMap;
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
@@ -23,13 +25,13 @@ import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.ImmutableMapUtils;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.SequencedMap;
+import java.util.Set;
 
-import static java.util.Collections.unmodifiableSequencedMap;
 import static java.util.Comparator.comparingInt;
-import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
@@ -100,16 +102,14 @@ public class PropPathResolver implements IPropPathResolver {
     @Override
     public Result resolve(final Set<Prop2> props, final QueryModelToStage1Transformer gen) {
         final var finalState = foldLeft(props.stream().sorted(prop2Comparator), State.empty, (acc, prop) -> resolveProp(acc, prop, gen));
-        final var joins = finalState.joins().entrySet()
-                .stream()
-                .collect(groupingBy(entry -> entry.getKey()._1(), mapping(Map.Entry::getValue, toList())));
-        final var resolutions = finalState.resolutions();
+        final var joins = finalState.joins().groupBy(entry -> entry._1()._1()).mapValues(g -> g.values().asJava()).toJavaMap();
+        final var resolutions = finalState.resolutions().toJavaMap();
         return new Result(joins, resolutions);
     }
 
     /// @param joins  (source ID, terminal property path) -> an implicit join.
     ///     The key represents the left side of the join, with the property path's resolution as [JoinNode#leftOn].
-    ///     [SequencedMap] is used to ensure that insertion order is preserved, as it determines correctness.
+    ///     [LinkedHashMap] is used to ensure that insertion order is preserved, as it determines correctness.
     /// @param resolutions  (source ID, property path) -> property resolution.
     ///     The keys correspond to [Prop2] instances in the query.
     /// @param expansions (source ID, terminal property path) -> property resolution.
@@ -117,12 +117,12 @@ public class PropPathResolver implements IPropPathResolver {
     ///     E.g., given `model.make.desc` in the query, [#resolutions] stores only the complete path's resolution,
     ///     while [#expansions] stores each property's resolution: `model`, `make`, `desc`.
     ///
-    record State ( SequencedMap<T2<Integer, String>, JoinNode> joins,
-                   Map<T2<Integer, String>, Resolution> resolutions,
-                   Map<T2<Integer, String>, Resolution> expansions )
+    record State ( LinkedHashMap<T2<Integer, String>, JoinNode> joins,
+                   HashMap<T2<Integer, String>, Resolution> resolutions,
+                   HashMap<T2<Integer, String>, Resolution> expansions )
     {
 
-        static final State empty = new State(unmodifiableSequencedMap(new LinkedHashMap<>()), Map.of(), Map.of());
+        static final State empty = new State(LinkedHashMap.empty(), HashMap.empty(), HashMap.empty());
 
     }
 
@@ -163,7 +163,7 @@ public class PropPathResolver implements IPropPathResolver {
     ///
     private T2<JoinNode, State> createJoin(final ISource2<?> leftSrc, final String leftProp, final State acc, final QueryModelToStage1Transformer gen) {
         final var pos = t2(leftSrc.id(), leftProp);
-        final var existingJoin = acc.joins().get(pos);
+        final var existingJoin = acc.joins().getOrElse(pos, null);
         if (existingJoin != null) {
             return t2(existingJoin, acc);
         }
@@ -189,7 +189,7 @@ public class PropPathResolver implements IPropPathResolver {
 
     private T2<Resolution, State> expand(final ISource2<?> source, final String prop, final State acc, final QueryModelToStage1Transformer gen) {
         final var key = t2(source.id(), prop);
-        final var existing = acc.expansions().get(key);
+        final var existing = acc.expansions().getOrElse(key, null);
         if (existing != null) {
             return t2(existing, acc);
         }
@@ -248,19 +248,15 @@ public class PropPathResolver implements IPropPathResolver {
     // : State updates
 
     private State insertJoin(final T2<Integer, String> pos, final JoinNode join, final State acc) {
-        final var newJoins = new LinkedHashMap<>(acc.joins());
-        newJoins.putLast(pos, join);
-        return new State(unmodifiableSequencedMap(newJoins), acc.resolutions(), acc.expansions());
+        return new State(acc.joins().put(pos, join), acc.resolutions(), acc.expansions());
     }
 
     private State addProperty(final T2<Integer, String> key, final Resolution resolution, final State acc) {
-        final var newResolutions = ImmutableMapUtils.insert(acc.resolutions(), key, resolution);
-        return new State(acc.joins(), newResolutions, acc.expansions());
+        return new State(acc.joins(), acc.resolutions().put(key, resolution), acc.expansions());
     }
 
     private State addExpansion(final T2<Integer, String> key, final Resolution resolution, final State acc) {
-        final var newExpansions = ImmutableMapUtils.insert(acc.expansions(), key, resolution);
-        return new State(acc.joins(), acc.resolutions(), newExpansions);
+        return new State(acc.joins(), acc.resolutions(), acc.expansions().put(key, resolution));
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
