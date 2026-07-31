@@ -174,7 +174,7 @@ public class PropPathResolver implements IPropPathResolver {
             }
             final var rightSrc = new Source2BasedOnPersistentType(lastItemEntityTyped.querySourceInfo, gen.nextSourceId(), false /*isExplicit*/);
             return expand(leftSrc, leftProp, acc, gen).map((leftOn, acc1) -> {
-                final var joinType = isNonNullable(leftSrc, leftProp) ? JoinType.IJ : JoinType.LJ;
+                final var joinType = lastItemEntityTyped.nonnullable ? JoinType.IJ : JoinType.LJ;
                 final var join = new JoinNode(leftSrc, rightSrc, leftOn, joinType);
                 return t2(join, insertJoin(pos, join, acc1));
             });
@@ -217,10 +217,6 @@ public class PropPathResolver implements IPropPathResolver {
         final Expression1 exp1 = new EqlCompiler(gen).compile(model.tokens(), EqlCompilationResult.StandaloneExpression.class).model();
         final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata, List.of(List.of(source)));
         return exp1.transform(context);
-    }
-
-    private boolean isNonNullable(final ISource2<?> source, final String prop) {
-        return resolveQuerySourceItem(source, prop).getLast() instanceof QuerySourceItemForEntityType<?> it && it.nonnullable;
     }
 
     /// Splits a property path into terminal properties.
