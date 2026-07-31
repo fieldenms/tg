@@ -35,18 +35,15 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.cypher.Checksum.sha256;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig.STARTUP_RESOURCES_VULCANIZED;
 import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.FILE_APP_INDEX_HTML;
 import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.FILE_APP_LOGIN_INITIATE_RESET_HTML;
 
 /// A set of utilities to facilitate Web UI application vulcanization.
 ///
 public class VulcanizingUtility {
-    /// Name of the vulcanised file with all client-side application resources.
-    /// It gets referenced from `index.html` (see `AbstractWebUiConfig.genAppIndex`).
-    ///
-    public static final String STARTUP_RESOURCES_VULCANIZED = "startup-resources-vulcanized";
-
-    /// Path of [#STARTUP_RESOURCES_VULCANIZED] file, as requested by a client.
+    /// Path of the vulcanised file with all client-side application resources, as requested by a client.
+    /// The file itself is named by [AbstractWebUiConfig#STARTUP_RESOURCES_VULCANIZED], which also references it from `index.html`.
     /// This is the only deployment resource that changes often (mostly on every release).
     /// That is why `service-worker.js` mirrors this path (as `STARTUP_RESOURCES_PATH`) to induce clearing of redundant resources.
     ///
