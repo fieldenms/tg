@@ -6,16 +6,11 @@ import com.google.inject.name.Names;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.restlet.Application;
-import org.restlet.Context;
-import org.restlet.Request;
-import org.restlet.Response;
-import org.restlet.Restlet;
+import org.restlet.*;
 import org.restlet.routing.Filter;
 import org.restlet.routing.Router;
 import org.restlet.routing.Template;
 import org.restlet.security.Authenticator;
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
@@ -23,6 +18,7 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.*;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.AppIndexResource;
 import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
 
 /// Represents a web application that is running on the server.
@@ -93,7 +89,7 @@ public abstract class AbstractWebUiResources extends Application {
         // Attach application configuration resource.
         guardedRouter.attach("/app/configuration", new ApplicationConfigurationResourceFactory(webApp, injector));
         // Attach main application resource.
-        guardedRouter.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates, injector.getInstance(ICriteriaGenerator.class)));
+        guardedRouter.attach(AppIndexResource.BINDING_PATH, new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates));
         guardedRouter.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider, dates));
         guardedRouter.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(webResourceLoader, deviceProvider, dates));
         guardedRouter.attach("/app/tg-app-actions.js", new TgAppActionsResourceFactory(webResourceLoader, deviceProvider, dates));
