@@ -496,7 +496,29 @@ Polymer({
             this.currentHistoryState = window.history.state;
         }
     },
-    
+
+    /// Handles Back / Forward moves between two history entries that share the same URI.
+    ///
+    /// Transitions are performed by the `_routeChanged` observer, which `<app-location>` triggers via `_route.path`.
+    /// Two adjacent entries with the same URI leave `_route.path` untouched, so that observer never runs.
+    /// A move like that would be lost then, and one more Back press would be needed to close an Entity Master dialog.
+    /// Such a pair of entries is recorded whenever an entry gets rewritten to the URI of the entry below it.
+    /// The instance for that is a '/tiny/...' entry rewritten to the main menu URI, see #2422.
+    ///
+    _historyPopped: function () {
+        // The check is deferred to let `<app-location>` report a URI change and `_routeChanged` handle it first.
+        // `_routeChanged` assigns 'currentHistoryState' from an entry it has just moved to.
+        // A mismatch that survives the deferral therefore means that no transition was performed for this move.
+        this.async(
+            function () {
+                const state = window.history.state;
+                if (state && this.currentHistoryState && this.currentHistoryState.currIndex !== state.currIndex) {
+                    this._routeChanged(this._route.path);
+                }
+            }
+        );
+    },
+
     _loadApplicationInfrastructureIntoHistory: function () {
         if (this._route.path) {
             const urlForRoot = new URL("", window.location.protocol + '//' + window.location.host).href;
@@ -821,6 +843,9 @@ Polymer({
         
         // Add URI (location) change event handler to set history state.
         window.addEventListener('location-changed', this._replaceStateWithNumber.bind(this));
+
+        // Add history transition handler for Back / Forward moves between entries that share the same URI.
+        window.addEventListener('popstate', this._historyPopped.bind(this));
 
         //Add resize listener that checks whether screen resolution changed
         window.addEventListener('resize', this._checkResolution.bind(this));
