@@ -503,9 +503,15 @@ Polymer({
             const urlForMenu = this._urlForMainMenu();
             const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
             window.history.replaceState({currIndex: 0}, '', urlForRoot);
-            window.history.pushState({currIndex: 1}, '', urlForMenu);
-            this.currentHistoryState = {currIndex: 2};
-            window.history.pushState(this.currentHistoryState, '', urlToOpen);
+            this.currentHistoryState = {currIndex: 1};
+            window.history.pushState(this.currentHistoryState, '', urlForMenu);
+            // The entry for a loaded URI is recorded only if it differs from the main menu entry.
+            // Two adjacent entries with the same URI are indistinguishable to a user.
+            // They also cost an extra Back press before an Entity Master dialog gets closed.
+            if (urlToOpen !== urlForMenu) {
+                this.currentHistoryState = {currIndex: 2};
+                window.history.pushState(this.currentHistoryState, '', urlToOpen);
+            }
             this._routeChanged();
         }
     },
@@ -828,7 +834,11 @@ Polymer({
         //@use-empty-console.log
         this.async(function () {
             if (!this._route.path) {
-                this._replaceStateWithNumber();
+                // An application loaded from the root URI ends up with a single history entry.
+                // Back has nothing to move to then, so an application gets unloaded instead of closing its dialogs.
+                // Rewriting that entry to the main menu URI lets `_routeChanged` record the history infrastructure.
+                // The transition below records nothing extra, because the URI already matches `/menu`.
+                window.history.replaceState(window.history.state, '', this._urlForMainMenu());
                 this.set("_route.path", "/menu");
             }
             
