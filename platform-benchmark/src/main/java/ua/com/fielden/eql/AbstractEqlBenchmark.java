@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -16,7 +17,8 @@ import java.nio.file.Path;
 import java.util.Properties;
 import java.util.Random;
 
-import static ua.com.fielden.eql.BenchmarkIocModule.newBenchmarkModule;
+import static ua.com.fielden.eql.AbstractEqlBenchmark.IocModule.iocModule;
+import static ua.com.fielden.eql.BenchmarkIocModule.benchmarkModule;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -326,8 +328,7 @@ public abstract class AbstractEqlBenchmark {
         }
 
         injector = new ApplicationInjectorFactory(Workflows.development)
-                .add(newBenchmarkModule(properties))
-                .add(new NewUserEmailNotifierTestIocModule())
+                .add(benchmarkModule(iocModule(properties)))
                 .getInjector();
 
         afterSetup(injector);
@@ -343,5 +344,26 @@ public abstract class AbstractEqlBenchmark {
      * Performs the last action in a benchmark method.
      */
     protected abstract Object finish(final QueryModel<?> queryModel);
+
+    static class IocModule extends BenchmarkIocModule {
+
+        public static IocModule iocModule(final Properties inProps) {
+            // final var props = propertiesUnionLeft(
+            //         mkProperties(Map.of(AuditingIocModule.AUDIT_MODE, AuditingMode.DISABLED.name())),
+            //         inProps);
+            return new IocModule(inProps);
+        }
+
+        private IocModule(final Properties props) {
+            super(props, new ApplicationDomain(), ApplicationDomain.domainTypes());
+        }
+
+        @Override
+        protected void configure() {
+            super.configure();
+            install(new NewUserEmailNotifierTestIocModule());
+        }
+
+    }
 
 }
