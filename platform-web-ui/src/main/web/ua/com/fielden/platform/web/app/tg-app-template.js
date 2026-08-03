@@ -862,10 +862,9 @@ Polymer({
             if (!this._route.path) {
                 // An application loaded from the root URI ends up with a single history entry.
                 // Back has nothing to move to then, so an application gets unloaded instead of closing its dialogs.
-                // Rewriting that entry to the main menu URI lets `_routeChanged` record the history infrastructure.
-                // The transition below records nothing extra, because the URI already matches `/menu`.
-                window.history.replaceState(window.history.state, '', this._urlForMainMenu());
-                this.set("_route.path", "/menu");
+                // Rewriting that entry to the main menu URI transitions `_route` there.
+                // `_routeChanged` then records the history infrastructure, as for a deep link load.
+                rewriteHistoryEntryUri(this._urlForMainMenu());
             }
             
             self.entityId = 'new';
