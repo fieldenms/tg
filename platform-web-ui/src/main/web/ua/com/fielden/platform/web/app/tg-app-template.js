@@ -223,15 +223,19 @@ Polymer({
         _invisibleMenuItems: Array,
         _saveMenuVisibilityChanges: Function,
         
-        /**
-         * The current number of active history entry.
-         * 
-         * For the very first history entry this number will be '1' due to rewriting in attached callback (if application loads from root page).
-         * For the very first history entry this number will be 'undefined' (if application loads from some specific URI, e.g. http://tgdev.com:8091/#/Work%20Activities/Work%20Activity).
-         * For all other cases we have actual number, aka 2, 3, and so on.
-         * 
-         * Please, not that history also always contains 'zero' entry which represents 'New Tab'.
-         */
+        /// The `state` object of the history entry that an application currently occupies.
+        ///
+        /// Its only member, `currIndex`, numbers the history entries that an application records.
+        /// It is `undefined` until those entries get recorded on the very first transition.
+        /// From then on it is `0` for the `'/'` entry and `1` for the main menu entry.
+        /// An entry for a URI that an application was loaded from gets `2`, unless that URI is the main menu one.
+        /// Every entry recorded afterwards continues the numbering, with `2` or `3`, then `4`, and so on.
+        /// Entries that a browser recorded before an application was loaded are not numbered.
+        ///
+        /// `_routeChanged` subtracts `currIndex` of `window.history.state` from this one to learn how a user moved.
+        /// A positive result means that many entries back, a negative one that many forward.
+        /// A `0` result means a transition that recorded a new entry instead of moving between existing ones.
+        ///
         currentHistoryState: {
             type: Object
         },
@@ -327,16 +331,11 @@ Polymer({
                     const rewrittenUri = sharedUri || this._urlForMainMenu();
 
                     // First, enforce correct current history entry with the same state, but new URI.
-                    window.history.replaceState(this.currentHistoryState, '', rewrittenUri);
+                    this._replaceHistoryEntryUri(rewrittenUri);
                     // Then perform transition using <app-location> 'location-changed' event (see element docs).
                     // `window.location.replace()` is not suitable because it messes up the `window.history.state` in our case
                     // (see `_routeChanged` observer with `if (!window.history.state) {...` branch).
-                    window.dispatchEvent(new CustomEvent('location-changed', {
-                        detail: {
-                            // The state was manually rewritten above -- prevent automatic rewrite.
-                            avoidStateAdjusting: true
-                        }
-                    }));
+                    this._notifyUriRewritten();
 
                     if (!sharedUri) {
                         const actionIdentifier = customObject['@@actionIdentifier'];
@@ -519,20 +518,24 @@ Polymer({
         );
     },
 
+    /// Records the history entries that Back navigation relies on, and then performs the very first transition.
+    ///
+    /// These are the `'/'` entry and the main menu entry.
+    /// An entry for a loaded URI is recorded too, unless that URI is the main menu one.
+    /// The `'/'` entry is the one that `_changePage` moves forward from, which keeps a user inside an application.
+    ///
     _loadApplicationInfrastructureIntoHistory: function () {
         if (this._route.path) {
             const urlForRoot = new URL("", window.location.protocol + '//' + window.location.host).href;
             const urlForMenu = this._urlForMainMenu();
             const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
-            window.history.replaceState({currIndex: 0}, '', urlForRoot);
-            this.currentHistoryState = {currIndex: 1};
-            window.history.pushState(this.currentHistoryState, '', urlForMenu);
+            this._replaceHistoryEntry(0, urlForRoot);
+            this._pushHistoryEntry(1, urlForMenu);
             // The entry for a loaded URI is recorded only if it differs from the main menu entry.
             // Two adjacent entries with the same URI are indistinguishable to a user.
-            // They also cost an extra Back press before an Entity Master dialog gets closed.
+            // They also cost an extra Back press.
             if (urlToOpen !== urlForMenu) {
-                this.currentHistoryState = {currIndex: 2};
-                window.history.pushState(this.currentHistoryState, '', urlToOpen);
+                this._pushHistoryEntry(2, urlToOpen);
             }
             this._routeChanged();
         }
@@ -863,7 +866,7 @@ Polymer({
                 // Back has nothing to move to then, so an application gets unloaded instead of closing its dialogs.
                 // Rewriting that entry to the main menu URI lets `_routeChanged` record the history infrastructure.
                 // The transition below records nothing extra, because the URI already matches `/menu`.
-                window.history.replaceState(window.history.state, '', this._urlForMainMenu());
+                this._replaceHistoryEntryUri(this._urlForMainMenu());
                 this.set("_route.path", "/menu");
             }
             
@@ -889,21 +892,50 @@ Polymer({
         window.removeEventListener("beforeunload", this._checkWhetherCanLeave);
     },
     
-    /**
-     * Provides custom 'state' object for history entries. Updates 'currentHistoryState' property.
-     */
+    /// Renumbers the current history entry, keeping its URI.
+    ///
+    /// This is the `location-changed` listener, which `<app-location>` fires after it has recorded a URI change.
+    /// Events with `avoidStateAdjusting` are skipped, as the state of their entry has already been taken care of.
+    ///
     _replaceStateWithNumber: function (event) {
         if (!(event && event.detail && event.detail.avoidStateAdjusting)) {
-            // the URI for history state rewrite
-            const fullNewUrl = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
-            // currentHistoryState should be updated first. If it is not yet defined then make it 0 otherwise increment it;
-            const newCurrentHistoryIndex = typeof this.currentHistoryState !== "undefined"? this.currentHistoryState.currIndex + 1 : 0;
-            this.currentHistoryState = {currIndex: newCurrentHistoryIndex}
-            // rewrite history state by providing concrete number of last history state
-            window.history.replaceState(this.currentHistoryState, '', fullNewUrl);
+            const nextIndex = typeof this.currentHistoryState !== "undefined" ? this.currentHistoryState.currIndex + 1 : 0;
+            const uri = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
+            this._replaceHistoryEntry(nextIndex, uri);
         }
     },
-    
+
+    /// Records `uri` as a new history entry, numbered with `currIndex`, and makes it `currentHistoryState`.
+    ///
+    _pushHistoryEntry: function (currIndex, uri) {
+        this.currentHistoryState = { currIndex: currIndex };
+        window.history.pushState(this.currentHistoryState, '', uri);
+    },
+
+    /// Rewrites the current history entry with `uri`, renumbers it with `currIndex` and makes it `currentHistoryState`.
+    ///
+    _replaceHistoryEntry: function (currIndex, uri) {
+        this.currentHistoryState = { currIndex: currIndex };
+        window.history.replaceState(this.currentHistoryState, '', uri);
+    },
+
+    /// Rewrites only the URI of the current history entry, leaving `currentHistoryState` as its state.
+    ///
+    /// A caller is responsible for making `<app-location>` aware of that URI.
+    /// This is done either through `_notifyUriRewritten`, or through a `_route` transition to a path matching it.
+    ///
+    _replaceHistoryEntryUri: function (uri) {
+        window.history.replaceState(this.currentHistoryState, '', uri);
+    },
+
+    /// Makes `<app-location>` re-read the URI of the current history entry after a manual rewrite.
+    ///
+    /// `avoidStateAdjusting` keeps `_replaceStateWithNumber` from renumbering that entry, as no entry was recorded.
+    ///
+    _notifyUriRewritten: function () {
+        window.dispatchEvent(new CustomEvent('location-changed', { detail: { avoidStateAdjusting: true } }));
+    },
+
     _getUrl: function() {
         let url = window.location.pathname;
         url += window.location.search;
