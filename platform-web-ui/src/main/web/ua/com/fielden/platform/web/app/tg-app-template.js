@@ -30,7 +30,7 @@ import { TgLongTapHandlerBehaviour } from '/resources/components/tg-long-tap-han
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
-import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp, rewriteHistoryEntryUri } from '/resources/reflection/tg-polymer-utils.js';
 import { isExternalURL, processURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
@@ -330,12 +330,10 @@ Polymer({
                     // Otherwise, rewrite to the main menu link because Entity Master for NEW instances are opened there.
                     const rewrittenUri = sharedUri || this._urlForMainMenu();
 
-                    // First, enforce correct current history entry with the same state, but new URI.
-                    this._replaceHistoryEntryUri(rewrittenUri);
-                    // Then perform transition using <app-location> 'location-changed' event (see element docs).
+                    // The rewrite performs the transition too, through the <app-location> 'location-changed' event.
                     // `window.location.replace()` is not suitable because it messes up the `window.history.state` in our case
                     // (see `_routeChanged` observer with `if (!window.history.state) {...` branch).
-                    this._notifyUriRewritten();
+                    rewriteHistoryEntryUri(rewrittenUri);
 
                     if (!sharedUri) {
                         const actionIdentifier = customObject['@@actionIdentifier'];
@@ -458,7 +456,7 @@ Polymer({
         } else {
             if (!window.history.state) {
                 // This logic might be invoked in case where someone changes hash by typing it in address bar.
-                this._replaceStateWithNumber();
+                this._renumberCurrentHistoryEntry();
             }
 
             // Determine history steps (i.e whether user pressed back or forward or multiple back or forward or changed history in some other way.
@@ -845,7 +843,7 @@ Polymer({
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
         
         // Add URI (location) change event handler to set history state.
-        window.addEventListener('location-changed', this._replaceStateWithNumber.bind(this));
+        window.addEventListener('location-changed', this._renumberCurrentHistoryEntry.bind(this));
 
         // Add history transition handler for Back / Forward moves between entries that share the same URI.
         window.addEventListener('popstate', this._historyPopped.bind(this));
@@ -866,7 +864,7 @@ Polymer({
                 // Back has nothing to move to then, so an application gets unloaded instead of closing its dialogs.
                 // Rewriting that entry to the main menu URI lets `_routeChanged` record the history infrastructure.
                 // The transition below records nothing extra, because the URI already matches `/menu`.
-                this._replaceHistoryEntryUri(this._urlForMainMenu());
+                window.history.replaceState(window.history.state, '', this._urlForMainMenu());
                 this.set("_route.path", "/menu");
             }
             
@@ -895,9 +893,9 @@ Polymer({
     /// Renumbers the current history entry, keeping its URI.
     ///
     /// This is the `location-changed` listener, which `<app-location>` fires after it has recorded a URI change.
-    /// Events with `avoidStateAdjusting` are skipped, as the state of their entry has already been taken care of.
+    /// Events with `avoidStateAdjusting` are skipped, as they report a rewrite that recorded no entry.
     ///
-    _replaceStateWithNumber: function (event) {
+    _renumberCurrentHistoryEntry: function (event) {
         if (!(event && event.detail && event.detail.avoidStateAdjusting)) {
             const nextIndex = typeof this.currentHistoryState !== "undefined" ? this.currentHistoryState.currIndex + 1 : 0;
             const uri = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
@@ -917,23 +915,6 @@ Polymer({
     _replaceHistoryEntry: function (currIndex, uri) {
         this.currentHistoryState = { currIndex: currIndex };
         window.history.replaceState(this.currentHistoryState, '', uri);
-    },
-
-    /// Rewrites only the URI of the current history entry, leaving `currentHistoryState` as its state.
-    ///
-    /// A caller is responsible for making `<app-location>` aware of that URI.
-    /// This is done either through `_notifyUriRewritten`, or through a `_route` transition to a path matching it.
-    ///
-    _replaceHistoryEntryUri: function (uri) {
-        window.history.replaceState(this.currentHistoryState, '', uri);
-    },
-
-    /// Makes `<app-location>` re-read the URI of the current history entry after a manual rewrite.
-    ///
-    /// `avoidStateAdjusting` keeps `_replaceStateWithNumber` from renumbering that entry, as no entry was recorded.
-    ///
-    _notifyUriRewritten: function () {
-        window.dispatchEvent(new CustomEvent('location-changed', { detail: { avoidStateAdjusting: true } }));
     },
 
     _getUrl: function() {

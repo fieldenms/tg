@@ -30,7 +30,7 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js';
-import { tearDownEvent, allDefined, isMobileApp, isIPhoneOs, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, allDefined, isMobileApp, isIPhoneOs, isTouchEnabled, getParentAnd, rewriteHistoryEntryUri } from '/resources/reflection/tg-polymer-utils.js';
 
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
@@ -853,14 +853,13 @@ Polymer({
         const hrefNoParamsNoSlash = hrefNoParams.endsWith('/') ? hrefNoParams.substring(0, hrefNoParams.length - 1) : hrefNoParams;
         const hrefNoParamsNoSlashNoUuid = configUuid === '' ? hrefNoParamsNoSlash : hrefNoParamsNoSlash.substring(0, hrefNoParamsNoSlash.lastIndexOf(configUuid) - 1 /* slash also needs removal */);
         const hrefReplacedUuid = hrefNoParamsNoSlashNoUuid + (newConfigUuid === '' ? '' : '/' + newConfigUuid);
-        if (hrefReplacedUuid !== window.location.href) { // when configuration is loaded through some action then potentially new URI will be formed matching new loaded configuration;
-            window.history.replaceState(window.history.state, '', hrefReplacedUuid); // in that case need to replace current history entry with new URI;
-            window.dispatchEvent(new CustomEvent('location-changed', {
-                detail: {
-                    avoidStateAdjusting: true
-                }
-            })); // in tg-app-template 'location-changed' listener no state changes should occur (everything was done here); however 'location-changed' event must be dispatched for 'app-location' to process it; it ensures ability to manually edit URI to the value before rewriting so that this editing triggers page change
-        } // if the URI hasn't been changed then URI is already matching to new loaded configuration and history transition has been recorded earlier (e.g. when manually changing URI in address bar)
+        // When configuration is loaded through some action then potentially new URI will be formed matching new loaded configuration.
+        // In that case the current history entry needs to be rewritten with that new URI.
+        // If the URI hasn't been changed then it is already matching to new loaded configuration.
+        // A history transition has then been recorded earlier, e.g. when manually changing URI in address bar.
+        if (hrefReplacedUuid !== window.location.href) {
+            rewriteHistoryEntryUri(hrefReplacedUuid);
+        }
     },
     
     /**

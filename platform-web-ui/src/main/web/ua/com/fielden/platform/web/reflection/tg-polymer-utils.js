@@ -484,3 +484,17 @@ export const createStubBindingEntity = function (typeName, customPropObject, pro
     bindingView._type = bindingViewType;
     return bindingView;
 };
+
+/// Rewrites the URI of the current history entry, keeping its state, and makes `<app-location>` re-read it.
+///
+/// No new history entry is recorded, so `tg-app-template` must not renumber the current one.
+/// `avoidStateAdjusting` conveys that to its `location-changed` listener.
+/// The event itself is still required, as it is the only way to inform `<app-location>` of a manual rewrite.
+/// It also keeps the rewritten URI editable in an address bar, so that editing it back triggers a page change.
+///
+/// @param {String} uri - the URI to become the one of the current history entry
+///
+export const rewriteHistoryEntryUri = function (uri) {
+    window.history.replaceState(window.history.state, '', uri);
+    window.dispatchEvent(new CustomEvent('location-changed', { detail: { avoidStateAdjusting: true } }));
+};
