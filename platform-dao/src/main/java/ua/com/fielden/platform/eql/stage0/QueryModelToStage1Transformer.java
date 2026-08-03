@@ -131,4 +131,10 @@ public class QueryModelToStage1Transformer {
         return paramValues.containsKey(paramName);
     }
 
+    /// For benchmark use only.
+    ///
+    public void _setSourceId(final int sourceId) {
+        this.sourceId = sourceId;
+    }
+
 }
