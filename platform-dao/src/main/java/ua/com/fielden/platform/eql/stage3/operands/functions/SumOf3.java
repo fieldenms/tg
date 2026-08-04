@@ -9,7 +9,7 @@ import ua.com.fielden.platform.utils.ToString;
 import static java.lang.String.format;
 
 public class SumOf3 extends SingleOperandFunction3 {
-    private final boolean distinct;
+    public final boolean distinct;
     
     public SumOf3(final ISingleOperand3 operand, final boolean distinct, final PropType type) {
         super(operand, type);
@@ -20,21 +20,6 @@ public class SumOf3 extends SingleOperandFunction3 {
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         final String distinctClause = distinct ? "DISTINCT " : "";
         return format("SUM(%s %s)", distinctClause, operand.sql(metadata, dbVersion));
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        final int result = super.hashCode();
-        return prime * result + (distinct ? 1231 : 1237);
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof SumOf3 that
-                  && distinct == that.distinct
-                  && super.equals(obj);
     }
 
     @Override

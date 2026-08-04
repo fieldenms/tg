@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage3.INode3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
@@ -19,9 +21,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
 
-public record Yields3 (SortedMap<String, Yield3> yieldsMap) implements ToString.IFormattable {
-
-    public static final Yields3 EMPTY = new Yields3(List.of());
+public record Yields3 (SortedMap<String, Yield3> yieldsMap) implements ToString.IFormattable, INode3 {
 
     public static final String ERR_YIELDS_MISMATCH = "Mismatch between the number of yields and their expected types: %s yield(s), but %s type(s).";
 
@@ -29,6 +29,10 @@ public record Yields3 (SortedMap<String, Yield3> yieldsMap) implements ToString.
 
     public Yields3(final List<Yield3> yields) {
         this(makeYieldsMap(yields));
+    }
+
+    public static Yields3 empty() {
+        return new Yields3(ImmutableList.of());
     }
 
     private static SortedMap<String, Yield3> makeYieldsMap(final List<Yield3> yields) {

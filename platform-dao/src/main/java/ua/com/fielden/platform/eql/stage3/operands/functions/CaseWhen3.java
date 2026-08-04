@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
+import com.google.common.collect.ImmutableList;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
@@ -10,26 +12,41 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ToString;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.eql.stage3.utils.TypeCastToSql.typeCastToSql;
 
 public class CaseWhen3 extends AbstractFunction3 {
 
-    private List<T2<ICondition3, ISingleOperand3>> whenThenPairs = new ArrayList<>();
-    private final ISingleOperand3 elseOperand;
-    private final ITypeCast typeCast;
+    private final List<T2<ICondition3, ISingleOperand3>> whenThenPairs;
+    private final @Nullable ISingleOperand3 elseOperand;
+    private final @Nullable ITypeCast typeCast;
 
     public CaseWhen3(final List<T2<ICondition3, ISingleOperand3>> whenThenPairs, final ISingleOperand3 elseOperand, final ITypeCast typeCast, final PropType type) {
         super(type);
-        this.whenThenPairs.addAll(whenThenPairs);
+        if (whenThenPairs.isEmpty()) {
+            throw new EqlStage3ProcessingException("[whenThenPairs] must not be empty.");
+        }
+        this.whenThenPairs = ImmutableList.copyOf(whenThenPairs);
         this.elseOperand = elseOperand;
         this.typeCast = typeCast;
         validateSelf();
+    }
+
+    /// Non-empty list of when-then pairs.
+    ///
+    public List<T2<ICondition3, ISingleOperand3>> whenThenPairs() {
+        return whenThenPairs;
+    }
+
+    public Optional<ISingleOperand3> elseOperand() {
+        return Optional.ofNullable(elseOperand);
+    }
+
+    public Optional<ITypeCast> typeCast() {
+        return Optional.ofNullable(typeCast);
     }
 
     @Override
@@ -74,26 +91,6 @@ public class CaseWhen3 extends AbstractFunction3 {
         return elseOperand == null ? thens : Stream.concat(thens, Stream.of(elseOperand));
     }
     
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ((elseOperand == null) ? 0 : elseOperand.hashCode());
-        result = prime * result + ((typeCast == null) ? 0 : typeCast.hashCode());
-        result = prime * result + whenThenPairs.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof CaseWhen3 that
-                  && Objects.equals(whenThenPairs, that.whenThenPairs)
-                  && Objects.equals(elseOperand, that.elseOperand)
-                  && Objects.equals(typeCast, that.typeCast)
-                  && super.equals(that);
-    }
-
     @Override
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString)
