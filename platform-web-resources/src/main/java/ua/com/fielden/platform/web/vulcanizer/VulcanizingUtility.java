@@ -21,6 +21,7 @@ import java.util.Properties;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 import static java.io.File.pathSeparator;
 import static java.lang.String.format;
 import static java.lang.System.arraycopy;
@@ -34,16 +35,22 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.cypher.Checksum.sha256;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig.STARTUP_RESOURCES_VULCANIZED;
+import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.FILE_APP_INDEX_HTML;
+import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.FILE_APP_LOGIN_INITIATE_RESET_HTML;
 
-/**
- * A set of utilities to facilitate Web UI application vulcanization.
- *
- * @author TG Team
- *
- */
+/// A set of utilities to facilitate Web UI application vulcanization.
+///
 public class VulcanizingUtility {
+    /// Path of the vulcanised file with all client-side application resources, as requested by a client.
+    /// The file itself is named by [AbstractWebUiConfig#STARTUP_RESOURCES_VULCANIZED], which also references it from `index.html`.
+    /// This is the only deployment resource that changes often (mostly on every release).
+    /// That is why `service-worker.js` mirrors this path (as `STARTUP_RESOURCES_PATH`) to induce clearing of redundant resources.
+    ///
+    public static final String FILE_STARTUP_RESOURCES_VULCANIZED_JS = "/resources/" + STARTUP_RESOURCES_VULCANIZED + ".js";
+
     private static final Logger LOGGER = getLogger(VulcanizingUtility.class);
-    
+
     public static String[] unixCommands(final String action) {
         return new String[] {"/bin/bash", action + "-script.bat"};
     }
@@ -146,22 +153,22 @@ public class VulcanizingUtility {
 
             LOGGER.info(format("\tGenerating checksums..."));
             final List<String> allExternalResources = listOf(
-                "/app/tg-app-index.html",
+                FILE_APP_INDEX_HTML, // '/', see AppIndexResource.BINDING_PATH
                 "/resources/app/tg-app-resource-loader.js",
-                "/resources/startup-resources-vulcanized.js",
+                FILE_STARTUP_RESOURCES_VULCANIZED_JS,
                 "/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js",
                 "/resources/polymer/web-animations-js/web-animations-next-lite.min.js",
                 "/resources/filesaver/FileSaver.min.js",
                 "/resources/manifest.webmanifest",
                 "/resources/icons/tg-icon192x192.png",
                 "/resources/icons/tg-icon144x144.png",
-                // Other page trees (logout.html, login.html, login-initiate-reset.html, login-initiated-reset.html).
+                // Other page trees (logout.html, login.html, login-initiate-reset.html ('/forgotten'), login-initiated-reset.html).
                 // Please note that login.html cannot go through service worker caching due to the need to redirect to index.html when authenticator appears.
                 // And logout.html cannot go through service worker to support request redirection during Single Log-Out lifecycle.
                 "/resources/zxcvbn/zxcvbn.js",
                 "/resources/login-startup-resources-vulcanized.js",
                 "/resources/icons/tg-icon.png",
-                "/app/login-initiate-reset.html",
+                FILE_APP_LOGIN_INITIATE_RESET_HTML, // '/forgotten', see LoginInitiateResetResource.BINDING_PATH
                 "/resources/login-initiated-reset.html",
                 "/resources/graphiql/graphiql.min.css",
                 "/resources/graphiql/react.production.min.js",
@@ -182,7 +189,6 @@ public class VulcanizingUtility {
                 "/resources/gis/leaflet/images/marker-shadow.png",
                 "/resources/gis/leaflet/controlloading/images/control-loading.gif",
                 "/resources/gis/leaflet/draw/images/spritesheet-2x.png",
-                "/resources/gis/leaflet/draw/images/spritesheet-2x.png",
                 "/resources/gis/leaflet/draw/images/spritesheet.svg",
                 "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.eot",
                 "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.svg",
@@ -194,6 +200,7 @@ public class VulcanizingUtility {
             final Map<String, String> checksums = generateChecksums(allExternalResources.toArray(new String[0]));
             try {
                 final ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.enable(INDENT_OUTPUT);
                 objectMapper.writeValue(new File(mobileAndDesktopAppSpecificPath + prefix + "checksums.json"), checksums);
             } catch (final IOException ex) {
                 final String msg = "Could not write checksum.json";
