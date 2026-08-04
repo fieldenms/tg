@@ -2,12 +2,11 @@ package ua.com.fielden.platform.eql.stage3.sundries;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage3.INode3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.utils.ToString;
-
-import java.util.Objects;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
@@ -30,7 +29,7 @@ import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
  *   <li>For other operands -- equal to the type of {@link #operand}.
  * </ul>
  */
-public record Yield3 (ISingleOperand3 operand, String alias, String column, PropType type) implements ToString.IFormattable {
+public record Yield3 (ISingleOperand3 operand, String alias, String column, PropType type) implements ToString.IFormattable, INode3 {
 
     public Yield3(final ISingleOperand3 operand, final String alias, final int columnId, final PropType type) {
         this(operand, alias, isEmpty(alias) ? null : "C_" + columnId, type);
@@ -74,21 +73,6 @@ public record Yield3 (ISingleOperand3 operand, String alias, String column, Prop
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return sql(metadata, dbVersion, NULL_TYPE);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(alias, operand, type);
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof Yield3 that
-                  && Objects.equals(operand, that.operand)
-                  && Objects.equals(alias, that.alias)
-                  && Objects.equals(column, that.column)
-                  && Objects.equals(type, that.type);
     }
 
     @Override

@@ -9,7 +9,7 @@ import ua.com.fielden.platform.utils.ToString;
 import static java.lang.String.format;
 
 public class AverageOf3 extends SingleOperandFunction3 {
-    private final boolean distinct;
+    public final boolean distinct;
     
     public AverageOf3(final ISingleOperand3 operand, final boolean distinct, final PropType type) {
         super(operand, type);
@@ -32,21 +32,6 @@ public class AverageOf3 extends SingleOperandFunction3 {
         }
     }
     
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        final int result = super.hashCode();
-        return prime * result + (distinct ? 1231 : 1237);
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof AverageOf3 that
-                  && distinct == that.distinct
-                  && super.equals(that);
-    }
-
     @Override
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString).add("distinct", distinct);

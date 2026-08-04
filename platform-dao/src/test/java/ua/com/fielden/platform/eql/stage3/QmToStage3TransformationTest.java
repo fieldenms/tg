@@ -1,50 +1,45 @@
 package ua.com.fielden.platform.eql.stage3;
 
 
-import static org.junit.Assert.*;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.eql.meta.PropType.*;
-import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
-import static ua.com.fielden.platform.test_utils.TestUtils.assertThrows;
-
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
-
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
-import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
-import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage1.sources.exceptions.InvalidYieldMatrixException;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
-import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
-import ua.com.fielden.platform.eql.stage3.operands.functions.AverageOf3;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
-import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
-import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
-import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
-import ua.com.fielden.platform.sample.domain.TeVehicle;
-import ua.com.fielden.platform.sample.domain.TeVehicleModel;
-import ua.com.fielden.platform.sample.domain.TeWorkOrder;
-import ua.com.fielden.platform.sample.domain.TgSynBogie;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.test_utils.TestUtils;
+import ua.com.fielden.platform.sample.domain.*;
+
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
+import static ua.com.fielden.platform.eql.meta.PropType.propType;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertThrows;
 
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
     @Test
     public void common_subproperty_of_union_property_is_resolved() {
-        qryCountAll(select(TgSynBogie.class).where().prop("location.id").isNotNull());
+        final var actualEql = select(TgBogie.class)
+                .where().prop("location.id").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
+
+        final var expectedEql = select(TgBogie.class)
+                .where().caseWhen().prop("location.wagonSlot").isNotNull().then().prop("location.wagonSlot.id")
+                        .when().prop("location.workshop").isNotNull().then().prop("location.workshop.id")
+                        .end()
+                        .isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
+
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
@@ -55,7 +50,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Conditions3 conditions = or(isNotNull(prop("make", model, LONG_PROP_TYPE)));
         final ResultQuery3 expQry = qryCountAll(sources(model), conditions);
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(expQry, actQry);
     }
 
     @Test
@@ -74,34 +69,29 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Conditions3 conditions = or(isNotNull(entityProp("make", model, MAKE)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(expQry, actQry);
     }
 
     @Test
     public void calc_props_of_component_type_are_resolved_correctly() {
-        final ResultQuery3 actQry = qryCountAll(select(ORG5).where().anyOfProps("averageVehPrice", "averageVehPurchasePrice").isNotNull());
+        final var actualEql = select(ORG5)
+                .where().anyOfProps("averageVehPrice", "averageVehPurchasePrice").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable ou5 = source(ORG5, 1);
+        final var expectedEql = select(ORG5)
+                .where().model(select(TgVehicle.class).where().prop("station").eq().extProp(ID).yield().avgOf().prop("price").modelAsPrimitive()).isNotNull()
+                        .or()
+                        .model(select(TgVehicle.class).where().prop("station").eq().extProp(ID).yield().avgOf().prop("purchasePrice").modelAsPrimitive()).isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable veh1 = source(TgVehicle.class, 2);
-        final IJoinNode3 subQrySources1 = sources(veh1);
-        final Conditions3 subQryConditions1 = cond(eq(entityProp("station", veh1, ORG5), idProp(ou5)));
-        final SubQuery3 expSubQry1 = subqry(subQrySources1, subQryConditions1, yields(new Yield3(new AverageOf3(prop("price.amount", veh1, BIGDECIMAL_PROP_TYPE), false, BIGDECIMAL_PROP_TYPE), ABSENT_ALIAS, nextSqlId(), BIGDECIMAL_PROP_TYPE)), BIGDECIMAL_PROP_TYPE);
-
-        final Source3BasedOnTable veh2 = source(TgVehicle.class, 3);
-        final IJoinNode3 subQrySources2 = sources(veh2);
-        final Conditions3 subQryConditions2 = cond(eq(entityProp("station", veh2, ORG5), idProp(ou5)));
-        final SubQuery3 expSubQry2 = subqry(subQrySources2, subQryConditions2, yields(new Yield3(new AverageOf3(prop("purchasePrice.amount", veh2, BIGDECIMAL_PROP_TYPE), false, BIGDECIMAL_PROP_TYPE), ABSENT_ALIAS, nextSqlId(), BIGDECIMAL_PROP_TYPE)), BIGDECIMAL_PROP_TYPE);
-
-        final IJoinNode3 sources = sources(ou5);
-        final Conditions3 conditions = or(isNotNull(expSubQry1), isNotNull(expSubQry2));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void yielding_entity_id_under_different_alias_preserves_entity_type_info() {
-        final AggregatedResultQueryModel qry = select(TeVehicleModel.class).
+        final var qry = select(TeVehicleModel.class).
                 yield().prop("id").as("model").
                 yield().prop("make").as("make").
                 modelAsAggregate();
@@ -115,647 +105,421 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Yields3 yields = yields(modelYield, makeYield);
 
         final ResultQuery3 expQry = qry(sources(source), yields);
-        assertEquals(expQry, actQry);
+        assertAlphaEq(expQry, actQry);
     }
 
     @Test
-    public void correlated_source_query_works() {
-        final AggregatedResultQueryModel sourceQry = select(TeVehicle.class).where().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
-        final PrimitiveResultQueryModel qtySubQry = select(sourceQry).yield().prop("qty").modelAsPrimitive();
-        final AggregatedResultQueryModel qry = select(TeVehicleModel.class).yield().model(qtySubQry).as("qty").modelAsAggregate();
+    public void extProp_resolves_to_the_outer_query() {
+        final var actualEql = select(TeVehicleModel.class)
+                .yield().model(select(select(TeVehicle.class)
+                                              .where().prop("model").eq().extProp("id")
+                                              .yield().countAll().as("qty")
+                                              .modelAsAggregate())
+                                       .yield().prop("qty")
+                                       .modelAsPrimitive())
+                .as("qty")
+                .modelAsAggregate();
 
-        final ResultQuery3 actQry = qry(qry);
+        final var expectedEql = select(TeVehicleModel.class).as("q1")
+                .yield().model(select(select(TeVehicle.class)
+                                              .where().prop("model").eq().prop("q1.id")
+                                              .yield().countAll().as("qty")
+                                              .modelAsAggregate())
+                                       .yield().prop("qty")
+                                       .modelAsPrimitive())
+                .as("qty")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable modelSource = source(MODEL, 3);
-
-        final Source3BasedOnTable vehSource = source(VEHICLE, 1);
-        final IJoinNode3 vehSources = sources(vehSource);
-        final Yields3 vehYields = yields(yieldCountAll("qty"));
-
-        final ISingleOperand3 vehModelProp = entityProp("model", vehSource, MODEL);
-        final ISingleOperand3 modelIdProp = idProp(modelSource);
-        final Conditions3 vehConditions = or(eq(vehModelProp, modelIdProp));
-
-        final SourceQuery3 vehSourceQry = srcqry(vehSources, vehConditions, vehYields);
-
-        final Source3BasedOnQueries qtyQrySource = source(2, vehSourceQry);
-        final IJoinNode3 qtyQrySources = sources(qtyQrySource);
-        final Yields3 qtyQryYields = yields(yieldProp("qty", qtyQrySource, ABSENT_ALIAS, INTEGER_PROP_TYPE));
-
-        final Yields3 modelQryYields = yields(yieldModel(subqry(qtyQrySources, qtyQryYields, INTEGER_PROP_TYPE), "qty", INTEGER_PROP_TYPE));
-
-        final ResultQuery3 expQry = qry(sources(modelSource), modelQryYields);
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void calc_prop_is_correctly_transformed_10() {
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicle.modelMakeKey", "vehicle.model.make.key").isNotNull());
+        final var actualEql = select(WORK_ORDER)
+                .where().anyOfProps("vehicle.modelMakeKey", "vehicle.model.make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable wo = source(WORK_ORDER, 1);
-        final Source3BasedOnTable veh = source(VEHICLE, 2);
-        final Source3BasedOnTable model = source(MODEL, 3);
-        final Source3BasedOnTable make = source(MAKE, 4);
-        final IJoinNode3 sources =
-                lj(
-                        wo,
-                        ij(
-                                veh,
-                                ij(
-                                        model,
-                                        make,
-                                        eq(entityProp("make", model, MAKE), idProp(make))
-                                  ),
-                                eq(entityProp("model", veh, MODEL), idProp(model))
-                          ),
-                        eq(entityProp("vehicle", wo, VEHICLE), idProp(veh))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, make)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
+        final var expectedEql = select(WORK_ORDER)
+                .where().anyOfProps("vehicle.model.make.key", "vehicle.model.make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void calc_prop_is_correctly_transformed_11() {
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicle.modelMakeKey", "vehicle.modelMakeKeyDuplicate").isNotNull());
+        final var actualEql = select(WORK_ORDER)
+                .where().anyOfProps("vehicle.modelMakeKey", "vehicle.modelMakeKeyDuplicate").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable wo = source(WORK_ORDER, 1);
-        final Source3BasedOnTable veh = source(VEHICLE, 2);
-        final Source3BasedOnTable model = source(MODEL, 3);
-        final Source3BasedOnTable make = source(MAKE, 4);
-        final IJoinNode3 sources =
-                lj(
-                        wo,
-                        ij(
-                                veh,
-                                ij(
-                                        model,
-                                        make,
-                                        eq(entityProp("make", model, MAKE), idProp(make))
-                                  ),
-                                eq(entityProp("model", veh, MODEL), idProp(model))
-                          ),
-                        eq(entityProp("vehicle", wo, VEHICLE), idProp(veh))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, make)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
+        final var expectedEql = select(WORK_ORDER)
+                .where().anyOfProps("vehicle.model.make.key", "vehicle.model.make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
 
     @Test
     public void calc_prop_is_correctly_transformed_13() {
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicle.modelKey", "vehicle.model.key").isNotNull());
+        final var actualEql = select(WORK_ORDER)
+                .where().anyOfProps("vehicle.modelKey", "vehicle.model.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable wo = source(WORK_ORDER, 1);
-        final Source3BasedOnTable veh = source(VEHICLE, 2);
-        final Source3BasedOnTable model = source(MODEL, 3);
+        final var expectedEql = select(WORK_ORDER)
+                .where().anyOfProps("vehicle.model.key", "vehicle.model.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                lj(
-                        wo,
-                        ij(
-                                veh,
-                                model,
-                                eq(entityProp("model", veh, MODEL), idProp(model))
-                          ),
-                        eq(entityProp("vehicle", wo, VEHICLE), idProp(veh))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, model)), isNotNull(stringProp(KEY, model)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
-    @Ignore
     public void calc_prop_is_correctly_transformed_12() {
-//        //protected static final ExpressionModel TgVehicle.modelMakeKey6_ = expr().model(select(TgVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("model.makeKey2").modelAsPrimitive()).model();
-//        //protected static final ExpressionModel makeKey2_ = expr().model(select(TgVehicleMake.class).where().prop("id").eq().extProp("make").yield().prop(KEY).modelAsPrimitive()).model();
+        final var actualEql = select(WORK_ORDER)
+                .where().anyOfProps("vehicle.modelMakeKey6").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicle.modelMakeKey6").isNotNull());
+        final var expectedEql = select(WORK_ORDER).as("wo")
+                .leftJoin(TeVehicle.class).as("v")
+                .on().prop("wo.vehicle").eq().prop("v.id")
+                .where().model(select(TeVehicleModel.class).where().prop("id").eq().prop("v.model").yield().prop("makeKey2").modelAsPrimitive()).isNotNull()
+                .yield().prop("wo.id").as("id")
+                .modelAsAggregate();
+
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
-    @Ignore
     public void calc_prop_is_correctly_transformed_09() {
-//        //protected static final ExpressionModel TgWorkOrder.makeKey2_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("modelMakeKey4").modelAsPrimitive()).model();
-//        //protected static final ExpressionModel TgVehicle.modelMakeKey4_ = expr().model(select(TgVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("model.makeKey2").modelAsPrimitive()).model();
-//        //protected static final ExpressionModel makeKey2_ = expr().model(select(TgVehicleMake.class).where().prop("id").eq().extProp("make").yield().prop(KEY).modelAsPrimitive()).model();
+        final var actualEql = select(WORK_ORDER)
+                .where().anyOfProps("makeKey2").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("makeKey2").isNotNull());
+        final var expectedEql = select(WORK_ORDER)
+                .where().model(select(TeVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("modelMakeKey4").modelAsPrimitive()).isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
+
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void calc_prop_is_correctly_transformed_14() {
-        final ResultQuery3 actQry = qryCountAll(select(TeWorkOrder.class).where().prop("vehicleModel.key").isNotNull());
+        final var actualEql = select(WORK_ORDER)
+                .where().prop("vehicleModel.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable wo = source(WORK_ORDER, 1);
+        final var expectedEql = select(WORK_ORDER).as("wo")
+                .leftJoin(VEHICLE).as("v")
+                .on().prop("wo.vehicle").eq().prop("v.id")
+                .leftJoin(TeVehicleModel.class).as("vm")
+                .on().prop("v.model").eq().prop("vm.id")
+                .where().prop("vm.key").isNotNull()
+                .yield().prop("wo.id").as("id")
+                .modelAsAggregate();
 
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void calc_prop_is_correctly_transformed_08() {
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("make.key").isNotNull());
+        final var actualEql = select(WORK_ORDER)
+                .where().prop("make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable wo = source(WORK_ORDER, 1);
-        final Source3BasedOnTable make = source(MAKE, 4);
-        final Source3BasedOnTable veh = source(VEHICLE, 2);
-        final Source3BasedOnTable model = source(MODEL, 3);
+        final var expectedEql = select(WORK_ORDER).as("wo")
+                .leftJoin(TeVehicleMake.class).as("m")
+                .on().model(select(TeVehicle.class).where().prop("id").eq().prop("wo.vehicle").yield().prop("model.make").modelAsEntity(TeVehicleMake.class))
+                     .eq().prop("m.id")
+                .where().prop("m.key").isNotNull()
+                .yield().prop("wo.id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 subQrySources =
-                ij(
-                        veh,
-                        model,
-                        eq(entityProp("model", veh, MODEL), idProp(model))
-                  );
-
-        final Conditions3 subQryConditions = cond(eq(idProp(veh), entityProp("vehicle", wo, VEHICLE)));
-
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), propType(MAKE, H_LONG));
-
-        final IJoinNode3 sources =
-                lj(
-                        wo,
-                        make,
-                        eq(expSubQry, idProp(make))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void calc_prop_is_correctly_transformed_07() {
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("make").isNotNull());
+        final var actualEql = select(WORK_ORDER)
+                .where().prop("make").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable wo = source(WORK_ORDER, 1);
-        final Source3BasedOnTable veh = source(VEHICLE, 2);
-        final Source3BasedOnTable model = source(MODEL, 3);
+        final var expectedEql = select(WORK_ORDER)
+                .where().model(select(VEHICLE).where().prop("id").eq().extProp("vehicle").yield().prop("model.make").modelAsEntity(MAKE)).isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 subQrySources =
-                ij(
-                        veh,
-                        model,
-                        eq(entityProp("model", veh, MODEL), idProp(model))
-                  );
-
-        final Conditions3 subQryConditions = cond(eq(idProp(veh), entityProp("vehicle", wo, VEHICLE)));
-
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), propType(MAKE, H_LONG));
-
-        final IJoinNode3 sources = sources(wo);
-        final Conditions3 conditions = or(isNotNull(expSubQry));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void calc_prop_is_correctly_transformed_06() {
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("makeKey").isNotNull());
+        final var actualEql = select(WORK_ORDER)
+                .where().prop("makeKey").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable wo = source(WORK_ORDER, 1);
-        final Source3BasedOnTable veh = source(VEHICLE, 2);
-        final Source3BasedOnTable model = source(MODEL, 3);
-        final Source3BasedOnTable make = source(MAKE, 4);
+        // Expansion of the calculated property `makeKey` of `TeWorkOrder`.
+        final var expectedEql = select(WORK_ORDER)
+                .where().model(select(VEHICLE).where().prop("id").eq().extProp("vehicle").yield().prop("model.make.key").modelAsPrimitive()).isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 subQrySources =
-                ij(
-                        veh,
-                        ij(
-                                model,
-                                make,
-                                eq(entityProp("make", model, MAKE), idProp(make))
-                          ),
-                        eq(entityProp("model", veh, MODEL), idProp(model))
-                  );
-
-        final Conditions3 subQryConditions = cond(eq(idProp(veh), entityProp("vehicle", wo, VEHICLE)));
-
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, make)), STRING_PROP_TYPE);
-
-        final IJoinNode3 sources = sources(wo);
-        final Conditions3 conditions = or(isNotNull(expSubQry));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
-    }
-
-    @Test
-    public void calc_prop_is_correctly_transformed_05() {
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("vehicleModel.key").isNotNull());
-
-        final Source3BasedOnTable wo = source(WORK_ORDER, 1);
-        final Source3BasedOnTable veh = source(VEHICLE, 2);
-        final Source3BasedOnTable model = source(MODEL, 3);
-
-        final IJoinNode3 sources =
-                lj(
-                        lj(
-                                wo,
-                                veh,
-                                eq(entityProp("vehicle", wo, VEHICLE), idProp(veh))
-                          ),
-                        model,
-                        eq(entityProp("model", veh, MODEL), idProp(model))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, model)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void calc_prop_is_correctly_transformed_04() {
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("vehicleModel.makeKey").isNotNull());
+        final var actualEql = select(WORK_ORDER)
+                .where().prop("vehicleModel.makeKey").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable wo = source(WORK_ORDER, 1);
-        final Source3BasedOnTable veh = source(VEHICLE, 2);
-        final Source3BasedOnTable model = source(MODEL, 3);
-        final Source3BasedOnTable make = source(MAKE, 4);
+        final var expectedEql = select(WORK_ORDER)
+                .where().prop("vehicleModel.make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                lj(
-                        lj(
-                                wo,
-                                veh,
-                                eq(entityProp("vehicle", wo, VEHICLE), idProp(veh))
-                          ),
-                        ij(
-                                model,
-                                make,
-                                eq(entityProp("make", model, MAKE), idProp(make))
-                          ),
-                        eq(entityProp("model", veh, MODEL), idProp(model))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void calc_prop_is_correctly_transformed_03() {
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("vehicle.modelMakeKey2").isNotNull());
+        final var actualEql = select(WORK_ORDER)
+                .where().prop("vehicle.modelMakeKey2").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable wo = source(WORK_ORDER, 1);
-        final Source3BasedOnTable veh = source(VEHICLE, 2);
-        final Source3BasedOnTable model = source(MODEL, 3);
-        final Source3BasedOnTable make = source(MAKE, 4);
+        final var expectedEql = select(WORK_ORDER)
+                .where().prop("vehicle.model.make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                lj(
-                        wo,
-                        ij(
-                                veh,
-                                ij(
-                                        model,
-                                        make,
-                                        eq(entityProp("make", model, MAKE), idProp(make))
-                                  ),
-                                eq(entityProp("model", veh, MODEL), idProp(model))
-                          ),
-                        eq(entityProp("vehicle", wo, VEHICLE), idProp(veh))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void calc_prop_is_correctly_transformed_02() {
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("vehicle.modelMakeKey").isNotNull());
+        final var actualEql = select(WORK_ORDER)
+                .where().prop("vehicle.modelMakeKey").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable wo = source(WORK_ORDER, 1);
-        final Source3BasedOnTable veh = source(VEHICLE, 2);
-        final Source3BasedOnTable model = source(MODEL, 3);
-        final Source3BasedOnTable make = source(MAKE, 4);
+        final var expectedEql = select(WORK_ORDER)
+                .where().prop("vehicle.model.make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                lj(
-                        wo,
-                        ij(
-                                veh,
-                                ij(
-                                        model,
-                                        make,
-                                        eq(entityProp("make", model, MAKE), idProp(make))
-                                  ),
-                                eq(entityProp("model", veh, MODEL), idProp(model))
-                          ),
-                        eq(entityProp("vehicle", wo, VEHICLE), idProp(veh))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void veh_calc_prop_is_correctly_transformed_08() {
-        final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelMakeKey2", "make.key", "model.make.key").isNotNull());
+        final var actualEql = select(VEHICLE)
+                .where().anyOfProps("modelMakeKey2", "make.key", "model.make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable veh = source(VEHICLE, 1);
-        final Source3BasedOnTable makeA = source(MAKE, 2);
-        final Source3BasedOnTable model = source(MODEL, 3);
-        final Source3BasedOnTable make = source(MAKE, 4);
+        final var expectedEql = select(VEHICLE)
+                .where().anyOfProps("model.make.key", "make.key", "model.make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                ij(
-                        lj(
-                                veh,
-                                makeA,
-                                eq(entityProp("make", veh, MAKE), idProp(makeA))),
-                        ij(
-                                model,
-                                make,
-                                eq(entityProp("make", model, MAKE), idProp(make))),
-                        eq(entityProp("model", veh, MODEL), idProp(model))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, makeA)), isNotNull(stringProp(KEY, make)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void veh_calc_prop_is_correctly_transformed_06() {
-        final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelMakeKey2", "make.key").isNotNull());
+        final var actualEql = select(VEHICLE)
+                .where().anyOfProps("modelMakeKey2", "make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable veh = source(VEHICLE, 1);
-        final Source3BasedOnTable makeA = source(MAKE, 2);
-        final Source3BasedOnTable model = source(MODEL, 3);
-        final Source3BasedOnTable make = source(MAKE, 4);
+        final var expectedEql = select(VEHICLE)
+                .where().anyOfProps("model.make.key", "make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                ij(
-                        lj(
-                                veh,
-                                makeA,
-                                eq(entityProp("make", veh, MAKE), idProp(makeA))),
-                        ij(
-                                model,
-                                make,
-                                eq(entityProp("make", model, MAKE), idProp(make))),
-                        eq(entityProp("model", veh, MODEL), idProp(model))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, makeA)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
-    }
-
-    @Test
-    public void veh_calc_prop_is_correctly_transformed_05() {
-        final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("model.make.key", "make.key").isNotNull());
-
-        final Source3BasedOnTable veh = source(VEHICLE, 1);
-        final Source3BasedOnTable makeA = source(MAKE, 2);
-        final Source3BasedOnTable model = source(MODEL, 3);
-        final Source3BasedOnTable make = source(MAKE, 4);
-
-        final IJoinNode3 sources =
-                ij(
-                        lj(
-                                veh,
-                                makeA,
-                                eq(entityProp("make", veh, MAKE), idProp(makeA))),
-                        ij(
-                                model,
-                                make,
-                                eq(entityProp("make", model, MAKE), idProp(make))),
-                        eq(entityProp("model", veh, MODEL), idProp(model))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, makeA)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void veh_calc_prop_is_correctly_transformed_04() {
-        final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelMakeKey2", "model.make.key").isNotNull());
-        final Source3BasedOnTable veh = source(VEHICLE, 1);
-        final Source3BasedOnTable model = source(MODEL, 2);
-        final Source3BasedOnTable make = source(MAKE, 3);
+        final var actualEql = select(VEHICLE)
+                .where().anyOfProps("modelMakeKey2", "model.make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                ij(
-                        veh,
-                        ij(
-                                model,
-                                make,
-                                eq(entityProp("make", model, MAKE), idProp(make))
-                          ),
-                        eq(entityProp("model", veh, MODEL), idProp(model))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, make)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
+        final var expectedEql = select(VEHICLE)
+                .where().anyOfProps("model.make.key", "model.make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void veh_calc_prop_is_correctly_transformed_03() {
-        final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelMakeKey", "modelMakeDesc").isNotNull());
+        final var actualEql = select(VEHICLE)
+                .where().anyOfProps("modelMakeKey", "modelMakeDesc").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable veh = source(VEHICLE, 1);
-        final Source3BasedOnTable model = source(MODEL, 2);
-        final Source3BasedOnTable make = source(MAKE, 3);
+        final var expectedEql = select(VEHICLE)
+                .where().anyOfProps("model.make.key", "model.make.desc").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                ij(
-                        veh,
-                        ij(
-                                model,
-                                make,
-                                eq(entityProp("make", model, MAKE), idProp(make))
-                          ),
-                        eq(entityProp("model", veh, MODEL), idProp(model))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(DESC, make)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void veh_calc_prop_is_correctly_transformed_02() {
-        final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelKey", "modelDesc").isNotNull());
-        final Source3BasedOnTable veh = source(VEHICLE, 1);
-        final Source3BasedOnTable model = source(MODEL, 2);
+        final var actualEql = select(VEHICLE)
+                .where().anyOfProps("modelKey", "modelDesc").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                ij(
-                        veh,
-                        model,
-                        eq(entityProp("model", veh, MODEL), idProp(model))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, model)), isNotNull(stringProp(DESC, model)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
+        final var expectedEql = select(VEHICLE)
+                .where().anyOfProps("model.key", "model.desc").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void veh_calc_prop_is_correctly_transformed_01() {
-        final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().prop("modelMakeKey").isNotNull());
-        final Source3BasedOnTable veh = source(VEHICLE, 1);
-        final Source3BasedOnTable model = source(MODEL, 2);
-        final Source3BasedOnTable make = source(MAKE, 3);
+        final var actualEql = select(VEHICLE)
+                .where().prop("modelMakeKey").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                ij(
-                        veh,
-                        ij(
-                                model,
-                                make,
-                                eq(entityProp("make", model, MAKE), idProp(make))
-                          ),
-                        eq(entityProp("model", veh, MODEL), idProp(model))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
+        final var expectedEql = select(VEHICLE)
+                .where().prop("model.make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
-
 
     @Test
     public void veh_model_calc_prop_is_correctly_transformed_05() {
-        final ResultQuery3 actQry = qryCountAll(select(MODEL).where().anyOfProps("makeKey", "makeKey2", "make.key").isNotNull());
+        final var actualEql = select(MODEL)
+                .where().anyOfProps("makeKey", "makeKey2", "make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable model = source(MODEL, 1);
-        final Source3BasedOnTable make = source(MAKE, 3);
+        // `makeKey` expands to the path `make.key`, `makeKey2` expands to a correlated subquery.
+        final var expectedEql = select(MODEL)
+                .where().prop("make.key").isNotNull()
+                        .or()
+                        .model(select(MAKE).where().prop("id").eq().extProp("make").yield().prop("key").modelAsPrimitive()).isNotNull()
+                        .or()
+                        .prop("make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable subQryMake = source(MAKE, 2);
-
-        final IJoinNode3 subQrySources = sources(subQryMake);
-
-        final Conditions3 subQryConditions = cond(eq(idProp(subQryMake), entityProp("make", model, MAKE)));
-
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, subQryMake)), STRING_PROP_TYPE);
-
-
-        final IJoinNode3 sources =
-                ij(
-                        model,
-                        make,
-                        eq(entityProp("make", model, MAKE), idProp(make))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(expSubQry), isNotNull(stringProp(KEY, make)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void veh_model_calc_prop_is_correctly_transformed_04() {
-        final ResultQuery3 actQry = qryCountAll(select(MODEL).where().anyOfProps("makeKey", "makeKey2").isNotNull());
-        final Source3BasedOnTable model = source(MODEL, 1);
-        final Source3BasedOnTable make = source(MAKE, 3);
-        final Source3BasedOnTable subQryMake = source(MAKE, 2);
+        final var actualEql = select(MODEL)
+                .where().anyOfProps("makeKey", "makeKey2").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 subQrySources = sources(subQryMake);
+        final var expectedEql = select(MODEL)
+                .where().prop("make.key").isNotNull()
+                        .or()
+                        .model(select(MAKE).where().prop("id").eq().extProp("make").yield().prop("key").modelAsPrimitive()).isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Conditions3 subQryConditions = cond(eq(idProp(subQryMake), entityProp("make", model, MAKE)));
-
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, subQryMake)), STRING_PROP_TYPE);
-
-
-        final IJoinNode3 sources =
-                ij(
-                        model,
-                        make,
-                        eq(entityProp("make", model, MAKE), idProp(make))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(expSubQry));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void veh_model_calc_prop_is_correctly_transformed_03() {
-        final ResultQuery3 actQry = qryCountAll(select(MODEL).where().anyOfProps("makeKey", "make.key").isNotNull());
-        final Source3BasedOnTable model = source(MODEL, 1);
-        final Source3BasedOnTable make = source(MAKE, 2);
+        final var actualEql = select(MODEL)
+                .where().anyOfProps("makeKey", "make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                ij(
-                        model,
-                        make,
-                        eq(entityProp("make", model, MAKE), idProp(make))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, make)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
+        final var expectedEql = select(MODEL)
+                .where().anyOfProps("make.key", "make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void veh_model_calc_prop_is_correctly_transformed_02() {
-        final ResultQuery3 actQry = qryCountAll(select(MODEL).where().prop("makeKey2").isNotNull());
-        final Source3BasedOnTable model = source(MODEL, 1);
+        final var actualEql = select(MODEL)
+                .where().prop("makeKey2").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final Source3BasedOnTable subQryMake = source(MAKE, 2);
+        final var expectedEql = select(MODEL)
+                .where().model(select(MAKE).where().prop("id").eq().extProp("make").yield().prop("key").modelAsPrimitive()).isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 subQrySources = sources(subQryMake);
-
-        final Conditions3 subQryConditions = cond(eq(idProp(subQryMake), entityProp("make", model, MAKE)));
-
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, subQryMake)), STRING_PROP_TYPE);
-
-        final IJoinNode3 sources = sources(model);
-        final Conditions3 conditions = or(isNotNull(expSubQry));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void veh_model_calc_prop_is_correctly_transformed_01() {
-        final ResultQuery3 actQry = qryCountAll(select(MODEL).where().prop("makeKey").isNotNull());
-        final Source3BasedOnTable model = source(MODEL, 1);
-        final Source3BasedOnTable make = source(MAKE, 2);
+        final var actualEql = select(MODEL)
+                .where().prop("makeKey").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                ij(
-                        model,
-                        make,
-                        eq(entityProp("make", model, MAKE), idProp(make))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, make)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
+        final var expectedEql = select(MODEL)
+                .where().prop("make.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void dot_notated_props_are_correctly_transformed_01() {
-        final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps(KEY, "replacedBy.key").isNotNull());
-        final Source3BasedOnTable veh = source(VEHICLE, 1);
-        final Source3BasedOnTable repVeh = source(VEHICLE, 2);
+        final var actualEql = select(VEHICLE)
+                .where().anyOfProps(KEY, "replacedBy.key").isNotNull()
+                .yield().prop("id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                lj(
-                        veh,
-                        repVeh,
-                        eq(entityProp("replacedBy", veh, VEHICLE), idProp(repVeh))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, veh)), isNotNull(stringProp(KEY, repVeh)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
+        final var expectedEql = select(VEHICLE).as("v1")
+                .leftJoin(VEHICLE).as("v2")
+                .on().prop("v1.replacedBy").eq().prop("v2.id")
+                .where().prop("v1.key").isNotNull()
+                        .or()
+                        .prop("v2.key").isNotNull()
+                .yield().prop("v1.id").as("id")
+                .modelAsAggregate();
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void dot_notated_props_are_correctly_transformed_02() {
+        // This test cannot be refactored to a query-to-query comparison.
+        // The implicit joins form a bushy tree: `station.name`/`station.parent.name` produce a grouped `ij(org5, org4)` subtree hanging off `veh`, alongside the separate `replacedBy` branch.
+        // The fluent join API builds only left-deep trees, so no explicit-join query can reproduce this shape.
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull());
         final Source3BasedOnTable veh = source(VEHICLE, 1);
         final Source3BasedOnTable repVeh = source(VEHICLE, 2);
@@ -779,34 +543,33 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Conditions3 conditions = or(isNotNull(dateProp("initDate", veh)), isNotNull(stringProp("name", org5)), isNotNull(stringProp("name", org4)), isNotNull(dateProp("initDate", repVeh)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(expQry, actQry);
     }
 
     @Test
     public void dot_notated_props_are_correctly_transformed_03() {
-        final ResultQuery3 actQry = qryCountAll(select(VEHICLE).as("veh").join(ORG5).as("ou5e").on().prop("veh.station").eq().prop("ou5e.id").where().anyOfProps("veh.key", "veh.replacedBy.key").isNotNull());
-        final Source3BasedOnTable veh = source(VEHICLE, 1);
-        final Source3BasedOnTable repVeh = source(VEHICLE, 3);
-        final Source3BasedOnTable ou5e = source(ORG5, 2);
+        final var actualEql = select(VEHICLE).as("veh")
+                .join(ORG5).as("ou5e").on().prop("veh.station").eq().prop("ou5e.id")
+                .where().anyOfProps("veh.key", "veh.replacedBy.key").isNotNull()
+                .yield().prop("veh.id").as("id")
+                .modelAsAggregate();
 
-        final IJoinNode3 sources =
-                ij(
-                        lj(
-                                veh,
-                                repVeh,
-                                eq(entityProp("replacedBy", veh, VEHICLE), idProp(repVeh))
-                          ),
-                        ou5e,
-                        eq(entityProp("station", veh, ORG5), idProp(ou5e))
-                  );
-        final Conditions3 conditions = or(isNotNull(stringProp(KEY, veh)), isNotNull(stringProp(KEY, repVeh)));
-        final ResultQuery3 expQry = qryCountAll(sources, conditions);
+        // The implicit join for `veh.replacedBy` is written out as an explicit left join.
+        final var expectedEql = select(VEHICLE).as("veh")
+                .leftJoin(VEHICLE).as("rep").on().prop("veh.replacedBy").eq().prop("rep.id")
+                .join(ORG5).as("ou5e").on().prop("veh.station").eq().prop("ou5e.id")
+                .where().anyOfProps("veh.key", "rep.key").isNotNull()
+                .yield().prop("veh.id").as("id")
+                .modelAsAggregate();
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(qry(expectedEql), qry(actualEql));
     }
 
     @Test
     public void dot_notated_props_are_correctly_transformed_04() {
+        // This test cannot be refactored to a query-to-query comparison.
+        // The implicit joins form a bushy tree with grouped subtrees hanging off `veh` (e.g. `ij(ou5, ou4)` for `station.parent.name`, `ij(ou5e, ou5eou4)` for `ou5e.parent.name`).
+        // The fluent join API builds only left-deep trees, so no explicit-join query can reproduce this shape.
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).as("veh").join(ORG5).as("ou5e").on().prop("station").eq().prop("ou5e.id").
                 where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "ou5e.parent.name").isNotNull());
 
@@ -848,11 +611,14 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                 isNotNull(stringProp("name", ou5eou4)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(expQry, actQry);
     }
 
     @Test
     public void dot_notated_props_are_correctly_transformed_05() {
+        // This test cannot be refactored to a query-to-query comparison.
+        // The implicit joins form a bushy tree with deeply nested grouped subtrees hanging off `veh` (e.g. `ij(ou5, ij(ou4, ou3))` for the `station.parent.parent...` chain).
+        // The fluent join API builds only left-deep trees, so no explicit-join query can reproduce this shape.
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).
                 join(ORG2).as("ou2e").on().prop("station.parent.parent.parent").eq().prop("ou2e.id").
                 where().anyOfProps("initDate", "replacedBy.initDate", "station.name", "station.parent.name", "ou2e.parent.key").isNotNull());
@@ -898,7 +664,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                 isNotNull(stringProp(KEY, ou2eou1)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
-        assertEquals(expQry, actQry);
+        assertAlphaEq(expQry, actQry);
     }
 
     @Test

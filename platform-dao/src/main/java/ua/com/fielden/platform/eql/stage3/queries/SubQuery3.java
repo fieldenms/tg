@@ -10,7 +10,6 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
-import java.util.Objects;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
@@ -44,19 +43,6 @@ public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
     @Override
     public PropType type() {
         return type;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + type.hashCode();
-        return prime * result + SubQuery3.class.getName().hashCode();
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj || obj instanceof SubQuery3 that && super.equals(that) && Objects.equals(type, that.type);
     }
 
     @Override

@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -35,9 +36,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.GT;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
+import static ua.com.fielden.platform.entity.query.IRetrievalModel.createRetrievalModel;
+import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.*;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 import static ua.com.fielden.platform.eql.meta.PropType.*;
@@ -61,6 +61,10 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
 
     private static <E extends AbstractEntity<?>> ResultQuery3 transform(final QueryProcessingModel<E, ?> qem) {
         return eqlQueryTransformer().transform(qem, empty()).item;
+    }
+
+    private static <E extends AbstractEntity<?>> ResultQuery3 transform(final QueryProcessingModel<E, ?> qem, final int initSourceId) {
+        return eqlQueryTransformer().transform(qem, empty(), initSourceId).item;
     }
 
     public static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
@@ -102,6 +106,15 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
 
     public static <T extends AbstractEntity<?>> ResultQuery3 qry(final EntityResultQueryModel<T> qry, final OrderingModel order) {
         return transform(new QueryProcessingModel<T, EntityResultQueryModel<T>>(qry, order, null, emptyMap(), true));
+    }
+
+    public static <T extends AbstractEntity<?>> ResultQuery3 qry(final EntityResultQueryModel<T> qry, final fetch<T> fetch) {
+        final var retrievalModel = createRetrievalModel(fetch, metadata(), querySourceInfoProvider());
+        return transform(new QueryProcessingModel<>(qry, null, retrievalModel, emptyMap(), true));
+    }
+
+    public static <T extends AbstractEntity<?>> ResultQuery3 qry(final EntityResultQueryModel<T> qry, final int initSourceId) {
+        return transform(new QueryProcessingModel<T, EntityResultQueryModel<T>>(qry, null, null, emptyMap(), true), initSourceId);
     }
 
     public static <T extends AbstractEntity<?>> ResultQuery3 qryFiltered(final EntityResultQueryModel<T> qry) {
@@ -282,27 +295,27 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     //    }
 
     public static SubQuery3 subqry(final IJoinNode3 sources, final Yields3 yields, final PropType resultType) {
-        return new SubQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, null, null), resultType);
+        return new SubQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), yields, GroupBys3.empty(), OrderBys3.empty()), resultType);
     }
 
     public static SubQuery3 subqry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final PropType resultType) {
-        return new SubQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, null, null), resultType);
+        return new SubQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, GroupBys3.empty(), OrderBys3.empty()), resultType);
     }
 
     private static ResultQuery3 resultQry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
-        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, null, null), resultType);
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), yields, GroupBys3.empty(), OrderBys3.empty()), resultType);
     }
 
     private static ResultQuery3 resultQry(final IJoinNode3 sources, final OrderBys3 orderBys3, final Class<?> resultType) {
-        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), null, null, null, orderBys3), resultType);
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), Yields3.empty(), GroupBys3.empty(), orderBys3), resultType);
     }
 
     private static ResultQuery3 resultQry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, null, null), resultType);
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, GroupBys3.empty(), OrderBys3.empty()), resultType);
     }
 
     private static ResultQuery3 resultQry(final IJoinNode3 sources, final Yields3 yields, final OrderBys3 ordering, final Class<?> resultType) {
-        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, null, ordering), resultType);
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), yields, GroupBys3.empty(), ordering), resultType);
     }
 
     private static ResultQuery3 resultQry(
@@ -311,7 +324,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
             final GroupBys3 groupBys,
             final Class<EntityAggregates> resultType)
     {
-        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, groupBys, null), resultType);
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), yields, groupBys, OrderBys3.empty()), resultType);
     }
 
     //    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
@@ -319,11 +332,11 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     //    }
 
     private static SourceQuery3 sourceQry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new SourceQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, null, null), resultType);
+        return new SourceQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, GroupBys3.empty(), OrderBys3.empty()), resultType);
     }
 
     private static SourceQuery3 sourceQry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
-        return new SourceQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, null, null), resultType);
+        return new SourceQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), yields, GroupBys3.empty(), OrderBys3.empty()), resultType);
     }
 
     //    protected static EntQuery3 qry(final IQrySources3 sources, final Class<?> resultType) {
@@ -339,7 +352,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     public static ResultQuery3 qryCountAll(final IJoinNode3 sources) {
-        return resultQry(sources, null, yields(yieldCountAll("KOUNT")), EntityAggregates.class);
+        return resultQry(sources, Conditions3.empty(), yields(yieldCountAll("KOUNT")), EntityAggregates.class);
     }
 
     public static ResultQuery3 qry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
@@ -380,7 +393,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     public static ResultQuery3 qry(final IJoinNode3 sources, final Yields3 yields, final GroupBys3 groupBys3, final OrderBys3 orderBys3) {
-        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, groupBys3, orderBys3), EntityAggregates.class);
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), Conditions3.empty(), yields, groupBys3, orderBys3), EntityAggregates.class);
     }
 
     //    protected static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
@@ -418,7 +431,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     public static Yield3 yieldCountAll(final String alias) {
-        return new Yield3(CountAll3.INSTANCE, alias, nextSqlId(), INTEGER_PROP_TYPE);
+        return new Yield3(new CountAll3(), alias, nextSqlId(), INTEGER_PROP_TYPE);
     }
 
     public static Yield3 yieldEntity(final String propName, final ISource3 source, final String alias, final Class<? extends AbstractEntity<?>> propType) {
@@ -473,7 +486,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return new GroupBys3(asList(groups));
     }
 
-    public static OrderBys3 orders(final OrderBy3... orders) {
+    public static OrderBys3 orders(final IOrderBy3... orders) {
         return new OrderBys3(asList(orders));
     }
 
@@ -494,10 +507,28 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return new Conditions3(false, asList(conditions));
     }
 
-    // TODO use in existing tests
-    public static void assertQueryEquals(final AbstractQuery3 expected, final AbstractQuery3 actual) {
-        if (!expected.equals(actual)) {
-            throw new ComparisonFailure("Queries have different structure.", expected.toString(), actual.toString());
+    public static void assertAlphaEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
+        if (!operations().alphaEq(q1, q2)) {
+            throw new ComparisonFailure("Queries are not alpha-equivalent.", q1.toString(), q2.toString());
         }
     }
+
+    public static void assertNotAlphaEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
+        if (operations().alphaEq(q1, q2)) {
+            throw new ComparisonFailure("Queries are unexpectedly alpha-equivalent.", q1.toString(), q2.toString());
+        }
+    }
+
+    public static void assertStructEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
+        if (!operations().structEq(q1, q2)) {
+            throw new ComparisonFailure("Queries are not structurally equivalent.", q1.toString(), q2.toString());
+        }
+    }
+
+    public static void assertNotStructEq(final AbstractQuery3 q1, final AbstractQuery3 q2) {
+        if (operations().structEq(q1, q2)) {
+            throw new ComparisonFailure("Queries are unexpectedly structurally equivalent.", q1.toString(), q2.toString());
+        }
+    }
+
 }

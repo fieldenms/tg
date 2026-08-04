@@ -15,6 +15,7 @@ import java.util.Set;
 
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3.skipTransformation;
 
 public record Conditions2 (boolean negated, List<List<? extends ICondition2<?>>> dnf)
         implements ICondition2<Conditions3>, ToString.IFormattable
@@ -54,7 +55,7 @@ public record Conditions2 (boolean negated, List<List<? extends ICondition2<?>>>
     @Override
     public TransformationResultFromStage2To3<Conditions3> transform(final TransformationContextFromStage2To3 context) {
         if (ignore()) {
-            return new TransformationResultFromStage2To3<>(null, context);
+            return skipTransformation(context);
         }
 
         final List<List<? extends ICondition3>> result = new ArrayList<>();

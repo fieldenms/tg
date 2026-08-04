@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.stage3;
 
-import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
@@ -10,17 +9,18 @@ import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Optional;
 
-/**
- * Represents all structural query parts (components) obtained as the result of stage 2 to stage 3 transformation.
- * This class is used as a convenience to keep all the query components together.
- *
- */
+/// Represents all structural query parts (components) obtained as the result of stage 2 to stage 3 transformation.
+/// This class is used as a convenience to keep all the query components together.
+///
+/// Some components are nullable only to comply with the existing test model.
+/// This will change in the future.
+///
 public record QueryComponents3(
         Optional<IJoinNode3> maybeJoinRoot,
-        @Nullable Conditions3 whereConditions,
-        @Nullable Yields3 yields,
-        @Nullable GroupBys3 groups,
-        @Nullable OrderBys3 orderings)
+        Conditions3 whereConditions,
+        Yields3 yields,
+        GroupBys3 groups,
+        OrderBys3 orderings)
     implements ToString.IFormattable
 {
 

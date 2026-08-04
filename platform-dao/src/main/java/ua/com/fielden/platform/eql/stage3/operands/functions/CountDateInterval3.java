@@ -8,13 +8,11 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
-import java.util.Objects;
-
 import static java.lang.String.format;
 
 public class CountDateInterval3 extends TwoOperandsFunction3 {
 
-    private DateIntervalUnit intervalUnit;
+    public DateIntervalUnit intervalUnit;
 
     public CountDateInterval3(final DateIntervalUnit intervalUnit, final ISingleOperand3 periodEndDate, final ISingleOperand3 periodStartDate, final PropType type) {
         super(periodEndDate, periodStartDate, type);
@@ -135,21 +133,6 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
         }
     }
     
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        final int result = super.hashCode();
-        return prime * result + intervalUnit.hashCode();
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof CountDateInterval3 that
-                  && Objects.equals(intervalUnit, that.intervalUnit)
-                  && super.equals(that);
-    }
-
     @Override
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString).add("unit", intervalUnit);

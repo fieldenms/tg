@@ -26,13 +26,21 @@ import static ua.com.fielden.platform.utils.CollectionUtil.append;
  *        It is not checked whether such a property is truly an entity ID, because cases where it is not are unlikely.
  * </ol>
  */
-final class UnionOrderById {
+public final class UnionOrderById {
 
     public static final UnionOrderById INSTANCE = new UnionOrderById();
+
+    /// Ad-hoc configuration for testing purposes.
+    /// When `false`, [#apply] becomes a no-op, which lets tests compile an "expected" query without this transformation being applied.
+    ///
+    public static boolean enabled = true;
 
     private UnionOrderById() {}
 
     public AbstractQuery2 apply(final AbstractQuery2 query) {
+        if (!enabled) {
+            return query;
+        }
         return maybeAddOrderById(query.orderings.orderBys(), query)
                 .map(models -> query.setOrderings(query.orderings.setModels(models)))
                 .orElse(query);

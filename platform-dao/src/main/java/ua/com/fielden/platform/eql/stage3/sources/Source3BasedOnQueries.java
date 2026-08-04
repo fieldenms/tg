@@ -15,7 +15,6 @@ import ua.com.fielden.platform.utils.ToString;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
@@ -33,7 +32,7 @@ public class Source3BasedOnQueries extends AbstractSource3 {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final List<SourceQuery3> models;
+    public final List<SourceQuery3> models;
     
     public Source3BasedOnQueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
         // It is sufficient to use just the first model's yields because all models in a list must share the same yield aliases.
@@ -94,22 +93,6 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     @Override
     public String toString() {
         return "Source3BasedOnQueries of type " + models.getFirst().resultType;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + models.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof Source3BasedOnQueries that
-                  && Objects.equals(this.models, that.models)
-                  && super.equals(that);
     }
 
     @Override

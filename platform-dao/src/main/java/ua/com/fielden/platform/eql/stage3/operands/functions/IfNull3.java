@@ -57,17 +57,4 @@ public class IfNull3 extends TwoOperandsFunction3 {
             return "COALESCE(%s, %s)".formatted(operand1Sql, operand2Sql);
         }
     }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        final int result = super.hashCode();
-        return prime * result + IfNull3.class.getName().hashCode();
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj || super.equals(obj) && obj instanceof IfNull3;
-    }
-
 }

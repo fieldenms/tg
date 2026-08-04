@@ -21,7 +21,7 @@ public class CountAll2 extends AbstractFunction2<CountAll3> {
 
     @Override
     public TransformationResultFromStage2To3<CountAll3> transform(final TransformationContextFromStage2To3 context) {
-        return new TransformationResultFromStage2To3<>(CountAll3.INSTANCE, context);
+        return new TransformationResultFromStage2To3<>(new CountAll3(), context);
     }
 
     @Override

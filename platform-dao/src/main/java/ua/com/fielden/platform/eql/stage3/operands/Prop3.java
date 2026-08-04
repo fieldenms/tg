@@ -18,46 +18,35 @@ public class Prop3 extends AbstractSingleOperand3 {
      */
     public final String name;
 
-    /**
-     * Either table or query where property {@code name} lives.
-     * Never {@code null}.
-     */
-    public final ISource3 source;
+    public final Integer sourceId;
+    // TODO Remove `column` once the `sql` operation can access ISource3 by sourceId.
+    // `column` is accidental complexity, `sourceId` is the only essential information about the source.
+    public final String column;
 
-    public Prop3(final String name, final ISource3 source, final PropType type) {
+    public Prop3(final String name, final Integer sourceId, final String column, final PropType type) {
         super(type);
         this.name = requireNonNull(name);
-        this.source = requireNonNull(source);
+        this.sourceId = requireNonNull(sourceId);
+        this.column = requireNonNull(column);
+    }
+
+    /// Kept for backward compatibility.
+    /// Will be removed together with [#column].
+    ///
+    public Prop3(final String name, final ISource3 source, final PropType type) {
+        this(name, source.id(), source.column(name), type);
     }
 
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        return source.column(name);
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + name.hashCode();
-        result = prime * result + source.id().hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof Prop3 that
-                  && name.equals(that.name)
-                  && source.id().equals(that.source.id())
-                  && super.equals(that);
+        return column;
     }
 
     @Override
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString)
                 .add("name", name)
-                .add("source", source);
+                .add("source", sourceId);
     }
 
 }

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.queries;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage3.INode3;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
@@ -16,11 +17,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.Predicates.or;
 import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
 import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 
-public abstract class AbstractQuery3 implements ToString.IFormattable {
+public abstract class AbstractQuery3 implements ToString.IFormattable, INode3 {
 
     public final Optional<IJoinNode3> maybeJoinRoot;
     public final Conditions3 whereConditions;
@@ -47,27 +47,10 @@ public abstract class AbstractQuery3 implements ToString.IFormattable {
         sb.append(yields.sql(metadata, dbVersion, expectedYieldTypes));
         sb.append(maybeJoinRoot.map(joinRoot -> "\nFROM\n" + joinRoot.sql(metadata, dbVersion))
                           .orElseGet(() -> dbVersion == ORACLE ? " FROM DUAL " : ""));
-        sb.append(whereConditions != null ? "\nWHERE " + whereConditions.sql(metadata, dbVersion) : "");
-        sb.append(groups != null && !groups.isEmpty() ? "\nGROUP BY " + groups.sql(metadata, dbVersion) : "");
-        sb.append(orderings != null && !orderings.isEmpty() ? "\nORDER BY " + orderings.sql(metadata, dbVersion, this) : "");
+        sb.append(!whereConditions.isEmpty() ? "\nWHERE " + whereConditions.sql(metadata, dbVersion) : "");
+        sb.append(!groups.isEmpty() ? "\nGROUP BY " + groups.sql(metadata, dbVersion) : "");
+        sb.append(!orderings.isEmpty() ? "\nORDER BY " + orderings.sql(metadata, dbVersion, this) : "");
         return sb.toString();
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(yields, orderings, groups, whereConditions, maybeJoinRoot, resultType);
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof AbstractQuery3 that
-                  && Objects.equals(maybeJoinRoot, that.maybeJoinRoot)
-                  && Objects.equals(yields, that.yields)
-                  && Objects.equals(whereConditions, that.whereConditions)
-                  && Objects.equals(groups, that.groups)
-                  && Objects.equals(orderings, that.orderings)
-                  && Objects.equals(resultType, that.resultType);
     }
 
     public static boolean isTopLevelQuery(final AbstractQuery3 query) {
@@ -88,10 +71,10 @@ public abstract class AbstractQuery3 implements ToString.IFormattable {
         return format.toString(this)
                 .add("resultType", resultType)
                 .addIfPresent("join", maybeJoinRoot)
-                .addIfNot("where", whereConditions, or(Objects::isNull, Conditions3::isEmpty))
-                .addIfNot("yields", yields, or(Objects::isNull, Yields3::isEmpty))
-                .addIfNot("groups", groups, or(Objects::isNull, GroupBys3::isEmpty))
-                .addIfNot("orderings", orderings, or(Objects::isNull, OrderBys3::isEmpty))
+                .addIfNot("where", whereConditions, Conditions3::isEmpty)
+                .addIfNot("yields", yields, Yields3::isEmpty)
+                .addIfNot("groups", groups, GroupBys3::isEmpty)
+                .addIfNot("orderings", orderings, OrderBys3::isEmpty)
                 .pipe(this::addToString)
                 .$();
     }

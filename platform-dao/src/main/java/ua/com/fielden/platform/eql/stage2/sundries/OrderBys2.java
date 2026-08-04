@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.fluent.Limit;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
+import ua.com.fielden.platform.eql.stage3.sundries.IOrderBy3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 import ua.com.fielden.platform.utils.ToString;
@@ -57,10 +57,10 @@ public record OrderBys2 (List<OrderBy2> orderBys, Limit limit, long offset) impl
             return new TransformationResultFromStage2To3<>(null, context);
         }
         
-        final var transformed = ImmutableList.<OrderBy3>builder();
+        final var transformed = ImmutableList.<IOrderBy3>builder();
         TransformationContextFromStage2To3 currentContext = context;
         for (final OrderBy2 orderBy : orderBys) {
-            final TransformationResultFromStage2To3<OrderBy3> orderByTr = orderBy.transform(currentContext, yields);
+            final TransformationResultFromStage2To3<IOrderBy3> orderByTr = orderBy.transform(currentContext, yields);
             transformed.add(orderByTr.item);
             currentContext = orderByTr.updatedContext;
         }

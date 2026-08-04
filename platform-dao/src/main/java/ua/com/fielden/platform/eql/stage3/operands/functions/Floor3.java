@@ -20,16 +20,4 @@ public class Floor3 extends SingleOperandFunction3 {
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return "FLOOR(%s)".formatted(operand.sql(metadata, dbVersion));
     }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        final int result = super.hashCode();
-        return prime * result + Floor3.class.getName().hashCode();
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj || super.equals(obj) && obj instanceof Floor3;
-    }
 }

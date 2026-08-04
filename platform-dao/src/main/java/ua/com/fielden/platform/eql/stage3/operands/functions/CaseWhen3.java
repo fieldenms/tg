@@ -13,7 +13,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.eql.stage3.utils.TypeCastToSql.typeCastToSql;
@@ -26,22 +26,27 @@ public class CaseWhen3 extends AbstractFunction3 {
 
     public CaseWhen3(final List<T2<ICondition3, ISingleOperand3>> whenThenPairs, final ISingleOperand3 elseOperand, final ITypeCast typeCast, final PropType type) {
         super(type);
+        if (whenThenPairs.isEmpty()) {
+            throw new EqlStage3ProcessingException("[whenThenPairs] must not be empty.");
+        }
         this.whenThenPairs = ImmutableList.copyOf(whenThenPairs);
         this.elseOperand = elseOperand;
         this.typeCast = typeCast;
         validateSelf();
     }
 
+    /// Non-empty list of when-then pairs.
+    ///
     public List<T2<ICondition3, ISingleOperand3>> whenThenPairs() {
         return whenThenPairs;
     }
 
-    public @Nullable ISingleOperand3 elseOperand() {
-        return elseOperand;
+    public Optional<ISingleOperand3> elseOperand() {
+        return Optional.ofNullable(elseOperand);
     }
 
-    public @Nullable ITypeCast typeCast() {
-        return typeCast;
+    public Optional<ITypeCast> typeCast() {
+        return Optional.ofNullable(typeCast);
     }
 
     public CaseWhen3 update(
@@ -95,26 +100,6 @@ public class CaseWhen3 extends AbstractFunction3 {
     private Stream<ISingleOperand3> streamAllOperands() {
         final Stream<ISingleOperand3> thens = whenThenPairs.stream().map(pair -> pair._2);
         return elseOperand == null ? thens : Stream.concat(thens, Stream.of(elseOperand));
-    }
-    
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ((elseOperand == null) ? 0 : elseOperand.hashCode());
-        result = prime * result + ((typeCast == null) ? 0 : typeCast.hashCode());
-        result = prime * result + whenThenPairs.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof CaseWhen3 that
-                  && Objects.equals(whenThenPairs, that.whenThenPairs)
-                  && Objects.equals(elseOperand, that.elseOperand)
-                  && Objects.equals(typeCast, that.typeCast)
-                  && super.equals(that);
     }
 
     @Override

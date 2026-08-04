@@ -22,16 +22,4 @@ public class RoundTo3 extends TwoOperandsFunction3 {
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return format("ROUND(%s, %s)", operand1.sql(metadata, dbVersion), operand2.sql(metadata, dbVersion));
     }
-    
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        final int result = super.hashCode();
-        return prime * result + RoundTo3.class.getName().hashCode();
-    }
-    
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj || super.equals(obj) && obj instanceof RoundTo3;
-    }
 }

@@ -25,6 +25,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNullElseGet;
+
 public abstract class AbstractQuery2 implements ToString.IFormattable {
 
     public final Optional<IJoinNode2<? extends IJoinNode3>> maybeJoinRoot;
@@ -87,7 +89,12 @@ public abstract class AbstractQuery2 implements ToString.IFormattable {
         final TransformationResultFromStage2To3<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
         final TransformationResultFromStage2To3<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext, yieldsTr.item);
 
-        final var qc = new QueryComponents3(Optional.ofNullable(joinRootTr.item), whereConditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
+        final var qc = new QueryComponents3(
+                Optional.ofNullable(joinRootTr.item),
+                requireNonNullElseGet(whereConditionsTr.item, Conditions3::empty),
+                yieldsTr.item,
+                requireNonNullElseGet(groupsTr.item, GroupBys3::empty),
+                requireNonNullElseGet(orderingsTr.item, OrderBys3::empty));
         final var qcTr = AggregateOperandMaterialiser.INSTANCE.apply(qc, orderingsTr.updatedContext);
         return qcTr.item != null
                 ? qcTr

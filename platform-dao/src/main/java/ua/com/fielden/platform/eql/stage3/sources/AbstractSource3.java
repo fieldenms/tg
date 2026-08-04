@@ -7,7 +7,6 @@ import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Map;
-import java.util.Objects;
 
 public abstract class AbstractSource3 implements ISource3, ToString.IFormattable {
     public final String sqlAlias;
@@ -68,25 +67,6 @@ public abstract class AbstractSource3 implements ISource3, ToString.IFormattable
         }
 
         return null;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + id.hashCode();
-        result = prime * result + sqlAlias.hashCode();
-        result = prime * result + columns.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj
-               || obj instanceof AbstractSource3 that
-                  && Objects.equals(sqlAlias, that.sqlAlias)
-                  && Objects.equals(id, that.id)
-                  && Objects.equals(columns, that.columns);
     }
 
     @Override

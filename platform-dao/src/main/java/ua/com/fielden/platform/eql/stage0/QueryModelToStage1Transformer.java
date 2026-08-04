@@ -35,6 +35,22 @@ public class QueryModelToStage1Transformer {
     public final IFilter filter;
     private final Optional<String> username;
     private final Map<String, Object> paramValues = new HashMap<>();
+    // TODO Extract source ID generation into a standalone generator class.
+    private int sourceId;
+
+    public QueryModelToStage1Transformer(
+            final IFilter filter,
+            final Optional<String> username,
+            final QueryNowValue nowValue,
+            final Map<String, Object> paramValues,
+            final int initSourceId)
+    {
+        this.filter = filter;
+        this.username = username;
+        this.nowValue = nowValue;
+        this.paramValues.putAll(paramValues);
+        this.sourceId = initSourceId;
+    }
 
     public QueryModelToStage1Transformer(
             final IFilter filter,
@@ -42,17 +58,12 @@ public class QueryModelToStage1Transformer {
             final QueryNowValue nowValue,
             final Map<String, Object> paramValues)
     {
-        this.filter = filter;
-        this.username = username;
-        this.nowValue = nowValue;
-        this.paramValues.putAll(paramValues);
+        this(filter, username, nowValue, paramValues, 0);
     }
 
     public QueryModelToStage1Transformer() {
-        this(null, Optional.empty(), null, emptyMap());
+        this(null, Optional.empty(), null, emptyMap(), 0);
     }
-
-    private int sourceId = 0;
 
     public int nextSourceId() {
         sourceId = sourceId + 1;

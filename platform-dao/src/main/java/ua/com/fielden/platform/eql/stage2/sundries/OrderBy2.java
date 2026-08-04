@@ -8,7 +8,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
-import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
+import ua.com.fielden.platform.eql.stage3.sundries.IOrderBy3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 import ua.com.fielden.platform.utils.ToString;
 
@@ -30,12 +30,12 @@ public record OrderBy2 (@Nullable ISingleOperand2<? extends ISingleOperand3> ope
         this(null, yieldName, isDesc);
     }
 
-    public TransformationResultFromStage2To3<OrderBy3> transform(final TransformationContextFromStage2To3 context, final Yields3 yields) {
+    public TransformationResultFromStage2To3<IOrderBy3> transform(final TransformationContextFromStage2To3 context, final Yields3 yields) {
         if (operand != null) {
             final TransformationResultFromStage2To3<? extends ISingleOperand3> operandTr = operand.transform(context);
-            return new TransformationResultFromStage2To3<>(new OrderBy3(operandTr.item, isDesc), operandTr.updatedContext);
+            return new TransformationResultFromStage2To3<>(new IOrderBy3.Operand(operandTr.item, isDesc), operandTr.updatedContext);
         } else {
-            return new TransformationResultFromStage2To3<>(new OrderBy3(yields.yieldsMap().get(yieldName), isDesc), context);
+            return new TransformationResultFromStage2To3<>(new IOrderBy3.Yield(yieldName, yields.yieldsMap().get(yieldName).column(), isDesc), context);
         }
     }
 
