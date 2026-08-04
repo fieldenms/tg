@@ -23,6 +23,7 @@ import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.IOrderBy3;
+import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 
@@ -204,8 +205,8 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
                 new QueryComponents3(Optional.of(new JoinLeafNode3(fuelUsageSource)),
                                      cond(eq(entityProp("vehicle", fuelUsageSource, TgVehicle.class), idProp(vehicleSource))),
                                      yields(yieldWithoutAlias(new Value3(null, NULL_TYPE), NULL_TYPE)),
-                                     null,
-                                     null));
+                                     GroupBys3.empty(),
+                                     OrderBys3.empty()));
 
         // `sumOfPrices` is calculated as `1 * price.amount + purchasePrice.amount`, so it is materialised as that expression.
         final var sumOfPrices = new Expression3(new Value3(1, INTEGER_PROP_TYPE),
@@ -351,7 +352,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_doubleQty),
-                                 (GroupBys3) null,
+                                 GroupBys3.empty(),
                                  orders(topOrder));
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
@@ -1044,8 +1045,8 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
                                      or(and(eq(entityProp("vehicle", laterFuelUsageSource, TgVehicle.class), entityProp("vehicle", fuelUsageSource, TgVehicle.class)),
                                             gt(prop("date", laterFuelUsageSource, DATETIME_PROP_TYPE), prop("date", fuelUsageSource, DATETIME_PROP_TYPE)))),
                                      yields(yieldWithoutAlias(new Value3(null, NULL_TYPE), NULL_TYPE)),
-                                     null,
-                                     null));
+                                     GroupBys3.empty(),
+                                     OrderBys3.empty()));
         final var lastFuelUsageQty = subqry(
                 new JoinLeafNode3(fuelUsageSource),
                 or(and(eq(entityProp("vehicle", fuelUsageSource, TgVehicle.class), idProp(vehicleSource)),
@@ -1264,8 +1265,8 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
                                      or(and(eq(entityProp("vehicle", laterFuelUsageSource, TgVehicle.class), entityProp("vehicle", fuelUsageSource, TgVehicle.class)),
                                             gt(prop("date", laterFuelUsageSource, DATETIME_PROP_TYPE), prop("date", fuelUsageSource, DATETIME_PROP_TYPE)))),
                                      yields(yieldWithoutAlias(new Value3(null, NULL_TYPE), NULL_TYPE)),
-                                     null,
-                                     null));
+                                     GroupBys3.empty(),
+                                     OrderBys3.empty()));
 
         // The whole sub-query: the `qty` of this vehicle's fuel usage that has no later fuel usage.
         final var lastFuelUsageQty = subqry(
@@ -1313,8 +1314,8 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
                                      or(and(eq(entityProp("vehicle", laterFuelUsageSource, TgVehicle.class), entityProp("vehicle", fuelUsageSource, TgVehicle.class)),
                                             gt(prop("date", laterFuelUsageSource, DATETIME_PROP_TYPE), prop("date", fuelUsageSource, DATETIME_PROP_TYPE)))),
                                      yields(yieldWithoutAlias(new Value3(null, NULL_TYPE), NULL_TYPE)),
-                                     null,
-                                     null));
+                                     GroupBys3.empty(),
+                                     OrderBys3.empty()));
 
         // `lastFuelUsageQty`: the `qty` of this vehicle's fuel usage that has no later fuel usage.
         final var lastFuelUsageQty = subqry(

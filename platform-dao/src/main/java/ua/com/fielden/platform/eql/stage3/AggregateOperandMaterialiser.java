@@ -211,7 +211,7 @@ public final class AggregateOperandMaterialiser {
         if (context.dbVersion() != DbVersion.MSSQL) {
             return skipTransformation(context);
         }
-        if (qc.maybeJoinRoot().isEmpty() || qc.yields() == null || qc.yields().isEmpty()) {
+        if (qc.maybeJoinRoot().isEmpty() || qc.yields().isEmpty()) {
             return skipTransformation(context);
         }
         final var origJoin = qc.maybeJoinRoot().get();
@@ -222,7 +222,7 @@ public final class AggregateOperandMaterialiser {
 
         final List<ISingleOperand3> yieldAndOrderingOperands = StreamUtils.concat(
                         origYields.getYields().stream().map(Yield3::operand),
-                        origOrderings == null ? Stream.of() : IOrderBy3.onlyOperands(origOrderings.list().stream()).map(IOrderBy3.Operand::operand))
+                        IOrderBy3.onlyOperands(origOrderings.list().stream()).map(IOrderBy3.Operand::operand))
                 .toList();
         // The transformation is applicable only to queries that yield or order by an aggregation.
         // In particular, group-by operands alone do not trigger the transformation, regardless of their complexity.
@@ -232,7 +232,7 @@ public final class AggregateOperandMaterialiser {
 
         final Set<ISingleOperand3> operandsToMaterialise = StreamUtils.concat(
                         yieldAndOrderingOperands.stream().flatMap(this::extractAggregatedExpressions),
-                        origGroups == null ? Stream.of() : origGroups.groups().stream().map(GroupBy3::operand))
+                        origGroups.groups().stream().map(GroupBy3::operand))
                 .collect(toCollection(LinkedHashSet::new));
         if (operandsToMaterialise.isEmpty() || operandsToMaterialise.stream().allMatch(AggregateOperandMaterialiser::isPersistentProperty)) {
             return skipTransformation(context);
@@ -248,8 +248,8 @@ public final class AggregateOperandMaterialiser {
 
         final var sJoin = origJoin;
         final var sWhere = origWhere;
-        final GroupBys3 sGroups = null;
-        final OrderBys3 sOrderings = null;
+        final GroupBys3 sGroups = GroupBys3.empty();
+        final OrderBys3 sOrderings = OrderBys3.empty();
         final var createYieldsResult = createYields(operandsAndAliases, context);
         final var sYields = new Yields3(createYieldsResult.item);
         final var context2 = createYieldsResult.updatedContext;
@@ -263,18 +263,18 @@ public final class AggregateOperandMaterialiser {
                 .collect(Collectors.toMap(T2::_1,
                                           t2 -> t2.map((rand, alias) -> () -> new Prop3(alias, topSource, rand.type()))));
 
-        final Conditions3 topConditions = null;
+        final Conditions3 topConditions = Conditions3.empty();
         final var topYields = new Yields3(
                 origYields.getYields()
                         .stream()
                         .map(y -> replaceAll(y, replacements))
                         .toList());
-        final var topGroups = origGroups == null ? null : new GroupBys3(
+        final var topGroups = new GroupBys3(
                 origGroups.groups()
                         .stream()
                         .map(g -> replaceAll(g, replacements))
                         .toList());
-        final var topOrders = origOrderings == null ? null : origOrderings.updateOrderBys(
+        final var topOrders = origOrderings.updateOrderBys(
                 origOrderings.list()
                         .stream()
                         .map(o -> replaceAll(o, replacements))
