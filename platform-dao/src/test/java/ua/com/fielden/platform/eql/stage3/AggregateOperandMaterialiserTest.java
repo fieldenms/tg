@@ -98,7 +98,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     /// A group-by key that is also yielded as a non-aggregate property is materialised once (as `c2`) and referenced by
@@ -141,7 +141,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -174,7 +174,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -229,7 +229,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -269,7 +269,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql, order);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -309,7 +309,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     /// An aggregation within an order-by has its argument materialised, just like an aggregation within a yield.
@@ -356,7 +356,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql, order);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     /// An aggregation occurring only in an order-by (with none in the yields) makes the query eligible for the
@@ -403,7 +403,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql, order);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -417,7 +417,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var actual = qry(query);
         AggregateOperandMaterialiser.enabled = false;
         final var expected = qry(query);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     /// Group-by operands alone do not make a query eligible for the transformation, regardless of their complexity.
@@ -433,7 +433,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var actual = qry(query);
         AggregateOperandMaterialiser.enabled = false;
         final var expected = qry(query);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -448,7 +448,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var actual = qry(query);
         AggregateOperandMaterialiser.enabled = false;
         final var expected = qry(query);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     /// A query may yield an aggregation over a persistent property (`sum(qty)`) alongside an aggregation over a
@@ -494,7 +494,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -531,7 +531,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -573,7 +573,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     // The following tests cover the rewriting of source properties referenced within the conditions of a `caseWhen`.
@@ -626,7 +626,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -674,7 +674,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -721,7 +721,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -768,7 +768,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -815,7 +815,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     // The following tests cover `concatOf`, whose intra-aggregate `order by` may reference properties that appear
@@ -858,7 +858,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     /// The `concatOf` aggregates over a persistent property (`qty`) and orders by another persistent property (`date`).
@@ -905,7 +905,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -943,7 +943,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         // The group-by sub-query: the number of this vehicle's fuel usages.
         final var countFuelUsageSubQry = subqry(new JoinLeafNode3(fuelUsageSource),
                                                 cond(eq(entityProp("vehicle", fuelUsageSource, TgVehicle.class), idProp(vehicleSource))),
-                                                yields(yieldWithoutAlias(CountAll3.INSTANCE, INTEGER_PROP_TYPE)),
+                                                yields(yieldWithoutAlias(new CountAll3(), INTEGER_PROP_TYPE)),
                                                 INTEGER_PROP_TYPE);
 
         final var srcQry = srcqry(new JoinLeafNode3(vehicleSource),
@@ -963,7 +963,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     /// `count(*)` is an aggregation without an argument: it contributes nothing to materialisation, but it does make
@@ -991,7 +991,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         // The group-by sub-query: the number of this vehicle's fuel usages.
         final var countFuelUsageSubQry = subqry(new JoinLeafNode3(fuelUsageSource),
                                                 cond(eq(entityProp("vehicle", fuelUsageSource, TgVehicle.class), idProp(vehicleSource))),
-                                                yields(yieldWithoutAlias(CountAll3.INSTANCE, INTEGER_PROP_TYPE)),
+                                                yields(yieldWithoutAlias(new CountAll3(), INTEGER_PROP_TYPE)),
                                                 INTEGER_PROP_TYPE);
 
         final var srcQry = srcqry(new JoinLeafNode3(vehicleSource),
@@ -1000,7 +1000,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 3, 6);
         final var prop_c1 = prop("c1", topSource, INTEGER_PROP_TYPE);
-        final var topYield_n = mkYield(CountAll3.INSTANCE, "n", 2);
+        final var topYield_n = mkYield(new CountAll3(), "n", 2);
         final var topGroupBy_c1 = new GroupBy3(prop_c1);
 
         final var expected = qry(new JoinLeafNode3(topSource),
@@ -1009,7 +1009,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -1070,7 +1070,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     // The following tests cover a known limitation: a subquery in a yield (or an order-by) outside of an aggregate
@@ -1112,7 +1112,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var actual = qry(query);
         AggregateOperandMaterialiser.enabled = false;
         final var expected = qry(query);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     /// The yielded subquery contains an aggregation that binds to the top-level source, illustrating a complex case of
@@ -1143,7 +1143,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var actual = qry(query);
         AggregateOperandMaterialiser.enabled = false;
         final var expected = qry(query);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     /// The yielded subquery contains an aggregation that binds to the top-level source, illustrating a complex case of
@@ -1173,7 +1173,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var actual = qry(query);
         AggregateOperandMaterialiser.enabled = false;
         final var expected = qry(query);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     /// A subquery in an order-by (outside of an aggregate argument) prevents the transformation for the same reason
@@ -1240,7 +1240,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -1288,7 +1288,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -1342,7 +1342,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -1387,7 +1387,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     @Test
@@ -1427,7 +1427,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
-        assertQueryEquals(expected, actual);
+        assertStructEq(expected, actual);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
