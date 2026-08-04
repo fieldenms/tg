@@ -6,6 +6,9 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
+import java.util.Objects;
+import java.util.stream.Stream;
+
 public sealed interface IOrderBy3 extends ToString.IFormattable, INode3 {
 
     String DESC = " DESC", ASC = " ASC";
@@ -59,6 +62,10 @@ public sealed interface IOrderBy3 extends ToString.IFormattable, INode3 {
                     .add("isDesc", isDesc)
                     .$();
         }
+    }
+
+    static Stream<Operand> onlyOperands(final Stream<? extends IOrderBy3> stream) {
+        return stream.map(orderBy -> orderBy instanceof Operand o ? o : null).filter(Objects::nonNull);
     }
 
 }

@@ -46,7 +46,7 @@ public record OrderBys3 (List<IOrderBy3> list, Limit limit, long offset) impleme
 
     /// Returns a new instance with the order-by list replaced by `newList`, preserving `limit` and `offset`.
     ///
-    public OrderBys3 updateOrderBys(final List<OrderBy3> newList) {
+    public OrderBys3 updateOrderBys(final List<IOrderBy3> newList) {
         return newList == this.list ? this : new OrderBys3(newList, limit, offset);
     }
 

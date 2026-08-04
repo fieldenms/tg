@@ -22,7 +22,7 @@ import ua.com.fielden.platform.eql.stage3.sources.JoinLeafNode3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
-import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
+import ua.com.fielden.platform.eql.stage3.sundries.IOrderBy3;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 
@@ -265,7 +265,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_avgPrice),
                                  groups(topGroupBy_c2),
-                                 orders(new OrderBy3(topYield_avgPrice, true)));
+                                 orders(new IOrderBy3.Yield(topYield_avgPrice.alias(), topYield_avgPrice.column(), true)));
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql, order);
@@ -305,7 +305,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_avgPrice),
                                  groups(topGroupBy_c2),
-                                 orders(new OrderBy3(topYield_avgPrice, true)));
+                                 orders(new IOrderBy3.Yield(topYield_avgPrice.alias(), topYield_avgPrice.column(), true)));
 
         AggregateOperandMaterialiser.setAliasGenerator(() -> mkAliasGenerator());
         final var actual = qry(actualEql);
@@ -347,7 +347,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, BIGDECIMAL_PROP_TYPE);
         final var topYield_doubleQty = mkYield(new SumOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "doubleQty", 2);
-        final var topOrder = new OrderBy3(new Expression3(new MaxOf3(prop_c2, BIGDECIMAL_PROP_TYPE), List.of(), BIGDECIMAL_PROP_TYPE), false);
+        final var topOrder = new IOrderBy3.Operand(new Expression3(new MaxOf3(prop_c2, BIGDECIMAL_PROP_TYPE), List.of(), BIGDECIMAL_PROP_TYPE), false);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_doubleQty),
@@ -394,7 +394,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var prop_c2 = prop("c2", topSource, DATETIME_PROP_TYPE);
         final var topYield_d = mkYield(prop_c2, "d", 2);
         final var topGroupBy_c2 = new GroupBy3(prop_c2);
-        final var topOrder = new OrderBy3(new Expression3(new MaxOf3(prop_c1, BIGDECIMAL_PROP_TYPE), List.of(), BIGDECIMAL_PROP_TYPE), true);
+        final var topOrder = new IOrderBy3.Operand(new Expression3(new MaxOf3(prop_c1, BIGDECIMAL_PROP_TYPE), List.of(), BIGDECIMAL_PROP_TYPE), true);
 
         final var expected = qry(new JoinLeafNode3(topSource),
                                  yields(topYield_d),
@@ -565,7 +565,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, STRING_PROP_TYPE);
         final var topYield_cost = mkYield(new SumOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "cost", 2);
-        final var topYield_keys = mkYield(new ConcatOf3(prop_c2, new Value3(" ", "P_1", STRING_PROP_TYPE), STRING_PROP_TYPE, List.of(new OrderBy3(prop_c2, false))),
+        final var topYield_keys = mkYield(new ConcatOf3(prop_c2, new Value3(" ", "P_1", STRING_PROP_TYPE), STRING_PROP_TYPE, List.of(new IOrderBy3.Operand(prop_c2, false))),
                                              "keys", 3);
 
         final var expected = qry(new JoinLeafNode3(topSource),
@@ -850,7 +850,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var topSource = new Source3BasedOnQueries(List.of(srcQry), 2, 5);
         final var prop_c1 = prop("c1", topSource, LONG_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, DATETIME_PROP_TYPE);
-        final var topYield_prices = mkYield(new ConcatOf3(prop_c1, new Value3(", ", "P_1", STRING_PROP_TYPE), STRING_PROP_TYPE, List.of(new OrderBy3(prop_c2, false))),
+        final var topYield_prices = mkYield(new ConcatOf3(prop_c1, new Value3(", ", "P_1", STRING_PROP_TYPE), STRING_PROP_TYPE, List.of(new IOrderBy3.Operand(prop_c2, false))),
                                                "ids", 2);
 
         final var expected = qry(new JoinLeafNode3(topSource),
@@ -896,7 +896,7 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         final var prop_c1 = prop("c1", topSource, BIGDECIMAL_PROP_TYPE);
         final var prop_c2 = prop("c2", topSource, BIGDECIMAL_PROP_TYPE);
         final var prop_c3 = prop("c3", topSource, DATETIME_PROP_TYPE);
-        final var topYield_qtys = mkYield(new ConcatOf3(prop_c2, new Value3(", ", "P_1", STRING_PROP_TYPE), STRING_PROP_TYPE, List.of(new OrderBy3(prop_c3, false))),
+        final var topYield_qtys = mkYield(new ConcatOf3(prop_c2, new Value3(", ", "P_1", STRING_PROP_TYPE), STRING_PROP_TYPE, List.of(new IOrderBy3.Operand(prop_c3, false))),
                                              "qtys", 3);
         final var topYield_doubleSum = mkYield(new SumOf3(prop_c1, false, BIGDECIMAL_PROP_TYPE), "doubleSum", 2);
 

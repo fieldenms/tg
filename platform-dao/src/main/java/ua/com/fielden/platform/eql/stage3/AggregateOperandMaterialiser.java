@@ -114,7 +114,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
 ///
 /// `Wt = empty` -- conditions are applied in `St`.
 ///
-/// `Ot = [transform(o) for o in O]`, and, for each `o`, if `o` references a yield from `Y`, replace it with a corresponding yield (based on alias) from `Yt`.
+/// `Ot = [transform(o) for o in O]`
 ///
 /// `Gt = [transform(g) for g in G]`
 ///
@@ -222,7 +222,7 @@ public final class AggregateOperandMaterialiser {
 
         final List<ISingleOperand3> yieldAndOrderingOperands = StreamUtils.concat(
                         origYields.getYields().stream().map(Yield3::operand),
-                        origOrderings == null ? Stream.of() : origOrderings.list().stream().map(OrderBy3::operand).filter(Objects::nonNull))
+                        origOrderings == null ? Stream.of() : IOrderBy3.onlyOperands(origOrderings.list().stream()).map(IOrderBy3.Operand::operand))
                 .toList();
         // The transformation is applicable only to queries that yield or order by an aggregation.
         // In particular, group-by operands alone do not trigger the transformation, regardless of their complexity.
@@ -277,8 +277,7 @@ public final class AggregateOperandMaterialiser {
         final var topOrders = origOrderings == null ? null : origOrderings.updateOrderBys(
                 origOrderings.list()
                         .stream()
-                        // If an order by referenced a yield, the old yield has to be replaced with a new one.
-                        .map(o -> replaceYield(replaceAll(o, replacements), topYields))
+                        .map(o -> replaceAll(o, replacements))
                         .toList());
         return new TransformationResultFromStage2To3<>(new QueryComponents3(Optional.of(new JoinLeafNode3(topSource)), topConditions, topYields, topGroups, topOrders), context3);
     }
@@ -325,7 +324,7 @@ public final class AggregateOperandMaterialiser {
             // concatOf: extract the aggregated expression and the ordering items.
             // The ordering items may reference properties of the source, hence have to be materialised.
             // The separator is always a constant, hence does not have to be materialised.
-            case ConcatOf3 it -> StreamUtils.concat(Stream.of(it.operand1), it.orderItems.stream().map(OrderBy3::operand).filter(Objects::nonNull));
+            case ConcatOf3 it -> StreamUtils.concat(Stream.of(it.operand1), IOrderBy3.onlyOperands(it.orderItems.stream()).map(IOrderBy3.Operand::operand));
             // `COUNT(*)` has no argument.
             case CountAll3 _ -> Stream.empty();
             default -> streamChildren(node).flatMap(this::extractAggregatedExpressions);
@@ -366,7 +365,7 @@ public final class AggregateOperandMaterialiser {
             case CaseWhen3 it -> it.whenThenPairs().stream()
                                          .anyMatch(pair -> pair.map((when, then) -> hasUnmaterialisedSubQuery(when, materialised)
                                                                                     || hasUnmaterialisedSubQuery(then, materialised)))
-                                 || it.elseOperand() != null && hasUnmaterialisedSubQuery(it.elseOperand(), materialised);
+                                 || it.elseOperand().isPresent() && hasUnmaterialisedSubQuery(it.elseOperand().get(), materialised);
             default -> streamChildren(node).anyMatch(child -> hasUnmaterialisedSubQuery(child, materialised));
         };
     }
@@ -394,23 +393,11 @@ public final class AggregateOperandMaterialiser {
         return groupBy.setOperand(newOperand);
     }
 
-    private OrderBy3 replaceAll(final OrderBy3 orderBy, final Map<? extends ISingleOperand3, Supplier<? extends ISingleOperand3>> replacements) {
-        if (orderBy.operand() != null) {
-            final var newOperand = replace(orderBy.operand(), replacements);
-            return orderBy.setOperand(newOperand);
-        }
-        else {
-            return orderBy;
-        }
-    }
-
-    private OrderBy3 replaceYield(final OrderBy3 orderBy3, final Yields3 yields) {
-        if (orderBy3.yield() != null) {
-            return orderBy3.setYield(yields.yieldsMap().getOrDefault(orderBy3.yield().alias(), orderBy3.yield()));
-        }
-        else {
-            return orderBy3;
-        }
+    private IOrderBy3 replaceAll(final IOrderBy3 orderBy, final Map<? extends ISingleOperand3, Supplier<? extends ISingleOperand3>> replacements) {
+        return switch (orderBy) {
+            case IOrderBy3.Operand operand -> operand.setOperand(replace(operand.operand(), replacements));
+            case IOrderBy3.Yield yield -> yield;
+        };
     }
 
     /*
@@ -481,22 +468,23 @@ public final class AggregateOperandMaterialiser {
             case CaseWhen3 it -> it.update(it.whenThenPairs().stream()
                                                    .map(t2 -> t2.map((when, then) -> t2(replaceChildren(when, replacements), replacements.getOrDefault(then, then))))
                                                    .toList(),
-                                           it.elseOperand() == null ? null : replacements.getOrDefault(it.elseOperand(), it.elseOperand()),
+                                           it.elseOperand().map(elseOp -> replacements.getOrDefault(elseOp, elseOp)),
                                            it.typeCast());
             default -> node;
         };
     }
 
-    private List<OrderBy3> replaceChildren(
-            final List<OrderBy3> orderBys,
+    private List<IOrderBy3> replaceChildren(
+            final List<IOrderBy3> orderBys,
             final Map<ISingleOperand3, ISingleOperand3> replacements)
     {
-        return orderBys.stream().anyMatch(o -> o.operand() != null && replacements.containsKey(o.operand()))
+        return orderBys.stream().anyMatch(orderBy -> orderBy instanceof IOrderBy3.Operand o && replacements.containsKey(o.operand()))
                 ? orderBys.stream()
-                        .map(o -> o.operand() != null && replacements.containsKey(o.operand())
-                                ? o.setOperand(replacements.get(o.operand()))
-                                : o)
-                        .collect(toImmutableList())
+                          .map(orderBy -> switch (orderBy) {
+                              case IOrderBy3.Operand o -> o.setOperand(replacements.getOrDefault(o.operand(), o.operand()));
+                              case IOrderBy3.Yield y -> y;
+                          })
+                          .collect(toImmutableList())
                 : orderBys;
     }
 
@@ -542,7 +530,7 @@ public final class AggregateOperandMaterialiser {
     ///
     private Stream<ISingleOperand3> streamChildren(final ISingleOperand3 node) {
         return switch (node) {
-            case ConcatOf3 it -> StreamUtils.concat(Stream.of(it.operand1, it.operand2), it.orderItems.stream().map(OrderBy3::operand).filter(Objects::nonNull));
+            case ConcatOf3 it -> StreamUtils.concat(Stream.of(it.operand1, it.operand2), IOrderBy3.onlyOperands(it.orderItems.stream()).map(IOrderBy3.Operand::operand));
             case SingleOperandFunction3 it -> Stream.of(it.operand);
             case TwoOperandsFunction3 it -> Stream.of(it.operand1, it.operand2);
             case Expression3 it -> StreamUtils.concat(Stream.of(it.firstOperand), it.otherOperands.stream().map(CompoundSingleOperand3::operand));
@@ -550,7 +538,7 @@ public final class AggregateOperandMaterialiser {
             // Case-when is special: operands within conditions are not immediate children but are included.
             case CaseWhen3 it -> StreamUtils.concat(
                     it.whenThenPairs().stream().flatMap(t2 -> t2.map((when, then) -> StreamUtils.concat(streamChildren(when), Stream.of(then)))),
-                    Optional.ofNullable(it.elseOperand()).stream());
+                    it.elseOperand().stream());
             default -> Stream.empty();
         };
     }
