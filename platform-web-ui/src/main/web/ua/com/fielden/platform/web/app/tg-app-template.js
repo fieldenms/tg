@@ -824,7 +824,7 @@ Polymer({
 
         // Listen for the server-pushed application-version announcement, dispatched on `window` by `tg-event-source.js`.
         // When the server reports a version different from the one this client was loaded with, the user is prompted to reload.
-        window.addEventListener('tg-application-version', event => this._handleAppVersionAnnouncement(event.detail && event.detail.version));
+        window.addEventListener('tg-application-version', event => this._handleAppVersionAnnouncement(event.detail?.version));
     },
 
     attached: function () {
