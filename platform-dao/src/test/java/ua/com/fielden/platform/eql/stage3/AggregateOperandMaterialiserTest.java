@@ -721,6 +721,50 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         assertStructEq(expected, actual);
     }
 
+    // The following tests cover an `exists` subquery, which differs from other subqueries in its stage 3 type
+    // (`SubQueryForExists3` rather than `SubQuery3`) and is reachable from a yield through `caseWhen`.
+    // It must be treated like any other subquery: opaque to analysis, and hence an obstacle to the transformation.
+
+    /// An `exists` subquery in a yield prevents the transformation for the same reason as any other yielded subquery:
+    /// it correlates to the original source, which the outer query would no longer access.
+    ///
+    @Test
+    public void exists_subquery_in_a_yield_alongside_an_aggregation_skips_the_transformation() {
+        final var fuelUsage = select(TgFuelUsage.class).where().prop("vehicle.key").eq().extProp(KEY).model();
+        final var query = select(TgVehicle.class)
+                .groupBy().prop(KEY)
+                .yield().prop(KEY).as("k")
+                .yield().caseWhen().exists(fuelUsage).then().val(1).otherwise().val(0).end().as("hasFuelUsage")
+                // Would trigger the transformation, were the `exists` subquery absent.
+                .yield().sumOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
+
+        final var actual = qry(query);
+        AggregateOperandMaterialiser.enabled = false;
+        final var expected = qry(query);
+        assertStructEq(expected, actual);
+    }
+
+    /// An aggregation within an `exists` subquery belongs to that subquery's level, not to the level of the outer query's
+    /// source, hence it must not make the outer query eligible for the transformation.
+    /// Here the only aggregation is the `sum` inside the `exists` subquery, while the outer query has a non-trivial
+    /// group-by operand that would be materialised were the transformation to apply.
+    ///
+    @Test
+    public void aggregation_within_an_exists_subquery_does_not_trigger_the_transformation() {
+        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().sumOf().prop("qty").modelAsPrimitive();
+        final var query = select(TgVehicle.class)
+                .groupBy().lowerCase().prop("key")
+                .yield().lowerCase().prop("key").as("k")
+                .yield().caseWhen().exists(countFuelUsage).then().val(1).otherwise().val(0).end().as("flag")
+                .modelAsAggregate();
+
+        final var actual = qry(query);
+        AggregateOperandMaterialiser.enabled = false;
+        final var expected = qry(query);
+        assertStructEq(expected, actual);
+    }
+
     /// A subquery in an order-by (outside of an aggregate argument) prevents the transformation for the same reason
     /// as a yielded subquery.
     /// The same query without the order-by is transformed (see `groupBy_a_subquery_that_is_not_yielded_materialises_it_as_a_column`).
