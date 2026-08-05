@@ -640,6 +640,114 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         assertAlphaEq(expected, actual);
     }
 
+    @Test
+    public void subquery_used_in_groupBy_and_part_of_a_yield_is_materialised_under_one_column() {
+        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
+        final var query = select(TgVehicle.class)
+                .groupBy().model(countFuelUsage)
+                .yield().absOf().model(countFuelUsage).as("count")
+                .yield().sumOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
+        final var expectedEql = select(
+                select(TgVehicle.class)
+                        .yield().model(countFuelUsage).as("c2")
+                        .yield().prop("sumOfPrices").as("c1")
+                        .modelAsAggregate()
+        )
+                .groupBy().prop("c2")
+                .yield().absOf().prop("c2").as("count")
+                .yield().sumOf().prop("c1").as("total")
+                .modelAsAggregate();
+
+        final var actual = qry(query);
+        AggregateOperandMaterialiser.enabled = false;
+        final var expected = qry(expectedEql);
+        assertAlphaEq(expected, actual);
+    }
+
+    /// A subquery in an order-by (outside of an aggregate argument) prevents the transformation for the same reason
+    /// as a yielded subquery.
+    /// The same query without the order-by is transformed (see `groupBy_a_subquery_that_is_not_yielded_materialises_it_as_a_column`).
+    ///
+    @Test
+    public void same_subquery_used_in_groupBy_and_orderBy_is_materialised_under_one_column() {
+        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
+        final var actualEql = select(TgVehicle.class)
+                .groupBy().model(countFuelUsage)
+                .orderBy().model(countFuelUsage).desc()
+                .yield().sumOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
+        final var expectedEql = select(
+                select(TgVehicle.class)
+                        .yield().model(countFuelUsage).as("c2")
+                        .yield().prop("sumOfPrices").as("c1")
+                        .modelAsAggregate()
+        )
+                .groupBy().prop("c2")
+                .orderBy().prop("c2").desc()
+                .yield().sumOf().prop("c1").as("total")
+                .modelAsAggregate();
+
+        final var actual = qry(actualEql);
+        AggregateOperandMaterialiser.enabled = false;
+        final var expected = qry(expectedEql);
+        assertAlphaEq(expected, actual);
+    }
+
+    /// A subquery in an order-by (outside of an aggregate argument) prevents the transformation for the same reason
+    /// as a yielded subquery.
+    /// The same query without the order-by is transformed (see `groupBy_a_subquery_that_is_not_yielded_materialises_it_as_a_column`).
+    ///
+    @Test
+    public void subquery_used_in_groupBy_and_part_of_orderBy_is_materialised_under_one_column() {
+        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
+        final var actualEql = select(TgVehicle.class)
+                .groupBy().model(countFuelUsage)
+                .orderBy().absOf().model(countFuelUsage).desc()
+                .yield().sumOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
+        final var expectedEql = select(
+                select(TgVehicle.class)
+                        .yield().model(countFuelUsage).as("c2")
+                        .yield().prop("sumOfPrices").as("c1")
+                        .modelAsAggregate()
+        )
+                .groupBy().prop("c2")
+                .orderBy().absOf().prop("c2").desc()
+                .yield().sumOf().prop("c1").as("total")
+                .modelAsAggregate();
+
+        final var actual = qry(actualEql);
+        AggregateOperandMaterialiser.enabled = false;
+        final var expected = qry(expectedEql);
+        assertAlphaEq(expected, actual);
+    }
+
+    @Test
+    public void same_subquery_used_in_groupBy_and_yield_via_calculated_property_is_materialised_under_one_column() {
+        final var actualEql = select(TgVehicle.class)
+                .groupBy().prop("lastFuelUsageQty")
+                .yield().prop("lastFuelUsageQty").as("qty")
+                .yield().sumOf().prop("sumOfPrices").as("total")
+                .modelAsAggregate();
+        final var expectedEql = select(
+                select(TgVehicle.class)
+                        .yield().prop("lastFuelUsageQty").as("c2")
+                        .yield().prop("sumOfPrices").as("c1")
+                        .modelAsAggregate()
+        )
+                .groupBy().prop("c2")
+                .yield().prop("c2").as("qty")
+                .yield().sumOf().prop("c1").as("total")
+                .modelAsAggregate();
+
+        final var actual = qry(actualEql);
+        AggregateOperandMaterialiser.enabled = false;
+        final var expected = qry(expectedEql);
+        assertAlphaEq(expected, actual);
+    }
+
+
     /// A yielded correlated subquery prevents the transformation: it would keep correlating to the original source,
     /// which the outer query would no longer access.
     ///
@@ -763,59 +871,6 @@ public class AggregateOperandMaterialiserTest extends EqlStage3TestCase {
         AggregateOperandMaterialiser.enabled = false;
         final var expected = qry(query);
         assertStructEq(expected, actual);
-    }
-
-    /// A subquery in an order-by (outside of an aggregate argument) prevents the transformation for the same reason
-    /// as a yielded subquery.
-    /// The same query without the order-by is transformed (see `groupBy_a_subquery_that_is_not_yielded_materialises_it_as_a_column`).
-    ///
-    @Test
-    public void same_subquery_used_in_groupBy_and_orderBy_is_materialised_under_one_column() {
-        final var countFuelUsage = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID).yield().countAll().modelAsPrimitive();
-        final var actualEql = select(TgVehicle.class)
-                .groupBy().model(countFuelUsage)
-                .orderBy().model(countFuelUsage).desc()
-                .yield().sumOf().prop("sumOfPrices").as("total")
-                .modelAsAggregate();
-        final var expectedEql = select(
-                select(TgVehicle.class)
-                        .yield().model(countFuelUsage).as("c2")
-                        .yield().prop("sumOfPrices").as("c1")
-                        .modelAsAggregate()
-                )
-                .groupBy().prop("c2")
-                .orderBy().prop("c2").desc()
-                .yield().sumOf().prop("c1").as("total")
-                .modelAsAggregate();
-
-        final var actual = qry(actualEql);
-        AggregateOperandMaterialiser.enabled = false;
-        final var expected = qry(expectedEql);
-        assertAlphaEq(expected, actual);
-    }
-
-    @Test
-    public void same_subquery_used_in_groupBy_and_yield_via_calculated_property_is_materialised_under_one_column() {
-        final var actualEql = select(TgVehicle.class)
-                .groupBy().prop("lastFuelUsageQty")
-                .yield().prop("lastFuelUsageQty").as("qty")
-                .yield().sumOf().prop("sumOfPrices").as("total")
-                .modelAsAggregate();
-        final var expectedEql = select(
-                select(TgVehicle.class)
-                        .yield().prop("lastFuelUsageQty").as("c2")
-                        .yield().prop("sumOfPrices").as("c1")
-                        .modelAsAggregate()
-                )
-                .groupBy().prop("c2")
-                .yield().prop("c2").as("qty")
-                .yield().sumOf().prop("c1").as("total")
-                .modelAsAggregate();
-
-        final var actual = qry(actualEql);
-        AggregateOperandMaterialiser.enabled = false;
-        final var expected = qry(expectedEql);
-        assertAlphaEq(expected, actual);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
