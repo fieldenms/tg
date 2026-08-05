@@ -10,6 +10,19 @@ import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 
+/// The name of the window event that requests a message to be displayed in the application message panel.
+/// The application shell (see `tg-app-template.js`) listens for this event.
+///
+export const SHOW_APP_MESSAGE_EVENT = 'tg-show-app-message';
+
+/// Requests `message` to be displayed in the application message panel.
+/// This works from anywhere in the application, with no need for the caller to have access to the panel.
+/// See `showMessage` for the supported shape of `message`.
+///
+export const showAppMessage = function (message) {
+    window.dispatchEvent(new CustomEvent(SHOW_APP_MESSAGE_EVENT, { detail: message }));
+};
+
 const template = html`
     <style>
         :host {

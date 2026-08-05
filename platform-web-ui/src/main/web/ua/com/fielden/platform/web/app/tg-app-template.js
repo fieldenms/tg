@@ -16,7 +16,7 @@ import '/resources/views/tg-app-menu.js';
 import '/resources/views/tg-app-view.js';
 import '/resources/master/tg-entity-master.js';
 import '/resources/actions/tg-ui-action.js';
-import '/resources/components/tg-message-panel.js';
+import { SHOW_APP_MESSAGE_EVENT } from '/resources/components/tg-message-panel.js';
 import '/resources/components/tg-global-error-handler.js';
 import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 
@@ -827,6 +827,9 @@ Polymer({
         // Listen for the server-pushed application-version announcement, dispatched on `window` by `tg-event-source.js`.
         // When the server reports a version different from the one this client was loaded with, the user is prompted to reload.
         window.addEventListener('tg-application-version', event => this._handleAppVersionAnnouncement(event.detail?.version));
+
+        // Display messages that other parts of the application request to be shown in the message panel.
+        window.addEventListener(SHOW_APP_MESSAGE_EVENT, event => this.$.msgPanel.showMessage(event.detail));
     },
 
     attached: function () {
