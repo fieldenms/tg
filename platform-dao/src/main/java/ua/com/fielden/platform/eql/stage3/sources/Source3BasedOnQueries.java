@@ -35,10 +35,28 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     public final List<SourceQuery3> models;
     
     public Source3BasedOnQueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
+        this(models, "Q_" + sqlId, id);
+    }
+
+    private Source3BasedOnQueries(final List<SourceQuery3> models, final String sqlAlias, final Integer id) {
         // It is sufficient to use just the first model's yields because all models in a list must share the same yield aliases.
         // See YieldInfoNodesGenerator.
-        super("Q_" + sqlId, id, obtainColumnsFromYields(validateModels(models).getFirst().yields.getYields()));
+        super(sqlAlias, id, obtainColumnsFromYields(validateModels(models).getFirst().yields.getYields()));
         this.models = ImmutableList.copyOf(models);
+    }
+
+    /// Returns a copy of this source with [#models] replaced.
+    /// [#sqlAlias] and [#id()] are preserved, as they identify this source: a `Prop3` refers to its source by id, and
+    /// embeds the alias in its column.
+    /// Columns are re-derived from the yields of `models`.
+    ///
+    public Source3BasedOnQueries update(final List<SourceQuery3> models) {
+        if (models == this.models) {
+            return this;
+        }
+        else {
+            return new Source3BasedOnQueries(models, sqlAlias, id());
+        }
     }
 
     private static List<SourceQuery3> validateModels(final List<SourceQuery3> models) {

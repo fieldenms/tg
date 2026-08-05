@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage3;
 import jakarta.inject.Inject;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /// A facade over the stage-3 AST operations.
@@ -14,17 +15,20 @@ public class Operations {
     private final StructuralEquivalenceVisitor structEq;
     private final AlphaEquivalenceVisitor alphaEq;
     private final NodeCollector nodeCollector;
+    private final UpdateVisitor updateVisitor;
 
     // TODO Make protected once EQL tests are refactored using IoC.
     @Inject
     public Operations(
             final StructuralEquivalenceVisitor structEq,
             final AlphaEquivalenceVisitor alphaEq,
-            final NodeCollector nodeCollector)
+            final NodeCollector nodeCollector,
+            final UpdateVisitor updateVisitor)
     {
         this.structEq = structEq;
         this.alphaEq = alphaEq;
         this.nodeCollector = nodeCollector;
+        this.updateVisitor = updateVisitor;
     }
 
     /// True iff `x` and `y` are structurally equivalent.
@@ -55,6 +59,15 @@ public class Operations {
     @SuppressWarnings("unchecked")
     public <T extends INode3> List<T> collectNodesOfType(final INode3 root, final Class<T> nodeType) {
         return (List<T>) collectNodes(root, nodeType::isInstance);
+    }
+
+    /// Updates the AST rooted at `root` according to `fn`.
+    ///
+    /// @see UpdateVisitor
+    ///
+    public INode3 update(final INode3 root, final Function<? super INode3, INode3> fn) {
+        final UpdateVisitor.State state = fn::apply;
+        return updateVisitor.visit(root, state);
     }
 
 }
