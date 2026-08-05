@@ -146,7 +146,7 @@ Polymer({
         ///
         _messageHandlers: {
             type: Object,
-            value: () => {}
+            value: () => ({})
         }
     },
 
