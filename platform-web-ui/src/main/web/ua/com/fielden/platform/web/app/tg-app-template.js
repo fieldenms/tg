@@ -7,6 +7,8 @@ import '/resources/polymer/@polymer/app-route/app-location.js';
 import '/resources/polymer/@polymer/app-route/app-route.js';
 
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
+// Required for the `Reload` action, used in the application-update message (see `_handleAppVersionAnnouncement`).
+import '/resources/polymer/@polymer/paper-button/paper-button.js';
 
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 
@@ -865,7 +867,17 @@ Polymer({
         const bootAppVersion = window.TG_APP?.appVersion;
         if (serverAppVersion && bootAppVersion && serverAppVersion !== bootAppVersion && serverAppVersion !== this._notifiedAppVersion) {
             this._notifiedAppVersion = serverAppVersion;
-            this.$.msgPanel.showUpdateMessage(serverAppVersion);
+            this.$.msgPanel.showMessage({
+                text: 'Update available.'
+                    + '<paper-button style="font-weight:500" raised class="action" data-tap="reload" tooltip-text="Reload application.">Reload</paper-button>'
+                    + 'now.',
+                tooltip: `New application version ${serverAppVersion} is available. Reload to update.`,
+                // Yellow warning colour, matching the browser-recommendation warning.
+                backgroundColor: "#FFFF8D",
+                handlers: {
+                    reload: () => window.location.reload()
+                }
+            });
         }
     },
     

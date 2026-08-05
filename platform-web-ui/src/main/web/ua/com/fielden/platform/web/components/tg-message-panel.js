@@ -3,11 +3,12 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
-import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+
+import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 
 const template = html`
     <style>
@@ -25,12 +26,11 @@ const template = html`
             @apply --layout-centre-justified;
             @apply --layout-flex;
         }
-        .reload-button {
-            height: 28px;
-            padding: 2px 8px;
-            margin: 0 4px;
-            color: var(--paper-grey-700);
-            font-weight: 500;
+        /* Default appearance of an actionable element in a message, marked with class "action". */
+        /* A message may override this with inline styles. */
+        .mesage-panel .action {
+            height: 22px;
+            color: var(--paper-grey-600);
         }
         .close-button {
             width: 22px;
@@ -45,8 +45,7 @@ const template = html`
             color: var(--paper-grey-400);
         }
     </style>
-    <div class="mesage-panel">[[messageText]]</div>
-    <paper-button hidden="[[!showReload]]" class="reload-button" on-tap="_reloadPage">Reload</paper-button>
+    <div id="messageContainer" class="mesage-panel" on-tap="_handleMessageTap"></div>
     <paper-icon-button class="close-button" icon="icons:cancel" on-tap="_closeMessage" tooltip-text="Close Message"></paper-icon-button>`;
 
 template.setAttribute('strip-whitespace', '');
@@ -118,57 +117,116 @@ Polymer({
     is: "tg-message-panel",
 
     properties: {
-        // Indicates whether the user has dismissed the current message.
+        /// Indicates whether the user has dismissed the current message.
+        ///
         closed: {
             type: Boolean,
             value: false
         },
 
-        // The text displayed by the panel; while empty the panel stays hidden.
+        /// The message displayed by the panel, which may contain HTML markup.
+        /// While empty the panel stays hidden.
+        ///
         messageText: {
             type: String,
-            value: ""
+            value: '',
+            observer: '_messageTextChanged'
         },
 
-        // Whether the Reload button is displayed; enabled for the application-update message.
-        showReload: {
-            type: Boolean,
-            value: false
+        /// The tooltip for the panel as a whole.
+        /// Elements inside a message may carry their own `tooltip-text`, which takes precedence over this one.
+        ///
+        tooltipText: {
+            type: String,
+            value: '',
+            observer: '_tooltipTextChanged'
+        },
+
+        /// Maps the `data-tap` identifiers, used in the current message, to their handler functions.
+        ///
+        _messageHandlers: {
+            type: Object,
+            value: () => {}
         }
     },
 
     observers: ["_updateVisibility(messageText, closed)"],
+
+    /// Makes tooltips work for this panel in its own right, including on pages such as `login.html`.
+    /// Such pages may have no enclosing component to provide tooltip support.
+    ///
+    behaviors: [ TgTooltipBehavior ],
 
     ready: function () {
         // Warn when the browser is not one of the recommended clients.
         const isRecommendedClient = isMobile.any() || isDesktop.isSafari() || isDesktop.isChrome() || isDesktop.isFirefox();
         if (!isRecommendedClient) {
             if (isDesktop.isIE()) {
-                this.messageText = "Application cannot be opened in Internet Explorer. A Chromium based browser is recommended.";
-                this.style.backgroundColor = "#FF8A80";
+                this.showMessage({
+                    text: "Application cannot be opened in Internet Explorer. A Chromium based browser is recommended.",
+                    backgroundColor: "#FF8A80"
+                });
             } else {
-                this.messageText = "Chrome is highly recommended for this application.";
-                this.style.backgroundColor = "#FFFF8D";
+                this.showMessage({
+                    text: "Chrome is highly recommended for this application.",
+                    backgroundColor: "#FFFF8D"
+                });
             }
         }
     },
 
-    /// Displays a dismissible yellow banner prompting the user to reload after a newer application version has been deployed.
+    /// Displays `message` in this panel, replacing whatever was displayed before, and undoes any previous dismissal.
     ///
-    showUpdateMessage: function (version) {
-        this.messageText = `A new application version (${version}) is available. Please reload to update.`;
-        // Yellow warning colour, matching the browser-recommendation warning.
-        this.style.backgroundColor = "#FFFF8D";
-        this.showReload = true;
+    /// `message.text` is the message itself and may contain HTML markup, including inline styles.
+    /// An element in `message.text` becomes actionable by carrying a `data-tap` attribute.
+    /// Its value identifies the handler function in `message.handlers`.
+    /// Such an element may also carry its own `tooltip-text` attribute.
+    ///
+    /// `message.tooltip` is the tooltip for the panel as a whole.
+    /// `message.backgroundColor` is the background colour of the panel, which conveys the severity of the message.
+    ///
+    showMessage: function (message) {
+        const { text = '', tooltip = '', backgroundColor = '', handlers = {} } = message || {};
+        this._messageHandlers = handlers;
+        this.tooltipText = tooltip;
+        this.style.backgroundColor = backgroundColor;
+        this.messageText = text;
         this.closed = false;
     },
 
-    _reloadPage: function (e) {
-        window.location.reload();
+    /// Invokes the handler for the tapped element, identified by its `data-tap` attribute, if there is such a handler.
+    ///
+    _handleMessageTap: function (e) {
+        const path = e.composedPath();
+        // Only the part of the path inside the message is of interest, hence the search stops at the message container.
+        const containerIdx = path.indexOf(this.$.messageContainer);
+        const messagePath = containerIdx >= 0 ? path.slice(0, containerIdx) : path;
+        const actionElement = messagePath.find(node => node.nodeType === Node.ELEMENT_NODE && node.hasAttribute("data-tap"));
+        if (actionElement) {
+            const handler = this._messageHandlers[actionElement.getAttribute("data-tap")];
+            if (handler) {
+                handler(e);
+            }
+        }
     },
 
     _closeMessage: function (e) {
         this.closed = true;
+    },
+
+    _messageTextChanged: function (messageText) {
+        // Guarded because property defaults are applied before the local DOM gets stamped.
+        if (this.$ && this.$.messageContainer) {
+            this.$.messageContainer.innerHTML = messageText || "";
+        }
+    },
+
+    _tooltipTextChanged: function (tooltipText) {
+        if (tooltipText) {
+            this.setAttribute("tooltip-text", tooltipText);
+        } else {
+            this.removeAttribute("tooltip-text");
+        }
     },
 
     _updateVisibility: function (messageText, closed) {
