@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage3;
 import jakarta.inject.Inject;
 
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 /// A facade over the stage-3 AST operations.
@@ -65,7 +65,7 @@ public class Operations {
     ///
     /// @see UpdateVisitor
     ///
-    public INode3 update(final INode3 root, final Function<? super INode3, INode3> fn) {
+    public INode3 update(final INode3 root, final BiFunction<? super INode3, UpdateVisitor.Action, INode3> fn) {
         final UpdateVisitor.State state = fn::apply;
         return updateVisitor.visit(root, state);
     }

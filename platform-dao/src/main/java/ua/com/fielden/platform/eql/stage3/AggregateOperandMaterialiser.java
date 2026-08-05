@@ -7,6 +7,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.conditions.*;
 import ua.com.fielden.platform.eql.stage3.operands.*;
 import ua.com.fielden.platform.eql.stage3.operands.functions.*;
+import ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinLeafNode3;
@@ -18,7 +19,7 @@ import ua.com.fielden.platform.utils.StreamUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -272,7 +273,7 @@ public final class AggregateOperandMaterialiser {
         // column of the source query that materialises it.
         // A node is replaced when it is alpha-equivalent to a materialised operand, so that occurrences differing only
         // in generated source identifiers are replaced by the same materialised column.
-        final Function<INode3, INode3> replace = x -> {
+        final BiFunction<INode3, UpdateVisitor.Action, INode3> replace = (x, k) -> {
             if (x instanceof ISingleOperand3) {
                 for (final var it : operandsAndAliases) {
                     if (operations.alphaEq(it._1, x)) {
@@ -281,11 +282,16 @@ public final class AggregateOperandMaterialiser {
                         // A fresh node is built for each matched occurrence.
                         // Replacing two or more occurrences by the same node would violate the node-uniqueness invariant,
                         // so this construction must not be hoisted out of the update function nor cached.
-                        return new Prop3(alias, topSource, type);
+                        return k.update(new Prop3(alias, topSource, type));
                     }
                 }
             }
-            return x;
+            // We are not analysing subqueries at present.
+            // Do not add `else` -- if the above branch doesn't find anything, it should reach here.
+            if (x instanceof AbstractQuery3) {
+                return k.stop();
+            }
+            return k.descend();
         };
 
         final var topConditions = Conditions3.empty();

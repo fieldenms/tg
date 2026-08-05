@@ -25,13 +25,27 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 /// A unary visitor that implements the _persistent update_ of the AST.
 ///
-/// This visitor accepts an _update function_ that maps a node into another or acts as identity.
+/// This visitor accepts an _update function_ that decides what to do with a node.
 ///
-/// The traversal abides by the following rules:
-/// 1. `N` is the currently visited node, `f` is the update function.
-/// 2. If `f(N) != N` by reference, the visit returns `f(N)`, not descending further.
-/// 3. Otherwise, the visit descends into the children of `N`, which are denoted by `[C]`.
-///    If any `C` in `[C]` was updated (i.e., `C_new != C_old` by reference), `N` is reconstructed with the new children.
+/// In addition to the rules documented in [Action], the following apply:
+///
+/// 1. `x` is the currently visited node, `f(x, k)` is the update function, where `k` is an [Action].
+///
+/// 2. `f` must return by calling `k`.
+///
+/// 3. If `f` calls [Action#descend], the children of `x` are visited, denoted by `[c]`.
+///    If any `c` in `[c]` is updated (i.e., `c_new != c_old` by reference), `x` is reconstructed with the new children.
+///
+///    As a reconstructed `x` is returned by `k`, `f` is able to further inspect it and even update it with [Action#update].
+///    ```
+///    (x, k) -> {
+///      if (x instanceof SumOf3) {
+///        final var newX = (SumOf3) k.descend();               // children rewritten first
+///        return k.update(new IfNull3(newX, zero, newX.type)); // then rewrite the parent
+///      }
+///      return k.descend();
+///    }
+///    ```
 ///
 /// The update is persistent because it maximises sharing -- for any updated node, only the branch leading to it from the root
 /// is replaced, while the rest of the tree is shared.
@@ -50,15 +64,50 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 ///
 public class UpdateVisitor extends AbstractVisitor<INode3, UpdateVisitor.State> {
 
+    public interface Action {
+        /// Update the currently visited node with `newNode`, without descending further.
+        ///
+        INode3 update(INode3 newNode);
+
+        /// Descend into the children of the currently visited node.
+        /// If the node is a leaf, the traversal stops (equivalent to [#stop]).
+        ///
+        /// Returns the visited node itself when nothing beneath it changed, otherwise a reconstruction of the node.
+        /// The type of the returned node is always the same as that of the currently visited node.
+        ///
+        INode3 descend();
+
+        /// Stop the traversal of the current branch.
+        /// E.g., if the currently visited node is [SubQuery3], it will not be updated and its children will not be processed.
+        ///
+        INode3 stop();
+    }
+
     // TODO Make protected once EQL tests are refactored using IoC.
     @Inject
     public UpdateVisitor() {}
 
-    interface State extends Function<INode3, INode3> {}
+    interface State extends BiFunction<INode3, Action, INode3> {}
 
     @Override
     protected INode3 defaultValue(final INode3 node, final State state) {
-        return state.apply(node);
+        return state.apply(node, new Action() {
+            @Override
+            public INode3 update(final INode3 newNode) {
+                return newNode;
+            }
+
+            @Override
+            public INode3 descend() {
+                // Nowhere to descend.
+                return node;
+            }
+
+            @Override
+            public INode3 stop() {
+                return node;
+            }
+        });
     }
 
     /// Undefined for the same reason as specified in [#combine].
@@ -425,16 +474,22 @@ public class UpdateVisitor extends AbstractVisitor<INode3, UpdateVisitor.State> 
     /// was updated.
     ///
     protected <N extends INode3> INode3 update(final N node, final State state, final Function<N, INode3> descend) {
-        // First update the visited node.
-        // If it was updated, use the result, do not descend.
-        final var newNode = state.apply(node);
-        if (node != newNode) {
-            return newNode;
-        }
-        // Otherwise, descend and reconstruct the node only if one of its children was updated.
-        else {
-            return descend.apply(node);
-        }
+        return state.apply(node, new Action() {
+            @Override
+            public INode3 update(final INode3 newNode) {
+                return newNode;
+            }
+
+            @Override
+            public INode3 descend() {
+                return descend.apply(node);
+            }
+
+            @Override
+            public INode3 stop() {
+                return node;
+            }
+        });
     }
 
     /// Generic implementation for arity-1 nodes.
