@@ -283,7 +283,7 @@ public class UpdateVisitor extends AbstractVisitor<INode3, UpdateVisitor.State> 
 
     @Override
     public INode3 concat(final Concat3 node, final State state) {
-        return updateAll(node, node.operands, state, operands -> new Concat3(operands, node.type));
+        return updateAll(node, node.operands(), state, operands -> new Concat3(operands, node.type));
     }
 
     @Override

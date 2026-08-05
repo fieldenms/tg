@@ -317,7 +317,7 @@ public abstract class AbstractVisitor<R, S> {
     // : Other functions
 
     public R concat(final Concat3 node, final S state) {
-        return visitAll(node.operands, state);
+        return visitAll(node.operands(), state);
     }
 
     public R caseWhen(final CaseWhen3 node, final S state) {
