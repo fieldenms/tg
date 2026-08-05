@@ -14,11 +14,6 @@ public abstract class TwoOperandsFunction3 extends AbstractFunction3 {
         this.operand2 = operand2;
     }
 
-    /// Returns a copy of this function with `operand1` and `operand2` replaced.
-    /// Implementations must preserve all other state and the concrete node type.
-    ///
-    public abstract TwoOperandsFunction3 setOperands(ISingleOperand3 operand1, ISingleOperand3 operand2);
-
     @Override
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString)

@@ -14,11 +14,6 @@ public class MinOf3 extends SingleOperandFunction3 {
     }
 
     @Override
-    public MinOf3 setOperand(final ISingleOperand3 operand) {
-        return operand == this.operand ? this : new MinOf3(operand, type);
-    }
-    
-    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return format("MIN(%s)", operand.sql(metadata, dbVersion));
     }

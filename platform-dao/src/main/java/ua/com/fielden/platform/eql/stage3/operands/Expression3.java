@@ -20,15 +20,6 @@ public class Expression3 extends AbstractSingleOperand3 {
         this.otherOperands = items;
     }
 
-    public Expression3 update(final ISingleOperand3 first, final List<CompoundSingleOperand3> items) {
-        if (first == this.firstOperand && items == this.otherOperands) {
-            return this;
-        }
-        else {
-            return new Expression3(first, items, type);
-        }
-    }
-
     public boolean isSingleOperandExpression() {
         return otherOperands.isEmpty();
     }

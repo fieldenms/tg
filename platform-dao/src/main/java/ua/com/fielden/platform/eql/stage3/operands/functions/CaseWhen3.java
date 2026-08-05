@@ -49,17 +49,6 @@ public class CaseWhen3 extends AbstractFunction3 {
         return Optional.ofNullable(typeCast);
     }
 
-    public CaseWhen3 update(
-            final List<T2<ICondition3, ISingleOperand3>> whenThenPairs,
-            final Optional<ISingleOperand3> elseOperand,
-            final Optional<ITypeCast> typeCast)
-    {
-        if (whenThenPairs == this.whenThenPairs && elseOperand.orElse(null) == this.elseOperand && typeCast.orElse(null) == this.typeCast) {
-            return this;
-        }
-        return new CaseWhen3(whenThenPairs, elseOperand.orElse(null), typeCast.orElse(null), type);
-    }
-
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         final StringBuffer sb = new StringBuffer();

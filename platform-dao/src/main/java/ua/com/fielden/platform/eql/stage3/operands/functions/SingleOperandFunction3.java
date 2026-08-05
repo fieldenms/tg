@@ -13,11 +13,6 @@ public abstract class SingleOperandFunction3 extends AbstractFunction3 {
         this.operand = operand;
     }
 
-    /// Returns a copy of this function with `operand` replaced.
-    /// Implementations must preserve all other state and the concrete function type.
-    ///
-    public abstract SingleOperandFunction3 setOperand(final ISingleOperand3 operand);
-
     @Override
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString).add("operand", operand);

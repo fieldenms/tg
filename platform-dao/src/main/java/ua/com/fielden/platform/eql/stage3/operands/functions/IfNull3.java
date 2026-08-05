@@ -7,7 +7,6 @@ import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.sqlCastTypeName;
 
@@ -15,11 +14,6 @@ public class IfNull3 extends TwoOperandsFunction3 {
 
     public IfNull3(final ISingleOperand3 operand1, final ISingleOperand3 operand2, final PropType type) {
         super(operand1, operand2, type);
-    }
-
-    @Override
-    public IfNull3 setOperands(final ISingleOperand3 operand1, final ISingleOperand3 operand2) {
-        return operand1 == this.operand1 && operand2 == this.operand2 ? this : new IfNull3(operand1, operand2, type);
     }
 
     @Override

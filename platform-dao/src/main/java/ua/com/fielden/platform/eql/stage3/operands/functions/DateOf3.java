@@ -14,11 +14,6 @@ public class DateOf3 extends SingleOperandFunction3 {
     }
 
     @Override
-    public DateOf3 setOperand(final ISingleOperand3 operand) {
-        return operand == this.operand ? this : new DateOf3(operand, type);
-    }
-    
-    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return switch (dbVersion) {
             case H2 -> format("CAST(%s AS DATE)", operand.sql(metadata, dbVersion));

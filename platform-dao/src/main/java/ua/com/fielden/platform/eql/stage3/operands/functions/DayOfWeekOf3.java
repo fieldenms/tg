@@ -14,11 +14,6 @@ public class DayOfWeekOf3 extends SingleOperandFunction3 {
     }
 
     @Override
-    public DayOfWeekOf3 setOperand(final ISingleOperand3 operand) {
-        return operand == this.operand ? this : new DayOfWeekOf3(operand, type);
-    }
-    
-    @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return switch (dbVersion) {
             case H2 -> format("ISO_DAY_OF_WEEK(%s)", operand.sql(metadata, dbVersion));

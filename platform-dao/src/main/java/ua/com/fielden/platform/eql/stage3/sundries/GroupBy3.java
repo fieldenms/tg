@@ -8,10 +8,6 @@ import ua.com.fielden.platform.utils.ToString;
 
 public record GroupBy3(ISingleOperand3 operand) implements ToString.IFormattable, INode3 {
 
-    public GroupBy3 setOperand(final ISingleOperand3 operand) {
-        return operand == this.operand ? this : new GroupBy3(operand);
-    }
-
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return operand.sql(metadata, dbVersion);
     }

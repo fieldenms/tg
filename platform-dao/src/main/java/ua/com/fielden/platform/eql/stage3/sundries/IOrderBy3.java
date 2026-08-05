@@ -23,10 +23,6 @@ public sealed interface IOrderBy3 extends ToString.IFormattable, INode3 {
             return (operand.sql(metadata, dbVersion)) + (isDesc ? DESC : ASC);
         }
 
-        public Operand setOperand(final ISingleOperand3 operand) {
-            return operand == this.operand ? this : new Operand(operand, isDesc);
-        }
-
         @Override
         public String toString() {
             return toString(ToString.separateLines());

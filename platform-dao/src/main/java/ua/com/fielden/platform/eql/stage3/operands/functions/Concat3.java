@@ -31,10 +31,6 @@ public class Concat3 extends AbstractFunction3 {
         return operands;
     }
 
-    public Concat3 setOperands(final List<ISingleOperand3> operands) {
-        return operands == this.operands ? this : new Concat3(operands, type);
-    }
-
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         switch (dbVersion) {
