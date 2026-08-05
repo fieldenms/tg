@@ -34,6 +34,7 @@ public class Prop3 extends AbstractSingleOperand3 {
     /// Will be removed together with [#column].
     ///
     public Prop3(final String name, final ISource3 source, final PropType type) {
+        requireNonNull(source);
         this(name, source.id(), source.column(name), type);
     }
 
