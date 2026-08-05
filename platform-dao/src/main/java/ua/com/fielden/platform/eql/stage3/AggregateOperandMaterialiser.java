@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.stage3;
 
-import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
@@ -16,17 +15,16 @@ import ua.com.fielden.platform.eql.stage3.sundries.*;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.StreamUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3.skipTransformation;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.types.tuples.T2.toMap;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
 /// Transforms a query that yields an aggregation by materialising the aggregated expression (the aggregate function's argument)
@@ -270,33 +268,30 @@ public final class AggregateOperandMaterialiser {
         final var context3 = context2.cloneWithNextSqlId();
         final var topSource = new Source3BasedOnQueries(List.of(sQuery), context3.gen().nextSourceId(), context3.sqlId);
 
-        final Replacements replacements = node -> {
-            for (final var it : operandsAndAliases) {
-                if (operations.alphaEq(it._1, node)) {
-                    final var alias = it._2;
-                    final var type = it._1.type();
-                    return () -> new Prop3(alias, topSource, type);
+        // The replacement operation: every reachable node that is being materialised is replaced by a reference to the
+        // column of the source query that materialises it.
+        // A node is replaced when it is alpha-equivalent to a materialised operand, so that occurrences differing only
+        // in generated source identifiers are replaced by the same materialised column.
+        final Function<INode3, INode3> replace = x -> {
+            if (x instanceof ISingleOperand3) {
+                for (final var it : operandsAndAliases) {
+                    if (operations.alphaEq(it._1, x)) {
+                        final var alias = it._2;
+                        final var type = it._1.type();
+                        // A fresh node is built for each matched occurrence.
+                        // Replacing two or more occurrences by the same node would violate the node-uniqueness invariant,
+                        // so this construction must not be hoisted out of the update function nor cached.
+                        return new Prop3(alias, topSource, type);
+                    }
                 }
             }
-            return null;
+            return x;
         };
 
-        final Conditions3 topConditions = Conditions3.empty();
-        final var topYields = new Yields3(
-                origYields.getYields()
-                        .stream()
-                        .map(y -> replaceAll(y, replacements))
-                        .toList());
-        final var topGroups = new GroupBys3(
-                origGroups.groups()
-                        .stream()
-                        .map(g -> replaceAll(g, replacements))
-                        .toList());
-        final var topOrders = origOrderings.updateOrderBys(
-                origOrderings.list()
-                        .stream()
-                        .map(o -> replaceAll(o, replacements))
-                        .toList());
+        final var topConditions = Conditions3.empty();
+        final var topYields = (Yields3) operations.update(origYields, replace);
+        final var topGroups = (GroupBys3) operations.update(origGroups, replace);
+        final var topOrders = (OrderBys3) operations.update(origOrderings, replace);
         return new TransformationResultFromStage2To3<>(new QueryComponents3(Optional.of(new JoinLeafNode3(topSource)), topConditions, topYields, topGroups, topOrders), context3);
     }
 
@@ -399,157 +394,6 @@ public final class AggregateOperandMaterialiser {
                     .flatMap(List::stream)
                     .anyMatch(c -> hasUnmaterialisedSubQuery(c, isMaterialised));
             default -> streamChildren(condition).anyMatch(rand -> hasUnmaterialisedSubQuery(rand, isMaterialised));
-        };
-    }
-
-    private Yield3 replaceAll(final Yield3 yield, final Replacements replacements) {
-        return yield.setOperand(replace(yield.operand(), replacements));
-    }
-
-    private GroupBy3 replaceAll(final GroupBy3 groupBy, final Replacements replacements) {
-        final var newOperand = replace(groupBy.operand(), replacements);
-        return groupBy.setOperand(newOperand);
-    }
-
-    private IOrderBy3 replaceAll(final IOrderBy3 orderBy, final Replacements replacements) {
-        return switch (orderBy) {
-            case IOrderBy3.Operand operand -> operand.setOperand(replace(operand.operand(), replacements));
-            case IOrderBy3.Yield yield -> yield;
-        };
-    }
-
-    /*
-    # The replacement operation on EQL AST nodes
-
-    The code below implements the replacement operation on a subset of EQL AST nodes -- operands, represented by [ISingleOperand2].
-    The replacement operation can be viewed as a function `replace(node, replacements)`, where `node` is an input node and
-    `replacements` resolves an old node to the new node that should take its place.
-    This operation produces a node equal to the input `node` but with every reachable node that `replacements` resolves
-    replaced by its resolution.
-    A node is resolved when it is alpha-equivalent to a materialised operand, so that occurrences
-    that differ only in generated source identifiers are replaced by the same materialised column.
-
-    In general, this operation could process the whole tree rooted at the input node.
-    But for the purposes of this specific transformation, it does not descend into subquery nodes.
-    */
-
-    /// Resolves the materialised replacement for a node, or null if the node is not being materialised.
-    /// Each call of the resulting [Supplier] produces a fresh replacement node to preserve the AST node-uniqueness invariant.
-    ///
-    @FunctionalInterface
-    private interface Replacements {
-        @Nullable Supplier<? extends ISingleOperand3> get(ISingleOperand3 node);
-    }
-
-    /// Reconstructs the tree rooted at `node` by replacing all reachable nodes that `replacements` resolves.
-    ///
-    /// @param replacements  resolves an old node to the new node that should take its place
-    ///
-    private ISingleOperand3 replace(
-            final ISingleOperand3 node,
-            final Replacements replacements)
-    {
-        final var mkNewNode = replacements.get(node);
-        if (mkNewNode != null) {
-            return mkNewNode.get();
-        }
-
-        final var replacedChildren = streamChildren(node)
-                .map(child -> {
-                    final var replacedChild = replace(child, replacements);
-                    return replacedChild == child ? null : t2(child, replacedChild);
-                })
-                .filter(Objects::nonNull)
-                // Use reference-based equality to ensure that equal nodes are each replaced with their own new node.
-                // Replacing two or more old nodes by the same new node would violate the node uniqueness invariant.
-                .collect(toMap((v1, _) -> v1, IdentityHashMap::new));
-        return replaceChildren(node, replacedChildren);
-    }
-
-
-    /// Reconstructs `node` by replacing all of its immediate children that are contained in `replacements`.
-    ///
-    /// @param replacements  a mapping between old nodes to be replaced and new nodes to take their place
-    ///
-    private ISingleOperand3 replaceChildren(final ISingleOperand3 node, final Map<ISingleOperand3, ISingleOperand3> replacements) {
-        if (replacements.isEmpty()) {
-            return node;
-        }
-
-        return switch (node) {
-            case SingleOperandFunction3 it -> it.setOperand(replacements.getOrDefault(it.operand, it.operand));
-            case ConcatOf3 it -> it.update(
-                    replacements.getOrDefault(it.operand1, it.operand1),
-                    replacements.getOrDefault(it.operand2, it.operand2),
-                    replaceChildren(it.orderItems, replacements));
-            case TwoOperandsFunction3 it -> {
-                final var newOperand1 = replacements.getOrDefault(it.operand1, it.operand1);
-                final var newOperand2 = replacements.getOrDefault(it.operand2, it.operand2);
-                yield it.setOperands(newOperand1, newOperand2);
-            }
-            case Expression3 it when streamChildren(it).anyMatch(replacements::containsKey)
-                    -> it.update(replacements.getOrDefault(it.firstOperand, it.firstOperand),
-                                 it.otherOperands.stream().map(item -> item.setOperand(replacements.getOrDefault(item.operand(), item.operand()))).toList());
-            case Concat3 it when it.operands().stream().anyMatch(replacements::containsKey)
-                    -> it.setOperands(it.operands().stream().map(rand -> replacements.getOrDefault(rand, rand)).collect(toImmutableList()));
-            // For case-when, also consider immediate children within the "when" conditions.
-            case CaseWhen3 it -> it.update(it.whenThenPairs().stream()
-                                                   .map(t2 -> t2.map((when, then) -> t2(replaceChildren(when, replacements), replacements.getOrDefault(then, then))))
-                                                   .toList(),
-                                           it.elseOperand().map(elseOp -> replacements.getOrDefault(elseOp, elseOp)),
-                                           it.typeCast());
-            default -> node;
-        };
-    }
-
-    private List<IOrderBy3> replaceChildren(
-            final List<IOrderBy3> orderBys,
-            final Map<ISingleOperand3, ISingleOperand3> replacements)
-    {
-        return orderBys.stream().anyMatch(orderBy -> orderBy instanceof IOrderBy3.Operand o && replacements.containsKey(o.operand()))
-                ? orderBys.stream()
-                          .map(orderBy -> switch (orderBy) {
-                              case IOrderBy3.Operand o -> o.setOperand(replacements.getOrDefault(o.operand(), o.operand()));
-                              case IOrderBy3.Yield y -> y;
-                          })
-                          .collect(toImmutableList())
-                : orderBys;
-    }
-
-    /// Reconstructs `condition` by replacing all of its immediate children that are contained in `replacements`.
-    ///
-    /// @param replacements  a mapping between old nodes to be replaced and new nodes to take their place
-    ///
-    private ICondition3 replaceChildren(
-            final ICondition3 condition,
-            final Map<ISingleOperand3, ISingleOperand3> replacements)
-    {
-        return switch (condition) {
-            case ComparisonPredicate3 it -> it.update(replacements.getOrDefault(it.leftOperand(), it.leftOperand()),
-                                                      it.operator(),
-                                                      replacements.getOrDefault(it.rightOperand(), it.rightOperand()));
-            case NullPredicate3 it -> it.update(replacements.getOrDefault(it.operand(), it.operand()), it.negated());
-            case LikePredicate3 it -> it.update(replacements.getOrDefault(it.matchOperand(), it.matchOperand()),
-                                                replacements.getOrDefault(it.patternOperand(), it.patternOperand()),
-                                                it.options());
-            case SetPredicate3 it -> it.update(replacements.getOrDefault(it.leftOperand(), it.leftOperand()),
-                                               it.negated(),
-                                               switch (it.rightOperand()) {
-                                                   case QueryBasedSet3 set -> set;
-                                                   case OperandsBasedSet3 set -> set.update(set.operands().stream().map(rand -> replacements.getOrDefault(rand, rand)).toList());
-                                                   default -> it.rightOperand();
-                                               });
-            case ExistencePredicate3 it -> it; // Subquery ignored.
-            case QuantifiedPredicate3 it -> it.update(replacements.getOrDefault(it.leftOperand(), it.leftOperand()),
-                                                      it.operator(),
-                                                      it.quantifier(),
-                                                      // Subquery ignored.
-                                                      it.rightOperand());
-            case Conditions3 it -> it.update(it.negated(),
-                                             it.allConditionsAsDnf().stream()
-                                                     .map(conds -> conds.stream().map(c -> replaceChildren(c, replacements)).collect(toImmutableList()))
-                                                     .collect(toImmutableList()));
-            default -> condition;
         };
     }
 
