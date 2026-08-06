@@ -871,7 +871,7 @@ Polymer({
             showStickyToast({
                 text: 'A new application version is available.',
                 detail: `${serverAppVersion} — reload to update.`,
-                actions: '<span class="action" data-tap="later">Later</span>'
+                actions: '<span class="action" data-tap="later" style="color: var(--paper-grey-400);">Later</span>'
                     + '<paper-button class="action" data-tap="reload">Reload</paper-button>',
                 handlers: {
                     reload: () => window.location.reload(),
