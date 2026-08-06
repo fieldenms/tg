@@ -55,6 +55,12 @@ const registerEventSourceHandlers = function (sourceObj) {
         console.log('opened connection');
     }, false);
 
+    // The server announces its current application version upon each (re)connection (see `EventSourceDispatchingEmitter`).
+    // Notify (see `tg-app-template.js`) through a window event., so that it can compare against the version this client was loaded with.
+    source.addEventListener('application-version', function (e) {
+        window.dispatchEvent(new CustomEvent('tg-application-version', { detail: { version: e.data } }));
+    }, false);
+
     source.addEventListener('error', function (e) {
         console.log('an error occurred: ', e);
 

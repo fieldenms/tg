@@ -102,6 +102,9 @@ public class ApplicationConfigurationResource extends AbstractWebResource {
         // IDates uses 1–7 for Mon–Sun; JS date pickers use 0 for Sun, so convert accordingly.
         configs.put("firstDayOfWeek", dates.startOfWeek() % 7);
         configs.put("title", webUiConfig.title());
+        // The version the client is loaded with, later compared against the server version.
+        // Server version is announced upon SSE (re)connection to detect a new deployment.
+        configs.put("appVersion", webUiConfig.appVersion());
         configs.put("ideaUri", webUiConfig.ideaUri());
         configs.put("panelColor", webUiConfig.mainPanelColor());
         configs.put("watermark", webUiConfig.watermark());
