@@ -17,6 +17,7 @@ import '/resources/actions/tg-ui-action.js';
 import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 import { resetCustomSettings } from '/resources/centre/tg-entity-centre-insertion-point.js';
+import { showStickyToast, hideStickyToast } from '/resources/components/tg-sticky-toast.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 
 import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
@@ -1054,17 +1055,16 @@ Polymer({
                 // Remove all IP orders from each container and splitter positions too.
                 this.resetCustomSettingsForInsertionPoints();
 
-                const firstIp = ips[0];
-                if (firstIp) {
-                    this.async(() => {
-                        firstIp.$.toaster.text = 'Layout was defaulted.';
-                        firstIp.$.toaster.hasMore = true;
-                        firstIp.$.toaster.msgText = `Layout was defaulted due to some views being removed.<br><br><b>${[...removedIps]}</b>`;
-                        firstIp.$.toaster.showProgress = false;
-                        firstIp.$.toaster.isCritical = true;
-                        firstIp.$.toaster.show();
-                    }, 1);
-                }
+                // Let the user know that their custom layout was reset, explaining the reason in the second row.
+                showStickyToast({
+                    text: 'Custom layout was reset.',
+                    detail: 'Due to the software update your custom layout needed to be reset to ensure its integrity. '
+                        + 'Please adjust the new layout to fit your workflow.',
+                    actions: '<span class="action" data-tap="close" style="color: var(--paper-grey-400);">Close</span>',
+                    handlers: {
+                        close: () => hideStickyToast()
+                    }
+                });
             }
         }
     },
