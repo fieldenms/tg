@@ -14,7 +14,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -23,19 +22,19 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import static java.lang.Integer.valueOf;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
-import static ua.com.fielden.platform.entity.query.DbVersion.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.*;
 
 public class EntityQueryExecutionTest extends AbstractDaoTestCase {
+
 
     private final ITgPersonName personNameDao = getInstance(ITgPersonName.class);
     private final ITgAuthor authorDao = getInstance(ITgAuthor.class);
@@ -1510,26 +1509,14 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void execution_of_aggregated_functions_on_the_correlated_scalar_subquery_succeeds_under_postgresql_and_h2() {
-        if (getDbCreator().dbVersion() == H2 || getDbCreator().dbVersion() == POSTGRESQL) {
-            final PrimitiveResultQueryModel vehiclesCountPerStationModel = select(TgVehicle.class).where().prop("station").eq().extProp("id").yield().countAll().modelAsPrimitive();
-            final AggregatedResultQueryModel maxVehiclesCountStationModel = select(TgOrgUnit5.class).yield().maxOf().model(vehiclesCountPerStationModel).as("maxVehiclesCountPerStation").modelAsAggregate();
-            final EntityAggregates result = aggregateDao.getEntity(from(maxVehiclesCountStationModel).model());
-            assertEquals("Incorrect value of max vehicles count", "1", result.get("maxVehiclesCountPerStation").toString());
-        }
-    }
-
-    @Test
-    public void execution_of_aggregated_functions_on_the_correlated_scalar_subquery_fails_under_mssql() {
-        if (getDbCreator().dbVersion() == MSSQL) {
-            final PrimitiveResultQueryModel vehiclesCountPerStationModel = select(TgVehicle.class).where().prop("station").eq().extProp("id").yield().countAll().modelAsPrimitive();
-            final AggregatedResultQueryModel maxVehiclesCountStationModel = select(TgOrgUnit5.class).yield().maxOf().model(vehiclesCountPerStationModel).as("maxVehiclesCountPerStation").modelAsAggregate();
-            try {
-                aggregateDao.getEntity(from(maxVehiclesCountStationModel).model());
-                fail("Should have failed due to the current limitation of MSSQL -- {Error 130: Cannot perform an aggregate function on an expression containing an aggregate or a subquery.}. ");
-            } catch (final Exception e) {
-            }
-        }
+    public void execution_of_aggregated_functions_on_the_correlated_scalar_subquery_suceeds() {
+        final var maxVehiclesCountStationModel = select(TgOrgUnit5.class)
+                .yield().maxOf().model(select(TgVehicle.class).where().prop("station").eq().extProp("id").yield().countAll().modelAsPrimitive())
+                .as("maxVehiclesCountPerStation")
+                .modelAsAggregate();
+        final var agg = aggregateDao.getEntity(from(maxVehiclesCountStationModel).model());
+        assertNotNull(agg);
+        assertThat(agg.<Integer>get("maxVehiclesCountPerStation")).isEqualTo(1);
     }
 
     @Test

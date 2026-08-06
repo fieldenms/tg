@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
@@ -16,14 +17,18 @@ public class Concat3 extends AbstractFunction3 {
 
     /// Non-empty list of operands.
     ///
-    public final List<ISingleOperand3> operands;
+    private final List<ISingleOperand3> operands;
 
     public Concat3(final List<ISingleOperand3> operands, final PropType type) {
         super(type);
         if (operands.isEmpty()) {
             throw new EqlStage3ProcessingException("There must be at least one operand.");
         }
-        this.operands = operands;
+        this.operands = ImmutableList.copyOf(operands);
+    }
+
+    public List<ISingleOperand3> operands() {
+        return operands;
     }
 
     @Override
@@ -38,7 +43,7 @@ public class Concat3 extends AbstractFunction3 {
             return super.sql(metadata, dbVersion);
         }
     }
-    
+
     @Override
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString).add("operands", operands);

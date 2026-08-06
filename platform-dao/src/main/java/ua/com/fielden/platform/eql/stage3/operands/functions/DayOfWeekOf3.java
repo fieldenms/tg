@@ -12,7 +12,7 @@ public class DayOfWeekOf3 extends SingleOperandFunction3 {
     public DayOfWeekOf3(final ISingleOperand3 operand, final PropType type) {
         super(operand, type);
     }
-    
+
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return switch (dbVersion) {

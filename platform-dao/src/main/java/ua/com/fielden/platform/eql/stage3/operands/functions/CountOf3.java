@@ -15,7 +15,7 @@ public class CountOf3 extends SingleOperandFunction3 {
         super(operand, type);
         this.distinct = distinct;
     }
-    
+
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         final String distinctClause = distinct ? "DISTINCT " : "";

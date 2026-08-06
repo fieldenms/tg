@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.test.runners;
 
+import net.bytebuddy.ByteBuddy;
 import org.junit.Test;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
@@ -10,13 +11,12 @@ import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.test_config.H2OrPostgreSqlOrSqlServerContextSelector;
 
+import java.lang.reflect.Modifier;
 import java.time.DateTimeException;
 import java.util.ArrayList;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.withTimeZone;
 
 /// Verifies that the TG test runner correctly decides whether a test method should be ignored based on the [RequireTimeZone] annotation.
@@ -52,19 +52,22 @@ public class RequireTimeZoneTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void an_invalid_required_time_zone_raises_an_exception_rather_than_silently_ignoring_the_test() throws Exception {
-        final var runner = new H2OrPostgreSqlOrSqlServerContextSelector(MyTest.class);
-        final var ex = assertThrows("An invalid @RequireTimeZone should fail loudly rather than silently ignore the test.",
-                                    DomainDrivenTestException.class,
-                                    () -> runner.isIgnored(findMethod(runner, "test_with_invalid_time_zone")));
-        assertTrue("The underlying time zone parsing error should be preserved as the cause.",
-                   ex.getCause() instanceof DateTimeException);
-    }
-
-    @Test
     public void an_invalid_required_time_zone_fails_only_its_own_method_and_does_not_abort_the_class() throws Exception {
-        final var runner = new H2OrPostgreSqlOrSqlServerContextSelector(MyTest.class);
+        final var testClass = new ByteBuddy().subclass(AbstractTestWithInvalidTimeZone.class)
+                .name(String.join(".", this.getClass().getPackageName(), "TestWithInvalidTimeZone"))
+                .modifiers(Modifier.PUBLIC)
+                .make()
+                .load(getClass().getClassLoader())
+                .getLoaded();
+
+        final var runner = new H2OrPostgreSqlOrSqlServerContextSelector(testClass);
         final var invalidMethod = findMethod(runner, "test_with_invalid_time_zone");
+
+        assertThatThrownBy(() -> runner.isIgnored(invalidMethod))
+                .as("An invalid @RequireTimeZone should fail loudly rather than silently ignore the test.")
+                .isInstanceOf(DomainDrivenTestException.class)
+                .as("The underlying time zone parsing error should be preserved as the cause.")
+                .cause().isInstanceOf(DateTimeException.class);
 
         final var failures = new ArrayList<Failure>();
         final var notifier = new RunNotifier();
@@ -86,6 +89,9 @@ public class RequireTimeZoneTest extends AbstractDaoTestCase {
                    failure.getException() instanceof DomainDrivenTestException);
     }
 
+    @Override
+    protected void populateDomain() {}
+
     // ---- Fixture classes used as input to the runner under test ----
 
     public static class MyTest extends AbstractDaoTestCase {
@@ -100,9 +106,22 @@ public class RequireTimeZoneTest extends AbstractDaoTestCase {
         @Test
         public void test_anywhere() {}
 
+        @Override
+        protected void populateDomain() {}
+    }
+
+    /// This test class has to be abstract to align with the default test runner configuration in IntelliJ IDEA.
+    /// A concrete class extending this one should be generated at runtime rather than declared in source code.
+    /// When declared in source code, IDEA picks up the deliberately invalid method, runs it, and the test naturally fails.
+    /// Maven's Surefire does not do this -- its default filter excludes inner classes.
+    ///
+    public static abstract class AbstractTestWithInvalidTimeZone extends AbstractDaoTestCase {
         @Test
         @RequireTimeZone("I don‘t exist")
         public void test_with_invalid_time_zone() {}
+
+        @Override
+        protected void populateDomain() {}
     }
 
     // ---- Helpers ----

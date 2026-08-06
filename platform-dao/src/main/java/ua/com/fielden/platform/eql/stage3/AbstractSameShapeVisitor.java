@@ -342,7 +342,7 @@ public abstract class AbstractSameShapeVisitor<R, S> {
     // : Other functions
 
     public R concat(final Concat3 x, final Concat3 y, final S state) {
-        return visitAll(x.operands, y.operands, state);
+        return visitAll(x.operands(), y.operands(), state);
     }
 
     public R caseWhen(final CaseWhen3 x, final CaseWhen3 y, final S state) {

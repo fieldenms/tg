@@ -12,9 +12,6 @@ import java.util.Optional;
 /// Represents all structural query parts (components) obtained as the result of stage 2 to stage 3 transformation.
 /// This class is used as a convenience to keep all the query components together.
 ///
-/// Some components are nullable only to comply with the existing test model.
-/// This will change in the future.
-///
 public record QueryComponents3(
         Optional<IJoinNode3> maybeJoinRoot,
         Conditions3 whereConditions,

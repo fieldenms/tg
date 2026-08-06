@@ -90,7 +90,7 @@ public class CaseWhen3 extends AbstractFunction3 {
         final Stream<ISingleOperand3> thens = whenThenPairs.stream().map(pair -> pair._2);
         return elseOperand == null ? thens : Stream.concat(thens, Stream.of(elseOperand));
     }
-    
+
     @Override
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString)

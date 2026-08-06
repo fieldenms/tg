@@ -6,12 +6,15 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
+import static java.util.Objects.requireNonNull;
+
 public class Prop3 extends AbstractSingleOperand3 {
 
     /**
      * In most cases a simple property name.
      * In case of a property declared in a union entity type -- path to a subproperty of the union type (e.g., {@code location.workshop}).
      * In case of a component-typed property -- path to a component subproperty (e.g., {@code richText.coreText}).
+     * Never {@code null}.
      */
     public final String name;
 
@@ -22,15 +25,16 @@ public class Prop3 extends AbstractSingleOperand3 {
 
     public Prop3(final String name, final Integer sourceId, final String column, final PropType type) {
         super(type);
-        this.name = name;
-        this.sourceId = sourceId;
-        this.column = column;
+        this.name = requireNonNull(name);
+        this.sourceId = requireNonNull(sourceId);
+        this.column = requireNonNull(column);
     }
 
     /// Kept for backward compatibility.
     /// Will be removed together with [#column].
     ///
     public Prop3(final String name, final ISource3 source, final PropType type) {
+        requireNonNull(source);
         this(name, source.id(), source.column(name), type);
     }
 

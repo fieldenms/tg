@@ -28,6 +28,16 @@ import static ua.com.fielden.platform.utils.CollectionUtil.append;
 import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
+/// ### Representation of `entity.id`
+///
+/// A trailing `.id` on an entity-typed property is treated specially.
+/// `prop("entity.id")` does NOT resolve to `[entity: Entity, id: Long]`.
+/// Instead, the resolver treats a trailing `.id` on a persistent entity as already satisfied by the column that the entity-typed
+/// property maps to, leaving the trailing `id` unresolved to avoid a join into the target table (see [PropResolutionProgress#isSuccessful()]).
+///
+/// So `Prop1("entity.id")` becomes `Prop2("entity")` with type [Long] — the resolved path ends on `entity`,
+/// and a join is avoided due to the primitive type [Long].
+///
 public record Prop1(String propPath, boolean external) implements ISingleOperand1<Prop2>, ToString.IFormattable {
 
     public static final String ERR_CANNOT_RESOLVE_PROPERTY = "Cannot resolve property [%s].";
@@ -50,6 +60,7 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
                 .map(item -> resolveProp(item, this))
                 .flatMap(Optional::stream)
                 .map(resolution -> {
+                    // `.id` on an entity is treated as `Long` here.
                     final var shouldBeTreatedAsId = propPath.endsWith("." + ID) && isEntityType(resolution.lastPart().javaType());
                     return new Prop2(resolution.source, enhancePath(resolution.getPath()), shouldBeTreatedAsId);
                 })

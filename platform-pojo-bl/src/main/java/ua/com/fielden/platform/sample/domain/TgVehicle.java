@@ -1,33 +1,20 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import ua.com.fielden.platform.audit.annotations.Audited;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Ignore;
-
-import ua.com.fielden.platform.audit.annotations.Audited;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.PersistentType;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(String.class)
 @MapEntityTo
@@ -120,9 +107,16 @@ public class TgVehicle extends AbstractEntity<String> {
 
     @IsProperty
     @Calculated
-    @Title("Last fuel usage qty")
+    @Title("Last Fuel Usage Qty")
     private BigDecimal lastFuelUsageQty;
     protected static final ExpressionModel lastFuelUsageQty_ = expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).yield().prop("qty").modelAsPrimitive()).model();
+
+    @IsProperty
+    @Readonly
+    @Calculated
+    @Title(value = "Half Last Fuel Usage Qty")
+    private BigDecimal halfLastFuelUsageQty;
+    protected static final ExpressionModel halfLastFuelUsageQty_ = expr().prop("lastFuelUsageQty").div().val(2).model();
 
     @IsProperty
     @Calculated
@@ -407,6 +401,16 @@ public class TgVehicle extends AbstractEntity<String> {
     public TgVehicle setLastFuelUsageQty(final BigDecimal lastFuelUsageQty) {
         this.lastFuelUsageQty = lastFuelUsageQty;
         return this;
+    }
+
+    @Observable
+    protected TgVehicle setHalfLastFuelUsageQty(final BigDecimal halfLastFuelUsageQty) {
+        this.halfLastFuelUsageQty = halfLastFuelUsageQty;
+        return this;
+    }
+
+    public BigDecimal getHalfLastFuelUsageQty() {
+        return halfLastFuelUsageQty;
     }
 
     @Observable

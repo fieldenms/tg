@@ -4,7 +4,7 @@ import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.utils.ToString;
 
-abstract class TwoOperandsFunction3 extends AbstractFunction3 {
+public abstract class TwoOperandsFunction3 extends AbstractFunction3 {
     public final ISingleOperand3 operand1;
     public final ISingleOperand3 operand2;
 

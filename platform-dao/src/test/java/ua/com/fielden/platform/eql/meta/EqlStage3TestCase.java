@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonPredicate3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
@@ -36,8 +37,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.IRetrievalModel.createRetrievalModel;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
+import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.*;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 import static ua.com.fielden.platform.eql.meta.PropType.*;
@@ -88,7 +88,11 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     public static ResultQuery3 qry(final AggregatedResultQueryModel qry) {
-        return transform(new QueryProcessingModel<EntityAggregates, AggregatedResultQueryModel>(qry, null, null, emptyMap(), true));
+        return transform(new QueryProcessingModel<>(qry, null, null, emptyMap(), true));
+    }
+
+    protected static ResultQuery3 qry(final AggregatedResultQueryModel qry, final OrderingModel order) {
+        return transform(new QueryProcessingModel<>(qry, order, null, emptyMap(), true));
     }
 
     public static ResultQuery3 qryFiltered(final AggregatedResultQueryModel qry) {
@@ -98,6 +102,10 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
 
     public static <T extends AbstractEntity<?>> ResultQuery3 qry(final EntityResultQueryModel<T> qry) {
         return transform(new QueryProcessingModel<T, EntityResultQueryModel<T>>(qry, null, null, emptyMap(), true));
+    }
+
+    public static <T extends AbstractEntity<?>> ResultQuery3 qry(final EntityResultQueryModel<T> qry, final OrderingModel order) {
+        return transform(new QueryProcessingModel<T, EntityResultQueryModel<T>>(qry, order, null, emptyMap(), true));
     }
 
     public static <T extends AbstractEntity<?>> ResultQuery3 qry(final EntityResultQueryModel<T> qry, final fetch<T> fetch) {
@@ -116,6 +124,10 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
 
     public static Source3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final Integer sourceForContextId) {
         return new Source3BasedOnTable(eqlTables().getTableForEntityType(sourceType), sourceForContextId, nextSqlId());
+    }
+
+    public static Source3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final Integer sourceForContextId, final Integer sqlId) {
+        return new Source3BasedOnTable(eqlTables().getTableForEntityType(sourceType), sourceForContextId, sqlId);
     }
 
     public static Source3BasedOnQueries source(final Integer sourceForContextId, final SourceQuery3... sourceQueries) {
@@ -152,6 +164,10 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
 
     public static ComparisonPredicate3 ne(final ISingleOperand3 op1, final ISingleOperand3 op2) {
         return new ComparisonPredicate3(op1, NE, op2);
+    }
+
+    public static ComparisonPredicate3 gt(final ISingleOperand3 op1, final ISingleOperand3 op2) {
+        return new ComparisonPredicate3(op1, GT, op2);
     }
 
     public static NullPredicate3 isNotNull(final ISingleOperand3 op1) {
@@ -408,6 +424,12 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return new Yields3(asList(yields));
     }
 
+    /// Creates a yield with the same type as the operand.
+    ///
+    public static Yield3 mkYield(final ISingleOperand3 operand, final String alias, final int columnId) {
+        return new Yield3(operand, alias, columnId, operand.type());
+    }
+
     public static Yield3 yieldCountAll(final String alias) {
         return new Yield3(new CountAll3(), alias, nextSqlId(), INTEGER_PROP_TYPE);
     }
@@ -424,8 +446,16 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return new Yield3(idProp(source), alias, nextSqlId(), LONG_PROP_TYPE);
     }
 
+    public static Yield3 yieldId(final ISource3 source, final String alias, final Integer sqlId) {
+        return new Yield3(idProp(source), alias, sqlId, LONG_PROP_TYPE);
+    }
+
     public static Yield3 yieldProp(final String propName, final ISource3 source, final String alias, final PropType type) {
         return new Yield3(prop(propName, source, type), alias, nextSqlId(), type);
+    }
+
+    public static Yield3 yieldProp(final String propName, final ISource3 source, final String alias, final PropType type, final Integer sqlId) {
+        return new Yield3(prop(propName, source, type), alias, sqlId, type);
     }
 
     public static Yield3 yieldProp(final String propName, final ISource3 source, final String alias) {
@@ -434,6 +464,10 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
 
     public static Yield3 yieldModel(final SubQuery3 model, final String alias, final PropType type) {
         return new Yield3(model, alias, nextSqlId(), type);
+    }
+
+    public static Yield3 yieldModel(final SubQuery3 model, final String alias, final Integer sqlId, final PropType type) {
+        return new Yield3(model, alias, sqlId, type);
     }
 
     public static Yield3 yieldSingleEntity(final String propName, final ISource3 source, final Class<? extends AbstractEntity<?>> propType) {

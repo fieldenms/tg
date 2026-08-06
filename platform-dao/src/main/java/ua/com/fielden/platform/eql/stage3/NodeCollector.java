@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 
-/// Collects every node within a tree that satifies a predicate.
+/// Collects every node within a tree that satisfies a predicate.
 ///
 /// The implementation reuses the binary [AbstractSameShapeVisitor] as a unary walk by pairing a tree root with
 /// itself: all shape checks then hold, so the traversal covers the whole tree once and [#combine] accumulates the matches.
