@@ -7,6 +7,8 @@ import '/resources/polymer/@polymer/app-route/app-location.js';
 import '/resources/polymer/@polymer/app-route/app-route.js';
 
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
+// Required for the `Reload` action, used in the application update message (see `_handleAppVersionAnnouncement`).
+import '/resources/polymer/@polymer/paper-button/paper-button.js';
 
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 
@@ -16,6 +18,7 @@ import '/resources/master/tg-entity-master.js';
 import '/resources/actions/tg-ui-action.js';
 import '/resources/components/tg-message-panel.js';
 import '/resources/components/tg-global-error-handler.js';
+import { showStickyToast, hideStickyToast } from '/resources/components/tg-sticky-toast.js';
 import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -821,6 +824,10 @@ Polymer({
 
         //Add click event listener to handle click on links
         window.addEventListener('click', this._checkURL.bind(this));
+
+        // Listen for the server-pushed application-version announcement, dispatched on `window` by `tg-event-source.js`.
+        // When the server reports a version different from the one this client was loaded with, the user is prompted to reload.
+        window.addEventListener('tg-application-version', event => this._handleAppVersionAnnouncement(event.detail?.version));
     },
 
     attached: function () {
@@ -853,7 +860,27 @@ Polymer({
     detached: function () {
         window.removeEventListener("beforeunload", this._checkWhetherCanLeave);
     },
-    
+
+    /// Prompts the user to reload when the server reports an application version different from the one this client was loaded with.
+    /// Guarded so that both versions must be known, must actually differ, and the user is prompted only once per newly reported version.
+    ///
+    _handleAppVersionAnnouncement: function (serverAppVersion) {
+        const bootAppVersion = window.TG_APP?.appVersion;
+        if (serverAppVersion && bootAppVersion && serverAppVersion !== bootAppVersion && serverAppVersion !== this._notifiedAppVersion) {
+            this._notifiedAppVersion = serverAppVersion;
+            showStickyToast({
+                text: 'A new application version is available.',
+                detail: `${serverAppVersion} — reload to update.`,
+                actions: '<span class="action" data-tap="later">Later</span>'
+                    + '<paper-button class="action" data-tap="reload">Reload</paper-button>',
+                handlers: {
+                    reload: () => window.location.reload(),
+                    later: () => hideStickyToast()
+                }
+            });
+        }
+    },
+
     /**
      * Provides custom 'state' object for history entries. Updates 'currentHistoryState' property.
      */
