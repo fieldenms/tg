@@ -238,7 +238,7 @@ public interface IWebUiConfig extends IMenuRetriever {
     default String appVersion() {
         /// TODO By default this is the application `title()`, which by convention encodes the application version.
         /// TODO Override this once application versioning becomes a first-class concept.
-        return "Quorum (20260824)"; //title();
+        return title();
     }
 
     /// Returns the URI of the “idea” action.
