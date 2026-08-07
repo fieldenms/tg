@@ -1,4 +1,5 @@
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
+import '/resources/polymer/@polymer/paper-styles/color.js';
 
 import '/resources/components/tg-paper-toast.js';
 
@@ -23,7 +24,7 @@ const stickyToastStyle = html`
             /* Roboto is loaded with weights 300, 400, 500 and 700 only, hence 500 rather than an intermediate weight. */
             .sticky-toast-text {
                 font-weight: 500;
-                color: #FFFFFF;
+                color: white;
             }
             .sticky-toast-detail {
                 margin-top: 2px;
@@ -44,12 +45,12 @@ const stickyToastStyle = html`
             /* A message may override this with inline styles. */
             .sticky-toast .action {
                 margin-left: 8px;
-                color: #03A9F4;
+                color: var(--paper-light-blue-500);
                 font-weight: 500;
                 cursor: pointer;
             }
             .sticky-toast a {
-                color: #03A9F4;
+                color: var(--paper-light-blue-500);
             }
         </style>
     </custom-style>`;

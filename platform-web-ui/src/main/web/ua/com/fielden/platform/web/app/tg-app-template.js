@@ -7,8 +7,9 @@ import '/resources/polymer/@polymer/app-route/app-location.js';
 import '/resources/polymer/@polymer/app-route/app-route.js';
 
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
-// Required for the `Reload` action, used in the application update message (see `_handleAppVersionAnnouncement`).
+// Both are required for the application update message (see `_handleAppVersionAnnouncement`).
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
+import '/resources/polymer/@polymer/paper-styles/color.js';
 
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 
@@ -870,7 +871,7 @@ Polymer({
             this._notifiedAppVersion = serverAppVersion;
             // Reload is a filled button, coloured as the application top panel, which makes it the primary action.
             // The label case is overridden because paper-button uppercases labels, as was the norm before Material Design 3.
-            const reloadStyle = 'text-transform: none; color: #FFFFFF; border-radius: 6px; '
+            const reloadStyle = 'text-transform: none; color: white; border-radius: 6px; '
                 + 'background: var(--tg-main-pannel-color, var(--paper-light-blue-700));';
             showStickyToast({
                 text: 'A new application version is available.',
