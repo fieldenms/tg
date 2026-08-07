@@ -236,8 +236,7 @@ public interface IWebUiConfig extends IMenuRetriever {
     /// Then client prompts the user to reload when versions differ.
     ///
     default String appVersion() {
-        /// TODO By default this is the application `title()`, which by convention encodes the application version.
-        /// TODO Override this once application versioning becomes a first-class concept.
+        // By default this is the application `title()`, which by convention encodes the application version.
         return title();
     }
 

@@ -226,7 +226,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
                     eventSource.disconnect();
                     iter.remove();
                 } catch (final Throwable ex) {
-                    LOGGER.warn(format("Non critical error during closing of emitters."), ex);
+                    LOGGER.warn("Non critical error during closing of emitters.", ex);
                 }
             }
             
@@ -237,7 +237,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
                 try {
                     emitter.close();
                 } catch (final Throwable ex) {
-                    LOGGER.warn(format("Non critical error during closing of emitters."), ex);
+                    LOGGER.warn("Non critical error during closing of emitters.", ex);
                 }
             }
             
