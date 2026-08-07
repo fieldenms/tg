@@ -19,6 +19,12 @@ const stickyToastStyle = html`
             tg-paper-toast.sticky-toast {
                 max-width: 420px;
             }
+            /* The message itself carries the emphasis, so that it stands out from the detail below it. */
+            /* Roboto is loaded with weights 300, 400, 500 and 700 only, hence 500 rather than an intermediate weight. */
+            .sticky-toast-text {
+                font-weight: 500;
+                color: #FFFFFF;
+            }
             .sticky-toast-detail {
                 margin-top: 2px;
                 font-size: 12px;
@@ -53,7 +59,7 @@ document.head.appendChild(stickyToastStyle.content);
 const template = html`
     <tg-paper-toast id="stickyToast" class="sticky-toast" allow-click-through always-on-top duration="0">
         <div id="messageContainer" on-tap="_handleMessageTap">
-            <div id="messageText"></div>
+            <div id="messageText" class="sticky-toast-text"></div>
             <div id="messageDetail" class="sticky-toast-detail"></div>
             <div id="messageActions" class="sticky-toast-actions"></div>
         </div>
