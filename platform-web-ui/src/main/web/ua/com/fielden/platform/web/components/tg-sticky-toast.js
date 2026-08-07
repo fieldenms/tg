@@ -43,10 +43,12 @@ const stickyToastStyle = html`
             }
             /* Default appearance of an actionable element in a message, marked with class "action". */
             /* A message may override this with inline styles. */
+            /* An action is expected to be a paper-button, whose labels are uppercased by default, as was the norm before Material Design 3. */
             .sticky-toast .action {
                 margin-left: 8px;
                 color: var(--paper-light-blue-500);
                 font-weight: 500;
+                text-transform: none;
                 cursor: pointer;
             }
             .sticky-toast a {

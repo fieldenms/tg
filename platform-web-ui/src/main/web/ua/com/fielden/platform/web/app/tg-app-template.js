@@ -870,13 +870,12 @@ Polymer({
         if (serverAppVersion && bootAppVersion && serverAppVersion !== bootAppVersion && serverAppVersion !== this._notifiedAppVersion) {
             this._notifiedAppVersion = serverAppVersion;
             // Reload is a filled button, coloured as the application top panel, which makes it the primary action.
-            // The label case is overridden because paper-button uppercases labels, as was the norm before Material Design 3.
-            const reloadStyle = 'text-transform: none; color: white; border-radius: 6px; '
+            const reloadStyle = 'color: white; border-radius: 6px; '
                 + 'background: var(--tg-main-pannel-color, var(--paper-light-blue-700));';
             showStickyToast({
                 text: 'A new application version is available.',
                 detail: `${serverAppVersion} — reload to update.`,
-                actions: '<span class="action" data-tap="later" style="color: var(--paper-grey-400);">Later</span>'
+                actions: '<paper-button class="action" data-tap="later" style="color: var(--paper-grey-400);">Later</paper-button>'
                     + `<paper-button raised class="action" data-tap="reload" style="${reloadStyle}">Reload</paper-button>`,
                 handlers: {
                     reload: () => window.location.reload(),
