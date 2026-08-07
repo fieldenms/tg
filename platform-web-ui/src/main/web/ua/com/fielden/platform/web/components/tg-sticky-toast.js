@@ -95,10 +95,6 @@ class TgStickyToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
         this.$.stickyToast.refit = function () {};
     }
 
-    get opened() {
-        return this.$.stickyToast.opened;
-    }
-
     /// Displays `message`, replacing whatever was displayed before.
     ///
     /// `message.text` is the message itself and may contain HTML markup, including inline styles and links.
