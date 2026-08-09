@@ -6,7 +6,6 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IDates;
@@ -14,9 +13,14 @@ import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
+import java.io.ByteArrayInputStream;
 import java.lang.management.ManagementFactory;
 
+import static java.lang.String.join;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.restlet.data.MediaType.TEXT_HTML;
+import static org.restlet.data.MediaType.TEXT_URI_LIST;
+import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 
 /**
@@ -28,11 +32,21 @@ import static ua.com.fielden.platform.web.resources.webui.FileResource.createRep
  *
  */
 public class AppIndexResource extends AbstractWebResource {
+    public static final String BINDING_PATH = "/";
+    public static final String FILE_APP_INDEX_HTML = "/app/tg-app-index.html";
+
+    /// Suffix for the Service Worker request that asks for the paths of all deployment resources.
+    /// Requests with this suffix must never be redirected to the login resource by `AbstractWebResourceGuard`.
+    /// Otherwise, a login page would be taken for the list of deployment resources, making every cached resource look redundant.
+    ///
+    public static final String RESOURCES_URL_SUFFIX = "?resources=true";
+
+    private static final String RESOURCES_DELIMITER = "\n";
+
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final IWebResourceLoader webResourceLoader;
-    private final ICriteriaGenerator criteriaGenerator;
-    
+
     /**
      * Creates {@link AppIndexResource} instance.
      *
@@ -46,15 +60,13 @@ public class AppIndexResource extends AbstractWebResource {
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
             final IDates dates,
-            final ICriteriaGenerator criteriaGenerator,
-            final Context context, 
+            final Context context,
             final Request request, 
             final Response response) {
         super(context, request, response, deviceProvider, dates);
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
         this.webResourceLoader = webResourceLoader;
-        this.criteriaGenerator = criteriaGenerator;
     }
 
     @Get
@@ -67,7 +79,12 @@ public class AppIndexResource extends AbstractWebResource {
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
         }
-        return createRepresentation(webResourceLoader, TEXT_HTML, "/app/tg-app-index.html", getReference().getRemainingPart());
+        // Handle special Service Worker '?resources=true' GET request against `AppIndexResource` (aka '/').
+        if (getReference().getRemainingPart().endsWith(RESOURCES_URL_SUFFIX)) {
+            return encodedRepresentation(new ByteArrayInputStream(join(RESOURCES_DELIMITER, webResourceLoader.deploymentResourcePaths()).getBytes(UTF_8)), TEXT_URI_LIST);
+        }
+        // Handle actual `AppIndexResource` generated file (see 'index.html').
+        return createRepresentation(webResourceLoader, TEXT_HTML, FILE_APP_INDEX_HTML, getReference().getRemainingPart());
     }
 
     /**
