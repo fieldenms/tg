@@ -23,6 +23,14 @@ mvn clean test -Dmaven.javadoc.skip=true -Dfork.count=4 -DdatabaseUri.prefix=//l
 mvn test -Dmaven.javadoc.skip=true -Dfork.count=4 -DdatabaseUri.prefix=//localhost:1433;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=false;databaseName=ci_  # SQL Server
 ```
 
+**Mutation-check every test you add or change.**
+A passing test proves nothing until it has been seen to fail: break the code it covers (drop an argument, invert a condition, return a constant), confirm that the intended test — and only that test — fails, then revert.
+Assertions that hold whether or not the code under test did anything are common, especially negative ones (`assertFalse`, `isEmpty`) whose fixture yields the same answer either way, and mutation of a loaded entity whose setter might not have assigned.
+
+**Mutating an upstream module requires `-am`.**
+`mvn test -pl platform-dao` resolves `platform-pojo-bl` from `~/.m2`, so an uncommitted edit there is invisible to the run and *every* mutation of it looks uncaught — a false all-clear.
+Use `mvn test -pl platform-dao -am -Dtest=SomeTest -DfailIfNoTests=false …`, or install the upstream module first.
+
 ### Version Management
 ```bash
 ./tg-update-version.sh 2.1.0-SNAPSHOT          # Update version (recommended)
