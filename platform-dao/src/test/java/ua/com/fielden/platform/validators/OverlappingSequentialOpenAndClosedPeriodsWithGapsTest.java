@@ -1,20 +1,14 @@
 package ua.com.fielden.platform.validators;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
 import org.junit.Test;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.Validators;
+
+import java.util.Optional;
+
+import static org.junit.Assert.*;
 
 public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends AbstractDaoTestCase {
 
@@ -79,16 +73,43 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
         assertEquals("Incorrect offended timesheet.", date("2011-11-01 15:00:00"), offendedTs.getStartDate());
     }
 
+    @Test
+    public void explicit_period_bounds_are_used_rather_than_those_held_by_the_entity() {
+        // This timesheet occupies 12:00-14:00 and does not overlap anything, as the next one starts at 15:00.
+        final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 12:00:00"));
+        assertNull("Precondition: the period held by the entity does not overlap.",
+                   Validators.findFirstOverlapping(ts, dao, "startDate", "finishDate", "person"));
+
+        // The very same entity, tested against a period it does not hold, does overlap the open-ended timesheet.
+        final Optional<TgTimesheet> offendedTs = Validators.findFirstOverlapping(ts, null, dao, "startDate", "finishDate",
+                                                                                 date("2011-11-01 16:30:00"), date("2011-11-01 19:00:00"), "person");
+        assertTrue(offendedTs.isPresent());
+        assertEquals("Incorrect offended timesheet.", date("2011-11-01 15:00:00"), offendedTs.get().getStartDate());
+    }
+
+    @Test
+    public void explicit_open_ended_period_overlaps_a_later_period() {
+        final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 12:00:00"));
+        // An open-ended period starting in the gap runs into the timesheet that starts at 15:00.
+        final Optional<TgTimesheet> offendedTs = Validators.findFirstOverlapping(ts, null, dao, "startDate", "finishDate",
+                                                                                 date("2011-11-01 14:30:00"), null, "person");
+        assertTrue(offendedTs.isPresent());
+        assertEquals("Incorrect offended timesheet.", date("2011-11-01 15:00:00"), offendedTs.get().getStartDate());
+    }
+
+    @Test
+    public void entity_itself_is_excluded_when_matching_explicit_period_bounds() {
+        // The open-ended timesheet, tested against its own period, must not report itself.
+        final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 15:00:00"));
+        assertTrue(Validators.findFirstOverlapping(ts, null, dao, "startDate", "finishDate",
+                                                   date("2011-11-01 15:00:00"), null, "person").isEmpty());
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
         save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 12:00:00")).setFinishDate(date("2011-11-01 14:00:00")).setIncident("001"));
         save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 15:00:00")).setIncident("002"));
-    }
-
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
     }
 
 }

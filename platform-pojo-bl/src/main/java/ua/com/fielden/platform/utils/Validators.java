@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import com.google.common.collect.ImmutableList;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -17,6 +18,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.isUnionMember;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -113,19 +115,60 @@ public final class Validators {
      */
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(
             final T entity,
-            final fetch<T> fetchModel,
+            final @Nullable fetch<T> fetchModel,
             final IEntityReader<T> co,
             final String fromDateProperty,
             final String toDateProperty,
             final String... matchProperties)
     {
-        final var query = composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, matchProperties);
-        final var orderBy = orderBy().prop(fromDateProperty).asc().model();
+        return firstMatching(co, fetchModel, fromDateProperty,
+                             composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, matchProperties))
+               .orElse(null);
+    }
+
+    /// Returns the first entity overlapping the period `[fromDateValue, toDateValue]`, if there is one.
+    ///
+    /// This is the counterpart of [#overlaps(AbstractEntity, IEntityReader, String, String, Date, Date, String...)]
+    /// that yields the overlapping entity rather than a boolean, for use where the period bounds are not (or not yet) the values held by `entity`.
+    /// The primary case is a `BeforeChange` handler, which runs before the new value is assigned, so reading the bound from `entity` would yield the stale one.
+    ///
+    /// @param entity  an entity that is being validated for overlapping; used for excluding itself by ID and for reading `matchProperties`, but not the period bounds.
+    /// @param fetchModel  an optional fetch model (i.e., can be `null`) used to initialise the overlapping entity, if any.
+    /// @param co  an entity companion used for executing a matching query.
+    /// @param fromDateProperty  a property name representing a `from` date.
+    /// @param toDateProperty  a property name representing a `to` date.
+    /// @param fromDateValue  the start of the period being tested; cannot be `null`.
+    /// @param toDateValue  the end of the period being tested; `null` denotes an open-ended period.
+    /// @param matchProperties  optional properties that can be used to fine-tune entity matching when identifying those that should be considered for overlapping.
+    /// @return  an overlapping entity, if there is one.
+    ///
+    public static <T extends AbstractEntity<?>> Optional<T> findFirstOverlapping(
+            final T entity,
+            final @Nullable fetch<T> fetchModel,
+            final IEntityReader<T> co,
+            final String fromDateProperty,
+            final String toDateProperty,
+            final Date fromDateValue,
+            final @Nullable Date toDateValue,
+            final String... matchProperties)
+    {
+        return firstMatching(co, fetchModel, fromDateProperty,
+                             composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, fromDateValue, toDateValue, matchProperties));
+    }
+
+    /// Executes `query`, ordered by `orderByProperty`, and returns the first matching entity, if there is one.
+    ///
+    private static <T extends AbstractEntity<?>> Optional<T> firstMatching(
+            final IEntityReader<T> co,
+            final @Nullable fetch<T> fetchModel,
+            final String orderByProperty,
+            final EntityResultQueryModel<T> query)
+    {
+        final var orderBy = orderBy().prop(orderByProperty).asc().model();
 
         final var partialQem = from(query).with(orderBy);
         final var qem = fetchModel != null ? partialQem.with(fetchModel).model() : partialQem.model();
-        final var result = co.getFirstEntities(qem, 1);
-        return result.stream().findFirst().orElse(null);
+        return co.getFirstEntities(qem, 1).stream().findFirst();
     }
 
     /**
