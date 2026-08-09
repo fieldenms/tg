@@ -10,9 +10,30 @@ import java.util.Optional;
 
 import static org.junit.Assert.*;
 
+/// A test case for overlapping validation where existing periods are a mix of closed and open-ended ones, separated by gaps.
+///
+/// All timesheets in the fixture belong to `USER1` and fall on 2011-11-01:
+/// * 10:00 -- 11:00, closed;
+/// * a gap;
+/// * 12:00 -- 14:00, closed;
+/// * a gap;
+/// * 15:00 onwards, open-ended.
+///
 public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends AbstractDaoTestCase {
 
     private final ITgTimesheet dao = getInstance(ITgTimesheet.class);
+
+    @Test
+    public void new_closed_period_strictly_inside_a_gap_does_not_overlap() {
+        final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 11:15:00")).setFinishDate(date("2011-11-01 11:45:00")).setIncident("001");
+        assertFalse(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
+    }
+
+    @Test
+    public void new_closed_period_filling_a_gap_and_touching_both_neighbours_does_not_overlap() {
+        final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 11:00:00")).setFinishDate(date("2011-11-01 12:00:00")).setIncident("001");
+        assertFalse(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
+    }
 
     @Test
     public void new_closed_period_inside_an_open_ended_period_overlaps() {
@@ -28,8 +49,21 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
     }
 
     @Test
+    public void new_closed_period_containing_an_existing_period_overlaps() {
+        // The period spans both gaps and thus completely contains the timesheet occupying 12:00-14:00.
+        final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 11:30:00")).setFinishDate(date("2011-11-01 14:30:00")).setIncident("001");
+        assertTrue(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
+    }
+
+    @Test
     public void new_open_ended_period_overlaps_an_existing_open_ended_period() {
         final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 15:00:00")).setIncident("001");
+        assertTrue(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
+    }
+
+    @Test
+    public void new_open_ended_period_starting_in_a_gap_overlaps_the_period_that_follows() {
+        final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 11:30:00")).setIncident("001");
         assertTrue(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
     }
 
@@ -41,9 +75,24 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
     }
 
     @Test
+    public void expanding_a_period_into_the_surrounding_gaps_does_not_overlap() {
+        final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 12:00:00"));
+        ts.setStartDate(date("2011-11-01 11:30:00"));
+        ts.setFinishDate(date("2011-11-01 14:30:00"));
+        assertFalse(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
+    }
+
+    @Test
     public void extending_a_closed_period_into_the_next_one_overlaps() {
         final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 12:00:00"));
         ts.setFinishDate(date("2011-11-01 15:30:00"));
+        assertTrue(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
+    }
+
+    @Test
+    public void removing_the_finish_date_makes_a_period_overlap_a_later_one() {
+        final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 12:00:00"));
+        ts.setFinishDate(null);
         assertTrue(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
     }
 
@@ -76,7 +125,7 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
 
     @Test
     public void findFirstOverlapping_uses_the_explicit_period_bounds_rather_than_those_held_by_the_entity() {
-        // This timesheet occupies 12:00-14:00 and does not overlap anything, as the next one starts at 15:00.
+        // This timesheet occupies 12:00-14:00 and does not overlap anything, as the previous one ends at 11:00 and the next one starts at 15:00.
         final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 12:00:00"));
         assertNull("Precondition: the period held by the entity does not overlap.",
                    Validators.findFirstOverlapping(ts, dao, "startDate", "finishDate", "person"));
@@ -109,6 +158,7 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
     @Override
     protected void populateDomain() {
         super.populateDomain();
+        save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 10:00:00")).setFinishDate(date("2011-11-01 11:00:00")).setIncident("001"));
         save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 12:00:00")).setFinishDate(date("2011-11-01 14:00:00")).setIncident("001"));
         save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 15:00:00")).setIncident("002"));
     }
