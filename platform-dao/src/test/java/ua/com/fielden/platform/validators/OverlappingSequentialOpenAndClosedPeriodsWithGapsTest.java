@@ -9,6 +9,8 @@ import ua.com.fielden.platform.utils.Validators;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 
 /// A test case for overlapping validation where existing periods are a mix of closed and open-ended ones, separated by gaps.
 ///
@@ -71,6 +73,8 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
     public void closing_the_last_open_ended_period_does_not_overlap() {
         final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 15:00:00"));
         ts.setFinishDate(date("2011-11-01 17:30:00"));
+        // The period held before the change does not overlap either, so the assignment has to be confirmed for the assertion below to mean anything.
+        assertEquals("Precondition: the new finish date was assigned.", date("2011-11-01 17:30:00"), ts.getFinishDate());
         assertFalse(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
     }
 
@@ -79,6 +83,9 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
         final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 12:00:00"));
         ts.setStartDate(date("2011-11-01 11:30:00"));
         ts.setFinishDate(date("2011-11-01 14:30:00"));
+        // The period held before the change does not overlap either, so the assignments have to be confirmed for the assertion below to mean anything.
+        assertEquals("Precondition: the new start date was assigned.", date("2011-11-01 11:30:00"), ts.getStartDate());
+        assertEquals("Precondition: the new finish date was assigned.", date("2011-11-01 14:30:00"), ts.getFinishDate());
         assertFalse(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
     }
 
@@ -124,35 +131,55 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
     }
 
     @Test
-    public void findFirstOverlapping_uses_the_explicit_period_bounds_rather_than_those_held_by_the_entity() {
+    public void firstOverlapping_uses_the_explicit_period_bounds_rather_than_those_held_by_the_entity() {
         // This timesheet occupies 12:00-14:00 and does not overlap anything, as the previous one ends at 11:00 and the next one starts at 15:00.
         final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 12:00:00"));
         assertNull("Precondition: the period held by the entity does not overlap.",
                    Validators.findFirstOverlapping(ts, dao, "startDate", "finishDate", "person"));
 
-        // The very same entity, tested against a period it does not hold, does overlap the open-ended timesheet.
-        final Optional<TgTimesheet> offendedTs = Validators.findFirstOverlapping(ts, null, dao, "startDate", "finishDate",
-                                                                                 date("2011-11-01 16:30:00"), date("2011-11-01 19:00:00"), "person");
+        // The very same entity, tested against a period it does not hold, does overlap the timesheet that precedes it.
+        // The period is entirely before the one held by the entity, so both explicit bounds are what select the answer.
+        final Optional<TgTimesheet> offendedTs = Validators.firstOverlapping(ts, null, dao, "startDate", "finishDate",
+                                                                             date("2011-11-01 10:30:00"), date("2011-11-01 11:30:00"), "person");
         assertTrue(offendedTs.isPresent());
-        assertEquals("Incorrect offended timesheet.", date("2011-11-01 15:00:00"), offendedTs.get().getStartDate());
+        assertEquals("Incorrect offended timesheet.", date("2011-11-01 10:00:00"), offendedTs.get().getStartDate());
     }
 
     @Test
-    public void findFirstOverlapping_returns_the_open_ended_period_that_an_explicit_open_ended_period_starting_in_a_gap_runs_into() {
+    public void firstOverlapping_finds_nothing_when_an_explicit_period_fits_inside_a_gap() {
+        final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 15:00:00"));
+        // The period lies strictly inside the 11:00-12:00 gap -- its end is what keeps it clear of the timesheet starting at 12:00.
+        assertTrue(Validators.firstOverlapping(ts, null, dao, "startDate", "finishDate",
+                                               date("2011-11-01 11:15:00"), date("2011-11-01 11:45:00"), "person").isEmpty());
+    }
+
+    @Test
+    public void firstOverlapping_returns_the_open_ended_period_that_an_explicit_open_ended_period_starting_in_a_gap_runs_into() {
         final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 12:00:00"));
         // An open-ended period starting in the gap runs into the timesheet that starts at 15:00.
-        final Optional<TgTimesheet> offendedTs = Validators.findFirstOverlapping(ts, null, dao, "startDate", "finishDate",
-                                                                                 date("2011-11-01 14:30:00"), null, "person");
+        final Optional<TgTimesheet> offendedTs = Validators.firstOverlapping(ts, null, dao, "startDate", "finishDate",
+                                                                             date("2011-11-01 14:30:00"), null, "person");
         assertTrue(offendedTs.isPresent());
         assertEquals("Incorrect offended timesheet.", date("2011-11-01 15:00:00"), offendedTs.get().getStartDate());
     }
 
     @Test
-    public void findFirstOverlapping_excludes_the_entity_itself_when_matching_explicit_period_bounds() {
+    public void firstOverlapping_initialises_the_overlapping_entity_with_the_specified_fetch_model() {
+        final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 12:00:00"));
+        final Optional<TgTimesheet> offendedTs = Validators.firstOverlapping(ts, fetchOnly(TgTimesheet.class).with("startDate"), dao, "startDate", "finishDate",
+                                                                            date("2011-11-01 16:30:00"), date("2011-11-01 19:00:00"), "person");
+        assertTrue(offendedTs.isPresent());
+        assertEquals("Incorrect offended timesheet.", date("2011-11-01 15:00:00"), offendedTs.get().getStartDate());
+        // Property `incident` lies outside the fetch model, so it must be proxied -- the default fetch model would have initialised it.
+        assertTrue("Property outside the fetch model should be proxied.", isPropertyProxied(offendedTs.get(), "incident"));
+    }
+
+    @Test
+    public void firstOverlapping_excludes_the_entity_itself_when_matching_explicit_period_bounds() {
         // The open-ended timesheet, tested against its own period, must not report itself.
         final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 15:00:00"));
-        assertTrue(Validators.findFirstOverlapping(ts, null, dao, "startDate", "finishDate",
-                                                   date("2011-11-01 15:00:00"), null, "person").isEmpty());
+        assertTrue(Validators.firstOverlapping(ts, null, dao, "startDate", "finishDate",
+                                               date("2011-11-01 15:00:00"), null, "person").isEmpty());
     }
 
     @Override

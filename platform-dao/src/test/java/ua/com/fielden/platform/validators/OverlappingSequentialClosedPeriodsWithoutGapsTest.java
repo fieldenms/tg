@@ -4,17 +4,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.Validators;
 
@@ -68,17 +64,17 @@ public class OverlappingSequentialClosedPeriodsWithoutGapsTest extends AbstractD
     public void overlap_check_fails_if_a_matching_property_has_no_value() {
         final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 14:00:00"));
 
-        try {
-            Validators.overlaps(ts, dao, "startDate", "finishDate", "person", "incident");
-            fail("Should have thrown an exception warning about missing value in one of the matching properties.");
-        } catch (final Exception e) {
-        }
+        final var ex = assertThrows(IllegalArgumentException.class,
+                                    () -> Validators.overlaps(ts, dao, "startDate", "finishDate", "person", "incident"));
+        assertEquals("Entity “%s” should have a value for matching property “%s”.".formatted(ts, "incident"), ex.getMessage());
     }
 
     @Test
     public void shrinking_a_period_does_not_overlap() {
         final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 12:00:00"));
         ts.setFinishDate(date("2011-11-01 12:30:00"));
+        // The period held before the change does not overlap either, so the assignment has to be confirmed for the assertion below to mean anything.
+        assertEquals("Precondition: the new finish date was assigned.", date("2011-11-01 12:30:00"), ts.getFinishDate());
         assertFalse(Validators.overlaps(ts, dao, "startDate", "finishDate", "person"));
     }
 
@@ -143,11 +139,6 @@ public class OverlappingSequentialClosedPeriodsWithoutGapsTest extends AbstractD
         super.populateDomain();
         save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 12:00:00")).setFinishDate(date("2011-11-01 13:00:00")).setIncident("001"));
         save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 13:00:00")).setFinishDate(date("2011-11-01 15:00:00")).setIncident("002"));
-    }
-
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
     }
 
 }

@@ -111,7 +111,7 @@ public final class Validators {
      *           Optional properties that can be used to fine-tune entity matching when identifying those that should be considered for overlapping.
      *           For example, property `person` can be specified when searching for overlaps of entities `Timesheet`
      *           to consider only the timesheets for the same person as in `entity` being tested.
-     * @return  either an overlapping entity or `null`.
+     * @return  the overlapping entity with the earliest `fromDateProperty` value, or `null` if there is none.
      */
     public static <T extends AbstractEntity<?>> T findFirstOverlapping(
             final T entity,
@@ -126,23 +126,30 @@ public final class Validators {
                .orElse(null);
     }
 
-    /// Returns the first entity overlapping the period `[fromDateValue, toDateValue]`, if there is one.
+    /// Returns the first entity whose period overlaps the period running from `fromDateValue` to `toDateValue`, if there is one.
     ///
-    /// This is the counterpart of [#overlaps(AbstractEntity, IEntityReader, String, String, Date, Date, String...)]
-    /// that yields the overlapping entity rather than a boolean, for use where the period bounds are not (or not yet) the values held by `entity`.
+    /// This is the counterpart of [#overlaps(AbstractEntity, IEntityReader, String, String, Date, Date, String...)] that yields the overlapping entity rather than a boolean, for use where the period bounds are not (or not yet) the values held by `entity`.
     /// The primary case is a `BeforeChange` handler, which runs before the new value is assigned, so reading the bound from `entity` would yield the stale one.
     ///
+    /// Periods that merely touch do not overlap: an entity ending exactly at `fromDateValue`, or starting exactly at `toDateValue`, is not reported.
+    /// The exception is properties annotated with `DateOnly`, where the time portion is disregarded, so periods touching on the same date do overlap.
+    ///
+    /// The name deliberately differs from the `findFirstOverlapping` family, which returns `null` rather than an empty `Optional`.
+    /// Sharing that name would put an `Optional`-returning method into an overload set where `!= null` is the established idiom, and would make calls with `null` date arguments ambiguous.
+    ///
     /// @param entity  an entity that is being validated for overlapping; used for excluding itself by ID and for reading `matchProperties`, but not the period bounds.
-    /// @param fetchModel  an optional fetch model (i.e., can be `null`) used to initialise the overlapping entity, if any.
+    /// @param fetchModel  an optional fetch model used to initialise the overlapping entity, if any; `null` selects the default fetch model.
     /// @param co  an entity companion used for executing a matching query.
     /// @param fromDateProperty  a property name representing a `from` date.
     /// @param toDateProperty  a property name representing a `to` date.
     /// @param fromDateValue  the start of the period being tested; cannot be `null`.
     /// @param toDateValue  the end of the period being tested; `null` denotes an open-ended period.
     /// @param matchProperties  optional properties that can be used to fine-tune entity matching when identifying those that should be considered for overlapping.
-    /// @return  an overlapping entity, if there is one.
+    ///                         Each of them must have a value in `entity`.
+    /// @return  the overlapping entity with the earliest `fromDateProperty` value, if there is one.
+    /// @throws IllegalArgumentException  if `fromDateValue` is `null`, or if `entity` has no value for one of `matchProperties`.
     ///
-    public static <T extends AbstractEntity<?>> Optional<T> findFirstOverlapping(
+    public static <T extends AbstractEntity<?>> Optional<T> firstOverlapping(
             final T entity,
             final @Nullable fetch<T> fetchModel,
             final IEntityReader<T> co,
