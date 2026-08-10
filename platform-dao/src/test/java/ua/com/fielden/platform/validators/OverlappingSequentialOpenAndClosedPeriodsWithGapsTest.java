@@ -8,6 +8,7 @@ import ua.com.fielden.platform.utils.Validators;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
@@ -149,8 +150,9 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
     public void firstOverlapping_finds_nothing_when_an_explicit_period_fits_inside_a_gap() {
         final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 15:00:00"));
         // The period lies strictly inside the 11:00-12:00 gap -- its end is what keeps it clear of the timesheet starting at 12:00.
-        assertTrue(Validators.firstOverlapping(ts, null, dao, "startDate", "finishDate",
-                                               date("2011-11-01 11:15:00"), date("2011-11-01 11:45:00"), "person").isEmpty());
+        assertThat(Validators.firstOverlapping(ts, null, dao, "startDate", "finishDate",
+                                               date("2011-11-01 11:15:00"), date("2011-11-01 11:45:00"), "person"))
+                .isEmpty();
     }
 
     @Test
@@ -178,8 +180,12 @@ public class OverlappingSequentialOpenAndClosedPeriodsWithGapsTest extends Abstr
     public void firstOverlapping_excludes_the_entity_itself_when_matching_explicit_period_bounds() {
         // The open-ended timesheet, tested against its own period, must not report itself.
         final TgTimesheet ts = dao.findByKey("USER1", date("2011-11-01 15:00:00"));
-        assertTrue(Validators.firstOverlapping(ts, null, dao, "startDate", "finishDate",
-                                               date("2011-11-01 15:00:00"), null, "person").isEmpty());
+        assertThat(Validators.firstOverlapping(ts, null, dao, "startDate", "finishDate", date("2011-11-01 15:00:00"), null, "person"))
+                        .isEmpty();
+        assertThat(Validators.firstOverlapping(ts, null, dao, "startDate", "finishDate", date("2011-11-01 14:30:00"), null, "person"))
+                .isEmpty();
+        assertThat(Validators.firstOverlapping(ts, null, dao, "startDate", "finishDate", date("2011-11-01 15:30:00"), null, "person"))
+                .isEmpty();
     }
 
     @Override
