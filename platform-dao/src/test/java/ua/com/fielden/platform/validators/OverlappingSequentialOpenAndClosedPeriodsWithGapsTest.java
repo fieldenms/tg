@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 
-/// A test case for overlapping validation where existing periods are a mix of closed and open-ended ones, separated by gaps.
+/// A test suite for overlapping validation where existing periods are a mix of closed and open-ended ones, separated by gaps.
 ///
 /// All timesheets in the fixture belong to `USER1` and fall on 2011-11-01:
 /// * 10:00 -- 11:00, closed;

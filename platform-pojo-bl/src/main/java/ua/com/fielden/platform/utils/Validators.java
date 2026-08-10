@@ -6,7 +6,9 @@ import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
@@ -113,7 +115,7 @@ public final class Validators {
      *           to consider only the timesheets for the same person as in `entity` being tested.
      * @return  the overlapping entity with the earliest `fromDateProperty` value, or `null` if there is none.
      */
-    public static <T extends AbstractEntity<?>> T findFirstOverlapping(
+    public static <T extends AbstractEntity<?>> @Nullable T findFirstOverlapping(
             final T entity,
             final @Nullable fetch<T> fetchModel,
             final IEntityReader<T> co,
@@ -129,13 +131,13 @@ public final class Validators {
     /// Returns the first entity whose period overlaps the period running from `fromDateValue` to `toDateValue`, if there is one.
     ///
     /// This is the counterpart of [#overlaps(AbstractEntity, IEntityReader, String, String, Date, Date, String...)] that yields the overlapping entity rather than a boolean, for use where the period bounds are not (or not yet) the values held by `entity`.
-    /// The primary case is a `BeforeChange` handler, which runs before the new value is assigned, so reading the bound from `entity` would yield the stale one.
+    /// The primary case is a [BeforeChange] handler, which runs before the new value is assigned, so reading the bound from `entity` would yield the stale one.
     ///
     /// Periods that merely touch do not overlap: an entity ending exactly at `fromDateValue`, or starting exactly at `toDateValue`, is not reported.
-    /// The exception is properties annotated with `DateOnly`, where the time portion is disregarded, so periods touching on the same date do overlap.
+    /// The exception is properties annotated with [DateOnly], where the time portion is disregarded, so periods touching on the same date do overlap.
     ///
-    /// The name deliberately differs from the `findFirstOverlapping` family, which returns `null` rather than an empty `Optional`.
-    /// Sharing that name would put an `Optional`-returning method into an overload set where `!= null` is the established idiom, and would make calls with `null` date arguments ambiguous.
+    /// The name deliberately differs from the [#findFirstOverlapping] family, which returns `null` rather than an empty [Optional].
+    /// Sharing that name would put an [Optional]-returning method into an overload set where `!= null` is the established idiom, and would make calls with `null` date arguments ambiguous.
     ///
     /// @param entity  an entity that is being validated for overlapping; used for excluding itself by ID and for reading `matchProperties`, but not the period bounds.
     /// @param fetchModel  an optional fetch model used to initialise the overlapping entity, if any; `null` selects the default fetch model.

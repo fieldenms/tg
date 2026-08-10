@@ -6,17 +6,14 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.sample.domain.ITgDateTestEntity;
 import ua.com.fielden.platform.sample.domain.TgDateTestEntity;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.Validators;
 
-/**
- * A test case for to the validation logic that determins overlapping of time periods for cases where both the start and end properties as {@code @DateOnly}.
- *
- * @author TG Team
- *
- */
+/// A test suite for the validation of overlapping time periods where both the start and end properties are [DateOnly].
+///
 public class OverlappingDateOnlyTest extends AbstractDaoTestCase {
 
     private final ITgDateTestEntity co = co(TgDateTestEntity.class);
