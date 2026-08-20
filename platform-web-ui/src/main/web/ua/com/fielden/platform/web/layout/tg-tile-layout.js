@@ -21,6 +21,18 @@ const template = html`
 template.setAttribute('strip-whitespace', '');
 
 (function () {
+    // Screen sizes that a tile layout can be defined for.
+    const DESKTOP = 'desktop',
+        TABLET = 'tablet',
+        MOBILE = 'mobile';
+    // Layout resolution order for each screen size.
+    // The first entry is the layout defined for that screen size, the rest are fallbacks, nearest first.
+    // This mirrors how `tg-flex-layout` resolves its layouts.
+    const LAYOUT_ORDER = {
+        [DESKTOP]: ['whenDesktop', 'whenTablet', 'whenMobile'],
+        [TABLET]: ['whenTablet', 'whenMobile', 'whenDesktop'],
+        [MOBILE]: ['whenMobile', 'whenTablet', 'whenDesktop']
+    };
     // Set the layout for the given layout specification.
     const setLayout = function (layoutSpec) {
         if (typeof layoutSpec === "string") {
@@ -67,6 +79,29 @@ template.setAttribute('strip-whitespace', '');
                 item.style.minWidth = "calc(" + self.minCellWidth + " * " + item.cols + ")";
             }
         });
+    };
+    // Returns the layout to apply for `screen`, falling back to the nearest available one.
+    // Layouts are optional per screen size.
+    // Without a fallback, a configuration that omits the layout for the matching screen size leaves every tile
+    // unpositioned, collapsing them all onto the same static position -- see `:host ::slotted(.tile)`.
+    const layoutForScreen = function (screen) {
+        if (!screen) {
+            return null;
+        }
+        const order = LAYOUT_ORDER[screen];
+        const layoutName = order.find(name => this[name]);
+        if (layoutName && layoutName !== order[0]) {
+            warnAboutFallback.bind(this)(screen, layoutName);
+        }
+        return layoutName ? this[layoutName] : null;
+    };
+    // Warns about a missing layout, once per screen size, as layouts are re-resolved on every resize.
+    const warnAboutFallback = function (screen, layoutName) {
+        this._reportedFallbacks = this._reportedFallbacks || new Set();
+        if (!this._reportedFallbacks.has(screen)) {
+            this._reportedFallbacks.add(screen);
+            console.warn(`tg-tile-layout: no [${screen}] layout is defined, falling back to [${layoutName}].`);
+        }
     };
     // Returns the component's bounding box in index units; Component for which bounding box must be calculated is specified with componentIndex.
     const getComponentBoundingBox = function (componentIndex, layoutGrid) {
@@ -229,15 +264,15 @@ template.setAttribute('strip-whitespace', '');
         properties: {
             whenDesktop: {
                 type: Array,
-                observer: "_whenDesktopChanged"
+                observer: "_layoutSpecChanged"
             },
             whenTablet: {
                 type: Array,
-                observer: "_whenTabletChanged"
+                observer: "_layoutSpecChanged"
             },
             whenMobile: {
                 type: Array,
-                observer: "_whenMobileChanged"
+                observer: "_layoutSpecChanged"
             },
             minCellHeight: {
                 type: String,
@@ -250,17 +285,17 @@ template.setAttribute('strip-whitespace', '');
             desktopScreen: {
                 type: Boolean,
                 readOnly: true,
-                observer: "_handleDesktopScreen"
+                observer: "_screenChanged"
             },
             tabletScreen: {
                 type: Boolean,
                 readOnly: true,
-                observer: "_handleTabletScreen"
+                observer: "_screenChanged"
             },
             mobileScreen: {
                 type: Boolean,
                 readOnly: true,
-                observer: "_handleMobileScreen"
+                observer: "_screenChanged"
             },
             contentLoaded: {
                 type: Boolean,
@@ -283,27 +318,38 @@ template.setAttribute('strip-whitespace', '');
             this._setAppropriateScreen();
         },
         _mobileChanged: function (e, detail) {
-            this._setMobileScreen(detail.value);
+            this._screenMatched(MOBILE, detail.value);
         },
         _tabletChanged: function (e, detail) {
-            this._setTabletScreen(detail.value);
+            this._screenMatched(TABLET, detail.value);
         },
         _desktopChanged: function (e, detail) {
-            this._setDesktopScreen(detail.value);
+            this._screenMatched(DESKTOP, detail.value);
         },
-        _handleMobileScreen: function (newValue, oldValue) {
-            if (newValue && this.whenMobile && this.contentLoaded) {
-                setLayout.bind(this)(this.whenMobile);
+        // The media queries are disjoint, so the one that starts matching fully determines the screen size.
+        // Their `query-matches-changed` events are delivered one at a time though, and on a rotation the event for the
+        // screen size that stopped matching may arrive after the event for the one that started.
+        // Assigning all three flags together, and only when a query starts matching, keeps them in agreement at every
+        // point at which an observer can read them.
+        // Acting on a query that stopped matching is unnecessary and would make the flags disagree.
+        _screenMatched: function (screen, matches) {
+            if (matches) {
+                this._setDesktopScreen(screen === DESKTOP);
+                this._setTabletScreen(screen === TABLET);
+                this._setMobileScreen(screen === MOBILE);
             }
         },
-        _handleTabletScreen: function (newValue, oldValue) {
-            if (newValue && this.whenTablet && this.contentLoaded) {
-                setLayout.bind(this)(this.whenTablet);
+        // Only the screen size that has just started matching triggers a relayout.
+        _screenChanged: function (newValue, oldValue) {
+            if (newValue && this.contentLoaded) {
+                this._setAppropriateScreen();
             }
         },
-        _handleDesktopScreen: function (newValue, oldValue) {
-            if (newValue && this.whenDesktop && this.contentLoaded) {
-                setLayout.bind(this)(this.whenDesktop);
+        // Any layout specification can affect the applied layout, not just the one for the matching screen size,
+        // because layouts are resolved with fallbacks -- see `layoutForScreen`.
+        _layoutSpecChanged: function (newValue, oldValue) {
+            if (this.contentLoaded) {
+                this._setAppropriateScreen();
             }
         },
         _handleContentLoading: function (newValue, oldValue) {
@@ -312,28 +358,21 @@ template.setAttribute('strip-whitespace', '');
             }
         },
         _setAppropriateScreen: function () {
-            if (this.desktopScreen && this.whenDesktop) {
-                setLayout.bind(this)(this.whenDesktop);
-            } else if (this.tabletScreen && this.whenTablet) {
-                setLayout.bind(this)(this.whenTablet);
-            } else if (this.mobileScreen && this.whenMobile) {
-                setLayout.bind(this)(this.whenMobile);
+            const layout = layoutForScreen.bind(this)(this._matchingScreen());
+            if (layout) {
+                setLayout.bind(this)(layout);
             }
         },
-        _whenMobileChanged: function (newValue, oldValue) {
-            if (this.mobileScreen && newValue && this.contentLoaded) {
-                setLayout.bind(this)(this.whenMobile);
+        // Returns the screen size that currently matches, or `null` while no media query has matched yet.
+        _matchingScreen: function () {
+            if (this.desktopScreen) {
+                return DESKTOP;
+            } else if (this.tabletScreen) {
+                return TABLET;
+            } else if (this.mobileScreen) {
+                return MOBILE;
             }
-        },
-        _whenTabletChanged: function (newValue, oldValue) {
-            if (this.tabletScreen && newValue && this.contentLoaded) {
-                setLayout.bind(this)(this.whenTablet);
-            }
-        },
-        _whenDesktopChanged: function (newValue, oldValue) {
-            if (this.desktopScreen && newValue && this.contentLoaded) {
-                setLayout.bind(this)(this.whenDesktop);
-            }
+            return null;
         },
         _minCellHeightChanged: function (newValue, oldValue) {
             setMinDimensions.bind(this)();
@@ -341,11 +380,14 @@ template.setAttribute('strip-whitespace', '');
         _minCellWidthChanged: function (newValue, oldValue) {
             setMinDimensions.bind(this)();
         },
+        // Upper bounds are a hair below the next lower bound rather than a whole pixel below it.
+        // Viewport widths are not necessarily integral -- device pixel ratios and page zoom produce fractional ones --
+        // and a whole-pixel gap leaves widths such as 979.5 matching no query at all.
         _calcMobileQuery: function () {
-            return "max-width: " + (this.$.appConfig.minTabletWidth - 1) + "px";
+            return "max-width: " + (this.$.appConfig.minTabletWidth - 0.02) + "px";
         },
         _calcTabletQuery: function () {
-            return "(min-width: " + this.$.appConfig.minTabletWidth + "px) and (max-width: " + (this.$.appConfig.minDesktopWidth - 1) + "px)";
+            return "(min-width: " + this.$.appConfig.minTabletWidth + "px) and (max-width: " + (this.$.appConfig.minDesktopWidth - 0.02) + "px)";
         },
         _calcDesktopQuery: function () {
             return "min-width: " + this.$.appConfig.minDesktopWidth + "px";
