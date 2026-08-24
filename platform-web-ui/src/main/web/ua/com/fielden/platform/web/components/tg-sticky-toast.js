@@ -157,7 +157,9 @@ class TgStickyToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
 
 customElements.define('tg-sticky-toast', TgStickyToast);
 
-// A single sticky toast is created for the whole application, as is done for tg-delayed-action-toast.
+/// A single sticky toast for the whole application.
+/// It is created similarly as it is done for tg-delayed-action-toast.
+///
 const stickyToastElement = document.createElement('tg-sticky-toast');
 document.body.appendChild(stickyToastElement);
 
