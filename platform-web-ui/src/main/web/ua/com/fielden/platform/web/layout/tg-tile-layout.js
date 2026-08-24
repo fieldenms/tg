@@ -23,8 +23,8 @@ template.setAttribute('strip-whitespace', '');
 (function () {
     // Screen sizes that a tile layout can be defined for.
     const DESKTOP = 'desktop',
-        TABLET = 'tablet',
-        MOBILE = 'mobile';
+          TABLET = 'tablet',
+          MOBILE = 'mobile';
     // Layout resolution order for each screen size.
     // The first entry is the layout defined for that screen size, the rest are fallbacks, nearest first.
     // This mirrors how `tg-flex-layout` resolves its layouts.
