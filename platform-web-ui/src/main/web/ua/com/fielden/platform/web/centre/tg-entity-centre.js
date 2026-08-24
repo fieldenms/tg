@@ -17,6 +17,7 @@ import '/resources/actions/tg-ui-action.js';
 import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 import { resetCustomSettings } from '/resources/centre/tg-entity-centre-insertion-point.js';
+import { showStickyToast, hideStickyToast } from '/resources/components/tg-sticky-toast.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 
 import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
@@ -1053,6 +1054,17 @@ Polymer({
                 persistedIps.forEach(tagName => resetCustomSettings(this.miType, tagName));
                 // Remove all IP orders from each container and splitter positions too.
                 this.resetCustomSettingsForInsertionPoints();
+
+                // Let the user know that their custom layout was reset, explaining the reason in the second row.
+                showStickyToast({
+                    text: 'Custom layout was reset.',
+                    detail: 'Due to the software update your custom layout needed to be reset to ensure its integrity. '
+                        + 'Please adjust the new layout to fit your workflow.',
+                    actions: '<paper-button class="action" data-tap="close" style="color: var(--paper-grey-400);">Close</paper-button>',
+                    handlers: {
+                        close: () => hideStickyToast()
+                    }
+                });
             }
         }
     },
