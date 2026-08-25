@@ -423,6 +423,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
 
     disconnectedCallback () {
+        this._clearDragState();
         this._dndCancelHoldTimer();
         this._reportDndDiag();
         super.disconnectedCallback();
@@ -953,7 +954,14 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
                 dragEvent.dataTransfer.effectAllowed = "copyMove";
                 dragEvent.dataTransfer.setDragImage(elementToDrag, relMousePos.x, relMousePos.y); 
                 hideTooltip();
-                setTimeout(() => {
+                // Assignment of the dragging state is deferred, because it hides the row through `[is-dragging-item]`
+                // and, on a desktop, the drag handle that carries `draggable` through `drag-mode` on `iron-list`.
+                // Hiding the source of a drag synchronously within `dragstart` aborts the drag on WebKit.
+                // Assigning it synchronously was measured on macOS Safari 26.5 as two drags that started and ended without ever producing a drop.
+                // The same measurement on Chrome 151 for Android completed its drag, so the abort is specific to WebKit rather than common to every engine.
+                // The handle is retained so that the assignment can be cancelled when a drag ends before the timer runs.
+                this._dragStateTimer = setTimeout(() => {
+                    this._dragStateTimer = null;
                     const itemIndex = this._getIndexForElement(elementToDrag);
                     this._reorderingObject = {
                         origin: itemIndex,
@@ -985,8 +993,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             this._countDnd("dropped");
             const chosenIds = this.entity.get("chosenIds");
             this.entity.setAndRegisterPropertyTouch("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
-            delete this._reorderingObject;
-            this._draggingItem = null;
+            this._clearDragState();
             // Invoke validation after user has completed item reordering.
             this._invokeValidation.bind(this)();
         }
@@ -996,9 +1003,24 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         this._countDnd("dragend");
         if (this._reorderingObject) {
             this.moveItem(this._reorderingObject.from, this._reorderingObject.origin);
-            delete this._reorderingObject;
-            this._draggingItem = null;
         }
+        this._clearDragState();
+    }
+
+    /**
+     * Cancels a pending assignment of the dragging state and clears whatever has already been assigned.
+     * This runs on every `dragend`, whether or not a drop occurred, so that nothing outlives a drag.
+     * A drag can end before the deferred assignment in `_startDrag` runs, which is the case on engines that abort a drag promptly.
+     * The state would then be assigned after the drag had ended and would never be cleared, leaving the row hidden by `[is-dragging-item]` indefinitely.
+     * A surviving `_reorderingObject` would also allow a later `dragover` to reorder items outside of a drag, which can leave the displayed order different from the order recorded in `chosenIds`.
+     */
+    _clearDragState () {
+        if (this._dragStateTimer) {
+            clearTimeout(this._dragStateTimer);
+            this._dragStateTimer = null;
+        }
+        delete this._reorderingObject;
+        this._draggingItem = null;
     }
     
     /**
