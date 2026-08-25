@@ -22,6 +22,8 @@ import { UnreportableError } from '/resources/components/tg-global-error-handler
  * The classic user-agent string is frozen by the browser, so on Android it always reports version `10` and model `K`.
  * Only User-Agent Client Hints can identify the actual OS version, device model and rendering engine.
  * This is a constant for the lifetime of the page, so it is resolved once and cached.
+ * The reported value is a device description, or `uach=unavailable` on engines without Client Hints, as confirmed on iOS Safari 26.6.
+ * It is `uach=error` if the query is rejected, and `uach=pending` if a session is reported before the query settles.
  */
 let _uaDetails = null;
 
@@ -73,7 +75,9 @@ const additionalTemplate = html`
             @apply --layout-center;
             padding: 16px 16px 16px 0;
             border-bottom: 1px solid #DDD;
-            /* Long-pressing selectable text competes with drag initiation on touch devices. */
+        }
+        /* Long-pressing selectable text competes with drag initiation on touch devices; only reorderable lists are dragged. */
+        :host([can-reorder-items]) .item {
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
@@ -394,12 +398,16 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         this.addEventListener('dragend', this._endDrag.bind(this));
 
         // Diagnostic listeners for issue #2819; these only count events and never interfere with them.
-        this.addEventListener('pointerdown', this._dndPointerDown.bind(this));
-        this.addEventListener('pointermove', this._dndPointerMove.bind(this));
-        this.addEventListener('pointerup', this._dndPointerEnd.bind(this));
-        this.addEventListener('pointercancel', this._dndPointerEnd.bind(this));
-        this.addEventListener('contextmenu', () => this._countDnd("ctx"));
-        this.addEventListener('selectstart', () => this._countDnd("sel"));
+        // Only reorderable lists are reported, so there is nothing to observe on the rest.
+        if (this.canReorderItems) {
+            this.addEventListener('pointerdown', this._dndPointerDown.bind(this));
+            this.addEventListener('pointermove', this._dndPointerMove.bind(this));
+            this.addEventListener('pointerup', this._dndPointerEnd.bind(this));
+            this.addEventListener('pointercancel', this._dndPointerEnd.bind(this));
+            this.addEventListener('contextmenu', e => this._dndRowFor(e) && this._countDnd("ctx"));
+            // `selectstart` is not composed, so it never leaves this shadow root and has to be observed there rather than on the host.
+            this.shadowRoot.addEventListener('selectstart', e => this._dndRowFor(e) && this._countDnd("sel"));
+        }
 
         this._touchEnabled = isTouchEnabled();
     }
@@ -410,7 +418,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         this._reportDndDiag();
         this._originalChosenIds = null;
         this._phraseForSearching ="";
-        this._dndDiag = {taps: 0, held: 0, ctx: 0, sel: 0, pcancel: 0, dragstart: 0, dragInit: 0, dropped: 0};
+        this._dndDiag = {taps: 0, held: 0, ctx: 0, sel: 0, pcancel: 0, dragstart: 0, dragInit: 0, dropped: 0, dragend: 0};
         _resolveUaDetails();
     }
 
@@ -985,6 +993,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
 
     _endDrag (dragEvent) {
+        this._countDnd("dragend");
         if (this._reorderingObject) {
             this.moveItem(this._reorderingObject.from, this._reorderingObject.origin);
             delete this._reorderingObject;
@@ -994,13 +1003,15 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     
     /**
      * Returns the reorderable row that the specified event originated from, or `null`.
+     * The target of `selectstart` is a text node, so it is normalised to the closest element before walking up.
      */
     _dndRowFor (e) {
         const target = e.composedPath()[0];
-        if (!target || target.nodeType !== Node.ELEMENT_NODE) {
+        const startElement = target && (target.nodeType === Node.ELEMENT_NODE ? target : target.parentElement);
+        if (!startElement) {
             return null;
         }
-        return getParentAnd(target, element => element.hasAttribute("drag-element"));
+        return getParentAnd(startElement, element => element.hasAttribute("drag-element")) || null;
     }
 
     /**
@@ -1068,7 +1079,11 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
      * A non-zero `sel` means that suppression of text selection is not in effect on the device.
      * `pcancel` counts cancellation of the pointer stream, which is expected once per drag but, alongside `dragstart` of `0`, indicates that something outside the page is taking the touch.
      * A non-zero `dragstart` with `dragInit` of `0` means the drag was initiated but the row was not recognised as draggable.
-     * A non-zero `dragInit` with `dropped` of `0` means the drop was never registered, which also happens when the user returns an item to its original position.
+     * A non-zero `dragInit` with `dropped` of `0` means that no drop was delivered.
+     * `_dragOver` marks the editor as a valid drop target, so a drop anywhere over it is counted, including one back at the starting position.
+     * What remains is an abandoned drag, such as a release outside the editor, and an engine that never delivers a drop at all, as observed on iOS Safari.
+     * `dragend` counts the engine signalling the end of a drag, which separates those two cases.
+     * Alongside `dropped` of `0`, a non-zero `dragend` means the drag was abandoned, while `dragend` of `0` means the engine never ended it.
      * Reporting is done with `UnreportableError`, which reaches the server log via `/error` without a toast for the user.
      * Only lists with reordering enabled are reported, which confines this to `Customise Columns` and keeps the volume to one line per dialog session.
      * Nothing is used as a filter beyond that, so that an absent breadcrumb means a broken breadcrumb.
@@ -1082,7 +1097,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         this._dndDiag = null;
         Promise.reject(new UnreportableError(
             `DND-DIAG touch=${this._touchEnabled} taps=${diag.taps} held=${diag.held} ctx=${diag.ctx} sel=${diag.sel}` +
-            ` pcancel=${diag.pcancel} dragstart=${diag.dragstart} dragInit=${diag.dragInit} dropped=${diag.dropped}` +
+            ` pcancel=${diag.pcancel} dragstart=${diag.dragstart} dragInit=${diag.dragInit} dropped=${diag.dropped} dragend=${diag.dragend}` +
             ` mtp=${navigator.maxTouchPoints} vw=${window.innerWidth} ${_uaDetails} ua=${navigator.userAgent}`));
     }
 
