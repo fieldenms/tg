@@ -91,7 +91,7 @@ class TgGlobalErrorHandler extends PolymerElement {
             /**
              * @property {Array}
              * Queue of errors to be sent to the server for processing.
-             * /
+             */
             _errorQueue: Array,
 
             /**
