@@ -952,7 +952,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
                 this._countDnd("dragInit");
                 const relMousePos = getRelativePos(dragEvent.clientX, dragEvent.clientY, elementToDrag);
                 dragEvent.dataTransfer.effectAllowed = "copyMove";
-                dragEvent.dataTransfer.setDragImage(elementToDrag, relMousePos.x, relMousePos.y); 
+                dragEvent.dataTransfer.setDragImage(this._createDragImage(elementToDrag), relMousePos.x, relMousePos.y);
                 hideTooltip();
                 // Assignment of the dragging state is deferred, because it hides the row through `[is-dragging-item]`
                 // and, on a desktop, the drag handle that carries `draggable` through `drag-mode` on `iron-list`.
@@ -1019,8 +1019,66 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             clearTimeout(this._dragStateTimer);
             this._dragStateTimer = null;
         }
+        this._removeDragImage();
         delete this._reorderingObject;
         this._draggingItem = null;
+    }
+
+    /**
+     * Creates an untransformed copy of the specified row to serve as the drag image.
+     * `iron-list` positions every row with an inline `transform: translate3d(0, Ypx, 0)`, so only the first row of an unscrolled list has `Y` of `0`.
+     * WebKit appears to disregard that transform when it rasterises a drag image, painting the row outside the bounds of the resulting bitmap.
+     * The drag then has no visual representation for every row except the one at `Y` of `0`, as observed on macOS Safari 26.5 for issue #2819.
+     * Clearing `transform` on the copy removes that offset, which is the whole point of taking a copy.
+     * The copy is appended to this shadow root so that the same scoped rules style it as a row, and it is positioned off-screen so that it can be neither seen nor interacted with.
+     */
+    _createDragImage (elementToDrag) {
+        this._removeDragImage();
+        const rect = elementToDrag.getBoundingClientRect();
+        const dragImage = elementToDrag.cloneNode(true);
+        // The copy must not be mistaken for a row by the drag handlers or by the diagnostics.
+        dragImage.removeAttribute("drag-element");
+        dragImage.removeAttribute("collectional-index");
+        dragImage.removeAttribute("draggable");
+        // `cloneNode` copies the `style` attribute, so the inline transform of the row has to be cleared explicitly.
+        dragImage.style.transform = "none";
+        dragImage.style.position = "fixed";
+        dragImage.style.top = "0";
+        dragImage.style.left = "-100000px";
+        dragImage.style.width = `${rect.width}px`;
+        dragImage.style.height = `${rect.height}px`;
+        dragImage.style.pointerEvents = "none";
+        dragImage.style.setProperty("--paper-checkbox-animation-duration", "0s");
+        this.shadowRoot.appendChild(dragImage);
+        this._settleDragImageCheckboxes(dragImage);
+        dragImage.offsetHeight; // forces layout, so that an engine rasterising synchronously within `setDragImage` finds the copy laid out
+        this._dragImage = dragImage;
+        return dragImage;
+    }
+
+    /**
+     * Puts the checkboxes of a drag image straight into their settled state.
+     * `cloneNode` does not copy shadow DOM, so each cloned `paper-checkbox` is upgraded afresh and restarts `checkmark-expand`,
+     * an animation that expands the tick from `scale(0, 0)` over 140ms and supplies the only transform the tick ever has.
+     * A drag image is rasterised long before that completes, which captures a checked box as a plain blue square.
+     * `--paper-checkbox-animation-duration` is the documented way to collapse the animation, and the final transform is
+     * also assigned directly, because a zero duration still leaves the tick relying on the fill being applied in time.
+     */
+    _settleDragImageCheckboxes (dragImage) {
+        dragImage.querySelectorAll("paper-checkbox").forEach(checkbox => {
+            const checkmark = checkbox.shadowRoot && checkbox.shadowRoot.querySelector("#checkmark");
+            if (checkmark) {
+                checkmark.style.animation = "none";
+                checkmark.style.transform = "scale(1, 1) rotate(45deg)";
+            }
+        });
+    }
+
+    _removeDragImage () {
+        if (this._dragImage) {
+            this._dragImage.remove();
+            this._dragImage = null;
+        }
     }
     
     /**
