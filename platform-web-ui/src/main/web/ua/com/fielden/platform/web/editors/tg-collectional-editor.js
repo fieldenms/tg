@@ -682,7 +682,12 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
 
     _computeStyleForDragAnchor (selected, _touchEnabled) {
-        return !selected || _touchEnabled ? "visibility: hidden;" : ""; 
+        if (!selected) {
+            return "visibility: hidden;";
+        }
+        // A touch device has no hover, so the handle of a selected row has to be shown outright rather than left to `.item:hover .drag-anchor`.
+        // It serves only as an affordance there, because on touch it is the row that carries `draggable` rather than the handle.
+        return _touchEnabled ? "visibility: visible;" : "";
     }
 
     _computeTitleStyle (canReorderItems) {
@@ -952,7 +957,8 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
                 this._countDnd("dragInit");
                 const relMousePos = getRelativePos(dragEvent.clientX, dragEvent.clientY, elementToDrag);
                 dragEvent.dataTransfer.effectAllowed = "copyMove";
-                dragEvent.dataTransfer.setDragImage(this._createDragImage(elementToDrag), relMousePos.x, relMousePos.y);
+                const dragImage = this._createDragImage(elementToDrag, relMousePos);
+                dragEvent.dataTransfer.setDragImage(dragImage.element, dragImage.x, dragImage.y);
                 hideTooltip();
                 // Assignment of the dragging state is deferred, because it hides the row through `[is-dragging-item]`
                 // and, on a desktop, the drag handle that carries `draggable` through `drag-mode` on `iron-list`.
@@ -1025,35 +1031,57 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
 
     /**
-     * Creates an untransformed copy of the specified row to serve as the drag image.
+     * Creates the drag image for the specified row, as an untransformed copy of it placed inside a transparent container.
      * `iron-list` positions every row with an inline `transform: translate3d(0, Ypx, 0)`, so only the first row of an unscrolled list has `Y` of `0`.
      * WebKit appears to disregard that transform when it rasterises a drag image, painting the row outside the bounds of the resulting bitmap.
      * The drag then has no visual representation for every row except the one at `Y` of `0`, as observed on macOS Safari 26.5 for issue #2819.
-     * Clearing `transform` on the copy removes that offset, which is the whole point of taking a copy.
-     * The copy is appended to this shadow root so that the same scoped rules style it as a row, and it is positioned off-screen so that it can be neither seen nor interacted with.
+     * Clearing `transform` on the copy removes that offset.
+     * The container is padded on touch, because a touch device centres the drag image on the touch point rather than honour the hot spot given to `setDragImage`.
+     * Sizing it so that the grab point falls at its centre makes the hot spot and the centre one and the same coordinate, which positions the row correctly either way.
+     * Padding costs up to twice the size of a row, so it is confined to touch, where a hot spot would otherwise be ignored.
+     * A wide row would otherwise exceed the largest drag image an engine will render, which Chrome truncates rather than scales, as seen on a maximised window holding a maximised dialog.
+     * The container is appended to this shadow root so that the same scoped rules style the copy as a row, and it is positioned off-screen so that it can be neither seen nor interacted with.
+     * The returned hot spot follows the copy, so that it is the grab point wherever within the container the copy has been placed.
      */
-    _createDragImage (elementToDrag) {
+    _createDragImage (elementToDrag, grabPos) {
         this._removeDragImage();
         const rect = elementToDrag.getBoundingClientRect();
-        const dragImage = elementToDrag.cloneNode(true);
+        const row = elementToDrag.cloneNode(true);
         // The copy must not be mistaken for a row by the drag handlers or by the diagnostics.
-        dragImage.removeAttribute("drag-element");
-        dragImage.removeAttribute("collectional-index");
-        dragImage.removeAttribute("draggable");
+        row.removeAttribute("drag-element");
+        row.removeAttribute("collectional-index");
+        row.removeAttribute("draggable");
         // `cloneNode` copies the `style` attribute, so the inline transform of the row has to be cleared explicitly.
-        dragImage.style.transform = "none";
+        row.style.transform = "none";
+        row.style.position = "absolute";
+        row.style.width = `${rect.width}px`;
+        row.style.height = `${rect.height}px`;
+
+        // Padding the container out to twice the larger distance from the grab point to an edge leaves that point at the centre, with the row still wholly inside.
+        const padded = this._touchEnabled;
+        const width = padded ? 2 * Math.max(grabPos.x, rect.width - grabPos.x) : rect.width;
+        const height = padded ? 2 * Math.max(grabPos.y, rect.height - grabPos.y) : rect.height;
+        const left = padded ? width / 2 - grabPos.x : 0;
+        const top = padded ? height / 2 - grabPos.y : 0;
+        row.style.left = `${left}px`;
+        row.style.top = `${top}px`;
+
+        const dragImage = document.createElement("div");
         dragImage.style.position = "fixed";
         dragImage.style.top = "0";
         dragImage.style.left = "-100000px";
-        dragImage.style.width = `${rect.width}px`;
-        dragImage.style.height = `${rect.height}px`;
+        dragImage.style.width = `${width}px`;
+        dragImage.style.height = `${height}px`;
+        dragImage.style.background = "transparent";
         dragImage.style.pointerEvents = "none";
         dragImage.style.setProperty("--paper-checkbox-animation-duration", "0s");
+        dragImage.appendChild(row);
+
         this.shadowRoot.appendChild(dragImage);
         this._settleDragImageCheckboxes(dragImage);
         dragImage.offsetHeight; // forces layout, so that an engine rasterising synchronously within `setDragImage` finds the copy laid out
         this._dragImage = dragImage;
-        return dragImage;
+        return {element: dragImage, x: left + grabPos.x, y: top + grabPos.y};
     }
 
     /**
