@@ -15,6 +15,34 @@ import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js'
 import { GestureEventListeners } from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
 import { scrollContainerIfPointNearTheEdge, tearDownEvent, isTouchEnabled, getParentAnd, getRelativePos} from '/resources/reflection/tg-polymer-utils.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
+
+/**
+ * High-entropy user-agent details for the drag-and-drop diagnostics of issue #2819.
+ * The classic user-agent string is frozen by the browser, so on Android it always reports version `10` and model `K`.
+ * Only User-Agent Client Hints can identify the actual OS version, device model and rendering engine.
+ * This is a constant for the lifetime of the page, so it is resolved once and cached.
+ */
+let _uaDetails = null;
+
+const _resolveUaDetails = function () {
+    if (_uaDetails !== null) {
+        return;
+    }
+    _uaDetails = "uach=pending";
+    const uaData = navigator.userAgentData;
+    if (uaData && uaData.getHighEntropyValues) {
+        uaData.getHighEntropyValues(["platformVersion", "model", "fullVersionList"]).then(values => {
+            const brands = (values.fullVersionList || []).map(brand => `${brand.brand}/${brand.version}`).join(",");
+            _uaDetails = `plat=${uaData.platform}/${values.platformVersion || "?"} model=${values.model || "?"}` +
+                ` uaMobile=${uaData.mobile} brands=[${brands}]`;
+        }).catch(() => {
+            _uaDetails = "uach=error";
+        });
+    } else {
+        _uaDetails = "uach=unavailable";
+    }
+};
 
 const additionalTemplate = html`
     <style>
@@ -365,13 +393,31 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         this.addEventListener("drop", this._dragDrop);
         this.addEventListener('dragend', this._endDrag.bind(this));
 
+        // Diagnostic listeners for issue #2819; these only count events and never interfere with them.
+        this.addEventListener('pointerdown', this._dndPointerDown.bind(this));
+        this.addEventListener('pointermove', this._dndPointerMove.bind(this));
+        this.addEventListener('pointerup', this._dndPointerEnd.bind(this));
+        this.addEventListener('pointercancel', this._dndPointerEnd.bind(this));
+        this.addEventListener('contextmenu', () => this._countDnd("ctx"));
+        this.addEventListener('selectstart', () => this._countDnd("sel"));
+
         this._touchEnabled = isTouchEnabled();
     }
 
     connectedCallback () {
         super.connectedCallback();
+        // Report the previous session in case it was not reported on disconnection.
+        this._reportDndDiag();
         this._originalChosenIds = null;
         this._phraseForSearching ="";
+        this._dndDiag = {taps: 0, held: 0, ctx: 0, sel: 0, pcancel: 0, dragstart: 0, dragInit: 0, dropped: 0};
+        _resolveUaDetails();
+    }
+
+    disconnectedCallback () {
+        this._dndCancelHoldTimer();
+        this._reportDndDiag();
+        super.disconnectedCallback();
     }
 
     _calcItemTooltip (item) {
@@ -450,6 +496,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
 
     _selectionHandler (e) {
         if (this._isSelectionEnabled(this._forReview)) {
+            this._countDnd("taps");
             this.$.input.toggleSelectionForItem(e.model.item);
             tearDownEvent(e);
         }
@@ -888,10 +935,12 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
 
     _startDrag (dragEvent) {
+        this._countDnd("dragstart");
         const target = dragEvent.composedPath()[0];
         if (target.nodeType === Node.ELEMENT_NODE && target.getAttribute("draggable") === 'true') {
             const elementToDrag = getParentAnd(target, element => element.hasAttribute("drag-element"));
             if (elementToDrag && elementToDrag.hasAttribute("selected")) {
+                this._countDnd("dragInit");
                 const relMousePos = getRelativePos(dragEvent.clientX, dragEvent.clientY, elementToDrag);
                 dragEvent.dataTransfer.effectAllowed = "copyMove";
                 dragEvent.dataTransfer.setDragImage(elementToDrag, relMousePos.x, relMousePos.y); 
@@ -925,6 +974,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
 
     _dragDrop (dragEvent) {
         if (this._reorderingObject) {
+            this._countDnd("dropped");
             const chosenIds = this.entity.get("chosenIds");
             this.entity.setAndRegisterPropertyTouch("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
             delete this._reorderingObject;
@@ -942,6 +992,100 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         }
     }
     
+    /**
+     * Returns the reorderable row that the specified event originated from, or `null`.
+     */
+    _dndRowFor (e) {
+        const target = e.composedPath()[0];
+        if (!target || target.nodeType !== Node.ELEMENT_NODE) {
+            return null;
+        }
+        return getParentAnd(target, element => element.hasAttribute("drag-element"));
+    }
+
+    /**
+     * Starts a timer that counts a long press that neither became a drag nor ended within the threshold.
+     * A successful drag cancels the pointer stream well before the threshold, so `held` approximates long presses where nothing happened.
+     */
+    _dndPointerDown (e) {
+        this._dndCancelHoldTimer();
+        if (!this._dndDiag || !this._dndRowFor(e)) {
+            return;
+        }
+        this._dndHoldOrigin = {x: e.clientX, y: e.clientY};
+        this._dndHoldTimer = setTimeout(() => {
+            this._dndHoldTimer = null;
+            this._countDnd("held");
+        }, 600);
+    }
+
+    _dndPointerMove (e) {
+        if (this._dndHoldTimer && this._dndHoldOrigin) {
+            const dx = e.clientX - this._dndHoldOrigin.x;
+            const dy = e.clientY - this._dndHoldOrigin.y;
+            if (dx * dx + dy * dy > 100) { // a movement of more than 10px is not a long press
+                this._dndCancelHoldTimer();
+            }
+        }
+    }
+
+    _dndPointerEnd (e) {
+        if (e.type === "pointercancel") {
+            this._countDnd("pcancel");
+        }
+        this._dndCancelHoldTimer();
+    }
+
+    _dndCancelHoldTimer () {
+        if (this._dndHoldTimer) {
+            clearTimeout(this._dndHoldTimer);
+            this._dndHoldTimer = null;
+        }
+        this._dndHoldOrigin = null;
+    }
+
+    /**
+     * Increments a counter of the current drag-and-drop diagnostic session.
+     * See `_reportDndDiag` for the purpose of this instrumentation.
+     */
+    _countDnd (key) {
+        if (this._dndDiag) {
+            this._dndDiag[key] += 1;
+        }
+    }
+
+    /**
+     * Reports a single diagnostic breadcrumb per session with a reorderable list.
+     * This is temporary instrumentation for issue #2819, where column reordering is reported as not working on managed Android tablets.
+     * Reordering relies on the browser's own long-tap-to-drag gesture on touch devices, so there is otherwise no way to tell whether it fires at all in the field.
+     * A completed reorder on touch reads `held=0 sel=0 pcancel=1 dragstart=1 dragInit=1 dropped=1`.
+     * That reference signature was observed on a Samsung SM-T570 running Android 13 and on a Pixel 8 running Android 17, both with Chrome 151.
+     * `ctx` was `1` on the former and `0` on the latter, so a context menu accompanies a successful drag on some devices but not others.
+     * The remaining counters discriminate between the ways it can fail.
+     * `held` counts long presses that produced no drag, which separates a refused gesture from a user who never attempted one.
+     * `ctx` and `sel` count context menus and text selections on rows.
+     * A context menu is also raised during a successful long-tap drag, so `ctx` indicates pre-emption of the drag only when `dragstart` is `0`.
+     * A non-zero `sel` means that suppression of text selection is not in effect on the device.
+     * `pcancel` counts cancellation of the pointer stream, which is expected once per drag but, alongside `dragstart` of `0`, indicates that something outside the page is taking the touch.
+     * A non-zero `dragstart` with `dragInit` of `0` means the drag was initiated but the row was not recognised as draggable.
+     * A non-zero `dragInit` with `dropped` of `0` means the drop was never registered, which also happens when the user returns an item to its original position.
+     * Reporting is done with `UnreportableError`, which reaches the server log via `/error` without a toast for the user.
+     * Only lists with reordering enabled are reported, which confines this to `Customise Columns` and keeps the volume to one line per dialog session.
+     * Nothing is used as a filter beyond that, so that an absent breadcrumb means a broken breadcrumb.
+     * The device kind stamped by `WebClientErrorLoggerResource` has been observed to be inaccurate, so device details travel in the payload.
+     */
+    _reportDndDiag () {
+        const diag = this._dndDiag;
+        if (!diag || !this.canReorderItems) {
+            return;
+        }
+        this._dndDiag = null;
+        Promise.reject(new UnreportableError(
+            `DND-DIAG touch=${this._touchEnabled} taps=${diag.taps} held=${diag.held} ctx=${diag.ctx} sel=${diag.sel}` +
+            ` pcancel=${diag.pcancel} dragstart=${diag.dragstart} dragInit=${diag.dragInit} dropped=${diag.dropped}` +
+            ` mtp=${navigator.maxTouchPoints} vw=${window.innerWidth} ${_uaDetails} ua=${navigator.userAgent}`));
+    }
+
     _getIndexForElement (element) {
         let currentElement = element;
         while (currentElement && !currentElement.hasAttribute("collectional-index")) {
