@@ -45,6 +45,12 @@ const additionalTemplate = html`
             @apply --layout-center;
             padding: 16px 16px 16px 0;
             border-bottom: 1px solid #DDD;
+            /* Long-pressing selectable text competes with drag initiation on touch devices. */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
         .item:hover {
             background-color: var(--google-grey-100);
