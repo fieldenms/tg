@@ -297,7 +297,7 @@
             <!-- jsoup HTML parser library @ https://jsoup.org/ -->
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.22.2</version>
+            <version>1.23.2</version>
         </dependency>
 
       <!-- https://mvnrepository.com/artifact/com.google.testing.compile/compile-testing -->
