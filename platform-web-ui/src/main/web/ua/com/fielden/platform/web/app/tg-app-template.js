@@ -528,8 +528,17 @@ Polymer({
     /// An entry for a loaded URI is recorded too, unless that URI is the main menu one.
     /// The `/` entry is the one that `_changePage` moves forward from, which keeps a user inside an application.
     ///
+    /// A reload lands on an entry that an application has already numbered, with all of that infrastructure still below it.
+    /// Nothing gets recorded then, as `pushState` would truncate the forward history and leave one more `/` entry behind.
+    ///
     _loadApplicationInfrastructureIntoHistory: function () {
         if (this._route.path) {
+            // An entry numbered by an application is one that it has already recorded the infrastructure for.
+            if (window.history.state && typeof window.history.state.currIndex === 'number') {
+                this.currentHistoryState = window.history.state;
+                this._routeChanged();
+                return;
+            }
             const urlForRoot = new URL("", window.location.protocol + '//' + window.location.host).href;
             const urlForMenu = this._urlForMainMenu();
             const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
