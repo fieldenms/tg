@@ -10,7 +10,7 @@ import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
 import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js'
 
-import '/resources/polymer/@polymer/app-layout/app-drawer/app-drawer.js';
+import '/resources/components/tg-app-drawer.js';
 import '/resources/polymer/@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
 
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
@@ -174,7 +174,7 @@ const template = html`
     <slot id="menuItemAction" name="menuItemAction"></slot>
     <app-drawer-layout id="drawerPanel" fullbleed force-narrow>
 
-        <app-drawer disable-swipe="[[!touchEnabled]]" slot="drawer" on-app-drawer-transitioned="_appDrawerTransitioned">
+        <tg-app-drawer disable-swipe="[[!touchEnabled]]" slot="drawer" on-app-drawer-transitioned="_appDrawerTransitioned">
             <div id="menuToolBar" class="tool-bar layout horizontal center">
                 <div class="flex">[[menuItem.key]]</div>
             </div>
@@ -241,7 +241,7 @@ const template = html`
                     </tg-sublistbox>
                 </template>
             </paper-listbox>
-        </app-drawer>
+        </tg-app-drawer>
 
         <div class="main-content">
 

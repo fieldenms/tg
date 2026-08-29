@@ -205,10 +205,19 @@ const TgEntityCentreTemplateBehaviorImpl = {
     },
 
     addOwnKeyBindings: function () {
+        // `$` gets assigned when Polymer stamps the element's template, which happens upon its first connection.
+        // An embedded centre that was loaded into a detached `tg-element-loader` has never been connected, and registers its key bindings from its own `attached` callback.
+        if (!this.$) {
+            return;
+        }
         this._dom().addOwnKeyBindings();
     },
 
     removeOwnKeyBindings: function () {
+        // See `addOwnKeyBindings` for why an element may not have `$` at this point.
+        if (!this.$) {
+            return;
+        }
         this._dom().removeOwnKeyBindings();
     },
 

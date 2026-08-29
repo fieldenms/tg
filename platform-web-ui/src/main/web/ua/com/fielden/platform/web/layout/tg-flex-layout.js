@@ -379,7 +379,8 @@ template.setAttribute('strip-whitespace', '');
                 observer: "_filterChanged"
             },
             _subheaders: {
-                type: Array
+                type: Array,
+                value: () => []
             },
             _htmlElements: {
                 type: Object
@@ -392,8 +393,6 @@ template.setAttribute('strip-whitespace', '');
             "_contextChanged(context.*)"],
 
         ready: function () {
-            this._subheaders = [];
-            
             this._editorErrorHandler = this._editorErrorHandler.bind(this);
             this.addEventListener('editor-error-appeared', this._editorErrorHandler);
         },
