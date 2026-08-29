@@ -227,7 +227,7 @@ Polymer({
         ///
         /// Its only member, `currIndex`, numbers the history entries that an application records.
         /// It is `undefined` until those entries get recorded on the very first transition.
-        /// From then on it is `0` for the `'/'` entry and `1` for the main menu entry.
+        /// From then on it is `0` for the `/` entry and `1` for the main menu entry.
         /// An entry for a URI that an application was loaded from gets `2`, unless that URI is the main menu one.
         /// Every entry recorded afterwards continues the numbering, with `2` or `3`, then `4`, and so on.
         /// Entries that a browser recorded before an application was loaded are not numbered.
@@ -324,13 +324,13 @@ Polymer({
                     const customObject = deserialisedResult.instance[1];
                     const sharedUri = customObject['@@sharedUri'];
 
-                    // Any tiny link should be rewritten to some form that wouldn't allow user to go by to that '/tiny/...' link.
-                    // If that link represents some other link (e.g. '/master/...'), let's rewrite to that other link.
+                    // Any tiny link should be rewritten to some form that wouldn't allow user to go by to that `/tiny/...` link.
+                    // If that link represents some other link (e.g. `/master/...`), let's rewrite to that other link.
                     // It would be consistent for opening such other links directly.
                     // Otherwise, rewrite to the main menu link because Entity Master for NEW instances are opened there.
                     const rewrittenUri = sharedUri || this._urlForMainMenu();
 
-                    // The rewrite performs the transition too, through the <app-location> 'location-changed' event.
+                    // The rewrite performs the transition too, through the `<app-location>` `location-changed` event.
                     // `window.location.replace()` is not suitable because it messes up the `window.history.state` in our case
                     // (see `_routeChanged` observer with `if (!window.history.state) {...` branch).
                     rewriteHistoryEntryUri(rewrittenUri);
@@ -449,7 +449,7 @@ Polymer({
         this.restoreActiveElement();
     },
     
-    _routeChanged: function (routePath) {
+    _routeChanged: function () {
         // in case where there is an open overlay we 1) close it on back 2) remain it open on forward. Still the history state will not be changed.
         if (typeof this.currentHistoryState === "undefined") {
             this._loadApplicationInfrastructureIntoHistory();
@@ -500,17 +500,23 @@ Polymer({
     /// Two adjacent entries with the same URI leave `_route.path` untouched, so that observer never runs.
     /// A move like that would be lost then, and one more Back press would be needed to close an Entity Master dialog.
     /// Such a pair of entries is recorded whenever an entry gets rewritten to the URI of the entry below it.
-    /// The instance for that is a '/tiny/...' entry rewritten to the main menu URI, see #2422.
+    /// The instance for that is a `/tiny/...` entry rewritten to the main menu URI, see #2422.
     ///
     _historyPopped: function () {
         // The check is deferred to let `<app-location>` report a URI change and `_routeChanged` handle it first.
-        // `_routeChanged` assigns 'currentHistoryState' from an entry it has just moved to.
+        // `_routeChanged` assigns `currentHistoryState` from an entry it has just moved to.
         // A mismatch that survives the deferral therefore means that no transition was performed for this move.
+        //
+        // A microtask checkpoint runs after each listener of an event, not only after the last one.
+        // This deferral outlasts the `<app-location>` listener only because that one is registered first.
+        // Polymer ensures that: `<app-location>` is attached with the stamped template during `super.ready()`,
+        //   while this listener is registered by the legacy `ready` that runs afterwards.
+        // Were the order reversed, `_routeChanged` would run against a `_route.path` that `<app-location>` has not updated yet.
         this.async(
             function () {
                 const state = window.history.state;
                 if (state && this.currentHistoryState && this.currentHistoryState.currIndex !== state.currIndex) {
-                    this._routeChanged(this._route.path);
+                    this._routeChanged();
                 }
             }
         );
@@ -518,9 +524,9 @@ Polymer({
 
     /// Records the history entries that Back navigation relies on, and then performs the very first transition.
     ///
-    /// These are the `'/'` entry and the main menu entry.
+    /// These are the `/` entry and the main menu entry.
     /// An entry for a loaded URI is recorded too, unless that URI is the main menu one.
-    /// The `'/'` entry is the one that `_changePage` moves forward from, which keeps a user inside an application.
+    /// The `/` entry is the one that `_changePage` moves forward from, which keeps a user inside an application.
     ///
     _loadApplicationInfrastructureIntoHistory: function () {
         if (this._route.path) {
@@ -540,7 +546,7 @@ Polymer({
     },
 
     /// Returns a `String` URL for main menu view of the application.
-    /// Main menu view is suitable for opening Entity Master links, both "tiny" and '/master/...' ones for persisted entities.
+    /// Main menu view is suitable for opening Entity Master links, both `/tiny/...` and `/master/...` ones for persisted entities.
     ///
     _urlForMainMenu: function () {
         return new URL('/#/menu', window.location.protocol + '//' + window.location.host).href;
