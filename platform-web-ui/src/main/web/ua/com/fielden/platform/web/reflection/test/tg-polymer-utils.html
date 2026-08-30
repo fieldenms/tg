@@ -15,7 +15,7 @@
 <body>
     <script type="module">
 
-        import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+        import { resultMessages, rewriteHistoryEntryUri, isHistoryEntryNumbered } from '/resources/reflection/tg-polymer-utils.js';
 
         suite('polymer utils', function() {
 
@@ -61,6 +61,99 @@
 
             test('resultMessages: result or exception with short<extended/>ext message returns short and ext messages in short and extended counterparts respectively', function (done) {
                 assert.deepEqual(resultMessages({ message: 'short<extended/>ext' }), { short: 'short', extended: 'ext' });
+                done();
+            });
+
+        });
+
+        suite('rewriteHistoryEntryUri', function () {
+
+            // The URI and 'state' of the history entry that a test runner occupies.
+            // Both get restored after each test, so that no test leaves the runner on a rewritten entry.
+            let originalUri, originalState;
+
+            // The URI to rewrite to.
+            // Only its fragment differs from the runner's own one, which keeps a rewrite within the current document.
+            let uriToRewriteTo;
+
+            setup(function () {
+                originalUri = window.location.href;
+                originalState = window.history.state;
+                uriToRewriteTo = window.location.pathname + window.location.search + '#rewritten-by-test';
+            });
+
+            teardown(function () {
+                window.history.replaceState(originalState, '', originalUri);
+            });
+
+            test('rewriteHistoryEntryUri: makes the argument the URI of the current history entry', function (done) {
+                rewriteHistoryEntryUri(uriToRewriteTo);
+                assert.strictEqual(window.location.href, new URL(uriToRewriteTo, originalUri).href);
+                done();
+            });
+
+            test('rewriteHistoryEntryUri: records no new history entry', function (done) {
+                const lengthBeforeRewrite = window.history.length;
+                rewriteHistoryEntryUri(uriToRewriteTo);
+                assert.strictEqual(window.history.length, lengthBeforeRewrite);
+                done();
+            });
+
+            test('rewriteHistoryEntryUri: keeps the state of the rewritten history entry', function (done) {
+                window.history.replaceState({ currIndex: 42 }, '', originalUri);
+                rewriteHistoryEntryUri(uriToRewriteTo);
+                assert.deepEqual(window.history.state, { currIndex: 42 });
+                done();
+            });
+
+            test("rewriteHistoryEntryUri: reports the rewrite with a 'location-changed' event that avoids state adjusting", function (done) {
+                // 'avoidStateAdjusting' is what stops 'tg-app-template._renumberCurrentHistoryEntry' from renumbering an entry that a rewrite has not recorded.
+                let reportedDetail;
+                const listener = event => { reportedDetail = event.detail; };
+                window.addEventListener('location-changed', listener);
+                try {
+                    rewriteHistoryEntryUri(uriToRewriteTo);
+                } finally {
+                    window.removeEventListener('location-changed', listener);
+                }
+                assert.ok(reportedDetail, "'location-changed' event has not been fired.");
+                assert.isTrue(reportedDetail.avoidStateAdjusting);
+                done();
+            });
+
+        });
+
+        suite('isHistoryEntryNumbered', function () {
+
+            test('isHistoryEntryNumbered: a state numbered zero, as the root entry is, counts as numbered', function (done) {
+                // The '/' entry carries 'currIndex' 0, which is falsy -- a truthiness test here would make a reload re-record the infrastructure.
+                assert.isTrue(isHistoryEntryNumbered({ currIndex: 0 }));
+                done();
+            });
+
+            test('isHistoryEntryNumbered: a state with a positive index counts as numbered', function (done) {
+                assert.isTrue(isHistoryEntryNumbered({ currIndex: 3 }));
+                done();
+            });
+
+            test('isHistoryEntryNumbered: null state, as a fresh navigation records, does not count as numbered', function (done) {
+                assert.isFalse(isHistoryEntryNumbered(null));
+                done();
+            });
+
+            test('isHistoryEntryNumbered: undefined state does not count as numbered', function (done) {
+                assert.isFalse(isHistoryEntryNumbered(undefined));
+                done();
+            });
+
+            test("isHistoryEntryNumbered: a state without 'currIndex', as <iron-location> records, does not count as numbered", function (done) {
+                // <iron-location> writes 'pushState({})' and leaves numbering to the 'location-changed' listener of 'tg-app-template'.
+                assert.isFalse(isHistoryEntryNumbered({}));
+                done();
+            });
+
+            test("isHistoryEntryNumbered: a non-numeric 'currIndex' does not count as numbered", function (done) {
+                assert.isFalse(isHistoryEntryNumbered({ currIndex: '2' }));
                 done();
             });
 

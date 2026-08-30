@@ -11,7 +11,7 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 /* Paper elements */
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
-import '/resources/polymer/@polymer/app-layout/app-drawer/app-drawer.js';
+import '/resources/components/tg-app-drawer.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
@@ -108,11 +108,11 @@ const template = html`
     <slot id="menuItemActions" name="menu-item-action"></slot>
 
     <app-drawer-layout id="drawerPanel" fullbleed on-app-drawer-transitioned="_appDrawerTransitioned">
-        <app-drawer id="drawer" disable-swipe="[[!touchEnabled]]" slot="drawer">
+        <tg-app-drawer id="drawer" disable-swipe="[[!touchEnabled]]" slot="drawer">
             <paper-listbox id="menu" attr-for-selected="data-route" selected="{{route}}" style="height: 100%; overflow: auto;">
                 <slot id="menuItems" name="menu-item"></slot>
             </paper-listbox>
-        </app-drawer>
+        </tg-app-drawer>
         <div class="master-container relative">
             <iron-pages id="mainPages" class="fit" attr-for-selected="data-route" selected="[[sectionRoute]]">
                 <slot name="menu-item-section"></slot>
