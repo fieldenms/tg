@@ -1,25 +1,19 @@
 package ua.com.fielden.platform.entity.annotation.factory;
 
-import java.lang.annotation.Annotation;
-
 import ua.com.fielden.platform.entity.annotation.DateOnly;
+import ua.com.fielden.platform.entity.annotation.DependentTimeZoneMode;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
-/**
- * Factory for date annotations.
- * 
- * @author TG Team
- *
- */
+import java.lang.annotation.Annotation;
+
+/// Factory for date annotations.
+///
 public class DateAnnotations {
     
-    /**
-     * Instantiates {@link DateOnly} annotation.
-     * 
-     * @return
-     */
+    /// Instantiates [DateOnly] annotation.
+    ///
     public static DateOnly newDateOnlyAnnotation() {
         return new DateOnly() {
             @Override
@@ -29,11 +23,8 @@ public class DateAnnotations {
         };
     }
     
-    /**
-     * Instantiates {@link TimeOnly} annotation.
-     * 
-     * @return
-     */
+    /// Instantiates [TimeOnly] annotation.
+    ///
     public static TimeOnly newTimeOnlyAnnotation() {
         return new TimeOnly() {
             @Override
@@ -43,11 +34,8 @@ public class DateAnnotations {
         };
     }
     
-    /**
-     * Instantiates marker annotation for UTC date properties.
-     * 
-     * @return
-     */
+    /// Instantiates marker annotation for UTC date properties.
+    ///
     public static PersistentType newUtcAnnotation() {
         return new PersistentType() {
             @Override
@@ -66,5 +54,16 @@ public class DateAnnotations {
             }
         };
     }
-    
+
+    /// Instantiates [DependentTimeZoneMode] annotation.
+    ///
+    public static DependentTimeZoneMode newDependentTimeZoneModeAnnotation() {
+        return new DependentTimeZoneMode() {
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return DependentTimeZoneMode.class;
+            }
+        };
+    }
+
 }

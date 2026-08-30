@@ -1,19 +1,5 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
-import static java.lang.Boolean.FALSE;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_DISPLAY_AS;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_TRAILING_ZEROS;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getDefaultEntityTitleAndDesc;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-
-import java.util.Optional;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
@@ -26,15 +12,24 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.types.tuples.T2;
 
-/**
- * A set of utilities to determine if the value of some property or meta-info is default. It is used internally for Jackson entity serialiser to significantly reduce the amount of
- * the information to be serialised.
- *
- * @author TG Team
- *
- */
+import java.util.Optional;
+
+import static java.lang.Boolean.FALSE;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.*;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getDefaultEntityTitleAndDesc;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+
+/// A set of utilities to determine if the value of some property or meta-info is default.
+/// It is used internally for Jackson entity serialiser to significantly reduce the amount of the information to be serialised.
+///
 public class DefaultValueContract {
     private static final String UTC = "UTC";
+    public static final String DATE_ONLY = "DATE";
+    public static final String TIME_ONLY = "TIME";
 
     private DefaultValueContract() {
     }
@@ -134,18 +129,14 @@ public class DefaultValueContract {
         return UTC.equals(getTimeZone(entityType, propertyName));
     }
 
-    /**
-     * Returns the value that indicates what portion of date property to display.
-     *
-     * @param entityType
-     * @param propertyName
-     * @return
-     */
+    /// Returns the value that indicates which portion of date property to display.
+    ///
     public static String getTimePortionToDisplay(final Class<?> entityType, final String propertyName) {
-        if (AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, entityType, propertyName)) {
-            return "DATE";
-        } else if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, entityType, propertyName)) {
-            return "TIME";
+        if (isPropertyAnnotationPresent(DateOnly.class, entityType, propertyName)) {
+            return DATE_ONLY;
+        }
+        else if (isPropertyAnnotationPresent(TimeOnly.class, entityType, propertyName)) {
+            return TIME_ONLY;
         }
         return null;
     }

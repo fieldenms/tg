@@ -59,6 +59,10 @@ public class EntityTypeProp extends AbstractEntity<String> {
     private String _timeZone;
 
     @IsProperty
+    @Title(value = "Dependent Time-zone Mode", desc = "Dependent Time-zone Mode of date-typed property.")
+    private Boolean _dependentTimeZoneMode;
+
+    @IsProperty
     @Title(value = "Is Date Only?", desc = "Should display only date portion?")
     private Boolean _date;
 
@@ -154,6 +158,16 @@ public class EntityTypeProp extends AbstractEntity<String> {
 
     public Boolean get_date() {
         return _date;
+    }
+
+    @Observable
+    public EntityTypeProp set_dependentTimeZoneMode(final Boolean _dependentTimeZoneMode) {
+        this._dependentTimeZoneMode = _dependentTimeZoneMode;
+        return this;
+    }
+
+    public Boolean get_dependentTimeZoneMode() {
+        return _dependentTimeZoneMode;
     }
 
     @Observable
