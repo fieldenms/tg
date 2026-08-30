@@ -63,7 +63,7 @@ public class SimplyMoneyWithTaxAndExTaxAmountType extends AbstractCompositeUserT
     }
 
     @Override
-    public Object instantiate(final Map<String, Object> arguments) {
+    public Money instantiate(final Map<String, Object> arguments) {
         if (allArgumentsAreNull(arguments)) {
             return null;
         }

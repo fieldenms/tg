@@ -3,7 +3,7 @@ package ua.com.fielden.platform.meta;
 import org.junit.Test;
 import ua.com.fielden.platform.audit.AuditUtils;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappingsProvider;
 import ua.com.fielden.platform.sample.domain.AuditedEntity_a3t_1;
 import ua.com.fielden.platform.sample.domain.AuditedEntity_a3t_2;
 import ua.com.fielden.platform.sample.domain.ReAuditedEntity_a3t;
@@ -24,7 +24,7 @@ public class AuditingMetadataTest {
 
     public AuditingMetadataTest() {
         final var dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
-        generator = TestDomainMetadataGenerator.wrap(new DomainMetadataGenerator(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
+        generator = TestDomainMetadataGenerator.wrap(new DomainMetadataGenerator(new PlatformHibernateTypeMappingsProvider(dbVersionProvider).get(),
                                                                                  dbVersionProvider));
     }
 

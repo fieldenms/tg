@@ -16,7 +16,7 @@ import ua.com.fielden.platform.meta.test_entities.Entity_OverridesProperty;
 import ua.com.fielden.platform.meta.test_entities.Entity_OverridesProperty_Super;
 import ua.com.fielden.platform.meta.test_entities.Entity_PropertyDescriptor;
 import ua.com.fielden.platform.meta.test_entities.Entity_UnknownPropertyTypes;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappingsProvider;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
 import ua.com.fielden.platform.ref_hierarchy.TypeLevelHierarchyEntry;
 import ua.com.fielden.platform.sample.domain.*;
@@ -37,7 +37,7 @@ public class EntityMetadataTest {
 
     public EntityMetadataTest() {
         final var dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
-        generator = TestDomainMetadataGenerator.wrap(new DomainMetadataGenerator(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
+        generator = TestDomainMetadataGenerator.wrap(new DomainMetadataGenerator(new PlatformHibernateTypeMappingsProvider(dbVersionProvider).get(),
                                                                                  dbVersionProvider));
     }
 

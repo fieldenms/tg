@@ -5,9 +5,8 @@ import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * <b>Warning</b>: This builder is mutable.
- */
+/// **Warning**: This builder is mutable.
+///
 public class HibernateTypeMappingsBuilder {
 
     private final Map<Class<?>, Object> map;

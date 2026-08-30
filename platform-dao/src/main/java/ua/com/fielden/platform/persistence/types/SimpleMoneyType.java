@@ -42,7 +42,7 @@ public class SimpleMoneyType extends AbstractCompositeUserType implements ISimpl
     }
 
     @Override
-    public Object instantiate(final Map<String, Object> arguments) {
+    public Money instantiate(final Map<String, Object> arguments) {
         if (allArgumentsAreNull(arguments)) {
             return null;
         }

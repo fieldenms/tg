@@ -25,12 +25,10 @@ import ua.com.fielden.platform.minheritance.SynModelInitService;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.persistence.types.SecurityTokenType;
 
 import java.util.Properties;
 
-import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.subclassesOf;
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
@@ -56,7 +54,6 @@ public abstract class TransactionalIocModule extends EntityIocModule {
     protected void configure() {
         super.configure();
 
-        bind(HibernateTypeMappings.class).toProvider(PlatformHibernateTypeMappings.Provider.class).in(SINGLETON);
         requestStaticInjection(SecurityTokenType.class);
 
         bind(IIdOnlyProxiedEntityTypeCache.class).to(IdOnlyProxiedEntityTypeCache.class);
@@ -74,6 +71,12 @@ public abstract class TransactionalIocModule extends EntityIocModule {
         // Start the services for generating and assigning the EQL models to the generated synthetic entities.
         requestStaticInjection(SynAuditModelInitService.class);
         requestStaticInjection(SynModelInitService.class);
+    }
+
+    @Provides
+    @Singleton
+    HibernateTypeMappings provideHibernateTypeMappings(final HibernateTypeMappings.Provider provider) {
+        return provider.get();
     }
 
     @Provides

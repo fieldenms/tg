@@ -2,34 +2,29 @@ package ua.com.fielden.platform.entity.query;
 
 import java.util.Map;
 
-/**
- * Interface for enabling hibernate-free instantiation of instances of hibernate mapped custom user types.
- * 
- * @author TG Team
- * 
- */
-public interface ICompositeUserTypeInstantiate {
-    /**
-     * Should provide object instantiation based on the passed by name constructor arguments.
-     * 
-     * @param arguments
-     * @return
-     */
-    Object instantiate(Map<String, Object> arguments);
+/// A contract for Hibernate types representing composite values that supports their instantiation from a persisted representation.
+///
+/// @param <T>  the type of values instantiated by the implementaiton of this contract
+///
+public interface ICompositeUserTypeInstantiate<T> {
 
-    /**
-     * Get the "property names" that may be used in a query.
-     * 
-     * @return an array of "property names"
-     */
-    public String[] getPropertyNames();
+    /// Creates a composite value from a map of components.
+    ///
+    /// @param arguments  a map of component values `{name: value}`, where each value has already been instantiated from
+    ///                   its persisted representation.
+    ///
+    T instantiate(Map<String, Object> arguments);
 
-    /**
-     * The class returned by <tt>nullSafeGet()</tt>.
-     * 
-     * @return Class
-     */
-    public Class<?> returnedClass();
+    /// Returns the names of components supported by this Hibernate type mapping.
+    ///
+    String[] getPropertyNames();
 
-    public Object[] getPropertyTypes();
+    /// Returns the type of values instantiated by the implementaiton of this contract.
+    ///
+    Class<T> returnedClass();
+
+    /// Returns the Hibernate types of components supported by this Hibernate type mapping.
+    ///
+    Object[] getPropertyTypes();
+
 }

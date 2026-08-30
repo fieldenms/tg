@@ -139,7 +139,7 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
     }
 
     @Override
-    public Object instantiate(final Map<String, Object> arguments) {
+    public RichText instantiate(final Map<String, Object> arguments) {
         if (allArgumentsAreNull(arguments)) {
             return null;
         }

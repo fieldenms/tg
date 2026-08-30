@@ -16,9 +16,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-/// Class that helps Hibernate to map [ISecurityToken] class into database.
-///
-@Singleton
+import static ua.com.fielden.platform.persistence.types.exceptions.UserTypeException.invalidJavaRepresentation;
+import static ua.com.fielden.platform.persistence.types.exceptions.UserTypeException.invalidPersistedRepresentation;
+
 public class SecurityTokenType implements UserType, ISecurityTokenType {
 
     public static final SecurityTokenType INSTANCE = new SecurityTokenType();
@@ -50,18 +50,23 @@ public class SecurityTokenType implements UserType, ISecurityTokenType {
     }
 
     @Override
-    public Object instantiate(final Object argument, final EntityFactory factory) {
-        final var name = (String) argument;
-        final var maybeSecurityToken = securityTokenProvider.getTokenByName(name);
-        return maybeSecurityToken.isPresent() ? maybeSecurityToken.get() : MissingSecurityTokenPlaceholder.class;
+    public Class<? extends ISecurityToken> instantiate(final Object argument, final EntityFactory factory) {
+        return switch (argument) {
+            case String name -> {
+                final var maybeSecurityToken = securityTokenProvider.getTokenByName(name);
+                yield maybeSecurityToken.isPresent() ?  maybeSecurityToken.get() :  MissingSecurityTokenPlaceholder.class;
+            }
+            case null, default -> throw invalidPersistedRepresentation("Security Token Type", argument);
+        };
     }
 
     @Override
     public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index, final SharedSessionContractImplementor session) throws SQLException {
-        if (null == value) {
-            preparedStatement.setNull(index, Types.VARCHAR);
-        } else {
-            preparedStatement.setString(index, value instanceof String ? (String) value : ((Class<?>) value).getName());
+        switch (value) {
+            case String s -> preparedStatement.setString(index, s);
+            case Class<?> klass -> preparedStatement.setString(index, klass.getName());
+            case null -> preparedStatement.setNull(index, Types.VARCHAR);
+            default -> throw invalidJavaRepresentation("Security Token Type", value);
         }
     }
 

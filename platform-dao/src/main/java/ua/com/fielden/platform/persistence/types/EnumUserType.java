@@ -6,19 +6,19 @@ package ua.com.fielden.platform.persistence.types;
  * Pls note that properties of enum E (if such exist) cannot be used in HQL queries.
  * If this is required then CompositeUserType should be used instead of UserType.
  */
+
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.usertype.UserType;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.usertype.UserType;
-
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
-
-public class EnumUserType<E extends Enum<E>> implements UserType, IUserTypeInstantiate {
+public class EnumUserType<E extends Enum<E>> implements UserType, IUserTypeInstantiate<E> {
     private Class<E> clazz = null;
 
     protected EnumUserType(final Class<E> c) {
@@ -38,7 +38,7 @@ public class EnumUserType<E extends Enum<E>> implements UserType, IUserTypeInsta
     }
 
     @Override
-    public Object instantiate(final Object argument, final EntityFactory factory) {
+    public E instantiate(final Object argument, final EntityFactory factory) {
         return argument == null ? null : Enum.valueOf(clazz, argument.toString() /*(String) argument*/);
     }
 
