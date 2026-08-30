@@ -485,6 +485,20 @@ export const createStubBindingEntity = function (typeName, customPropObject, pro
     return bindingView;
 };
 
+/// Tells whether `state` belongs to a history entry that an application has numbered, and has therefore already recorded its history infrastructure for.
+///
+/// A fresh navigation lands on an entry that carries no state of an application, so that infrastructure has to be recorded.
+/// A reload lands on an entry that carries `currIndex`, with all of that infrastructure still below it.
+///
+/// `currIndex` of the `/` entry is `0`, which is why a number is tested for rather than truthiness.
+/// `<iron-location>` records an entry with `pushState({})` before `tg-app-template` numbers it, which is why a `state` without `currIndex` counts as not numbered.
+///
+/// @param {Object} state - the `state` object of a history entry, `null` for an entry that carries none
+///
+export const isHistoryEntryNumbered = function (state) {
+    return !!state && typeof state.currIndex === 'number';
+};
+
 /// Rewrites the URI of the current history entry, keeping its state, and makes `<app-location>` re-read it.
 ///
 /// No new history entry is recorded, so `tg-app-template` must not renumber the current one.

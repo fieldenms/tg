@@ -30,7 +30,7 @@ import { TgLongTapHandlerBehaviour } from '/resources/components/tg-long-tap-han
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
-import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp, rewriteHistoryEntryUri } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp, isHistoryEntryNumbered, rewriteHistoryEntryUri } from '/resources/reflection/tg-polymer-utils.js';
 import { isExternalURL, processURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
@@ -533,8 +533,7 @@ Polymer({
     ///
     _loadApplicationInfrastructureIntoHistory: function () {
         if (this._route.path) {
-            // An entry numbered by an application is one that it has already recorded the infrastructure for.
-            if (window.history.state && typeof window.history.state.currIndex === 'number') {
+            if (isHistoryEntryNumbered(window.history.state)) {
                 this.currentHistoryState = window.history.state;
                 this._routeChanged();
                 return;

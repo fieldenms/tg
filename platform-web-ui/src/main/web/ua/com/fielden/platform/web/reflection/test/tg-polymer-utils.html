@@ -15,7 +15,7 @@
 <body>
     <script type="module">
 
-        import { resultMessages, rewriteHistoryEntryUri } from '/resources/reflection/tg-polymer-utils.js';
+        import { resultMessages, rewriteHistoryEntryUri, isHistoryEntryNumbered } from '/resources/reflection/tg-polymer-utils.js';
 
         suite('polymer utils', function() {
 
@@ -118,6 +118,42 @@
                 }
                 assert.ok(reportedDetail, "'location-changed' event has not been fired.");
                 assert.isTrue(reportedDetail.avoidStateAdjusting);
+                done();
+            });
+
+        });
+
+        suite('isHistoryEntryNumbered', function () {
+
+            test('isHistoryEntryNumbered: a state numbered zero, as the root entry is, counts as numbered', function (done) {
+                // The '/' entry carries 'currIndex' 0, which is falsy -- a truthiness test here would make a reload re-record the infrastructure.
+                assert.isTrue(isHistoryEntryNumbered({ currIndex: 0 }));
+                done();
+            });
+
+            test('isHistoryEntryNumbered: a state with a positive index counts as numbered', function (done) {
+                assert.isTrue(isHistoryEntryNumbered({ currIndex: 3 }));
+                done();
+            });
+
+            test('isHistoryEntryNumbered: null state, as a fresh navigation records, does not count as numbered', function (done) {
+                assert.isFalse(isHistoryEntryNumbered(null));
+                done();
+            });
+
+            test('isHistoryEntryNumbered: undefined state does not count as numbered', function (done) {
+                assert.isFalse(isHistoryEntryNumbered(undefined));
+                done();
+            });
+
+            test("isHistoryEntryNumbered: a state without 'currIndex', as <iron-location> records, does not count as numbered", function (done) {
+                // <iron-location> writes 'pushState({})' and leaves numbering to the 'location-changed' listener of 'tg-app-template'.
+                assert.isFalse(isHistoryEntryNumbered({}));
+                done();
+            });
+
+            test("isHistoryEntryNumbered: a non-numeric 'currIndex' does not count as numbered", function (done) {
+                assert.isFalse(isHistoryEntryNumbered({ currIndex: '2' }));
                 done();
             });
 
