@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 rm -f package-lock.json
 npm install --no-bin-links
 rm -f node_modules/.package-lock.json
