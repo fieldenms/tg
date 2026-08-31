@@ -13,6 +13,6 @@ for dir in build/node_modules/*; do
 done
 rm -r -f _virtual
 mv build/_virtual ./
-find _virtual -type f -exec sed -i 's|node_modules|polymer|g' {} \;
+find _virtual -type f -exec perl -i -pe 's|node_modules|polymer|g' {} +
 rm -r -f build
 find polymer -type f -name "package.json" -delete
