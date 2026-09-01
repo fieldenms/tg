@@ -59,6 +59,7 @@ import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
@@ -72,8 +73,10 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
+import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.FILE_APP_INDEX_HTML;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_OWN_COPY_MSG;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
+import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.FILE_APP_LOGIN_INITIATE_RESET_HTML;
 import static ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions.ALL_OFF;
 
 /**
@@ -90,6 +93,13 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in WebUiConfig.";
     private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default configurations for [%s]-typed centres (caching)...";
     private static final int DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS = 183;
+
+    /// Alternative names of the file with all client-side application resources, as substituted for `@startupResources` in `index.html` (see [#genAppIndex()]).
+    /// A development workflow references the unvulcanised one, all others -- the vulcanised one, produced by `VulcanizingUtility`.
+    ///
+    public static final String
+        STARTUP_RESOURCES_ORIGIN = "startup-resources-origin",
+        STARTUP_RESOURCES_VULCANIZED = "startup-resources-vulcanized";
 
     private final String title;
     private final Optional<String> ideaUri;
@@ -118,7 +128,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      */
     private final List<String> resourcePaths;
     private final Workflows workflow;
-    private final Map<String, String> checksums;
+    private final SequencedMap<String, String> checksums;
     private final boolean independentTimeZone;
     private final String masterActionOptions;
 
@@ -316,9 +326,9 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public final String genAppIndex() {
         final String indexSource = getText("ua/com/fielden/platform/web/index.html");
         if (isDevelopmentWorkflow(this.workflow)) {
-            return indexSource.replace("@startupResources", "startup-resources-origin");
+            return indexSource.replace("@startupResources", STARTUP_RESOURCES_ORIGIN);
         } else {
-            return indexSource.replace("@startupResources", "startup-resources-vulcanized");
+            return indexSource.replace("@startupResources", STARTUP_RESOURCES_VULCANIZED);
         }
 
     }
@@ -419,6 +429,17 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public Optional<String> checksum(final String resourceURI) {
         return ofNullable(checksums.get(resourceURI));
+    }
+
+    @Override
+    public SequencedSet<String> deploymentResourcePaths() {
+        return checksums.keySet().stream()
+            .map(path -> switch (path) {
+                case FILE_APP_INDEX_HTML -> AppIndexResource.BINDING_PATH;
+                case FILE_APP_LOGIN_INITIATE_RESET_HTML -> LoginInitiateResetResource.BINDING_PATH;
+                default -> path;
+            })
+            .collect(toCollection(LinkedHashSet::new));
     }
 
     @Override

@@ -23,6 +23,14 @@ mvn clean test -Dmaven.javadoc.skip=true -Dfork.count=4 -DdatabaseUri.prefix=//l
 mvn test -Dmaven.javadoc.skip=true -Dfork.count=4 -DdatabaseUri.prefix=//localhost:1433;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=false;databaseName=ci_  # SQL Server
 ```
 
+**Mutation-check every test you add or change.**
+A passing test proves nothing until it has been seen to fail: break the code it covers (drop an argument, invert a condition, return a constant), confirm that the intended test — and only that test — fails, then revert.
+Assertions that hold whether or not the code under test did anything are common, especially negative ones (`assertFalse`, `isEmpty`) whose fixture yields the same answer either way, and mutation of a loaded entity whose setter might not have assigned.
+
+**Mutating an upstream module requires `-am`.**
+`mvn test -pl platform-dao` resolves `platform-pojo-bl` from `~/.m2`, so an uncommitted edit there is invisible to the run and *every* mutation of it looks uncaught — a false all-clear.
+Use `mvn test -pl platform-dao -am -Dtest=SomeTest -DfailIfNoTests=false …`, or install the upstream module first.
+
 ### Version Management
 ```bash
 ./tg-update-version.sh 2.1.0-SNAPSHOT          # Update version (recommended)
@@ -53,6 +61,7 @@ The platform targets **Java 25**:
 | `platform-db-evolution` | Database migration and evolution tools |
 | `platform-eql-grammar` | ANTLR-based EQL parser and compiler |
 | `platform-benchmark` | Performance benchmarking tools |
+| `platform-bom` | Bill of materials pinning the versions of all published platform artifacts, for end projects to import |
 
 LaTeX documentation in `platform-doc/`.
 
@@ -119,6 +128,15 @@ Example: `MeterReading.TOTAL_READING_TITLE` is declared on the entity because it
 **String formatting:** in new code, prefer the `String#formatted` instance method over `String.format(…)`.
 Reads as the format string operating on its arguments (`"foo [%s]".formatted(x)`) and avoids the `java.lang.String.format` import.
 Legacy `String.format` calls are still common; touch them opportunistically but don't churn unrelated code.
+
+**`Result` factories in validators:** compose formatted results with `Result.failuref(TEMPLATE, args)` / `Result.warningf(TEMPLATE, args)` declared against `ERR_`/`WARN_` template constants — not `failure/warning(value, TEMPLATE.formatted(args))`.
+The instance argument is unnecessary for property-validation results, and the `String.format` semantics keep message-equality assertions in tests working unchanged.
+When a validator statically imports three or more `Result` members, collapse to `import static ua.com.fielden.platform.error.Result.*;`.
+
+**Companion fetch models are the contract for validators and definers.**
+When a validator or definer traverses properties of a related entity (e.g. `WorkOrder.projectLine.expenditureType.woType`), include those paths in the companion-level `FETCH_PROVIDER` — masters, producers and helpers all fetch through it — and have the handler read the getter chain directly.
+Do not guard with `Reflector.isPropertyProxied` and skip the check (warnings would be silently missed), and do not fall back to refetching inside the handler (several requests instead of one fetch) — a `StrictProxyException` in some flow marks a fetch-model gap to be fixed at that flow's source.
+Null checks are equally out of place: `@Required` properties of fetched persisted entities are invariants; null-check only genuinely optional properties and incoming mutation values.
 
 **Lazy logging:** when a log call requires string formatting, pass a `Supplier` lambda so the formatting cost is paid only when the level is enabled:
 ```java
