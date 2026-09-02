@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.DirectoryIteratorException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,8 +18,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-
-import com.google.common.base.Charsets;
 
 public class IronIconsetUtility {
     public static final String FILE_BEGIN_TEMPLATE = "import '/resources/polymer/@polymer/iron-icon/iron-icon.js';%n" +
@@ -39,7 +38,7 @@ public class IronIconsetUtility {
 
     public void createSvgIconset(final String outputFile) throws IOException {
         try (OutputStream outputStream = new FileOutputStream(outputFile)) {
-            outputStream.write(joinFilesContent().getBytes(Charsets.UTF_8));
+            outputStream.write(joinFilesContent().getBytes(StandardCharsets.UTF_8));
         }
     }
 

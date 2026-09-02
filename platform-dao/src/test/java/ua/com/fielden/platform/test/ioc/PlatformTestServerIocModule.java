@@ -38,9 +38,9 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
@@ -230,7 +230,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         return CacheBuilder.newBuilder()
                 // all authenticators should be evicted from the cache in 2 minutes time after that have been
                 // put into the cache
-                .expireAfterWrite(2, TimeUnit.MINUTES)
+                .expireAfterWrite(Duration.ofMinutes(2))
                 // the ticker controls the eviction time
                 // the injected instance is initialised with IUniversalConstants.now() as its start time
                 .ticker(ticker)

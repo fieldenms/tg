@@ -4,6 +4,7 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.multi.FunctionalMultiActionElement;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.impl.DynamicColumn;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
@@ -24,9 +25,23 @@ import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.*;
 /// When the column has more than one action group the cell additionally renders a triple-dot overflow button that opens the shared EGI dropdown (`tg-action-dropdown`) listing all groups.
 ///
 public class PropertyColumnElement implements IRenderable, IImportable {
-    //The minimal column width. It is used only when specified width is greater than minimal.
+    /// The floor for *manual drag-resize* of a column.
+    /// This is **not** a CSS `min-width` — CSS `min-width` is the column's natural width and is set from `column.width`.
+    /// `MIN_COLUMN_WIDTH` only enters the picture as the lower bound for the per-column `minWidth` attribute.
+    /// JS resize handler uses it to clamp the new width during a drag (see `_trackColumnSize`).
+    ///
     public static final int MIN_COLUMN_WIDTH = 16;
     public static final int DEFAULT_COLUMN_WIDTH = 80;
+
+    /// The drag-resize floor exposed on the rendered column (HTML `min-width` attribute / `DYN_COL_MIN_WIDTH` JSON key).
+    /// Equals `MIN_COLUMN_WIDTH` for any reasonable column.
+    /// Degrades to the column's `width` only when the user has explicitly chosen a width smaller than `MIN_COLUMN_WIDTH`.
+    /// Shared by static columns (see [#minWidthBinding()]) and dynamic columns (see [DynamicColumn#getResizeFloor()]).
+    /// This is for the two to have a single source of truth.
+    ///
+    public static int resizeFloor(final int width) {
+        return Math.min(MIN_COLUMN_WIDTH, width);
+    }
 
     private final String propertyName;
     private final boolean isDynamic;
@@ -155,7 +170,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     }
 
     private String minWidthBinding() {
-        return isDynamic ? format("[[item.%s]]", DYN_COL_MIN_WIDTH) : String.valueOf(Math.min(MIN_COLUMN_WIDTH, width));
+        return isDynamic ? format("[[item.%s]]", DYN_COL_MIN_WIDTH) : String.valueOf(resizeFloor(width));
     }
 
     private String widthBinding() {

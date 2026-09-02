@@ -68,7 +68,7 @@ public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynam
             res.put(DYN_COL_TITLE, dynamicProp.getTitle());
             res.put(DYN_COL_DESC, dynamicProp.getDesc().orElse(dynamicProp.getTitle()));
             res.put(DYN_COL_WIDTH, dynamicProp.getWidth());
-            res.put(DYN_COL_MIN_WIDTH, dynamicProp.getMinWidth());
+            res.put(DYN_COL_MIN_WIDTH, dynamicProp.getResizeFloor());
             res.put(DYN_COL_GROW_FACTOR, dynamicProp.getGrowFactor());
             res.put(DYN_COL_WORD_WRAP, dynamicProp.isWordWrap());
             return res;

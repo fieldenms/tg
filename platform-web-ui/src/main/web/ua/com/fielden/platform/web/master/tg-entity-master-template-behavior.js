@@ -128,6 +128,13 @@ const TgEntityMasterTemplateBehaviorImpl = {
     },
 
     addOwnKeyBindings: function () {
+        // `$` gets assigned when Polymer stamps the element's template, which happens upon its first connection.
+        // An embedded view that was loaded into a detached `tg-element-loader` has never been connected.
+        // A master that gets re-attached also runs its own `connectedCallback` ahead of those of its descendants.
+        // In both cases the embedded view registers its key bindings from its own `attached` callback, once it is connected.
+        if (!this.$) {
+            return;
+        }
         const keyBindings = this._ownKeyBindings;
         if (this.$.loader) {
             if (this.$.loader.wasLoaded) {
@@ -146,6 +153,10 @@ const TgEntityMasterTemplateBehaviorImpl = {
     },
 
     removeOwnKeyBindings: function () {
+        // See `addOwnKeyBindings` for why an element may not have `$` at this point.
+        if (!this.$) {
+            return;
+        }
         if (this.$.loader) {
             if (this.$.loader.wasLoaded) {
                 if (typeof this.$.loader.loadedElement.removeOwnKeyBindings === 'function') {

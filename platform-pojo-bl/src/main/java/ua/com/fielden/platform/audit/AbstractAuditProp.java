@@ -10,6 +10,12 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 /// Specific types derived from this one are expected to declare properties [#AUDIT_ENTITY] and [#PROPERTY].
 /// These properties cannot be declared in this base type due to a limitation on using type variables in property types.
 ///
+/// ### Deletion
+///
+/// Audit-prop companions **do not support deletion**.
+/// Instead, audit records are cascade deleted when the corresponding audited record is (as referenced by [AbstractAuditEntity#AUDITED_ENTITY]).
+/// This coupling of deletion at the model level prevents manipulation of an entity's audit trail.
+///
 /// @param <E>  type of the audited entity
 ///
 @KeyType(DynamicEntityKey.class)
@@ -31,6 +37,14 @@ public abstract class AbstractAuditProp<E extends AbstractEntity<?>> extends Abs
     /// An audited entity type cannot be used because it could result in a persisted property descriptor becoming invalid due to structural changes to that audited type.
     ///
     public static final String PROPERTY = "property";
+
+    /// Property path from an audit-prop type to the audited entity, via [#AUDIT_ENTITY].
+    ///
+    /// Note that [#AUDIT_ENTITY] is a required key-member, so EQL renders this path as an *inner* join.
+    /// Therefore, a query using this path is blind to audit-prop records whose audit-entity record no longer exists.
+    /// This is precisely why audit-prop records must be deleted *before* audit-entity records.
+    ///
+    public static final String PATH_TO_AUDITED_ENTITY = AUDIT_ENTITY + "." + AbstractAuditEntity.AUDITED_ENTITY;
 
     /// Getter for property [#AUDIT_ENTITY].
     ///

@@ -23,6 +23,11 @@ For the underlying interception mechanism see *Property Declaration* in `entity-
 Avoid `assertThatThrownBy(() -> save(entity))` for these tests: it tests platform plumbing (save propagates failure as a thrown exception) rather than the logic itself, and substring-matches messages instead of exact-matching them.
 Reach for `save()` only when the test genuinely depends on persistence (e.g., to verify that a persistently-calculated property is stored, or that a cascading DAO behaviour fires).
 
+**Behaviour that relies on dependent revalidation needs a restored-entity test.**
+An in-memory test mutates one instance whose sibling properties were setter-assigned, so it cannot distinguish that path from the web validation cycle, which restores a fresh entity and applies only the touched properties.
+To pin the restored path: persist the entity, refetch it fresh via an instrumented companion with the companion's fetch model, apply the change via `entity.getProperty(prop).setValue(value, true)` — the same enforced application that `EntityResourceUtils.processPropertyValue` performs — and assert on the dependent property's metastate.
+If an interactive check contradicts such a passing test, suspect the environment first (server build predating the change, stale client bundle) before redesigning.
+
 ## Fetch Patterns
 
 | Scenario | Pattern |
@@ -39,7 +44,8 @@ Do not use `FETCH_PROVIDER` for read-only access to basic properties.
 
 ## Auditing in Tests
 
-`AUDIT_MODE = DISABLED` in DAO test config is expected — see `auditing/quick-reference.md`.
+The platform's DAO test config sets `AUDIT_MODE = ENABLED`, so auditing is exercised by DAO tests — see `auditing/quick-reference.md`.
+Test databases are created without FK constraints, so tests cannot exercise the FKs that audit tables carry.
 
 ## Authorization in Tests
 

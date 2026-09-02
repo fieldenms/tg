@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.type.ResolvedType;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.google.common.base.Charsets;
 import jakarta.inject.Inject;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +33,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Modifier;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -225,10 +225,10 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         }
 
         try {
-            // logger.debug("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), Charsets.UTF_8) + "|.");
+            // logger.debug("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(obj), StandardCharsets.UTF_8) + "|.");
             EntitySerialiser.getContext().reset();
-            final byte[] bytes = writeValueAsBytes(obj); // default encoding is Charsets.UTF_8
-            logger.debug("Serialised JSON = |" + new String(bytes, Charsets.UTF_8) + "|.");
+            final byte[] bytes = writeValueAsBytes(obj); // default encoding is StandardCharsets.UTF_8
+            logger.debug("Serialised JSON = |" + new String(bytes, StandardCharsets.UTF_8) + "|.");
 
             return bytes;
         } catch (final JsonProcessingException e) {

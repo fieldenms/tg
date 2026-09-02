@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web_api.fields;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
@@ -203,5 +204,54 @@ public class WebApiLongFieldTest extends AbstractDaoTestCase {
             ))
         )), result);
     }
-    
+
+    @Test
+    public void long_prop_supports_values_beyond_the_32_bit_integer_range() {
+        // 3_000_000_000 exceeds Integer.MAX_VALUE (2_147_483_647); supporting such values is the whole point of Long over Int.
+        final long beyondInt = 3_000_000_000L;
+        save(new_(TgWebApiEntity.class, "VEH1").setLongProp(beyondInt));
+
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key longProp}}"));
+
+        assertTrue(errors(result).isEmpty());
+        assertEquals(result(linkedMapOf(
+            t2("tgWebApiEntity", listOf(
+                linkedMapOf(t2("key", "VEH1"), t2("longProp", beyondInt))
+            ))
+        )), result);
+    }
+
+    @Test
+    public void long_prop_filters_by_a_literal_bound_beyond_the_32_bit_integer_range() {
+        save(new_(TgWebApiEntity.class, "VEH1").setLongProp(1_000_000_000L)); // below the bound
+        save(new_(TgWebApiEntity.class, "VEH2").setLongProp(5_000_000_000L)); // above the bound, and beyond Integer.MAX_VALUE
+
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key longProp(from:3000000000)}}"));
+
+        assertTrue(errors(result).isEmpty());
+        assertEquals(result(linkedMapOf(
+            t2("tgWebApiEntity", listOf(
+                linkedMapOf(t2("key", "VEH2"), t2("longProp", 5_000_000_000L))
+            ))
+        )), result);
+    }
+
+    @Test
+    public void long_prop_with_a_literal_bound_beyond_the_64_bit_range_results_in_errors() {
+        createLongEntities();
+        // 9223372036854775808 == 2^63 == Long.MAX_VALUE + 1, so it cannot be represented as a Long and must be rejected.
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key longProp(from:9223372036854775808)}}"));
+
+        assertFalse(errors(result).isEmpty());
+    }
+
+    @Test
+    public void long_prop_with_a_fractional_literal_bound_results_in_errors() {
+        createLongEntities();
+        // A fractional literal is a FloatValue, which is not a valid Long argument.
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key longProp(from:2.5)}}"));
+
+        assertFalse(errors(result).isEmpty());
+    }
+
 }

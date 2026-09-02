@@ -171,6 +171,10 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
         super();
         this._reflector = new TgReflector();
         this._appConfig = new TgAppConfig();
+        // Raised when an event source rebuild is requested while the calendar is hidden; flushed by `_resizeEventListener` once the calendar becomes visible.
+        this._pendingEventSourceUpdate = false;
+        // Latches whether a deferred rebuild still owes a navigate-to-first-event: a run deferred while hidden must navigate on flush even if a later refresh arrives before the flush.
+        this._pendingNavigate = false;
     }
 
     ready () {
@@ -191,6 +195,7 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
         const config = {
             initialView: 'dayGridMonth',
             headerToolbar: false,
+            locale: this._appConfig.locale,
             datesSet: (dataInfo) => {
                 this.calendarTitle = dataInfo.view.title;
             },
@@ -286,9 +291,21 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
 
     _changeView(e) {
         if (this._calendar) {
-            this._calendar.changeView(this.viewTypes[e.detail].valueToSet);
+            const newView = this.viewTypes[e.detail].valueToSet;
+            this._calendar.changeView(newView);
+            this.currentView = newView;
         }
         tearDownEvent(e);
+    }
+
+    _currentViewChanged(newView, oldView) {
+        if (oldView !== undefined && this._calendar) {
+            const wasMonth = oldView === 'dayGridMonth';
+            const isMonth = newView === 'dayGridMonth';
+            if (wasMonth !== isMonth) {
+                this._updateEventSource(this.entities, this.eventKeyProperty, this.eventDescProperty, this.eventFromProperty, this.eventToProperty, this._calendar);
+            }
+        }
     }
 
     _showLegend() {
@@ -296,40 +313,134 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
     }
 
     /**
-     * Updates calendar data; moves it to the date of the chronologically first event (if any); re-renders calendar.
+     * Updates calendar data; moves it to the date of the chronologically first event (if any).
+     *
+     * While the calendar is hidden (`offsetParent === null`, e.g. a non-selected alternative view that `iron-pages` hides via `display: none`),
+     * the rebuild is skipped — a pending flag is raised instead and `_resizeEventListener` flushes it upon the `iron-resize` event that accompanies becoming visible.
+     * This avoids rebuilding the whole event source on every centre run while the calendar cannot be seen.
      */
     _updateEventSource(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty, _calendar) {
-        if (allDefined(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty) && _calendar) {
-            _calendar.getEvents().forEach(event => event.remove());
-            let startTime = Infinity;
-            entities.forEach(entity => {
-                if (startTime > entity.get(eventFromProperty)) {
-                    startTime = entity.get(eventFromProperty);
-                }
-                const eventColor = this.colorProperty ? entity.get(this.colorProperty) : undefined;
-                _calendar.addEvent({
-                    extendedProps: {
-                        entity: entity
-                    },
-                    title: entity.get(eventKeyProperty) + (eventDescProperty && entity.get(eventDescProperty) ? " - "+ entity.get(eventDescProperty) : ""),
-                    start: entity.get(eventFromProperty),
-                    end: entity.get(eventToProperty),
-                    backgroundColor: eventColor ? '#' + eventColor["hashlessUppercasedColourValue"]  : "#3788d8",
+        if (!_calendar) {
+            return;
+        }
+        if (this.offsetParent === null) {
+            this._pendingEventSourceUpdate = true;
+            // Latch the navigation intent at defer time: `dataChangeReason` reflects only the latest update, so a refresh arriving later while still hidden must not cancel the navigation owed to an earlier deferred run.
+            this._pendingNavigate = this._pendingNavigate || this.dataChangeReason !== RunActions.refresh;
+            return;
+        }
+        // This rebuild supersedes any deferred one, consuming a latched navigation if such is owed.
+        this._pendingEventSourceUpdate = false;
+        const shouldNavigate = this._pendingNavigate || this.dataChangeReason !== RunActions.refresh;
+        this._pendingNavigate = false;
+        this._rebuildEventSource(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty, _calendar, shouldNavigate);
+    }
+
+    /**
+     * Rebuilds calendar events from `entities`, navigating to the chronologically first event (if any) when `shouldNavigate` is true; the calendar re-renders exactly once.
+     *
+     * All mutations are grouped under `batchRendering` because FullCalendar otherwise re-renders synchronously after every single mutation
+     * (each removed event, each added event, each navigation) — an unbatched rebuild triggers thousands of re-renders for large result sets.
+     * The single re-render happens when the batch completes, hence no explicit `render()` call.
+     */
+    _rebuildEventSource(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty, _calendar, shouldNavigate) {
+        // Sentinels for open-ended events. Far enough outside any plausible calendar view to behave like ±infinity.
+        const FAR_PAST = moment('1900-01-01').toDate();
+        const FAR_FUTURE = moment('2200-01-01').toDate();
+        if (allDefined(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty)) {
+            _calendar.batchRendering(() => {
+                _calendar.removeAllEvents();
+                let startTime = Infinity;
+                // Month view shows a single continuous bar per entity; time-grid views split into timed + allDay segments.
+                const isMonth = this.currentView === 'dayGridMonth';
+                entities.forEach(entity => {
+                    const startVal = entity.get(eventFromProperty);
+                    const endVal = entity.get(eventToProperty);
+                    // Events without a start date must not participate in `startTime`, otherwise a single such event would suppress the navigation below.
+                    if (startVal && startTime > startVal) {
+                        startTime = startVal;
+                    }
+                    const eventColor = this.colorProperty ? entity.get(this.colorProperty) : undefined;
+                    const common = {
+                        extendedProps: { entity: entity },
+                        title: entity.get(eventKeyProperty) + (eventDescProperty && entity.get(eventDescProperty) ? " - "+ entity.get(eventDescProperty) : ""),
+                        backgroundColor: eventColor ? '#' + eventColor["hashlessUppercasedColourValue"]  : "#3788d8",
+                        groupId: 'evt-' + entity.get('id')
+                    };
+                    if (isMonth) {
+                        if (!startVal && !endVal) {
+                            _calendar.addEvent({ ...common, start: FAR_PAST, end: FAR_FUTURE, allDay: true });
+                        } else if (!startVal) {
+                            _calendar.addEvent({ ...common, start: FAR_PAST, end: endVal, allDay: true });
+                        } else if (!endVal) {
+                            _calendar.addEvent({ ...common, start: startVal, end: FAR_FUTURE, allDay: true });
+                        } else {
+                            _calendar.addEvent({ ...common, start: startVal, end: endVal });
+                        }
+                    } else if (!startVal && !endVal) {
+                        _calendar.addEvent({ ...common, start: FAR_PAST, end: FAR_FUTURE, allDay: true });
+                    } else if (!startVal) {
+                        const end = moment(endVal);
+                        const endDayStart = end.clone().startOf('day');
+                        _calendar.addEvent({ ...common, start: FAR_PAST, end: endDayStart.toDate(), allDay: true });
+                        if (endDayStart.isBefore(end)) {
+                            _calendar.addEvent({ ...common, start: endDayStart.toDate(), end: end.toDate() });
+                        }
+                    } else if (!endVal) {
+                        const start = moment(startVal);
+                        const allDayStart = start.clone().startOf('day');
+                        if (allDayStart.isBefore(start)) {
+                            allDayStart.add(1, 'day');
+                        }
+                        if (start.isBefore(allDayStart)) {
+                            _calendar.addEvent({ ...common, start: start.toDate(), end: allDayStart.toDate() });
+                        }
+                        _calendar.addEvent({ ...common, start: allDayStart.toDate(), end: FAR_FUTURE, allDay: true });
+                    } else {
+                        const start = moment(startVal);
+                        const end = moment(endVal);
+                        const fullDayStart = start.clone().startOf('day');
+                        if (fullDayStart.isBefore(start)) {
+                            fullDayStart.add(1, 'day');
+                        }
+                        const fullDayEnd = end.clone().startOf('day');
+                        if (!fullDayStart.isBefore(fullDayEnd)) {
+                            _calendar.addEvent({ ...common, start: startVal, end: endVal });
+                        } else {
+                            if (start.isBefore(fullDayStart)) {
+                                _calendar.addEvent({ ...common, start: start.toDate(), end: fullDayStart.toDate() });
+                            }
+                            // allDay events use exclusive end semantics in FullCalendar.
+                            _calendar.addEvent({ ...common, start: fullDayStart.toDate(), end: fullDayEnd.toDate(), allDay: true });
+                            if (fullDayEnd.isBefore(end)) {
+                                _calendar.addEvent({ ...common, start: fullDayEnd.toDate(), end: end.toDate() });
+                            }
+                        }
+                    }
                 });
-                if (this.dataChangeReason !== RunActions.refresh && startTime && startTime < Infinity) {
+                // Navigate once, after the earliest event start across all entities is known.
+                if (shouldNavigate && startTime < Infinity) {
                     _calendar.gotoDate(startTime);
                 }
             });
-            _calendar.render();
-        } else if (_calendar){
-            _calendar.gotoDate(new Date());
-            _calendar.getEvents().forEach(event => event.remove());
-            _calendar.render();
+        } else {
+            _calendar.batchRendering(() => {
+                _calendar.gotoDate(new Date());
+                _calendar.removeAllEvents();
+            });
         }
     }
 
     _resizeEventListener () {
         if (this._calendar) {
+            // Flushes an event source rebuild that was deferred while the calendar was hidden.
+            // `iron-resize` is guaranteed on becoming visible: `iron-pages` performs `notifyResize` on every selection change and the notification reaches this component through the resizable chain.
+            if (this._pendingEventSourceUpdate && this.offsetParent !== null) {
+                this._pendingEventSourceUpdate = false;
+                const shouldNavigate = this._pendingNavigate;
+                this._pendingNavigate = false;
+                this._rebuildEventSource(this.entities, this.eventKeyProperty, this.eventDescProperty, this.eventFromProperty, this.eventToProperty, this._calendar, shouldNavigate);
+            }
             this._calendar.render();
         }
     }

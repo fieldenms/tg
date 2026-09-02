@@ -152,6 +152,7 @@ Polymer({
         const self = this;@ALLOW_CUSTOMISED
         self.retrieveAll = @retrieveAll;
         @sseRefreshCountdown
+        @sseMinAutoRefreshInterval
     },
 
     ready: function () {

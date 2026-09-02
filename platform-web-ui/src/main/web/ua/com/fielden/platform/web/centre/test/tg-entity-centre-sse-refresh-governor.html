@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>entity-centre SSE refresh governor tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+    <script src="/resources/test-configuration.js"></script>
+</head>
+
+<body>
+    <tg-reflector id="reflector"></tg-reflector>
+    <!-- 'event-source-class' is provided here explicitly: in the application it is assigned by the web view that hosts the centre, not by the generated centre itself. -->
+    <test-fixture id="CentreFixture">
+        <template>
+            <tg-MiTgPersistentEntityWithProperties-centre id="centre" uuid="some_centre_uuid_for_sse_governor_tests" event-source-class="test.sse.EventSourceForGovernorTests"></tg-MiTgPersistentEntityWithProperties-centre>
+        </template>
+    </test-fixture>
+
+    <script type="module">
+
+        import '/app/tg-reflector.js';
+        import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties';
+
+        suite('entity centre SSE refresh governor', function () {
+            this.timeout(15000);
+
+            let centre;
+            let toastShownCount, toastHiddenCount;
+
+            const sleep = millis => new Promise(resolve => setTimeout(resolve, millis));
+
+            const retrieveAndRun = () => centre.retrieve().then(() => centre.run());
+
+            setup(function () {
+                centre = fixture('CentreFixture');
+                // Stub toast presentation to observe governor decisions without touching the shared toast element.
+                toastShownCount = 0;
+                toastHiddenCount = 0;
+                centre.showRefreshToast = () => { toastShownCount += 1; };
+                centre.hideRefreshToast = () => { toastHiddenCount += 1; };
+                // Let the fixture settle: attachment subscribes the centre to SSE events, and the IntersectionObserver delivers its initial visibility report,
+                // which would override a prematurely forced _visible (an un-run centre legitimately reports its result container as invisible).
+                // Force visibility after that delivery -- no further deliveries occur without intersection changes.
+                return sleep(100).then(() => {
+                    centre._visible = true;
+                });
+            });
+
+            teardown(function () {
+                // Prevent timers of one test from leaking into subsequent tests.
+                centre._cancelDeferredRefreshToast();
+                centre.cancelDataHandling();
+                centre._pendingRefresh = false;
+            });
+
+            test('SSE refresh configuration (withRefreshPrompt, withMinAutoRefreshInterval) gets generated into the centre', function () {
+                assert.strictEqual(centre.countdown, 0, 'withRefreshPrompt should have generated countdown of 0.');
+                assert.strictEqual(centre.minAutoRefreshInterval, 30, 'withMinAutoRefreshInterval(30) should have generated the corresponding property.');
+            });
+
+            test('SSE event prompts immediately in case where the quiet window has expired', function () {
+                centre.minAutoRefreshInterval = 60;
+                centre._lastRefreshTimestamp = Date.now() - 120000; // the window expired long ago
+                centre.dataHandler({});
+                assert.isTrue(centre._pendingRefresh);
+                assert.isNull(centre._timerIdForDeferredRefresh, 'No deferral is expected for an expired window.');
+                assert.strictEqual(toastShownCount, 1);
+            });
+
+            test('SSE event inside the quiet window defers the prompt until window expiry (trailing edge)', function () {
+                centre.minAutoRefreshInterval = 1; // 1 second, to keep the test fast
+                centre._lastRefreshTimestamp = Date.now();
+                centre.dataHandler({});
+                assert.isTrue(centre._pendingRefresh);
+                assert.isNotNull(centre._timerIdForDeferredRefresh, 'The prompt should have been deferred.');
+                assert.strictEqual(toastShownCount, 0, 'No prompt is expected inside the quiet window.');
+                return sleep(600).then(() => {
+                    centre._visible = true; // re-assert visibility in case the IntersectionObserver reported non-intersection meanwhile
+                    return sleep(800);
+                }).then(() => {
+                    assert.strictEqual(toastShownCount, 1, 'The deferred prompt should have fired at window expiry.');
+                    assert.isNull(centre._timerIdForDeferredRefresh);
+                    assert.isTrue(centre._pendingRefresh, 'The refresh remains pending until actioned or cancelled.');
+                });
+            });
+
+            test('SSE events during a deferral get coalesced into the single deferred prompt', function () {
+                centre.minAutoRefreshInterval = 1;
+                centre._lastRefreshTimestamp = Date.now();
+                centre.dataHandler({});
+                const timerId = centre._timerIdForDeferredRefresh;
+                centre.dataHandler({});
+                centre.dataHandler({});
+                assert.strictEqual(centre._timerIdForDeferredRefresh, timerId, 'Subsequent events should not re-schedule the deferral.');
+                return sleep(600).then(() => {
+                    centre._visible = true; // re-assert visibility in case the IntersectionObserver reported non-intersection meanwhile
+                    return sleep(800);
+                }).then(() => {
+                    assert.strictEqual(toastShownCount, 1, 'Exactly one prompt is expected for the whole burst of events.');
+                });
+            });
+
+            test('started data load cancels a deferred pending auto-refresh and its completion restarts the quiet window', function () {
+                centre.minAutoRefreshInterval = 60;
+                centre._lastRefreshTimestamp = Date.now(); // the window is open
+                centre.dataHandler({});
+                assert.isTrue(centre._pendingRefresh);
+                assert.isNotNull(centre._timerIdForDeferredRefresh);
+                const loadStart = Date.now();
+                return retrieveAndRun().then(() => {
+                    assert.isFalse(centre._pendingRefresh, 'The load supersedes the pending auto-refresh.');
+                    assert.isNull(centre._timerIdForDeferredRefresh);
+                    assert.strictEqual(toastShownCount, 0);
+                    assert.isAtLeast(centre._lastRefreshTimestamp, loadStart, 'The completed load should have restarted the quiet window.');
+                });
+            });
+
+            test('started data load cancels SSE events that still await their delayed handling', function () {
+                assert.isOk(centre._messageSubscription, 'The centre should be subscribed to SSE events (event-source-class is assigned).');
+                postal.publish({
+                    channel: 'sse-event',
+                    topic: `/${centre.eventSourceClass}/message`,
+                    data: {msg: {minDelay: 60000, delay: 1}}
+                });
+                assert.isNotNull(centre._timerIdForDataHandling, 'Delayed handling of the event should have been scheduled.');
+                return retrieveAndRun().then(() => {
+                    assert.isNull(centre._timerIdForDataHandling, 'The load should have cancelled the delayed handling.');
+                    assert.isFalse(centre._pendingRefresh);
+                    assert.strictEqual(toastShownCount, 0);
+                });
+            });
+
+            test('SSE event after a completed data load gets deferred by the freshly restarted quiet window', function () {
+                return retrieveAndRun().then(() => {
+                    centre.minAutoRefreshInterval = 60;
+                    centre.dataHandler({});
+                    assert.isTrue(centre._pendingRefresh);
+                    assert.isNotNull(centre._timerIdForDeferredRefresh, 'The prompt should have been deferred by the window, restarted by the completed load.');
+                    assert.strictEqual(toastShownCount, 0);
+                });
+            });
+
+            test('Skip snoozes: a fresh quiet window starts, deferring a subsequent event', function () {
+                centre.minAutoRefreshInterval = 60;
+                centre._lastRefreshTimestamp = Date.now() - 120000;
+                centre.dataHandler({});
+                assert.strictEqual(toastShownCount, 1);
+                centre.cancelHandler(true); // as actioned by button SKIP
+                assert.isFalse(centre._pendingRefresh);
+                centre.dataHandler({});
+                assert.isNotNull(centre._timerIdForDeferredRefresh, 'An event shortly after Skip should be deferred.');
+                assert.strictEqual(toastShownCount, 1, 'No immediate re-prompt is expected after Skip.');
+            });
+
+            test('programmatic cancellation does not snooze: a subsequent event prompts immediately', function () {
+                centre.minAutoRefreshInterval = 60;
+                centre._lastRefreshTimestamp = Date.now() - 120000;
+                centre.dataHandler({});
+                assert.strictEqual(toastShownCount, 1);
+                centre.cancelHandler(); // as invoked by cancelRefreshToast() when a data load gets instigated
+                assert.isFalse(centre._pendingRefresh);
+                centre.dataHandler({});
+                assert.isNull(centre._timerIdForDeferredRefresh, 'The window was not restarted, hence no deferral.');
+                assert.strictEqual(toastShownCount, 2, 'The prompt is expected to be immediate.');
+            });
+
+            test('SSE event arriving during a load is not superseded and gets deferred once the load completes', function () {
+                // The load is simulated by toggling isRunning directly: a real run may legitimately involve more than one runner request,
+                // and every subsequent request would supersede an event that arrived during the previous one, making the test indeterminate.
+                centre.minAutoRefreshInterval = 60;
+                centre._lastRefreshTimestamp = Date.now() - 120000; // the window expired before the load
+                centre.isRunning = true; // a data load starts
+                centre.dataHandler({}); // the event arrives while the load is in progress
+                assert.isTrue(centre._pendingRefresh);
+                assert.strictEqual(toastShownCount, 0, 'No prompt is expected while the load is in progress.');
+                centre.isRunning = false; // the load completes
+                assert.isTrue(centre._pendingRefresh, 'An event, arriving during the load, should survive it.');
+                assert.isNotNull(centre._timerIdForDeferredRefresh, 'The surviving event is subject to the freshly restarted window.');
+                assert.strictEqual(toastShownCount, 0);
+            });
+
+            test('without minAutoRefreshInterval an event prompts immediately, but a load still cancels the pending auto-refresh', function () {
+                centre.minAutoRefreshInterval = undefined;
+                centre.dataHandler({});
+                assert.isTrue(centre._pendingRefresh);
+                assert.isNull(centre._timerIdForDeferredRefresh, 'No deferral without the refresh governor.');
+                assert.strictEqual(toastShownCount, 1);
+                return retrieveAndRun().then(() => {
+                    assert.isFalse(centre._pendingRefresh, 'The load supersedes the pending auto-refresh even without the refresh governor.');
+                    assert.isAtLeast(toastHiddenCount, 1, 'The prompt should have been hidden when the load started.');
+                });
+            });
+
+        });
+    </script>
+
+</body>
+
+</html>

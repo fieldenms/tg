@@ -42,6 +42,12 @@ import java.util.Date;
 ///    While the column name is now changed for `User.base`, the column name for `User_a3t_1.a3t_base` remains unchanged.
 ///    In this case, the solution is to manually edit `User_a3t_1.a3t_base` by annotating it with `@MapTo("A3T__BASE")`.
 ///
+/// ### Deletion
+///
+/// Audit-entity companions **do not support deletion**.
+/// Instead, audit records are cascade deleted when the corresponding audited record is (as referenced by [#AUDITED_ENTITY]).
+/// This coupling of deletion at the model level prevents manipulation of an entity's audit trail.
+///
 /// @param <E>  type of the audited entity
 ///
 @KeyType(DynamicEntityKey.class)

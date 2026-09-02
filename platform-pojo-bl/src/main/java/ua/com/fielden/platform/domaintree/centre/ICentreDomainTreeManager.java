@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This interface defines how domain tree can be managed for <b>entity centres</b>. <br>
@@ -811,14 +812,70 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         
         /**
          * Sets column widths and grow factors to facilitate full overriding of that information; need to get information using {@link #getWidthsAndGrowFactors()} method.
-         * 
+         *
          * @param widthsAndGrowFactors
          */
         void setWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors);
-        
+
+        /// Sets a `width` for a *dynamic* column (property).
+        /// A dynamic column is emitted at request time by an `IDynamicColumnBuilder` and identified by its group-key value.
+        /// Unlike [#setWidth(Class, String, int)], this method bypasses the "checked properties" contract.
+        /// Dynamic column keys never appear in [#checkedProperties(Class)].
+        /// They would otherwise trigger a `DomainTreeException` in strict mode.
+        ///
+        void setDynamicWidth(final Class<?> root, final String property, final int width);
+
+        /// Returns a `width` for a *dynamic* column (property), or empty if no override has been persisted for `property`.
+        /// Callers should fall back to the default emitted by the `IDynamicColumnBuilder` when empty.
+        ///
+        Optional<Integer> getDynamicWidth(final Class<?> root, final String property);
+
+        /// Sets a `growFactor` for a *dynamic* column (property).
+        /// See [#setDynamicWidth(Class, String, int)] for the bypass rationale.
+        ///
+        void setDynamicGrowFactor(final Class<?> root, final String property, final int growFactor);
+
+        /// Returns a `growFactor` for a *dynamic* column (property), or empty if no override has been persisted for `property`.
+        ///
+        Optional<Integer> getDynamicGrowFactor(final Class<?> root, final String property);
+
+        /// Returns dynamic column widths and grow factors.
+        /// Facilitates exact copy through [#setDynamicWidthsAndGrowFactors(T2)].
+        ///
+        T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> getDynamicWidthsAndGrowFactors();
+
+        /// Sets dynamic column widths and grow factors to facilitate full overriding of that information.
+        /// Use [#getDynamicWidthsAndGrowFactors()] to capture the current state first.
+        ///
+        void setDynamicWidthsAndGrowFactors(
+            final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors
+        );
+
+        /// Records `lastSeenMillis` for a *dynamic* column (property).
+        /// Used by the eviction sweep to detect entries, whose corresponding dynamic column has not been emitted for long enough.
+        ///
+        void setDynamicLastSeen(final Class<?> root, final String property, final long lastSeenMillis);
+
+        /// Returns the last-seen milliseconds for a *dynamic* column (property), or empty if no millis have been recorded.
+        ///
+        Optional<Long> getDynamicLastSeen(final Class<?> root, final String property);
+
+        /// Returns the underlying map of dynamic last-seen millis to facilitate exact copying.
+        ///
+        EnhancementPropertiesMap<Long> getDynamicLastSeenMap();
+
+        /// Overwrites the map of dynamic last-seen millis.
+        ///
+        void setDynamicLastSeenMap(final EnhancementPropertiesMap<Long> lastSeenMap);
+
+        /// Removes width, growFactor and last-seen entries for a *dynamic* column (property).
+        /// Used by the eviction sweep to discard stale entries.
+        ///
+        void removeDynamicEntry(final Class<?> root, final String property);
+
         /**
          * Gets result-set page capacity.
-         * 
+         *
          * @return
          */
         int getPageCapacity();

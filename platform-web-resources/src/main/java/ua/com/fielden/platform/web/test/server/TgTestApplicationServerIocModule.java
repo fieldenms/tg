@@ -12,7 +12,6 @@ import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
-import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -22,9 +21,9 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
 import ua.com.fielden.platform.web.interfaces.IUserPreferencesProvider;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
@@ -53,7 +52,6 @@ public class TgTestApplicationServerIocModule extends BasicWebServerIocModule {
         bind(IUserPreferencesProvider.class).to(CustomUserSettings.class);
         bind(IAuthenticationModel.class).to(TgTestAppAuthenticationModel.class);
         bind(ISecurityTokenNodeTransformation.class).to(TgTestApplicationSecurityTokenNodeTransformation.class);
-        bind(ISecurityTokenProvider.class).to(TgTestSecurityTokenProvider.class);
 
         requireBinding(IDates.class);
         requireBinding(IUniversalConstants.class);
@@ -70,7 +68,7 @@ public class TgTestApplicationServerIocModule extends BasicWebServerIocModule {
     @Singleton
     @SessionCache Cache<String, UserSession> provideSessionCache(final @UntrustedDeviceSessionDuration int untrustedDeviceSessionDurationMins) {
         return CacheBuilder.newBuilder()
-                .expireAfterWrite(untrustedDeviceSessionDurationMins / 2, TimeUnit.MINUTES)
+                .expireAfterWrite(Duration.ofMinutes(untrustedDeviceSessionDurationMins / 2))
                 .build();
     }
 
