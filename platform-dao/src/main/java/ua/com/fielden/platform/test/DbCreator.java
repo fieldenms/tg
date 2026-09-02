@@ -5,22 +5,29 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.ddl.IDdlGenerator;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadataUtils;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
+import ua.com.fielden.platform.utils.DbUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
+import static ua.com.fielden.platform.test.AbstractDomainDrivenTestCase.*;
 import static ua.com.fielden.platform.utils.DbUtils.batchExecSql;
 
 /// Abstracts the logic for creating the initial test-case database
@@ -62,10 +69,30 @@ import static ua.com.fielden.platform.utils.DbUtils.batchExecSql;
 ///   For this option to be effective, test data must have been previously saved to a file.
 ///
 public abstract class DbCreator {
+
     public static final String baseDir = "./src/test/resources/db";
     public static final String ddlScriptFileName = format("%s/create-db-ddl.script", DbCreator.baseDir);
 
     public static final int BATCH_SIZE = 1000;
+
+    public static String prePopulationScriptPath(final String name) {
+        return format("%s/prePopulate-%s.script", DbCreator.baseDir, name);
+    }
+
+    private static boolean isPrePopulationScript(final Path path) {
+        final var filename = path.getFileName().toString();
+        return filename.startsWith("prePopulate-") && filename.endsWith(".script");
+    }
+
+    private static boolean PRE_POPULATED = false;
+
+    /// The ID seed that gets assigned based on pre-populated data.
+    /// It is guaranteed to be greater than any entity ID in all of pre-populated data.
+    /// It is relevant only for tests in Cached Mode.
+    ///
+    /// This field is guaranteed to be non-null when [#PRE_POPULATED] is `true`.
+    ///
+    private static Long PRE_POPULATED_ID_SEED = null;
 
     public final IDomainDrivenTestCaseConfiguration config;
 
@@ -125,24 +152,31 @@ public abstract class DbCreator {
     /// Executes the test data population logic.
     /// Should be invoked before each unit test.
     ///
-    public final DbCreator populateOrRestoreData(final AbstractDomainDrivenTestCase testCase) throws SQLException {
+    public final DbCreator populateOrRestoreData(final AbstractDomainDrivenTestCase testCase) {
+        runPrePopulation(testCase);
+
+        final var dbUtils = config.getInstance(DbUtils.class);
+
         if (testCase.useSavedDataPopulationScript() && testCase.saveDataPopulationScriptToFile()) {
             throw new DomainDrivenTestException("useSavedDataPopulationScript() && saveDataPopulationScriptToFile() should not be true at the same time.");
         }
 
         Optional<Exception> raisedEx = Optional.empty();
 
-        if (!dataScripts.isEmpty()) {
-            // Apply the data population script.
-            logger.debug("Executing data population script.");
-            config.getInstance(TransactionalExecution.class).execStrict(conn -> batchExecSql(new ArrayList<>(dataScripts), conn, BATCH_SIZE));
-        } else {
+        // For the first test in the test class: initial population of test data.
+        if (dataScripts.isEmpty()) {
             try {
                 if (testCase.useSavedDataPopulationScript()) {
                     config.getInstance(TransactionalExecution.class).execStrict(conn -> restoreDataFromFile(testCaseType, conn));
+                    // Set the ID seed to a value greater than any ID used in the script.
+                    // This is to prevent ID conflicts with populateDomain() which may save new entities.
+                    testCase.setIdSeed(AbstractDomainDrivenTestCase.ID_HEADROOM + dbUtils.maxEntityId());
                 }
-                // Need to call populateDomain, which might have some initialization even if the actual data saving does not need to occur.
+                testCase.resetIdGenerator();
+                // Call populateDomain regardless of using a data population script -- populateDomain may contain extra initialisation.
                 testCase.populateDomain();
+                testCase.setIdSeed(AbstractDomainDrivenTestCase.ID_HEADROOM + dbUtils.maxEntityId());
+                // No need to resetIdGenerator here, each test class has a @Before method that will do this.
             } catch (final Exception ex) {
                 raisedEx = Optional.of(ex);
             }
@@ -156,6 +190,12 @@ public abstract class DbCreator {
                 }
             }
         }
+        // After the first test in the test class: repopulation of test data.
+        else {
+            // Apply the data population script.
+            logger.debug("Executing data population script.");
+            config.getInstance(TransactionalExecution.class).execStrict(conn -> batchExecSql(new ArrayList<>(dataScripts), conn, BATCH_SIZE));
+        }
 
         if (raisedEx.isPresent()) {
             raisedEx.ifPresent(ex -> logger.fatal(ex.getMessage(), ex));
@@ -163,6 +203,120 @@ public abstract class DbCreator {
         }
 
         return this;
+    }
+
+    private void runPrePopulation(final AbstractDomainDrivenTestCase testCase) {
+        final var loadDataScriptFromFile = Boolean.getBoolean(LOAD_DATA_SCRIPT_FROM_FILE);
+        final var saveScriptsToFile = Boolean.getBoolean(SAVE_SCRIPTS_TO_FILE);
+        final var dbUtils = config.getInstance(DbUtils.class);
+        final var dbVersionProvider = config.getInstance(IDbVersionProvider.class);
+        final var testCaseName = PropertyTypeDeterminator.stripIfNeeded(testCase.getClass()).getSimpleName();
+
+        // Cached Mode: pre-populate or load from file.
+        if (!testCase.skipCaching()) {
+            logger.info(() -> format("%s: Cached Mode is active. [%s = %s], [%s = %s]",
+                                     testCaseName, LOAD_DATA_SCRIPT_FROM_FILE, loadDataScriptFromFile, SAVE_SCRIPTS_TO_FILE, saveScriptsToFile));
+            // Pre-population occurs only once per JVM (controlled by PRE_POPULATED).
+            if (!PRE_POPULATED) {
+                if (!loadDataScriptFromFile) {
+                    logger.info(() -> "Performing initial pre-population.");
+
+                    if (saveScriptsToFile) {
+                        // Delete all existing pre-population scripts.
+                        if (java.nio.file.Files.exists(Path.of(baseDir))) {
+                            logger.info(() -> "Deleting existing pre-population scripts.");
+                            try (final Stream<Path> paths = java.nio.file.Files.list(Path.of(baseDir))) {
+                                final var delCount = paths.filter(DbCreator::isPrePopulationScript)
+                                        .filter(p -> {
+                                            try {
+                                                return java.nio.file.Files.deleteIfExists(p);
+                                            } catch (final IOException ex) {
+                                                logger.warn(() -> "Could not delete pre-population script [%s]. This may affect test results.".formatted(p), ex);
+                                                return false;
+                                            }
+                                        }).count();
+                                logger.info(() -> "Deleted %s pre-population scripts.".formatted(delCount));
+                            } catch (final IOException ex) {
+                                logger.warn(() -> "Could not list existing pre-population scripts. This may affect test results.", ex);
+                            }
+                        }
+
+                        // Delete the ID seed script.
+                        try {
+                            if (java.nio.file.Files.deleteIfExists(Path.of(idSequenceScriptPath()))) {
+                                logger.info(() -> "Deleted [%s].".formatted(idSequenceScriptPath()));
+                            }
+                        } catch (final IOException ex) {
+                            logger.warn(() -> "Could not delete [%s].".formatted(idSequenceScriptPath()), ex);
+                        }
+                    }
+
+                    // let's use non-strict mode for scripting
+                    try {
+                        AbstractEntity.useNonStrictModelVerification();
+                        testCase.prePopulateDomain();
+                    } finally {
+                        // reset model verification mode to strict after scripting
+                        AbstractEntity.useStrictModelVerification();
+                    }
+
+                    PRE_POPULATED_ID_SEED = AbstractDomainDrivenTestCase.ID_HEADROOM + dbUtils.maxEntityId();
+                    if (saveScriptsToFile) {
+                        saveScriptToFile(List.of(dbUtils.sqlRestartSequence(dbVersionProvider.dbVersion(), ID_SEQUENCE_NAME, PRE_POPULATED_ID_SEED)),
+                                         idSequenceScriptPath());
+                        logger.info(() -> "Created %s with ID=%s.".formatted(idSequenceScriptPath(), PRE_POPULATED_ID_SEED));
+                    }
+
+                    logger.info(() -> "Completed creating all pre-population scripts. Clearing the DB.");
+
+                    // After pre-population clear the DB for the upcoming test case.
+                    try {
+                        testCase.afterPrePopulation();
+                        config.getInstance(TransactionalExecution.class).execStrict(conn -> {
+                            final List<String> script = genTruncStmt(persistentEntitiesMetadata(), conn);
+                            batchExecSql(script, conn, DbCreator.BATCH_SIZE);
+                        });
+                    } catch (final Exception ex) {
+                        final String msg = "Failed to clear the DB after pre-population.";
+                        logger.fatal(msg, ex);
+                        throw new DomainDrivenTestException(msg, ex);
+                    }
+                }
+                else {
+                    // loadDataScriptFromFile = true means that a prior Cached Mode test run performed pre-population.
+                    // Load the seed ID from a script created by that test run.
+
+                    logger.info(() -> "Skipping pre-population. Loading the seed ID.");
+
+                    final var idSequenceScript = new File(idSequenceScriptPath());
+                    if (idSequenceScript.exists()) {
+                        try {
+                            final var lines = Files.readLines(idSequenceScript, StandardCharsets.UTF_8);
+                            config.getInstance(TransactionalExecution.class).exec(conn -> batchExecSql(lines, conn, 1));
+                        } catch (final Exception ex) {
+                            throw new RuntimeException(ex);
+                        }
+                        PRE_POPULATED_ID_SEED = config.getInstance(TransactionalExecution.class).execWithSession($ -> DbUtils.nextIdValue(ID_SEQUENCE_NAME, $.getSession()));
+                    }
+                    else {
+                        logger.warn(() -> format("%s does not exist, but [%s = %s]."
+                                                 + " This may result in entity ID conflicts during test data population."
+                                                 + " It is recommended to regenerate all scripts by running all tests with [%s = false].",
+                                                 idSequenceScriptPath(), LOAD_DATA_SCRIPT_FROM_FILE, loadDataScriptFromFile, LOAD_DATA_SCRIPT_FROM_FILE));
+                        PRE_POPULATED_ID_SEED = DEFAULT_ID_SEED;
+                    }
+                }
+                PRE_POPULATED = true;
+            }
+
+            // PRE_POPULATED_ID_SEED should not be null at this point, but let's keep this condition just in case.
+            if (PRE_POPULATED_ID_SEED != null && testCase.getIdSeed() == null) {
+                testCase.setIdSeed(PRE_POPULATED_ID_SEED);
+            }
+        }
+        else {
+            logger.info(() -> "%s: Uncached Mode is active.".formatted(testCaseName));
+        }
     }
 
     /// Executes the script that truncates database tables.
@@ -266,6 +420,13 @@ public abstract class DbCreator {
         } catch (final IOException ex) {
             throw new DomainDrivenTestException("Could not save [%d] scripts to file [%s].".formatted(scripts.size(), fileName), ex);
         }
+    }
+
+    /// Returns a relative path to the ID sequence script.
+    /// This is an SQL script that restarts the entity ID sequence with a value that is greater than any entity ID used in `populate*` scripts.
+    ///
+    private static String idSequenceScriptPath() {
+        return "%s/id-sequence.script".formatted(baseDir);
     }
 
 }

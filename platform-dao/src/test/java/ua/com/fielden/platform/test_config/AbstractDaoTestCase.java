@@ -2,16 +2,12 @@ package ua.com.fielden.platform.test_config;
 
 import org.joda.time.DateTime;
 import org.junit.runner.RunWith;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-
-import java.util.List;
 
 /// Should be used as a convenient base class for domain driven test cases.
 ///
@@ -20,11 +16,12 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
 
     public static final String UNIT_TEST_USER = User.system_users.UNIT_TEST_USER.name();
     public static final String UNIT_TEST_ROLE = "UNIT_TEST_ROLE";
-    
+
     @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
+    public void prePopulateDomain() {}
+
+    @Override
+    public void afterPrePopulation() {}
 
     /// Initialises a test user.
     /// Needs to be invoked in descendant classes.

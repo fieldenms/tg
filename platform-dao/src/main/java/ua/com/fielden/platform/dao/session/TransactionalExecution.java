@@ -109,6 +109,13 @@ public class TransactionalExecution extends WithTransaction {
         return action.apply(this);
     }
 
+    /// Executes the specified `action` transactionally, providing this instance of [ISessionEnabled].
+    ///
+    @SessionRequired
+    public void runWithSession(final Consumer<ISessionEnabled> action) {
+        action.accept(this);
+    }
+
     /// Executes the specified `action` transactionally, providing this instance of [ISessionEnabled], and returns its result.
     ///
     /// This is a **strict** execution method — it throws an exception if invoked within the scope of an existing session.
