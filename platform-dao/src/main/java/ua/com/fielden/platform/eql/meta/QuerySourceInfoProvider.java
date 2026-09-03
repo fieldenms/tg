@@ -142,8 +142,12 @@ public class QuerySourceInfoProvider {
                 }
             }
         } catch (final TopologicalSortException topoEx) {
-            final var msg = format("There are cyclic dependencies between synthetic entities: %s",
-                                   CollectionUtil.toString(topoEx.cycle(), it -> ((Class<?>) it).getSimpleName(), " -> "));
+            // A sort failure is not necessarily a cycle: `seDependencies` is not restricted to registered synthetic
+            // entities, so a model selecting from an unregistered one leaves a dangling edge.
+            final var msg = topoEx.cycle().isEmpty()
+                    ? "Could not order synthetic entities. %s".formatted(topoEx.getMessage())
+                    : "There are cyclic dependencies between synthetic entities: %s"
+                            .formatted(CollectionUtil.toString(topoEx.cycle(), it -> ((Class<?>) it).getSimpleName(), " -> "));
             final var ex = new EqlMetadataGenerationException(msg);
             LOGGER.error(ex);
             throw ex;

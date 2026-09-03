@@ -22,7 +22,6 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -67,9 +66,9 @@ public class DependentCalcPropsVerifier {
             // The topological order is irrelevant; the sort throws with the offending cycle if one exists.
             sortTopologically(dependencyGraph(querySourceInfo));
         } catch (final TopologicalSortException ex) {
-            throw new EqlException(format(ERR_CYCLIC_DEPENDENCIES_BETWEEN_CALCULATED_PROPERTIES,
-                                          querySourceInfo.javaType().getSimpleName(),
-                                          CollectionUtil.toString(ex.cycle(), " -> ")));
+            throw new EqlException(ERR_CYCLIC_DEPENDENCIES_BETWEEN_CALCULATED_PROPERTIES
+                                   .formatted(querySourceInfo.javaType().getSimpleName(),
+                                              CollectionUtil.toString(ex.cycle(), " -> ")));
         }
     }
 
@@ -83,10 +82,10 @@ public class DependentCalcPropsVerifier {
 
         final Map<String, Set<String>> graph = calculatedProperties(querySourceInfo)
                 .collect(toMap(T2::_1, t2 -> directDeps(source, t2, querySourceInfo, gen).collect(toCollection(HashSet::new))));
-        // Keep the graph closed (every dependency is also a node) -- relied upon by cycle extraction.
-        // This drops references to any calculated property not enumerated as a node (e.g. a calculated key).
-        final var nodes = graph.keySet();
-        graph.values().forEach(deps -> deps.retainAll(nodes));
+        // Restrict to the subgraph induced by the enumerated calc props, so that no edge dangles.
+        // This drops references to any calculated property not enumerated as a vertex (e.g. a calculated key).
+        final var vertices = graph.keySet();
+        graph.values().forEach(deps -> deps.retainAll(vertices));
         return graph;
     }
 
