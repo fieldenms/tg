@@ -42,6 +42,14 @@ public class DependentCalcPropsVerifierTest extends AbstractDaoTestCase {
         assertCyclicDependencies(EntityWithTransitiveCyclicCalcProps.class, "alpha", "beta", "gamma");
     }
 
+    /// Component-typed calculated properties are enumerated through their sub-items, because a
+    /// `QuerySourceItemForComponentType` never carries an expression of its own.
+    ///
+    @Test
+    public void a_cycle_between_component_typed_calc_props_is_detected() {
+        assertCyclicDependencies(EntityWithCyclicCalcComponentProps.class, "costA", "costB");
+    }
+
     // ------------------------------------------------------------------------------------------------
     // Helpers
 
