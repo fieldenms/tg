@@ -710,6 +710,37 @@ After quote.
         assertSearchText("two three four", "<b> two </b> <i>three</i> four");
     }
 
+    /**
+     * A CDATA section in HTML content is parsed as a bogus comment, so its contents are never rendered.
+     * Therefore, they must not contribute to core text either.
+     * This behaviour is determined by the HTML parser, which is why it is pinned here.
+     * jsoup aligned its CDATA tokenisation with the HTML specification in 1.23.1, prior to which the contents of a CDATA section were extracted as text.
+     */
+    @Test
+    public void core_text_excludes_contents_of_CDATA_sections() {
+        assertCoreText("one two", "one <![CDATA[hidden]]> two");
+        assertCoreText("onetwo", "one<![CDATA[hidden]]>two");
+        assertCoreText("one\ntwo", "<p>one</p><![CDATA[hidden]]><p>two</p>");
+        assertCoreText("", "<![CDATA[hidden]]>");
+        // An unterminated CDATA section ends at the first `>`, or at the end of the input if there is none.
+        assertCoreText("one two", "one <![CDATA[hidden> two");
+        assertCoreText("one", "one <![CDATA[hidden two");
+    }
+
+    /**
+     * @see #core_text_excludes_contents_of_CDATA_sections()
+     */
+    @Test
+    public void search_text_excludes_contents_of_CDATA_sections() {
+        assertSearchText("one two", "one <![CDATA[hidden]]> two");
+        assertSearchText("onetwo", "one<![CDATA[hidden]]>two");
+        assertSearchText("one two", "<p>one</p><![CDATA[hidden]]><p>two</p>");
+        assertSearchText("", "<![CDATA[hidden]]>");
+        // An unterminated CDATA section ends at the first `>`, or at the end of the input if there is none.
+        assertSearchText("one two", "one <![CDATA[hidden> two");
+        assertSearchText("one", "one <![CDATA[hidden two");
+    }
+
     @Test
     public void safe_HTML_that_becomes_unsafe_after_conversion_to_coreText_is_disallowed() {
         final var html = "<code>&lt;img onerror=alert(1) /&gt;</code>";
