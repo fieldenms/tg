@@ -5,13 +5,17 @@ import ua.com.fielden.BenchmarkProperties;
 import ua.com.fielden.platform.audit.AuditingIocModule;
 import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
 import ua.com.fielden.platform.eql.stage2.IPropPathResolver;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -30,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 import static ua.com.fielden.eql.BenchmarkIocModule.benchmarkModule;
 import static ua.com.fielden.eql.IPropPathResolverBenchmark.IocModule.iocModule;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.MiscUtilities.mkProperties;
 import static ua.com.fielden.platform.utils.MiscUtilities.propertiesUnionLeft;
@@ -43,6 +48,8 @@ import static ua.com.fielden.platform.utils.MiscUtilities.propertiesUnionLeft;
 /// The corpus covers the axes along which the cost of resolution varies: the number of properties, the length of property
 /// paths, the sharing of path prefixes (which implicit joins must reuse rather than recreate), header properties
 /// (component- and union-typed), and the expansion of calculated properties, including transitive ones.
+/// Each query is prepared with a minimal fetch model, so that what it resolves is its own criteria rather than the
+/// result type's whole property surface -- see [#prepare].
 ///
 /// ## Running
 ///
@@ -83,6 +90,10 @@ public class IPropPathResolverBenchmark {
     /// Retained so that [#beforeInvocation()] can rebuild `gen`.
     private IFilter filter;
     private QueryNowValue nowValue;
+
+    /// Retained so that [#prepare] can build a fetch model.
+    private IDomainMetadata domainMetadata;
+    private QuerySourceInfoProvider querySourceInfoProvider;
 
     /// The source-ID counter once [#beforeTrial()] has prepared every query, and thus above every explicit source ID
     /// held by the pre-computed [Prop2] sets.
@@ -166,9 +177,9 @@ public class IPropPathResolverBenchmark {
         filter = injector.getInstance(IFilter.class);
         nowValue = new QueryNowValue(injector.getInstance(IDates.class));
         gen = mkGen(0);
-        final var context = TransformationContextFromStage1To2.mkContext(
-                injector.getInstance(QuerySourceInfoProvider.class),
-                injector.getInstance(IDomainMetadata.class));
+        domainMetadata = injector.getInstance(IDomainMetadata.class);
+        querySourceInfoProvider = injector.getInstance(QuerySourceInfoProvider.class);
+        final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata);
 
         singleProp = prepare(singlePropQuery(), context);
         dotNotation = prepare(dotNotationQuery(), context);
@@ -226,8 +237,22 @@ public class IPropPathResolverBenchmark {
     /// Replicates [EqlQueryTransformer#transform] up to, but excluding, the call to [IPropPathResolver#resolve],
     /// and returns the properties that the call would receive.
     ///
-    private Set<Prop2> prepare(final QueryModel<?> queryModel, final TransformationContextFromStage1To2 context) {
-        final var props = gen.generateAsResultQuery(queryModel, null, null).transform(context).collectProps();
+    /// A minimal fetch model is supplied deliberately.
+    /// Yields are resolved along with the criteria, so a richer model adds the yielded properties to every query alike,
+    /// swamping the axis each one is meant to isolate.
+    ///
+    /// Supplying none at all is the worst case, not the lightest.
+    /// These queries declare no yields, so [ResultQuery1] expands them from every property of the query source, and the
+    /// retrieval model serves only to narrow that expansion (`retrievalModel == null || retrievalModel.containsProp(..)`).
+    /// A null model does not widen a fetch model -- it removes the filter, so the query yields the source's entire
+    /// property set, calculated properties included.
+    /// That is more than [FetchCategory#DEFAULT] would retrieve, since that category excludes calculated properties,
+    /// bar the components kept for legacy EQL2 behaviour.
+    ///
+    private <T extends AbstractEntity<?>> Set<Prop2> prepare(final QueryModel<T> queryModel, final TransformationContextFromStage1To2 context) {
+        final var fetchModel = new EntityRetrievalModel<>(
+                fetchIdOnly(queryModel.getResultType()), domainMetadata, querySourceInfoProvider);
+        final var props = gen.generateAsResultQuery(queryModel, null, fetchModel).transform(context).collectProps();
         // Domain metadata and query source information are generated lazily and cached.
         // Resolve once up front so that the cost of populating those caches is not attributed to a measured invocation.
         propPathResolver.resolve(props, gen);
@@ -237,7 +262,7 @@ public class IPropPathResolverBenchmark {
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Queries
 
-    /// The baseline: a single persistent property, one resolution, no implicit joins.
+    /// The baseline: a single persistent property, one resolution beyond the id yield, no implicit joins.
     ///
     private static QueryModel<?> singlePropQuery() {
         return select(TgVehicle.class).where()
