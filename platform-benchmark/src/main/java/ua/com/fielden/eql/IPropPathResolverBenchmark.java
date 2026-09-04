@@ -77,6 +77,10 @@ public class IPropPathResolverBenchmark {
 
     private IPropPathResolver propPathResolver;
     private QueryModelToStage1Transformer gen;
+
+    /// The source-ID counter as it stands once [#beforeTrial()] has prepared every query, and thus above every
+    /// explicit source ID held by the pre-computed [Prop2] sets.
+    ///
     private int initSourceId;
 
     /// Stage 2 properties of each query, pre-computed by [#beforeTrial()].
@@ -164,7 +168,6 @@ public class IPropPathResolverBenchmark {
                 Optional.empty(),
                 new QueryNowValue(injector.getInstance(IDates.class)),
                 Map.of());
-        initSourceId = gen.nextSourceId() - 1;
         final var context = TransformationContextFromStage1To2.mkContext(
                 injector.getInstance(QuerySourceInfoProvider.class),
                 injector.getInstance(IDomainMetadata.class));
@@ -178,6 +181,10 @@ public class IPropPathResolverBenchmark {
         calcEntityProps = prepare(calcEntityPropsQuery(), context);
         transitiveCalcProps = prepare(transitiveCalcPropsQuery(), context);
         composite = prepare(compositeQuery(), context);
+
+        // Captured only once every query has been prepared, so that the reset in `beforeInvocation` never rewinds
+        // below an explicit source ID already held by the pre-computed properties.
+        initSourceId = gen.nextSourceId() - 1;
     }
 
     static class IocModule extends BenchmarkIocModule {
@@ -204,6 +211,10 @@ public class IPropPathResolverBenchmark {
     @Setup(Level.Invocation)
     public void beforeInvocation() {
         // Reset the source ID generator to avoid running out of IDs.
+        // It must be rewound no further than `initSourceId`: source IDs are globally unique, and `joins` and
+        // `expansions` are keyed on (source ID, property), so an implicit source re-issued an ID that an explicit
+        // source already holds shares its namespace, and an entry can be silently absorbed -- the resolver then
+        // does less work than a real transformation would, with no error to show for it.
         gen._setSourceId(initSourceId);
     }
 
