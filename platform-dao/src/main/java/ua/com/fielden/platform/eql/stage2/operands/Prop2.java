@@ -39,8 +39,8 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
  * <p>
  * Dot-notated path may also contain "headers" such as union-typed property or component-typed property (e.g., {@link Money}). The parts of the path that represent such properties exist mainly to preserve the structure of dot-notated properties.
  * For example, property {@code vehicle.model.make.avgPrice.amount} will be resolved to 5 parts, where the part corresponding to {@code avgPrice} will be a "header", without any retrievable value.
- * At a later processing stage such "header" parts get combined into "chunks" (represented by {@link ua.com.fielden.platform.eql.stage2.sources.enhance.PropChunk PropChunk}) that have retrievable values.
- * In the current example such chunk would correspond to {@code avgPrice.amount}.
+ * At a later processing stage such "header" parts get combined with the part that follows them into "terminal" property paths that have retrievable values (see {@link ua.com.fielden.platform.eql.stage2.PropPathResolver PropPathResolver}).
+ * In the current example such a terminal would correspond to {@code avgPrice.amount}.
  *
  * @author TG Team
  *
