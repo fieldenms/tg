@@ -80,8 +80,12 @@ public class IPropPathResolverBenchmark {
     private IPropPathResolver propPathResolver;
     private QueryModelToStage1Transformer gen;
 
-    /// The source-ID counter as it stands once [#beforeTrial()] has prepared every query, and thus above every
-    /// explicit source ID held by the pre-computed [Prop2] sets.
+    /// Retained so that [#beforeInvocation()] can rebuild `gen`.
+    private IFilter filter;
+    private QueryNowValue nowValue;
+
+    /// The source-ID counter once [#beforeTrial()] has prepared every query, and thus above every explicit source ID
+    /// held by the pre-computed [Prop2] sets.
     ///
     private int initSourceId;
 
@@ -159,11 +163,9 @@ public class IPropPathResolverBenchmark {
                 .getInjector();
 
         propPathResolver = injector.getInstance(IPropPathResolver.class);
-        gen = new QueryModelToStage1Transformer(
-                injector.getInstance(IFilter.class),
-                Optional.empty(),
-                new QueryNowValue(injector.getInstance(IDates.class)),
-                Map.of());
+        filter = injector.getInstance(IFilter.class);
+        nowValue = new QueryNowValue(injector.getInstance(IDates.class));
+        gen = mkGen(0);
         final var context = TransformationContextFromStage1To2.mkContext(
                 injector.getInstance(QuerySourceInfoProvider.class),
                 injector.getInstance(IDomainMetadata.class));
@@ -178,9 +180,25 @@ public class IPropPathResolverBenchmark {
         transitiveCalcProps = prepare(transitiveCalcPropsQuery(), context);
         composite = prepare(compositeQuery(), context);
 
-        // Captured only once every query has been prepared, so that the reset in `beforeInvocation` never rewinds
-        // below an explicit source ID already held by the pre-computed properties.
+        // Captured only once every query has been prepared, so that a rebuilt generator never re-issues an explicit
+        // source ID already held by the pre-computed properties.
         initSourceId = gen.nextSourceId() - 1;
+    }
+
+    private QueryModelToStage1Transformer mkGen(final int initialSourceId) {
+        return new QueryModelToStage1Transformer(filter, Optional.empty(), nowValue, Map.of(), initialSourceId);
+    }
+
+    /// Rebuilds the generator so that a long run neither exhausts source IDs nor drifts into magnitudes that a real
+    /// transformation never reaches -- `EqlQueryTransformer` builds a fresh generator per query, so IDs stay small,
+    /// and letting them grow unboundedly here measures boxing that production does not pay.
+    ///
+    /// Rebuilding rather than rewinding the live generator keeps the uniqueness invariant intact: a fresh generator
+    /// has no sources of its own to collide with.
+    ///
+    @Setup(Level.Invocation)
+    public void beforeInvocation() {
+        gen = mkGen(initSourceId);
     }
 
     static class IocModule extends BenchmarkIocModule {
@@ -204,15 +222,6 @@ public class IPropPathResolverBenchmark {
 
     }
 
-    @Setup(Level.Invocation)
-    public void beforeInvocation() {
-        // Reset the source ID generator to avoid running out of IDs.
-        // It must be rewound no further than `initSourceId`: source IDs are globally unique, and `joins` and
-        // `expansions` are keyed on (source ID, property), so an implicit source re-issued an ID that an explicit
-        // source already holds shares its namespace, and an entry can be silently absorbed -- the resolver then
-        // does less work than a real transformation would, with no error to show for it.
-        gen._setSourceId(initSourceId);
-    }
 
     /// Replicates [EqlQueryTransformer#transform] up to, but excluding, the call to [IPropPathResolver#resolve],
     /// and returns the properties that the call would receive.
