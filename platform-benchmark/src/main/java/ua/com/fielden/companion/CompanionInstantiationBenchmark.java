@@ -3,15 +3,12 @@ package ua.com.fielden.companion;
 import com.google.inject.Injector;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
+import ua.com.fielden.BenchmarkProperties;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Properties;
 
 import static org.openjdk.jmh.annotations.Threads.MAX;
 import static ua.com.fielden.companion.BenchmarkIocModule.newBenchmarkModule;
@@ -21,11 +18,13 @@ import static ua.com.fielden.companion.BenchmarkIocModule.newBenchmarkModule;
  *
  * The following command should be used to run this benchmark, assuming the current working directory is this module (platform-benchmark).
  * <pre>
-java -jar target/benchmarks.jar \
+java -Dbenchmark.db=my_db -jar target/benchmarks.jar \
     -p propertiesFile="src/main/resources/benchmark-application.properties" \
     -prof gc \
     "ua.com.fielden.companion.CompanionInstantiationBenchmark"
  </pre>
+ * {@code -Dbenchmark.db} names the database to connect to, defaulting to {@code test_db_1};
+ * see {@link ua.com.fielden.BenchmarkProperties}.
  */
 @Fork(value = 3)
 @Warmup(iterations = 2)
@@ -41,14 +40,7 @@ public class CompanionInstantiationBenchmark {
 
     @Setup(Level.Trial)
     public void setup() throws IOException {
-        if (!Files.isReadable(Path.of(propertiesFile))) {
-            throw new IllegalStateException("Can't read file: %s".formatted(propertiesFile));
-        }
-
-        final var properties = new Properties();
-        try (final var in = new FileInputStream(propertiesFile)) {
-            properties.load(in);
-        }
+        final var properties = BenchmarkProperties.load(propertiesFile);
 
         injector = new ApplicationInjectorFactory(Workflows.development)
                 .add(newBenchmarkModule(properties))

@@ -1,6 +1,7 @@
 package ua.com.fielden.eql;
 
 import org.openjdk.jmh.annotations.*;
+import ua.com.fielden.BenchmarkProperties;
 import ua.com.fielden.platform.audit.AuditingIocModule;
 import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.basic.config.Workflows;
@@ -20,10 +21,7 @@ import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -51,11 +49,15 @@ import static ua.com.fielden.platform.utils.MiscUtilities.propertiesUnionLeft;
 /// Assuming the current working directory is this module (`platform-benchmark`):
 ///
 /// ```
-/// java -jar target/benchmarks.jar \
+/// java -Dbenchmark.db=my_db -jar target/benchmarks.jar \
 ///         -p propertiesFile="src/main/resources/benchmark-application.properties" \
 ///         -prof gc \
 ///         "ua.com.fielden.eql.IPropPathResolverBenchmark"
 /// ```
+///
+/// `-Dbenchmark.db` names the database, defaulting to `test_db_1`; see [BenchmarkProperties].
+/// This benchmark resolves metadata only and never opens a connection, so the value is immaterial here;
+/// it matters to benchmarks that execute queries.
 ///
 /// A single query can be benchmarked by appending its method name, e.g. `...IPropPathResolverBenchmark.deep_dot_notation`.
 ///
@@ -150,13 +152,7 @@ public class IPropPathResolverBenchmark {
 
     @Setup(Level.Trial)
     public void beforeTrial() throws IOException {
-        if (!Files.isReadable(Path.of(propertiesFile))) {
-            throw new IllegalStateException("Can't read file: %s".formatted(propertiesFile));
-        }
-        final var properties = new Properties();
-        try (final var in = new FileInputStream(propertiesFile)) {
-            properties.load(in);
-        }
+        final var properties = BenchmarkProperties.load(propertiesFile);
 
         final var injector = new ApplicationInjectorFactory(Workflows.development)
                 .add(benchmarkModule(iocModule(properties)))

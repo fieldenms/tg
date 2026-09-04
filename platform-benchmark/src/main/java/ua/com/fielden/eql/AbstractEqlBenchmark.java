@@ -3,6 +3,7 @@ package ua.com.fielden.eql;
 import com.google.inject.Injector;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
+import ua.com.fielden.BenchmarkProperties;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -10,10 +11,7 @@ import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Properties;
 import java.util.Random;
 
@@ -31,11 +29,13 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  * The following command should be used to run a benchmark based on this class, assuming the current working directory
  * is this module (platform-benchmark).
  * <pre>
- java -jar target/benchmarks.jar \
+ java -Dbenchmark.db=my_db -jar target/benchmarks.jar \
  -p propertiesFile="src/main/resources/benchmark-application.properties" \
  -prof gc \
  "ua.com.fielden.eql.$SPECIFIC_BENCHMARK"
  </pre>
+ * {@code -Dbenchmark.db} names the database to connect to, defaulting to {@code test_db_1};
+ * see {@link ua.com.fielden.BenchmarkProperties}.
  */
 @State(Scope.Benchmark)
 public abstract class AbstractEqlBenchmark {
@@ -318,14 +318,7 @@ public abstract class AbstractEqlBenchmark {
     public void setup() throws IOException {
         eqlGenerator = new EqlRandomGenerator(new Random(9375679861L));
 
-        if (!Files.isReadable(Path.of(propertiesFile))) {
-            throw new IllegalStateException("Can't read file: %s".formatted(propertiesFile));
-        }
-
-        final var properties = new Properties();
-        try (final var in = new FileInputStream(propertiesFile)) {
-            properties.load(in);
-        }
+        final var properties = BenchmarkProperties.load(propertiesFile);
 
         injector = new ApplicationInjectorFactory(Workflows.development)
                 .add(benchmarkModule(iocModule(properties)))
