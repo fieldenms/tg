@@ -14,8 +14,7 @@ public record JoinLeafNode1 (ISource1<?> source) implements IJoinNode1<JoinLeafN
     @Override
     public TransformationResultFromStage1To2<JoinLeafNode2> transform(TransformationContextFromStage1To2 context) {
         final ISource2<?> mainTransformed = source.transform(context);
-        return new TransformationResultFromStage1To2<>(new JoinLeafNode2(mainTransformed),
-                                                       context.cloneWithAdded(mainTransformed));
+        return new TransformationResultFromStage1To2<>(new JoinLeafNode2(mainTransformed), context.pushSource(mainTransformed));
     }
 
     @Override
