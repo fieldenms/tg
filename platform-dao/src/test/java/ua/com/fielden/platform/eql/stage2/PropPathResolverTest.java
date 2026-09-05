@@ -55,8 +55,45 @@ public class PropPathResolverTest extends EqlTestCase {
                                  Tuple.tuple(TeVehicleMake.class, "expression"));   // replacedByTwiceModelMake
     }
 
+    /// The dependency need not be a direct property reference.
+    /// `TeVehicle.theSameVehicle` is a correlated sub-query that reaches back to the outer source with `extProp`:
+    ///
+    /// ```
+    /// theSameVehicle = select(TeVehicle).where().prop("id").eq().extProp("id")
+    ///                    .and().prop("priceDiffBetweenCurrentAndReplacedByTwice")
+    ///                          .eq().extProp("priceDiffBetweenCurrentAndReplacedByTwice")
+    /// ```
+    ///
+    /// That `extProp` resolves against the outer source and, through `priceDiffBetweenCurrentAndReplacedByTwice` and
+    /// `replacedByTwicePrice`, needs the `replacedByTwice` join -- which must therefore be emitted first.
+    /// This is the case the removed `EqlDomainMetadataTest` asserted as "replacedByTwice precedes theSameVehicle".
+    ///
+    @Test
+    public void a_dependency_reached_through_a_correlated_sub_query_still_orders_the_joins() {
+        final var joins = joinsForSingleSourceOf(
+                select(TeVehicle.class).where().prop("theSameVehicle.key").isNotNull().model(),
+                TeVehicle.class);
+
+        assertThat(joins).hasSize(3);
+
+        // The two expression-based joins are both onto TeVehicle, so they are told apart by the one distinguishing
+        // feature: only `theSameVehicle` expands to an expression referencing a source other than its own.
+        assertThat(joins).extracting(PropPathResolverTest::kindOf, PropPathResolverTest::referencesAnotherSource)
+                .containsExactly(Tuple.tuple("column", false),        // replacedBy
+                                 Tuple.tuple("expression", false),    // replacedByTwice
+                                 Tuple.tuple("expression", true));    // theSameVehicle
+    }
+
     // ------------------------------------------------------------------------------------------------
     // Helpers
+
+    /// Whether a join's ON side expands to an expression that references a source other than the one it hangs off --
+    /// true only where a calculated property's expression contains a correlated sub-query.
+    ///
+    private static boolean referencesAnotherSource(final JoinNode join) {
+        return join.leftOn() instanceof Resolution.Expr expr
+               && expr.expr().collectProps().stream().anyMatch(prop -> !prop.source.id().equals(join.left().id()));
+    }
 
     private static String kindOf(final JoinNode join) {
         return join.leftOn() instanceof Resolution.Column ? "column" : "expression";
