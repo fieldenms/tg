@@ -71,8 +71,8 @@ public interface IPropPathResolver {
     /// @param resolutions  (source ID, property path) -> property resolution.
     ///     The keys correspond to [Prop2] instances in the query.
     ///
-    record Result ( Map<Integer, List<JoinNode>> joins,
-                    Map<T2<Integer, String>, Resolution> resolutions) {}
+    record Result (Map<Integer, List<JoinNode>> joins,
+                   Map<T2<Integer, String>, Resolution> resolutions) {}
 
     /// Resolution of a property path.
     ///
