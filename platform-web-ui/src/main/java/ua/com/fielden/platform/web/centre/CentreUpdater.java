@@ -183,29 +183,21 @@ public class CentreUpdater {
     protected CentreUpdater() {
     }
     
-    /**
-     * Returns device-specific surrogate name for the centre based on original <code>surrogateName</code>.
-     * <p>
-     * Every centre, defined by miType and surrogateName, when accessed through {@link CentreUpdater} API could have two counterparts: DESKTOP and MOBILE.
-     * This is needed to differentiate between actual centres on different devices for the same user (for example, only a subset of columns could be visible in
-     * MOBILE app, but a full set in DESKTOP app).
-     * <p>
-     * This need has arisen mainly from embedded [into actions] centres, because copying of miTypes and those actions (and their full hierarchy with invocation points)
-     * seems heavily impractical.
-     * 
-     * @param surrogateName
-     * @param device
-     * @return
-     */
+    /// Returns the surrogate name for the centre, unchanged.
+    ///
+    /// Centre configurations used to be partitioned by device profile.
+    /// A MOBILE configuration carried a literal `MOBILE` prefix on its title, and a DESKTOP one carried no prefix.
+    /// That separation has been removed, so that a single configuration serves both applications.
+    ///
+    /// The `device` parameter is retained to keep this change contained to name generation and querying.
+    /// It is vestigial, and is to be removed together with the rest of the device plumbing.
+    ///
+    /// @param surrogateName  surrogate name of the centre, for example fresh or previouslyRun
+    /// @param device  ignored
+    ///
     private static String deviceSpecific(final String surrogateName, final DeviceProfile device) {
-        if (DESKTOP.equals(device)) {
+        if (DESKTOP.equals(device) || MOBILE.equals(device)) {
             return surrogateName;
-        } else if (MOBILE.equals(device)) {
-            // Please note that in case where the need arise to 'use the same configuration for both MOBILE and DESKTOP apps' 
-            // then it is quite trivial to support such functionality.
-            // In that case we can provide annotation for menu item types like @TheSameForMobileAndDesktop and check here whether this annotation is present.
-            // If yes then 'surrogateName' should be returned just like for DESKTOP device.
-            return MOBILE.name() + surrogateName;
         } else {
             throw new CentreUpdaterException(format("Device [%s] is unknown.", device));
         }
@@ -759,16 +751,6 @@ public class CentreUpdater {
     }
     
     /**
-     * Returns opposite device for the specified <code>device</code>.
-     * 
-     * @param device
-     * @return
-     */
-    private static DeviceProfile opposite(final DeviceProfile device) {
-        return DESKTOP.equals(device) ? MOBILE : DESKTOP;
-    }
-    
-    /**
      * Receives actual title from surrogate name persisted inside {@link EntityCentreConfig#getTitle()}.
      * 
      * @param title
@@ -792,20 +774,17 @@ public class CentreUpdater {
         return surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]"));
     }
     
-    /**
-     * Creates a function that returns a query to find centre configurations persisted.
-     * <p>
-     * Looks only for named / link configurations, default configurations are avoided.
-     * 
-     * @param miType
-     * @param device -- the device for which centre configurations are looked for
-     * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
-     * @return
-     */
+    /// Creates a function that returns a query to find centre configurations persisted.
+    ///
+    /// Looks only for named / link configurations, default configurations are avoided.
+    ///
+    /// @param miType  menu item type to which the centre configurations belong
+    /// @param device  ignored, see [#deviceSpecific(String, DeviceProfile)]
+    /// @param surrogateName  surrogate name of the centre, for example fresh or previouslyRun
+    ///
     static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
         return select(EntityCentreConfig.class).where()
             .prop("title").like().val(deviceSpecific(surrogateName, device) + "[%")
-            .and().prop("title").notLike().val(deviceSpecific(surrogateName, opposite(device)) + "[%")
             .and().prop("menuItem.key").eq().val(miType.getName());
     }
     
