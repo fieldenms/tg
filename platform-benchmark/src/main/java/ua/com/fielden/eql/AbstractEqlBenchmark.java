@@ -3,38 +3,37 @@ package ua.com.fielden.eql;
 import com.google.inject.Injector;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
+import ua.com.fielden.BenchmarkProperties;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Properties;
 import java.util.Random;
 
-import static ua.com.fielden.eql.BenchmarkIocModule.newBenchmarkModule;
+import static ua.com.fielden.eql.AbstractEqlBenchmark.IocModule.iocModule;
+import static ua.com.fielden.eql.BenchmarkIocModule.benchmarkModule;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-/**
- * Base class for benchmarks. Contains EQL expressions of various kinds and complexity in their raw unparsed form.
- * It is up to subclasses to perform the desired transformation of those expressions via {@link #finish(QueryModel)}.
- *
- * <h3> Running benchmarks </h3>
- *
- * The following command should be used to run a benchmark based on this class, assuming the current working directory
- * is this module (platform-benchmark).
- * <pre>
- java -jar target/benchmarks.jar \
- -p propertiesFile="src/main/resources/benchmark-application.properties" \
- -prof gc \
- "ua.com.fielden.eql.$SPECIFIC_BENCHMARK"
- </pre>
- */
+/// Base class for benchmarks. Contains EQL expressions of various kinds and complexity in their raw unparsed form.
+/// It is up to subclasses to perform the desired transformation of those expressions via [#finish(QueryModel)].
+/// ### Running benchmarks
+///
+/// The following command should be used to run a benchmark based on this class, assuming the current working directory
+/// is this module (platform-benchmark).
+/// ```
+/// java -Dbenchmark.db=my_db -jar target/benchmarks.jar \
+/// -p propertiesFile="src/main/resources/benchmark-application.properties" \
+/// -prof gc \
+/// "ua.com.fielden.eql.$SPECIFIC_BENCHMARK"
+/// ```
+/// `-Dbenchmark.db` names the database to connect to, defaulting to `test_db_1`;
+/// see [ua.com.fielden.BenchmarkProperties].
 @State(Scope.Benchmark)
 public abstract class AbstractEqlBenchmark {
 
@@ -316,18 +315,10 @@ public abstract class AbstractEqlBenchmark {
     public void setup() throws IOException {
         eqlGenerator = new EqlRandomGenerator(new Random(9375679861L));
 
-        if (!Files.isReadable(Path.of(propertiesFile))) {
-            throw new IllegalStateException("Can't read file: %s".formatted(propertiesFile));
-        }
-
-        final var properties = new Properties();
-        try (final var in = new FileInputStream(propertiesFile)) {
-            properties.load(in);
-        }
+        final var properties = BenchmarkProperties.load(propertiesFile);
 
         injector = new ApplicationInjectorFactory(Workflows.development)
-                .add(newBenchmarkModule(properties))
-                .add(new NewUserEmailNotifierTestIocModule())
+                .add(benchmarkModule(iocModule(properties)))
                 .getInjector();
 
         afterSetup(injector);
@@ -343,5 +334,23 @@ public abstract class AbstractEqlBenchmark {
      * Performs the last action in a benchmark method.
      */
     protected abstract Object finish(final QueryModel<?> queryModel);
+
+    static class IocModule extends BenchmarkIocModule {
+
+        public static IocModule iocModule(final Properties inProps) {
+            return new IocModule(inProps);
+        }
+
+        private IocModule(final Properties props) {
+            super(props, new ApplicationDomain(), ApplicationDomain.domainTypes());
+        }
+
+        @Override
+        protected void configure() {
+            super.configure();
+            install(new NewUserEmailNotifierTestIocModule());
+        }
+
+    }
 
 }
