@@ -18,9 +18,16 @@
 --     1. Delete MOBILE link configurations.
 --     2. Make every remaining MOBILE configuration un-preferred.
 --     3. Rename each MOBILE configuration group into a named configuration carrying a ` (mobile)` suffix.
+--     4. Give every migrated default configuration a `configUuid`, as step 3 turns it into a named one.
 --
 -- A group whose new title is already taken is skipped and keeps its `MOBILE` prefix.
 -- Such a group becomes a harmless orphan, unreachable once `deviceSpecific` stops producing that prefix.
+--
+-- Known and accepted, not addressed here, because base configurations are rare in the MOBILE namespace.
+-- A migrated default is named `Default (mobile)` for every user, so where a base user also had one, a derived user's
+-- entry matches it by name in the `Load` dialog, is shown as inherited from base, and can no longer be deleted.
+-- A configuration inherited from base or shared stays correctly linked only because both sides are renamed by the
+-- same rule; a group skipped on one side but migrated on the other reproduces the defect described in issue #1626.
 --
 -- The script is idempotent.
 -- Re-running it migrates nothing further and skips exactly the same orphans.
@@ -84,6 +91,7 @@ SELECT ecc._ID                                  AS ID,
        ecc.ID_CRAFT                             AS OWNER_ID,
        ecc.ID_MAIN_MENU                         AS MENU_ID,
        part.SAVE_AS_PART                        AS SAVE_AS_PART,
+       LEFT(core.CORE, surrogate.SURROGATE_LEN) AS SURROGATE,
        newTitle.NEW_TITLE                       AS NEW_TITLE
   INTO #MobileConfig
   FROM ENTITY_CENTRE_CONFIG ecc
@@ -111,8 +119,13 @@ GO
 CREATE INDEX I_MOBILECONFIG__GROUP ON #MobileConfig(OWNER_ID, MENU_ID, SAVE_AS_PART);
 GO
 
-DECLARE @ownerId BIGINT, @menuId BIGINT, @saveAsPart VARCHAR(8000);
-DECLARE @migrated INT = 0, @skippedConflict INT = 0, @skippedError INT = 0;
+-- A default configuration carries no `configUuid`, since only save-as, link and inherited configurations receive one.
+-- Turning it into a named one breaks the invariant that a loadable configuration always has a uuid, which the `Load`
+-- dialog relies on to tell own save-as configurations apart from those orphaned by a deleted upstream.
+-- FRESH and SAVED of a migrated default therefore receive one fresh uuid, exactly as a save-as would.
+-- PREVIOUSLY_RUN is left without one, matching `setCentreSaver`.
+DECLARE @ownerId BIGINT, @menuId BIGINT, @saveAsPart VARCHAR(8000), @newUuid VARCHAR(36);
+DECLARE @migrated INT = 0, @skippedConflict INT = 0, @skippedError INT = 0, @uuidsAssigned INT = 0;
 
 -- Groups are processed in order of their lowest `_ID`, so that the outcome does not depend on the query plan.
 -- Two MOBILE groups can compete for one new title, for example a default one and a named one called `Default`.
@@ -155,6 +168,22 @@ BEGIN
                AND m.MENU_ID = @menuId
                AND m.SAVE_AS_PART = @saveAsPart;
             SET @migrated = @migrated + 1;
+
+            -- Step 4, applied only to a group that has just been migrated, and only to a default one.
+            -- A named group keeps the uuid it already carries.
+            IF @saveAsPart = ''
+            BEGIN
+                SET @newUuid = LOWER(CONVERT(VARCHAR(36), NEWID()));
+                UPDATE e
+                   SET e.CONFIGUUID_ = @newUuid
+                  FROM ENTITY_CENTRE_CONFIG e
+                 INNER JOIN #MobileConfig m ON m.ID = e._ID
+                 WHERE m.OWNER_ID = @ownerId
+                   AND m.MENU_ID = @menuId
+                   AND m.SAVE_AS_PART = @saveAsPart
+                   AND m.SURROGATE IN ('__________FRESH', '__________SAVED');
+                SET @uuidsAssigned = @uuidsAssigned + 1;
+            END
         END
     END TRY
     BEGIN CATCH
@@ -175,6 +204,7 @@ DEALLOCATE configGroup;
 PRINT 'Step 3: migrated ' + CAST(@migrated AS VARCHAR(20)) + ' configuration(s), skipped '
     + CAST(@skippedConflict AS VARCHAR(20)) + ' on conflict and '
     + CAST(@skippedError AS VARCHAR(20)) + ' on error.';
+PRINT 'Step 4: assigned a configUuid to ' + CAST(@uuidsAssigned AS VARCHAR(20)) + ' migrated default configuration(s).';
 GO
 
 DROP TABLE #MobileConfig;

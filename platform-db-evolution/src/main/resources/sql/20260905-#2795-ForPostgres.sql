@@ -18,9 +18,20 @@
 --     1. Delete MOBILE link configurations.
 --     2. Make every remaining MOBILE configuration un-preferred.
 --     3. Rename each MOBILE configuration group into a named configuration carrying a ` (mobile)` suffix.
+--     4. Give every migrated default configuration a `configUuid`, as step 3 turns it into a named one.
 --
 -- A group whose new title is already taken is skipped and keeps its `MOBILE` prefix.
 -- Such a group becomes a harmless orphan, unreachable once `deviceSpecific` stops producing that prefix.
+--
+-- Known and accepted, not addressed here, because base configurations are rare in the MOBILE namespace.
+-- A migrated default is named `Default (mobile)` for every user, so where a base user also had one, a derived user's
+-- entry matches it by name in the `Load` dialog, is shown as inherited from base, and can no longer be deleted.
+-- A configuration inherited from base or shared stays correctly linked only because both sides are renamed by the
+-- same rule; a group skipped on one side but migrated on the other reproduces the defect described in issue #1626.
+--
+-- Step 4 uses `gen_random_uuid()`, which is built in from PostgreSQL 13.
+-- On an older server, either enable the `pgcrypto` extension or replace the call with
+-- `md5(random()::text || clock_timestamp()::text)::uuid`.
 --
 -- The script is idempotent.
 -- Re-running it migrates nothing further and skips exactly the same orphans.
@@ -99,6 +110,7 @@ SELECT p.ID                                       AS ID,
        p.OWNER_ID                                 AS OWNER_ID,
        p.MENU_ID                                  AS MENU_ID,
        p.SAVE_AS_PART                             AS SAVE_AS_PART,
+       left(p.CORE, p.SURROGATE_LEN)              AS SURROGATE,
        left(p.CORE, p.SURROGATE_LEN)
            || '['
            || CASE WHEN length(p.SAVE_AS_PART) >= 2
@@ -114,9 +126,11 @@ CREATE INDEX I_MOBILE_CONFIG__GROUP ON MOBILE_CONFIG(OWNER_ID, MENU_ID, SAVE_AS_
 DO $$
 DECLARE
     grp              RECORD;
+    new_uuid         TEXT;
     migrated         INT := 0;
     skipped_conflict INT := 0;
     skipped_error    INT := 0;
+    uuids_assigned   INT := 0;
 BEGIN
     -- Groups are processed in order of their lowest `ID`, so that the outcome does not depend on the query plan.
     -- Two MOBILE groups can compete for one new title, for example a default one and a named one called `Default`.
@@ -152,6 +166,25 @@ BEGIN
                    AND m.MENU_ID = grp.MENU_ID
                    AND m.SAVE_AS_PART = grp.SAVE_AS_PART;
                 migrated := migrated + 1;
+
+                -- Step 4, applied only to a group that has just been migrated, and only to a default one.
+                -- A default carries no `configUuid`, since only save-as, link and inherited configurations get one.
+                -- Turning it into a named one breaks the invariant that a loadable configuration always has a uuid,
+                -- which the `Load` dialog relies on to tell own save-as configurations apart from orphaned ones.
+                -- FRESH and SAVED receive one fresh uuid, exactly as a save-as would.
+                -- PREVIOUSLY_RUN is left without one, matching `setCentreSaver`, and a named group keeps its own.
+                IF grp.SAVE_AS_PART = '' THEN
+                    new_uuid := gen_random_uuid()::text;
+                    UPDATE ENTITY_CENTRE_CONFIG e
+                       SET CONFIGUUID_ = new_uuid
+                      FROM MOBILE_CONFIG m
+                     WHERE m.ID = e._ID
+                       AND m.OWNER_ID = grp.OWNER_ID
+                       AND m.MENU_ID = grp.MENU_ID
+                       AND m.SAVE_AS_PART = grp.SAVE_AS_PART
+                       AND m.SURROGATE IN ('__________FRESH', '__________SAVED');
+                    uuids_assigned := uuids_assigned + 1;
+                END IF;
             END IF;
         EXCEPTION WHEN OTHERS THEN
             -- An unforeseen failure skips this configuration only, and leaves it behind as a MOBILE orphan.
@@ -163,6 +196,7 @@ BEGIN
 
     RAISE NOTICE 'Step 3: migrated % configuration(s), skipped % on conflict and % on error.',
         migrated, skipped_conflict, skipped_error;
+    RAISE NOTICE 'Step 4: assigned a configUuid to % migrated default configuration(s).', uuids_assigned;
 END $$;
 
 DROP TABLE MOBILE_CONFIG;
