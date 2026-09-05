@@ -9,7 +9,6 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.query.*;
-import ua.com.fielden.platform.eql.meta.utils.DependentCalcPropsOrder;
 import ua.com.fielden.platform.eql.meta.utils.TopologicalSortException;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
@@ -29,6 +28,7 @@ import java.util.stream.Stream;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.util.Collections.emptySortedMap;
+import static java.util.Collections.unmodifiableCollection;
 import static java.util.stream.Collectors.*;
 import static java.util.stream.Stream.concat;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -63,11 +63,6 @@ public class QuerySourceInfoProvider {
     """;
     private static final String ERR_NON_RETRIEVABLE_PROP_YIELDED_WITH_DOT_EXPRESSION =
     "Non-retrievable property [%s] cannot be used as a dot-notated yield alias (in a source query with source type [%s]).\n";
-    private static final String ERR_MISSING_CALC_PROPS_ORDER =
-    """
-    Analysis of dependent calculated properties wasn't performed for entity type [%s]. \
-    This could indicate either an unregistered domain type or a generated type with added dependent calculated properties, which isn't supported.\
-    """;
     public static final String ERR_FAILED_GENERATION_FOR_SYNTHETIC_ENTITY = "Could not generate modelled entity info for synthetic entity [%s].";
 
     /** Used to obtain models for synthetic entities. */
@@ -84,7 +79,6 @@ public class QuerySourceInfoProvider {
     /** Association between a synthetic entity type (SE) and its underlying models transformed to stage 1. */
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, List<SourceQuery1>> seModels;
 
-    private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder;
     private final IDomainMetadata domainMetadata;
     private final ISyntheticModelProvider synModelProvider;
 
@@ -134,7 +128,8 @@ public class QuerySourceInfoProvider {
                                                      .flatMap(Set::stream)
                                                      .filter(EntityUtils::isSyntheticEntityType)
                                                      .collect(toSet()));
-        // Topological sorting will uncover any circular dependencies by throwing an exception.
+        // Topological sorting will not help uncover cyclic dependencies here.
+        // A cycle will cause a StackOverflowError earlier, during compilation of synthetic models.
         try {
             for (final var seType : sortTopologically(seDependencies)) {
                 try {
@@ -146,20 +141,18 @@ public class QuerySourceInfoProvider {
                     throw new EqlMetadataGenerationException(msg, ex);
                 }
             }
-        } catch (final TopologicalSortException $) {
-            final var msg = "There are cyclic dependencies between synthetic entities. All dependencies:\n" +
-                            seDependencies.entrySet().stream()
-                                    .map(entry -> "%s depends on [%s]".formatted(entry.getKey().getSimpleName(),
-                                                                                 CollectionUtil.toString(entry.getValue(), Class::getSimpleName, ", ")))
-                                    .collect(joining("\n"));
-            LOGGER.error(msg);
-            throw new EqlMetadataGenerationException(msg);
+        } catch (final TopologicalSortException topoEx) {
+            // A sort failure is not necessarily a cycle: `seDependencies` is not restricted to registered synthetic
+            // entities, so a model selecting from an unregistered one leaves a dangling edge.
+            final var msg = topoEx.cycle().isEmpty()
+                    ? "Could not order synthetic entities. %s".formatted(topoEx.getMessage())
+                    : "There are cyclic dependencies between synthetic entities: %s"
+                            .formatted(CollectionUtil.toString(topoEx.cycle(), it -> ((Class<?>) it).getSimpleName(), " -> "));
+            final var ex = new EqlMetadataGenerationException(msg);
+            LOGGER.error(ex);
+            throw ex;
         }
         // All modelled query source infos have been created.
-
-        entityTypesDependentCalcPropsOrder = modelledQuerySourceInfoMap.values().stream()
-                .collect(toConcurrentMap(querySourceInfo -> querySourceInfo.javaType().getName(),
-                                         querySourceInfo -> DependentCalcPropsOrder.orderDependentCalcProps(this, domainMetadata, QUERY_MODEL_TO_STAGE_1_TRANSFORMER, querySourceInfo)));
     }
 
     /// Produces a query source info for the specified entity type backed by the specified models.
@@ -252,20 +245,9 @@ public class QuerySourceInfoProvider {
     /// Only properties that are present in SE yields are preserved.
     ///
     private <T extends AbstractEntity<?>> QuerySourceInfo<?> generateModelledQuerySourceInfoForSyntheticType(final Class<? extends AbstractEntity<?>> entityType, final List<SourceQuery1> queries) {
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(this, domainMetadata);
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.mkContext(this, domainMetadata);
         final List<SourceQuery2> transformedQueries = queries.stream().map(m -> m.transform(context)).collect(toList());
         return produceQuerySourceInfoForEntityType(transformedQueries, entityType, true /*isComprehensive*/);
-    }
-
-    public List<String> getCalcPropsOrder(final Class<? extends AbstractEntity<?>> entityType) {
-        // TODO: It is assumed that there would be no generated types with newly added dependent calc props.
-        //       This assumption needs to be revisited when implementing support for user-definable calculated properties.
-        final var order = entityTypesDependentCalcPropsOrder.get(getOriginalType(entityType).getName());
-        if (order == null) {
-            throw new EqlMetadataGenerationException(ERR_MISSING_CALC_PROPS_ORDER.formatted(entityType.getSimpleName()));
-        } else {
-            return order;
-        }
     }
 
     private List<AbstractQuerySourceItem<?>> generateQuerySourceItems(
@@ -330,12 +312,12 @@ public class QuerySourceInfoProvider {
                         //     querySourceInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(querySourceInfo.javaType()), hibType, required, expr));
                             new QuerySourceItemForEntityType<>(pm.name(), allQuerySourceInfos.get(pem.javaType()), pm.hibType(), pm.is(REQUIRED),
                                                                pm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null));
+                    // TODO: Handle synthetic entity types, which are valid types for properties of other synthetic entities.
                     default ->
                         // TODO: It is not clear why QuerySourceItemForPrimType is used in all other cases.
                         //       The original comment here was:
                         //       // Finally, if nothing else, the property must be of some primitive type or a type with a custom Hibernate converter:
                         //       // String, Long, Integer, BigDecimal, Date, boolean, Colour, Hyperlink, PropertyDescriptor, SecurityToken.
-                        //       However, this case would also include properties of Synthetic Entity type, but such properties are recognised as transient (plain) and later ignored.
                         //       Properties of Value Entity type are not handled by this case.
                         //       This is because, domainMetadata.forEntityOpt(PropertyDescriptor.class) returns an empty result, and Union Entities are handled separately above.
                             mkPrim(pm);
@@ -403,6 +385,12 @@ public class QuerySourceInfoProvider {
     public QuerySourceInfo<?> getDeclaredQuerySourceInfo(final Class<? extends AbstractEntity<?>> type) {
         final QuerySourceInfo<?> existing = declaredQuerySourceInfoMap.get(type);
         return existing != null ? existing : generateDeclaredQuerySourceInfo(type);
+    }
+
+    /// All modelled query source infos, i.e., those created for every registered entity type during construction.
+    ///
+    public Collection<QuerySourceInfo<?>> modelledQuerySourceInfos() {
+        return unmodifiableCollection(modelledQuerySourceInfoMap.values());
     }
 
     /// @param type  entity type which must be reifiable with metadata

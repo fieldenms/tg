@@ -7,6 +7,8 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.ioc.BasicWebServerIocModule;
 import ua.com.fielden.platform.security.annotations.SessionCache;
@@ -25,10 +27,16 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 
+/// Standard IoC module for EQL benchmarks.
+///
+/// To use this module or a module that extends this one, it is necessary to pass it to [#benchmarkModule] first.
+///
 class BenchmarkIocModule extends BasicWebServerIocModule  {
 
-    public static Module newBenchmarkModule(final Properties props) {
-        return Modules.override(new BenchmarkIocModule(props))
+    /// Completes the configuration in `module`.
+    ///
+    public static Module benchmarkModule(final BenchmarkIocModule module) {
+        return Modules.override(module)
                 .with(new AbstractModule() {
                     @Override
                     protected void configure() {
@@ -38,10 +46,12 @@ class BenchmarkIocModule extends BasicWebServerIocModule  {
                 });
     }
 
-    private BenchmarkIocModule(final Properties props) {
-        super(List::of,
-              List.of(),
-              props);
+    public BenchmarkIocModule(
+            final Properties props,
+            final IApplicationDomainProvider appDomain,
+            final List<Class<? extends AbstractEntity<?>>> domainTypes)
+    {
+        super(appDomain, domainTypes, props);
     }
 
     @Override

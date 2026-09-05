@@ -151,6 +151,13 @@ Settings holders (e.g. `WebApiSettings`), stateless services, and IoC-bound util
 Without `@Singleton`, Guice creates a fresh instance per injection point — wasteful, and conceptually wrong for "global app config" or shared infrastructure.
 Do **not** apply `@Singleton` to classes that hold per-request / per-thread state, or that are explicitly intended to be re-instantiated.
 
+**Persistent data structures — [vavr](https://vavr.io) is available platform-wide.**
+`io.vavr:vavr` is declared in `platform-pojo-bl`, so it reaches TG-based applications transitively and may be used in application code without adding a dependency.
+The version is managed centrally in the root `pom.xml`.
+Reach for it when a structure is *updated repeatedly along a computation* and each intermediate version must remain intact: vavr path-copies one branch per update, whereas rebuilding a Guava `ImmutableMap` per step is O(n) each time and O(n²) overall.
+`PropPathResolver` is the reference example — folding resolution state through `LinkedHashMap`/`HashMap` cut both allocation and time by roughly a third against immutable-collection rebuilding.
+It is **not** a general replacement for Guava immutable collections or `java.util`: for a collection built once and then only read, those remain the right choice.
+
 **Grouped constants:** when several `static final` fields of the same type form a logical *set of alternatives* — alternative error messages produced by the same validator, alternative warnings from the same definer, parallel format-string templates — declare them under a single `public static final <Type>` line, separated by commas:
 ```java
 public static final String

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
+import com.google.common.collect.Iterables;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
@@ -23,9 +24,9 @@ public record JoinInnerNode1 (IJoinNode1<? extends IJoinNode2<?>> leftNode,
 
     @Override
     public TransformationResultFromStage1To2<JoinInnerNode2> transform(final TransformationContextFromStage1To2 context) {
-        final TransformationResultFromStage1To2<? extends IJoinNode2<?>> lsTransformed = leftNode.transform(context);
-        final TransformationResultFromStage1To2<? extends IJoinNode2<?>> rsTransformed = rightNode.transform(context);
-        final TransformationContextFromStage1To2 updatedContext = context.cloneWithAdded(lsTransformed.updatedContext.getCurrentLevelSources(), rsTransformed.updatedContext.getCurrentLevelSources());
+        final var lsTransformed = leftNode.transform(context);
+        final var rsTransformed = rightNode.transform(context);
+        final var updatedContext = context.pushSources(Iterables.concat(lsTransformed.updatedContext.peekSources(), rsTransformed.updatedContext.peekSources()));
         final Conditions2 jcTransformed = joinConditions.transform(updatedContext);
         return new TransformationResultFromStage1To2<>(new JoinInnerNode2(lsTransformed.item, rsTransformed.item, joinType, jcTransformed), updatedContext);
     }
