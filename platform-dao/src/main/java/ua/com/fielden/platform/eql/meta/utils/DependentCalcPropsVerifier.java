@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.meta.utils;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.antlr.EqlCompilationResult;
@@ -37,7 +36,6 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 /// A cyclic dependency is a domain-definition error, so this verifier throws early.
 /// It is intended to be installed as a startup verification service via [com.google.inject.AbstractModule#requestStaticInjection].
 ///
-@Singleton
 public class DependentCalcPropsVerifier {
 
     public static final String
