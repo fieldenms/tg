@@ -45,7 +45,7 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
     /// An alternative to [#transform(TransformationContextFromStage1To2)] that does not apply [AppendIdToUnionTypedProp1].
     ///
     public Prop2 transformBase(final TransformationContextFromStage1To2 context) {
-        return context.sourcesForNestedQueries.stream()
+        return context.sourcesStack().stream()
                 .skip(external ? 1 : 0)
                 .map(item -> resolveProp(item, this))
                 .flatMap(Optional::stream)

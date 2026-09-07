@@ -75,6 +75,10 @@ protected static final ExpressionModel totalCost_ = expr().prop(X_.hours()).mult
 
 Used in aggregations, EQL expands the expression inline (e.g., `SUM(hours * rate)`).
 
+**Calculated properties of an entity must not depend on each other cyclically**, whatever their types.
+A cycle is a domain-definition error, and `DependentCalcPropsVerifier` rejects it at application startup with a message naming the entity and the offending cycle, e.g. `[i1 -> i2 -> i1]`.
+A dependency is any reference an expression makes to another calculated property of the same entity, whether to its value or by navigating into it (`otherCalc.someProp`).
+
 For `BigDecimal` calculated properties, any literal default (`then().val(...)`) — and any consumer literal such as a test assertion — must match the declared `@IsProperty(scale = N)`.
 `BigDecimal.equals` is scale-sensitive, so `BigDecimal.ZERO` (scale 0) does not equal `0.00` (scale 2) returned from the DB.
 See *Calculated Properties — Subquery Patterns* in `reference.md` for the recommended scale-matching constant pattern.

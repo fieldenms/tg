@@ -34,6 +34,7 @@ import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.EMPTY_CO
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.conditions;
 import static ua.com.fielden.platform.eql.stage2.sundries.GroupBys2.EMPTY_GROUP_BYS;
 import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.EMPTY_ORDER_BYS;
+
 /**
  * Base class for stage 1 data structures representing an EQL query, suitable for transformation into stage 2.
  * There are four kinds of structures for representing queries depending on its usage:
@@ -155,7 +156,7 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
             return originalConditions;
         }
 
-        final TransformationContextFromStage1To2 localContext = TransformationContextFromStage1To2.forMainContext(context).cloneWithAdded(mainSource);
+        final var localContext = context.setSourcesStack(List.of(List.of(mainSource)));
         final Conditions2 udfConditions2 = udfConditions.transform(localContext);
 
         if (originalConditions.ignore()) {

@@ -3,7 +3,7 @@
     <parent>
         <groupId>fielden</groupId>
         <artifactId>platform-parent</artifactId>
-        <version>2.5.3</version>
+        <version>2.5.4</version>
     </parent>
 
     <artifactId>platform-pojo-bl</artifactId>
@@ -326,6 +326,16 @@
             <groupId>io.nayuki</groupId>
             <artifactId>qrcodegen</artifactId>
             <version>${qrcodegen.version}</version>
+        </dependency>
+
+        <!-- https://vavr.io -->
+        <!-- Persistent (immutable, structurally shared) data structures.
+             Declared here, rather than in the module that first used it (platform-dao), so that it reaches
+             TG-based applications transitively and is available to them without an explicit declaration.
+             Moving it to a narrower module would withdraw it from applications. -->
+        <dependency>
+            <groupId>io.vavr</groupId>
+            <artifactId>vavr</artifactId>
         </dependency>
 
     </dependencies>

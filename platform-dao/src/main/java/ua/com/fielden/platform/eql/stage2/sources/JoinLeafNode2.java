@@ -4,6 +4,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.eql.stage2.IPropPathResolver;
+import ua.com.fielden.platform.eql.stage2.IPropPathResolver.Resolution;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonPredicate3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
@@ -18,14 +20,12 @@ import ua.com.fielden.platform.utils.ToString;
 import java.util.List;
 import java.util.Set;
 
-import static java.util.Arrays.asList;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
-import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
-import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 import static ua.com.fielden.platform.eql.meta.PropType.propType;
 import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
+import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 public record JoinLeafNode2 (ISource2<?> source) implements IJoinNode2<IJoinNode3>, ToString.IFormattable {
 
@@ -46,71 +46,58 @@ public record JoinLeafNode2 (ISource2<?> source) implements IJoinNode2<IJoinNode
 
     @Override
     public TransformationResultFromStage2To3<IJoinNode3> transform(TransformationContextFromStage2To3 context) {
-        final TransformationResultFromStage2To3<? extends ISource3> explicitSourceTr = source.transform(context);
-        return generateJoinNode(explicitSourceTr.item, context.getHelperNodesForSource(source.id()),
-                                explicitSourceTr.updatedContext);
+        final var explicitSourceTr = source.transform(context);
+        return addImplicitJoins(explicitSourceTr.item, explicitSourceTr.updatedContext);
     }
 
-    /**
-     * Depending on the existence of helper nodes either {@code JoinLeafNode3} or {@code JoinInnerNode3} is generated.
-     *
-     * @param source
-     * @param helperNodes
-     * @param context
-     * @return
-     */
-    private static TransformationResultFromStage2To3<IJoinNode3> generateJoinNode(final ISource3 source, final List<HelperNodeForImplicitJoins> helperNodes, final TransformationContextFromStage2To3 context) {
-        // registering source within transformation context
-        TransformationContextFromStage2To3 currentContext = context.cloneWithSource(source);
-        IJoinNode3 currentJoinNode = new JoinLeafNode3(source);
-
-        // enhancing current join node with helper nodes
-        for (final HelperNodeForImplicitJoins helperNode : helperNodes) {
-            final TransformationResultFromStage2To3<JoinInnerNode3> tr = joinImplicitNode(currentJoinNode, helperNode,
-                                                                                          source, currentContext);
-            currentJoinNode = tr.item;
-            currentContext = tr.updatedContext;
-        }
-
-        return new TransformationResultFromStage2To3<>(currentJoinNode, currentContext);
+    private TransformationResultFromStage2To3<IJoinNode3> addImplicitJoins(
+            final ISource3 source,
+            final TransformationContextFromStage2To3 context)
+    {
+        final var resJoins = context.propResolutions().joins().getOrDefault(source.id(), List.of());
+        final var baseJoinNode = new JoinLeafNode3(source);
+        final var baseContext = context.cloneWithSource(source);
+        return foldLeft(resJoins, new TransformationResultFromStage2To3<>(baseJoinNode, baseContext), this::add);
     }
 
-    /**
-     * @param currentJoinNode -- join node that will become {@code leftNode} in a {@link JoinInnerNode3} instance being
-     *                        generated as a result of the join.
-     * @param helperNode      -- helper node, which serves as a base for generation of {@code rightNode} in a
-     *                        {@link JoinInnerNode3} instance being generated as a result of the implicit join.
-     * @param rootSource
-     * @param context
-     * @return
-     */
-    private static TransformationResultFromStage2To3<JoinInnerNode3> joinImplicitNode(final IJoinNode3 currentJoinNode, final HelperNodeForImplicitJoins helperNode, final ISource3 rootSource, final TransformationContextFromStage2To3 context) {
-        final TransformationResultFromStage2To3<? extends ISource3> tr = helperNode.source.transform(context);
-        final ISource3 addedSource = tr.item;
-        TransformationContextFromStage2To3 currentContext = tr.updatedContext;
+    private TransformationResultFromStage2To3<IJoinNode3> add(
+            final TransformationResultFromStage2To3<IJoinNode3> acc,
+            final IPropPathResolver.JoinNode resJoin)
+    {
+        final var accJoinNode = acc.item;
+        final var context = acc.updatedContext;
 
-        final ISingleOperand3 leftOperand;
+        final var rightSource2 = resJoin.right();
 
-        if (helperNode.expr == null) {
-            leftOperand = new Prop3(helperNode.name, rootSource, propType(helperNode.source.sourceType(), H_ENTITY));
-        } else {
-            final TransformationResultFromStage2To3<Expression3> exprTransRes = helperNode.expr.transform(
-                    currentContext);
-            leftOperand = exprTransRes.item.isSingleOperandExpression()
-                    ? exprTransRes.item.firstOperand
-                    : exprTransRes.item;
-            currentContext = exprTransRes.updatedContext;
-        }
+        final var rightSource3Tr = rightSource2.transform(context);
+        final var rightSource3 = rightSource3Tr.item;
+        final var context2 = rightSource3Tr.updatedContext;
 
-        final Prop3 rightOperand = new Prop3(ID, addedSource, LONG_PROP_TYPE);
-        final ComparisonPredicate3 comparisonPredicate = new ComparisonPredicate3(leftOperand, EQ, rightOperand);
-        final Conditions3 joinOnConditions = new Conditions3(false, asList(asList(comparisonPredicate)));
-        final TransformationResultFromStage2To3<IJoinNode3> implicitJoinNodeTr = generateJoinNode(addedSource,
-                                                                                                  helperNode.subnodes(),
-                                                                                                  currentContext);
-        return new TransformationResultFromStage2To3<>(
-                new JoinInnerNode3(currentJoinNode, implicitJoinNodeTr.item, (helperNode.nonnullable ? IJ : LJ),
-                                   joinOnConditions), implicitJoinNodeTr.updatedContext);
+        final var rightJoinNodeTr = addImplicitJoins(rightSource3, context2);
+        final var rightJoinNode = rightJoinNodeTr.item;
+        final var context3 = rightJoinNodeTr.updatedContext;
+
+        // The left ON operand is always typed as the referenced (right) entity.
+        final var leftOnOperandTr = mkOperand(rightSource2.sourceType(), resJoin.leftOn(), context3);
+        final var leftOnOperand = leftOnOperandTr.item;
+        final var context4 = leftOnOperandTr.updatedContext;
+
+        final var conds = new Conditions3(false, List.of(List.of(
+                new ComparisonPredicate3(leftOnOperand, EQ, new Prop3(ID, rightSource3, LONG_PROP_TYPE))
+        )));
+        final var joinNode = new JoinInnerNode3(accJoinNode, rightJoinNode, resJoin.joinType(), conds);
+        return new TransformationResultFromStage2To3<>(joinNode, context4);
+    }
+
+    private TransformationResultFromStage2To3<? extends ISingleOperand3> mkOperand(
+            final Class<? extends AbstractEntity<?>> rightType,
+            final Resolution resolution,
+            final TransformationContextFromStage2To3 context)
+    {
+        return switch (resolution) {
+            case Resolution.Column it -> new TransformationResultFromStage2To3<>(new Prop3(it.prop(), context.getSource(it.sourceId()), propType(rightType, H_ENTITY)), context);
+            case Resolution.Expr it -> Expression3.simplify(it.expr().transform(context));
+        };
     }
 
     @Override
