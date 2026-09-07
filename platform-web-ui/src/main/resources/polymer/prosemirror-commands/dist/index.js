@@ -289,16 +289,20 @@ a custom function to determine the type of the newly split off block.
 */
 function splitBlockAs(splitNode) {
     return (state, dispatch) => {
-        let { $from, $to } = state.selection;
         if (state.selection instanceof NodeSelection && state.selection.node.isBlock) {
+            let { $from } = state.selection;
             if (!$from.parentOffset || !canSplit(state.doc, $from.pos))
                 return false;
             if (dispatch)
                 dispatch(state.tr.split($from.pos).scrollIntoView());
             return true;
         }
-        if (!$from.depth)
+        if (!state.selection.$from.depth)
             return false;
+        let tr = state.tr;
+        if (!state.selection.empty && (state.selection instanceof TextSelection || state.selection instanceof AllSelection))
+            tr.deleteSelection();
+        let { $from } = tr.selection, mapFrom = tr.steps.length;
         let types = [];
         let splitDepth, deflt, atEnd = false, atStart = false;
         for (let d = $from.depth;; d--) {
@@ -307,7 +311,7 @@ function splitBlockAs(splitNode) {
                 atEnd = $from.end(d) == $from.pos + ($from.depth - d);
                 atStart = $from.start(d) == $from.pos - ($from.depth - d);
                 deflt = defaultBlockAt($from.node(d - 1).contentMatchAt($from.indexAfter(d - 1)));
-                let splitType = splitNode && splitNode($to.parent, atEnd, $from);
+                let splitType = splitNode && splitNode($from.parent, atEnd, $from);
                 types.unshift(splitType || (atEnd && deflt ? { type: deflt } : null));
                 splitDepth = d;
                 break;
@@ -318,10 +322,7 @@ function splitBlockAs(splitNode) {
                 types.unshift(null);
             }
         }
-        let tr = state.tr;
-        if (state.selection instanceof TextSelection || state.selection instanceof AllSelection)
-            tr.deleteSelection();
-        let splitPos = tr.mapping.map($from.pos);
+        let splitPos = $from.pos;
         let can = canSplit(tr.doc, splitPos, types.length, types);
         if (!can) {
             types[0] = deflt ? { type: deflt } : null;
@@ -331,9 +332,10 @@ function splitBlockAs(splitNode) {
             return false;
         tr.split(splitPos, types.length, types);
         if (!atEnd && atStart && $from.node(splitDepth).type != deflt) {
-            let first = tr.mapping.map($from.before(splitDepth)), $first = tr.doc.resolve(first);
+            let mapping = tr.mapping.slice(mapFrom);
+            let first = mapping.map($from.before(splitDepth)), $first = tr.doc.resolve(first);
             if (deflt && $from.node(splitDepth - 1).canReplaceWith($first.index(), $first.index() + 1, deflt))
-                tr.setNodeMarkup(tr.mapping.map($from.before(splitDepth)), deflt);
+                tr.setNodeMarkup(mapping.map($from.before(splitDepth)), deflt);
         }
         if (dispatch)
             dispatch(tr.scrollIntoView());

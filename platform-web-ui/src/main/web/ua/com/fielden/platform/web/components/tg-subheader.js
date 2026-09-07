@@ -70,13 +70,18 @@ Polymer({
             value: false
         },
 
+        /**
+         * Elements that this subheader governs.
+         *
+         * The default is applied at construction, because `tg-flex-layout` populates a subheader through `addRelativeElement` and may do so before the subheader gets connected.
+         */
         relativeElements: {
-            type: Array
+            type: Array,
+            value: () => []
         }
     },
 
     ready: function () {
-        this.relativeElements = [];
         this.toggle = this.toggle.bind(this);
 
         this.addEventListener('click', this.toggle);

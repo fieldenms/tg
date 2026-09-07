@@ -297,7 +297,7 @@
             <!-- jsoup HTML parser library @ https://jsoup.org/ -->
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.22.2</version>
+            <version>1.23.2</version>
         </dependency>
 
       <!-- https://mvnrepository.com/artifact/com.google.testing.compile/compile-testing -->
@@ -326,6 +326,16 @@
             <groupId>io.nayuki</groupId>
             <artifactId>qrcodegen</artifactId>
             <version>${qrcodegen.version}</version>
+        </dependency>
+
+        <!-- https://vavr.io -->
+        <!-- Persistent (immutable, structurally shared) data structures.
+             Declared here, rather than in the module that first used it (platform-dao), so that it reaches
+             TG-based applications transitively and is available to them without an explicit declaration.
+             Moving it to a narrower module would withdraw it from applications. -->
+        <dependency>
+            <groupId>io.vavr</groupId>
+            <artifactId>vavr</artifactId>
         </dependency>
 
     </dependencies>

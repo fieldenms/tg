@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import com.google.inject.Inject;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -81,7 +82,7 @@ final class EntityFetcher implements IEntityFetcher {
     }
 
     private <E extends AbstractEntity<?>> IRetrievalModel<E> produceRetrievalModel(
-            final fetch<E> fetchModel,
+            final @Nullable fetch<E> fetchModel,
             final Class<E> resultType,
             final IDomainMetadata domainMetadata,
             final QuerySourceInfoProvider qsip)

@@ -165,6 +165,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         }
 
         requestStaticInjection(MultiInheritanceEntityVerificationService.class);
+        requestStaticInjection(DependentCalcPropsVerificationService.class);
         requestStaticInjection(EntityQueryCriteriaUtils.class);
     }
 

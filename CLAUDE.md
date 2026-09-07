@@ -23,6 +23,14 @@ mvn clean test -Dmaven.javadoc.skip=true -Dfork.count=4 -DdatabaseUri.prefix=//l
 mvn test -Dmaven.javadoc.skip=true -Dfork.count=4 -DdatabaseUri.prefix=//localhost:1433;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=false;databaseName=ci_  # SQL Server
 ```
 
+**Mutation-check every test you add or change.**
+A passing test proves nothing until it has been seen to fail: break the code it covers (drop an argument, invert a condition, return a constant), confirm that the intended test — and only that test — fails, then revert.
+Assertions that hold whether or not the code under test did anything are common, especially negative ones (`assertFalse`, `isEmpty`) whose fixture yields the same answer either way, and mutation of a loaded entity whose setter might not have assigned.
+
+**Mutating an upstream module requires `-am`.**
+`mvn test -pl platform-dao` resolves `platform-pojo-bl` from `~/.m2`, so an uncommitted edit there is invisible to the run and *every* mutation of it looks uncaught — a false all-clear.
+Use `mvn test -pl platform-dao -am -Dtest=SomeTest -DfailIfNoTests=false …`, or install the upstream module first.
+
 ### Version Management
 ```bash
 ./tg-update-version.sh 2.1.0-SNAPSHOT          # Update version (recommended)
@@ -142,6 +150,13 @@ When the same formatted message is also needed by surrounding code (e.g. as a re
 Settings holders (e.g. `WebApiSettings`), stateless services, and IoC-bound utilities all qualify.
 Without `@Singleton`, Guice creates a fresh instance per injection point — wasteful, and conceptually wrong for "global app config" or shared infrastructure.
 Do **not** apply `@Singleton` to classes that hold per-request / per-thread state, or that are explicitly intended to be re-instantiated.
+
+**Persistent data structures — [vavr](https://vavr.io) is available platform-wide.**
+`io.vavr:vavr` is declared in `platform-pojo-bl`, so it reaches TG-based applications transitively and may be used in application code without adding a dependency.
+The version is managed centrally in the root `pom.xml`.
+Reach for it when a structure is *updated repeatedly along a computation* and each intermediate version must remain intact: vavr path-copies one branch per update, whereas rebuilding a Guava `ImmutableMap` per step is O(n) each time and O(n²) overall.
+`PropPathResolver` is the reference example — folding resolution state through `LinkedHashMap`/`HashMap` cut both allocation and time by roughly a third against immutable-collection rebuilding.
+It is **not** a general replacement for Guava immutable collections or `java.util`: for a collection built once and then only read, those remain the right choice.
 
 **Grouped constants:** when several `static final` fields of the same type form a logical *set of alternatives* — alternative error messages produced by the same validator, alternative warnings from the same definer, parallel format-string templates — declare them under a single `public static final <Type>` line, separated by commas:
 ```java
