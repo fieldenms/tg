@@ -180,3 +180,12 @@ Cross-links from a quick-reference should prefer another quick-reference; from a
 | `testing/` | Fetch patterns, indirect testing, test data caching | `reference.md` — DynamicQueryBuilder testing, test clock, web resource testing |
 | `security/` | Token templates, `@Authorise` usage | `reference.md` — `@Authorise` + AOP infrastructure, authorization scopes (DAO/Producer/Property/Action), runtime-generated audit tokens |
 | `auditing/` | @Audited basics, generated types, test config | `reference.md` — full type hierarchy, versioning, runtime plumbing, GenAudit, Web UI |
+
+## Development Guidelines
+
+### Keep Documentation up-to-date
+
+Every change should be followed by corresponding changes to the documentation.
+This includes comments and documentation within the code, and external documentation, such as design documents, wiki pages, `platform-doc/claude/`, etc.
+This rule should be followed when reviewing changes.
+Perform documentation lookup efficiently: external documentation is more likely to cover high-level architectural decisions and conventions rather than low-level implementation details.
