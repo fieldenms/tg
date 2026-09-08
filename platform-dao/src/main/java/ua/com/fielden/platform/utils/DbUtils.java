@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -14,6 +15,12 @@ import org.hibernate.tool.hbm2ddl.SchemaExport.Action;
 import org.hibernate.tool.schema.TargetType;
 import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.ddl.MetadataProvider;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.meta.EntityMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadataUtils;
 
 import java.io.*;
 import java.sql.*;
@@ -24,7 +31,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 
 /// A collection of convenient DB related utilities such as to generate DDL and obtain the next value for sequence by name.
@@ -45,7 +55,41 @@ public class DbUtils {
     ///
     public static final String PHASE_BOUNDARY_MARKER = "-- TG_DDL_PHASE_BOUNDARY";
 
-    private DbUtils() {}
+    private final IDomainMetadataUtils domainMetadataUtils;
+    private final ICompanionObjectFinder coFinder;
+
+    @Inject
+    protected DbUtils(final IDomainMetadataUtils domainMetadataUtils, final ICompanionObjectFinder coFinder) {
+        this.domainMetadataUtils = domainMetadataUtils;
+        this.coFinder = coFinder;
+    }
+
+    /// Finds the maximum ID among all persisted entities in the application.
+    ///
+    public Long maxEntityId() {
+        final var sourceQueries = domainMetadataUtils.registeredEntities()
+                .map(EntityMetadata::asPersistent)
+                .flatMap(Optional::stream)
+                .map(em -> select(em.javaType())
+                        .yield().maxOf().prop(ID).as("maxId")
+                        .modelAsAggregate())
+                .toArray(AggregatedResultQueryModel[]::new);
+        final var query = select(sourceQueries)
+                .yield().maxOf().prop("maxId").as("maxId")
+                .modelAsAggregate();
+        final var coAgg = coFinder.find(EntityAggregates.class, true);
+        return coAgg.getEntityOptional(from(query).model())
+                .map(agg -> agg.<Long>get("maxId"))
+                .orElse(0L);
+    }
+
+    /// Creates an SQL statement that restarts an existing sequence.
+    ///
+    public String sqlRestartSequence(final DbVersion dbVersion, final String sequenceName, final Long value) {
+        return switch (dbVersion) {
+            default -> "ALTER SEQUENCE %s RESTART WITH %s".formatted(sequenceName, value);
+        };
+    }
 
     /// Returns the next sequence value using DB independent way that utilises the Hibernate's Dialect support.
     ///

@@ -26,6 +26,7 @@ import java.util.function.Function;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Reflector.assignStatic;
+import static ua.com.fielden.platform.test.AbstractDomainDrivenTestCase.*;
 import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
 
 /// The domain test case runner responsible for instantiating and initializing domain test cases.
@@ -83,36 +84,18 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         
         // databaseUri value should be specified in POM or come from the command line
         // however, need to provide a sensible default not to force developers to specify this parameter for each test case in IDE, assuming H2 is the default
-        if (isEmpty(System.getProperty("databaseUri"))) {
+        if (isEmpty(System.getProperty(DATABASE_URI))) {
             databaseUri = "./src/test/resources/db/DEFAULT_TEST_DB";
         } else {
-            databaseUri = System.getProperty("databaseUri");
+            databaseUri = System.getProperty(DATABASE_URI);
         }
         
-        // check if loadDdlScriptFromFile is specified 
-        final boolean loadDdlScriptFromFile;
-        if (isEmpty(System.getProperty("loadDdlScriptFromFile"))) {
-            loadDdlScriptFromFile = false;
-        } else {
-            loadDdlScriptFromFile = Boolean.parseBoolean(System.getProperty("loadDdlScriptFromFile"));
-        }
-        
-        // check if saveDdlScriptToFile is specified
-        final boolean saveScriptsToFile;
-        if (isEmpty(System.getProperty("saveScriptsToFile"))) {
-            saveScriptsToFile = false;
-        } else {
-            saveScriptsToFile = Boolean.parseBoolean(System.getProperty("saveScriptsToFile"));
-        }
+        final boolean loadDdlScriptFromFile = Boolean.getBoolean(LOAD_DDL_SCRIPT_FROM_FILE);
+        final boolean saveScriptsToFile = Boolean.getBoolean(SAVE_SCRIPTS_TO_FILE);
+        final boolean loadDataScriptFromFile = Boolean.getBoolean(LOAD_DATA_SCRIPT_FROM_FILE);
 
-        final boolean loadDataScriptFromFile;
-        if (isEmpty(System.getProperty("loadDataScriptFromFile"))) {
-            loadDataScriptFromFile = false;
-        } else {
-            loadDataScriptFromFile = Boolean.parseBoolean(System.getProperty("loadDataScriptFromFile"));
-        }
-
-        logger.info(() -> "Running [%s] with loadDdlScriptFromFile = [%s], saveScriptsToFile = [%s], loadDataScriptFromFile = [%s] and  databaseUri = [%s]".formatted(klass, loadDdlScriptFromFile, saveScriptsToFile, loadDataScriptFromFile, databaseUri));
+        logger.info(() -> "Running [%s] with %s = [%s], %s = [%s], %s = [%s] and  databaseUri = [%s]".formatted(
+                klass, LOAD_DDL_SCRIPT_FROM_FILE, loadDdlScriptFromFile, SAVE_SCRIPTS_TO_FILE, saveScriptsToFile, LOAD_DATA_SCRIPT_FROM_FILE, loadDataScriptFromFile, databaseUri));
 
         // let's construct and assign test configuration
         // this should occur only once per JVM instance as this is a computationally intensive operation
