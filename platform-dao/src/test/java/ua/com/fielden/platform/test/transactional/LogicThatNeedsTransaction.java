@@ -1,10 +1,8 @@
 package ua.com.fielden.platform.test.transactional;
 
+import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Session;
-
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ISessionEnabled;
@@ -14,12 +12,10 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
 
-/**
- * A helper class for testing transactional support.
- *
- * @author TG Team
- *
- */
+import java.sql.Connection;
+
+/// A helper class for testing transactional support.
+///
 public class LogicThatNeedsTransaction implements ISessionEnabled {
     private final IEntityDao<EntityWithMoney> dao;
     private Session session;
