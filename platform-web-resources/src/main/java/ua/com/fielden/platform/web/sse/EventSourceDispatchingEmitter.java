@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.apache.tika.utils.StringUtils.isBlank;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -67,7 +68,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
     /// @param appVersionSupplier supplier of String-based version to be announced to each client upon establishing an SSE connection
     ///
     public EventSourceDispatchingEmitter(final Supplier<String> appVersionSupplier) {
-        this.appVersionSupplier = appVersionSupplier;
+        this.appVersionSupplier = requireNonNull(appVersionSupplier);
     }
 
     /// A helper function that creates a register key from `user` and `sseUid`.
@@ -125,14 +126,34 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
     /// This lets a client detect that a newer application version has been deployed since it was loaded, and prompt the user to reload.
     ///
     private void announceAppVersion(final IEventSourceEmitter emitter) {
-        final var appVersion = appVersionSupplier.get();
+        final var appVersion = currentAppVersion();
         if (!isBlank(appVersion)) {
             try {
                 emitter.event(APP_VERSION_EVENT_NAME, appVersion);
-            } catch (final IOException ex) {
+            } catch (final Throwable ex) {
                 // A failure here is non-critical: the client will receive the announcement upon its next (re)connection.
                 LOGGER.warn(format("Could not announce application version [%s] to a newly connected SSE client.", appVersion), ex);
             }
+        }
+    }
+
+    /// Obtains the current application version, or `null` if it could not be obtained.
+    ///
+    /// `IWebUiConfig.appVersion()`, which backs [#appVersionSupplier], is an application-level extension point.
+    /// An application may derive its version from a manifest, a properties file or a database, and so the supplier may throw.
+    /// Such a failure must not propagate: `SseServlet` would then deregister the emitter and respond with an error,
+    /// leaving the client to retry and fail upon every reconnection, and so lose the whole eventing subsystem for the sake of a cosmetic announcement.
+    ///
+    /// The guard is deliberately as wide as [Throwable], as it is elsewhere in this class.
+    /// A misconfigured deployment fails with an [ExceptionInInitializerError] or a [NoClassDefFoundError] rather than with an exception,
+    /// and such a failure is both permanent and identical for every client – exactly what must not reach the eventing subsystem.
+    ///
+    private String currentAppVersion() {
+        try {
+            return appVersionSupplier.get();
+        } catch (final Throwable ex) {
+            LOGGER.warn("Could not obtain the current application version to announce to a newly connected SSE client.", ex);
+            return null;
         }
     }
 
