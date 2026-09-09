@@ -107,6 +107,20 @@ public class LogicThatNeedsTransaction implements ISessionEnabled {
         ((EntityWithMoneyDao) dao).saveTwoWithException(one, two);
     }
     
+    /// An entirely ordinary unit of work: the entity is saved through its companion, which flushes explicitly,
+    /// so the `INSERT` has already been sent to and accepted by the database.
+    ///
+    /// The physical connection is then dropped before the transaction commits.
+    /// This is exactly what a database failover, a connection-pool eviction, or an administrator terminating the backend does in production.
+    /// The `COMMIT` never reaches the server, so the database rolls the transaction back.
+    ///
+    @SessionRequired
+    public void saveThenLoseConnectionBeforeCommit(final String key) {
+        dao.save(factory.newEntity(EntityWithMoney.class, key, "flushed").setMoney(new Money("20.00")));
+        // Release the connection out from under the open transaction, as a pool eviction would.
+        getSession().doWork(Connection::close);
+    }
+
     @SessionRequired(allowNestedScope = false)
     public void cannotBeInvokeWithinExistingTransaction() {
         singleTransactionInvocaion("20.00", "30.00");

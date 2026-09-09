@@ -126,6 +126,23 @@ public class TransactionalTest extends AbstractDaoTestCase {
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
     }
 
+    /// Every save in a TG application goes through a companion, which flushes explicitly — but a flush is not durability, only the commit is.
+    /// When the commit fails, `SessionInterceptor.commitTransactionAndCloseSession` catches it,
+    /// logs `Could not commit transaction.` and returns normally.
+    /// As the result, a perfectly ordinary save is reported as successful while the database has rolled it back.
+    /// This should not be happening with the correct error handling by the [SessionInterceptor].
+    ///
+    @Test
+    public void commit_failure_after_a_successful_companion_save_is_reported_to_the_caller() {
+        final String key = "lost";
+
+        assertThrows("A save whose commit failed must not be reported to the caller as success.",
+                     Exception.class,
+                     () -> logic.saveThenLoseConnectionBeforeCommit(key));
+
+        assertNull("The flushed INSERT was rolled back with the transaction.", dao.findByKey(key));
+    }
+
     @Test
     public void methods_with_disallowed_nested_scope_transactions_can_be_invoked_in_their_own_scope() {
         logic.cannotBeInvokeWithinExistingTransaction();
