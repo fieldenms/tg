@@ -176,12 +176,14 @@ public class SessionInterceptor implements MethodInterceptor {
     }
 
     private void commitTransactionAndCloseSession(final Session session, final Transaction tr, final User user) {
+        Exception commitError = null;
         try {
             if (tr.isActive()) {
                 tr.commit();
             }
         } catch (final Exception ex) {
             LOGGER.error(() -> ERR_COULD_NOT_COMMIT.formatted(user), ex);
+            commitError = ex;
         } finally {
             transactionGuid.remove();
         }
@@ -193,7 +195,14 @@ public class SessionInterceptor implements MethodInterceptor {
             }
             LOGGER.debug(() -> MSG_CLOSED_SESSION.formatted(user));
         } catch (final Exception ex) {
-            LOGGER.error(format("[%s] Could not close session.", user), ex);
+            LOGGER.error(() -> ERR_COULD_NOT_CLOSE_SESSION.formatted(user), ex);
+        }
+
+        // A failed commit means the unit of work was not persisted, and must not be reported as success.
+        // It is raised only after the session has been closed, so that cleanup is never skipped --
+        // throwing from the catch block above would leave a dead session as the current session.
+        if (commitError != null) {
+            throw new TransactionCommitException(ERR_COULD_NOT_COMMIT.formatted(user), commitError);
         }
     }
     
