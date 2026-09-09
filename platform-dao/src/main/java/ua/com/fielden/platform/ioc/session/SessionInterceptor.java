@@ -40,7 +40,9 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 /// A failure to *commit* is reported rather than swallowed.
 /// Committing is the point at which a unit of work becomes durable, so a failure there means nothing was persisted, however successfully the method itself ran.
 /// [TransactionCommitException] is thrown for this, and only after the session has been closed, so that cleanup is never skipped.
-/// It is deliberately distinct from a business failure: the work was valid and its statements were accepted, but the transaction could not be made durable — typically because of an infrastructure failure, such as a database failover or a terminated connection.
+/// It is deliberately distinct from a business failure: the work was valid and its statements were accepted, but the
+/// transaction could not be made durable — typically because of an infrastructure failure, such as a database
+/// failover or a terminated connection.
 ///
 /// Two further behaviours are not apparent from a call site:
 ///   - The session is put into [FlushMode#COMMIT], so Hibernate never auto-flushes.
@@ -155,16 +157,17 @@ public class SessionInterceptor implements MethodInterceptor {
         return shouldCommit;
     }
 
-    private Exception completeTransactionWithError(final Session session, final Transaction tr, final Throwable ex, final User user) {
-        switch (ex) {
+    private Exception completeTransactionWithError(final Session session, final Transaction tr, final Throwable th, final User user) {
+        switch (th) {
             // Most Result exceptions are validation errors, which are more relevant for debug messages.
-            case Result _ -> LOGGER.debug(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), ex);
-            case SessionScopingException _ -> LOGGER.error(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), ex);
+            case Result _ -> LOGGER.debug(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), th);
+            case SessionScopingException _ -> LOGGER.error(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), th);
             case TransactionCommitException _ -> {} // Already logged before.
-            default -> LOGGER.warn(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), ex);
+            default -> LOGGER.warn(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), th);
         }
         try {
-            if (tr.isActive()) { // if transaction is active and there was an exception then it should be rollbacked
+            // If transaction is active and there was an exception, it should be rolled back.
+            if (tr.isActive()) {
                 LOGGER.debug(() -> "[%s] Rolling back DB transaction".formatted(user));
                 rollbackTransactionAndCloseSession(session, tr, user);
                 LOGGER.debug(() -> "[%s] Rolled back DB transaction".formatted(user));
@@ -172,7 +175,7 @@ public class SessionInterceptor implements MethodInterceptor {
         } finally {
             transactionGuid.remove();
         }
-        return ex instanceof Exception ? (Exception) ex : new TransactionRollbackDueToThrowable(ex);
+        return th instanceof Exception ex ? ex : new TransactionRollbackDueToThrowable(th);
     }
 
     private void commitTransactionAndCloseSession(final Session session, final Transaction tr, final User user) {
