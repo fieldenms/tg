@@ -2,6 +2,10 @@ package ua.com.fielden.platform.test.transactional;
 
 import org.junit.Before;
 import org.junit.Test;
+import ua.com.fielden.platform.ioc.session.exceptions.TransactionCommitException;
+
+import java.sql.Connection;
+import java.util.stream.Stream;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
@@ -139,6 +143,25 @@ public class TransactionalTest extends AbstractDaoTestCase {
         assertThrows("A save whose commit failed must not be reported to the caller as success.",
                      Exception.class,
                      () -> logic.saveThenLoseConnectionBeforeCommit(key));
+
+        assertNull("The flushed INSERT was rolled back with the transaction.", dao.findByKey(key));
+    }
+
+    /// The same commit runs from a `Stream.onClose` handler when a `SessionRequired` method returns a stream,
+    /// so the failure has to survive `Stream#close` to reach the caller.
+    ///
+    @Test
+    public void commit_failure_on_stream_close_is_reported_to_the_caller() {
+        final String key = "streamed";
+        assertThrows("A commit that failed on stream close must not be silent.",
+                     TransactionCommitException.class,
+                     () -> {
+                         try (final Stream<EntityWithMoney> stream = logic.saveAndStream(key)) {
+                             stream.forEach(entity -> {
+                             });                 // consume while the connection is still alive
+                             logic.getSession().doWork(Connection::close);  // then release it, as a pool eviction would
+                         }
+                     });
 
         assertNull("The flushed INSERT was rolled back with the transaction.", dao.findByKey(key));
     }
