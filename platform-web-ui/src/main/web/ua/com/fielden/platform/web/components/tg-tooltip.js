@@ -2,14 +2,14 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
 
-import { tgRichTextStyles } from '/resources/components/rich-text/tg-rich-text-styles.js';
+import { tgRichTextContentsStyles } from '/resources/components/rich-text/tg-rich-text-contents-styles.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import {NeonAnimationRunnerBehavior} from '/resources/polymer/@polymer/neon-animation/neon-animation-runner-behavior.js';
 
 const template = html`
-    ${tgRichTextStyles}
+    ${tgRichTextContentsStyles}
     <style>
         :host {
             overflow: hidden;
