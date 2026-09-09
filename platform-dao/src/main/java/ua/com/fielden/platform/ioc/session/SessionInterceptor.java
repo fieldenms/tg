@@ -156,12 +156,12 @@ public class SessionInterceptor implements MethodInterceptor {
     }
 
     private Exception completeTransactionWithError(final Session session, final Transaction tr, final Throwable ex, final User user) {
-        if (ex instanceof Result) {
-            LOGGER.debug(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), ex);  // most Result exceptions are validation errors, which are more relevant for debug messages
-        } else if (ex instanceof SessionScopingException) {
-            LOGGER.error(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), ex); // transactional scoping errors should be reported as errors
-        } else {
-            LOGGER.warn(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), ex); // otherwise, warning
+        switch (ex) {
+            // Most Result exceptions are validation errors, which are more relevant for debug messages.
+            case Result _ -> LOGGER.debug(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), ex);
+            case SessionScopingException _ -> LOGGER.error(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), ex);
+            case TransactionCommitException _ -> {} // Already logged before.
+            default -> LOGGER.warn(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), ex);
         }
         try {
             if (tr.isActive()) { // if transaction is active and there was an exception then it should be rollbacked
