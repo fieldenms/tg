@@ -1,15 +1,13 @@
 import '/resources/polymer/@polymer/paper-styles/typography.js';
 import { createStyleModule } from '/resources/polymer/lib/tg-style-utils.js';
 
-// Registers 'tg-rich-text-contents-styles', which the full rich text styles include ahead of the UI ones.
-import '/resources/components/rich-text/tg-rich-text-contents-styles.js';
-
-import { toastuiEditorStyles } from '/resources/polymer/lib/toastui-editor-styles-lib.js';
+import { tgRichTextContentsStyles } from '/resources/components/rich-text/tg-rich-text-contents-styles.js';
+import { toastuiEditorUiStyles } from '/resources/polymer/lib/toastui-editor-ui-styles-lib.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 // TG overrides for the editor UI.
 // The overrides for the rendered markup live in 'tg-rich-text-contents-styles.js'.
-createStyleModule('tg-rich-text-styles', `
+createStyleModule('tg-rich-text-ui-styles', `
     :host {
         position: relative
         @apply --layout-vertical;
@@ -28,9 +26,10 @@ createStyleModule('tg-rich-text-styles', `
 
 /// Full rich text styles, that is the rendered markup styles followed by the editor UI ones.
 /// Include these in an editor, and `tgRichTextContentsStyles` where rich text is displayed read-only.
-/// Included modules are applied in the order listed, so the editor UI overrides come last.
+/// The module id is inlined into the template, because the html tag function security forbids interpolating it.
 ///
 export const tgRichTextStyles = html`
-    ${toastuiEditorStyles}
-    <style include='tg-rich-text-contents-styles tg-rich-text-styles'></style>
+    ${tgRichTextContentsStyles}
+    ${toastuiEditorUiStyles}
+    <style include='tg-rich-text-ui-styles'></style>
 `;
