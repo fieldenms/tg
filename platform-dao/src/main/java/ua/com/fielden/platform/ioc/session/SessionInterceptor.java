@@ -176,36 +176,22 @@ public class SessionInterceptor implements MethodInterceptor {
     }
 
     private void commitTransactionAndCloseSession(final Session session, final Transaction tr, final User user) {
-        Exception commitError = null;
         try {
             if (tr.isActive()) {
                 tr.commit();
             }
         } catch (final Exception ex) {
             LOGGER.error(() -> ERR_COULD_NOT_COMMIT.formatted(user), ex);
-            commitError = ex;
+            // A failed commit means the unit of work was not persisted, and must not be reported as success.
+            // The `finally` block below completes before this exception propagates, so the session is always closed and
+            // never left as a dead current session.
+            throw new TransactionCommitException(ERR_COULD_NOT_COMMIT.formatted(user), ex);
         } finally {
             transactionGuid.remove();
-        }
-        
-        try {
-            LOGGER.debug(() -> MSG_CLOSING_SESSION.formatted(user));
-            if (session.isOpen()) {
-                session.close();
-            }
-            LOGGER.debug(() -> MSG_CLOSED_SESSION.formatted(user));
-        } catch (final Exception ex) {
-            LOGGER.error(() -> ERR_COULD_NOT_CLOSE_SESSION.formatted(user), ex);
-        }
-
-        // A failed commit means the unit of work was not persisted, and must not be reported as success.
-        // It is raised only after the session has been closed, so that cleanup is never skipped --
-        // throwing from the catch block above would leave a dead session as the current session.
-        if (commitError != null) {
-            throw new TransactionCommitException(ERR_COULD_NOT_COMMIT.formatted(user), commitError);
+            closeSession(session, user);
         }
     }
-    
+
     private static void rollbackTransactionAndCloseSession(final Session session, final Transaction tr, final User user) {
         try {
             if (tr.isActive()) {
@@ -214,7 +200,11 @@ public class SessionInterceptor implements MethodInterceptor {
         } catch (final Exception ex) {
             LOGGER.error(() -> "[%s] Could not rollback transaction. Transaction active: [%s].".formatted(user, tr.isActive()), ex);
         }
-        
+
+        closeSession(session, user);
+    }
+
+    private static void closeSession(final Session session, final User user) {
         try {
             LOGGER.debug(() -> MSG_CLOSING_SESSION.formatted(user));
             if (session.isOpen()) {
