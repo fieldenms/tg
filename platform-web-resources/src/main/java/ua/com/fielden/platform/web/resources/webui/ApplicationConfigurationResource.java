@@ -23,6 +23,7 @@ import java.util.TimeZone;
 
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 
 /// A web resource that exposes the client-side application configuration.
 /// Extend this resource when additional platform-level configuration settings are needed.
@@ -67,14 +68,20 @@ public class ApplicationConfigurationResource extends AbstractWebResource {
 
     /// Handles a GET request for configuration data.
     ///
+    /// The configuration is what a client boots with, so an unanticipated failure here prevents an application from loading.
+    /// Such a failure is therefore reported as JSON, as it is by every other resource, and not as an error page –
+    /// a client reads the reason from the response (see `tg-app-resource-loader.js`) to report it to a user.
+    ///
     @Get
     public Representation get() {
-        if (webUiConfig.minDesktopWidth() <= webUiConfig.minTabletWidth()) {
-            LOGGER.error(ERR_DEVICE_SCREEN_WIDTH);
-            getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
-            return restUtil.webApiResultRepresentation(linkedMapOf(t2("errorMsg", ERR_DEVICE_SCREEN_WIDTH)));
-        }
-        return restUtil.webApiResultRepresentation(buildConfiguration(webUiConfig, appSettings, dates, userPreferencesProvider, userProvider.getUser()));
+        return handleUndesiredExceptions(getResponse(), () -> {
+            if (webUiConfig.minDesktopWidth() <= webUiConfig.minTabletWidth()) {
+                LOGGER.error(ERR_DEVICE_SCREEN_WIDTH);
+                getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+                return restUtil.webApiResultRepresentation(linkedMapOf(t2("errorMsg", ERR_DEVICE_SCREEN_WIDTH)));
+            }
+            return restUtil.webApiResultRepresentation(buildConfiguration(webUiConfig, appSettings, dates, userPreferencesProvider, userProvider.getUser()));
+        }, restUtil);
     }
 
     /// Builds the application configuration map by combining platform-level settings with user-specific preferences.
