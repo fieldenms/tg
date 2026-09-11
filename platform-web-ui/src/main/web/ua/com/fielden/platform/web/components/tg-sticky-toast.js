@@ -84,9 +84,12 @@ const normaliseMessage = function (message) {
 /// It therefore never gets overridden by, and never overrides, transient messages.
 /// It is placed at the bottom of the shared toast container, so that all transient toasts are shifted above it.
 ///
-/// There is a single sticky toast per application, so its own messages take turns in it rather than replace one another.
-/// Each is displayed until it gets dismissed, whereupon the next one, if any, takes its place.
-/// No message is therefore lost, which matters most right after a deployment, when an update prompt and a layout reset notice arise together.
+/// There is a single sticky toast per application, so its own messages stack in it rather than replace one another.
+/// The most recent one is displayed, and dismissing it reveals the one beneath, so that no message is lost.
+/// This matters most right after a deployment, when an update prompt and a layout reset notice arise together.
+///
+/// The most recent message is displayed first because it is the one that explains what has just happened, such as a layout reset upon opening a centre.
+/// An earlier message, such as a prompt to reload, remains just as relevant however long it waits beneath.
 ///
 class TgStickyToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
 
@@ -103,9 +106,10 @@ class TgStickyToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
                 value: () => ({})
             },
 
-            /// Messages awaiting their turn, the first of which is the one being displayed.
+            /// Messages that have not been dismissed yet, the most recent first.
+            /// The first of them is the one being displayed.
             ///
-            _queue: {
+            _stack: {
                 type: Array,
                 value: () => []
             }
@@ -118,7 +122,7 @@ class TgStickyToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
         this.$.stickyToast.refit = function () {};
     }
 
-    /// Displays `message`, or queues it behind the message being displayed.
+    /// Displays `message`, keeping whatever was displayed before to be revealed once `message` gets dismissed.
     ///
     /// `message.text` is the message itself and may contain HTML markup, including inline styles and links.
     /// `message.detail` is an optional less emphasised second row, also supporting markup.
@@ -128,28 +132,25 @@ class TgStickyToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
     /// Its value identifies the handler function in `message.handlers`.
     ///
     /// `message.id` identifies the message, defaulting to its text.
-    /// A message that is already displayed or already awaiting its turn gets ignored.
+    /// A message that is already displayed, or that is still waiting beneath, gets ignored.
     ///
     showMessage (message) {
         const msg = normaliseMessage(message);
-        if (this._queue.some(queued => queued.id === msg.id)) {
+        if (this._stack.some(pending => pending.id === msg.id)) {
             return;
         }
-        this._queue.push(msg);
-        // A message takes its turn at once, but only if it is the only one, as otherwise the message being displayed must be dismissed first.
-        if (this._queue.length === 1) {
-            this._display(msg);
-        }
+        this._stack.unshift(msg);
+        this._display(msg);
     }
 
-    /// Dismisses the message being displayed, and displays the next queued one, if any.
+    /// Dismisses the message being displayed, and displays the one beneath it, if any.
     ///
     dismiss () {
-        this._queue.shift();
-        if (this._queue.length > 0) {
-            this._display(this._queue[0]);
+        this._stack.shift();
+        if (this._stack.length > 0) {
+            this._display(this._stack[0]);
         } else {
-            this.hide();
+            this._hide();
         }
     }
 
@@ -186,11 +187,11 @@ class TgStickyToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
         this.$.stickyToast.open();
     }
 
-    /// Closes this toast, discarding the message being displayed along with any that await their turn.
+    /// Closes this toast, discarding the message being displayed along with any beneath it.
     /// An action that dismisses a single message should invoke `dismiss` instead.
     ///
-    hide () {
-        this._queue = [];
+    _hide () {
+        this._stack = [];
         this.$.stickyToast.close();
         this._clear();
     }
@@ -225,7 +226,7 @@ customElements.define('tg-sticky-toast', TgStickyToast);
 const stickyToastElement = document.createElement('tg-sticky-toast');
 document.body.appendChild(stickyToastElement);
 
-/// Displays `message` in the application sticky toast, or queues it behind the message being displayed.
+/// Displays `message` in the application sticky toast, above any message that has not been dismissed yet.
 /// This works from anywhere in the application, with no need for the caller to have access to the toast.
 /// See `showMessage` of `tg-sticky-toast` for the supported shape of `message`.
 ///
@@ -233,7 +234,7 @@ export const showStickyToast = function (message) {
     stickyToastElement.showMessage(message);
 };
 
-/// Dismisses the message being displayed in the application sticky toast, revealing the next queued one, if any.
+/// Dismisses the message being displayed in the application sticky toast, revealing the one beneath it, if any.
 /// This is what an action that closes a message should invoke.
 ///
 export const hideStickyToast = function () {
