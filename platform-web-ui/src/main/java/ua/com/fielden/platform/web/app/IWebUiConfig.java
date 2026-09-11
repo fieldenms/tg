@@ -240,6 +240,13 @@ public interface IWebUiConfig extends IMenuRetriever {
         return title();
     }
 
+    /// Returns the identity of this deployment, which a client compares to detect that a new version was deployed.
+    /// Unlike [#appVersion()], this is never displayed, and so may carry information that is not user-facing.
+    ///
+    default String deploymentId() {
+        return appVersion();
+    }
+
     /// Returns the URI of the “idea” action.
     ///
     String ideaUri();

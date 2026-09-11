@@ -55,6 +55,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static java.lang.String.join;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Optional.of;
@@ -63,6 +65,7 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
+import static ua.com.fielden.platform.cypher.Checksum.sha256;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTPS;
@@ -129,6 +132,12 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final List<String> resourcePaths;
     private final Workflows workflow;
     private final SequencedMap<String, String> checksums;
+
+    /// Identifies the client build, derived from [#checksums].
+    /// Those change whenever vulcanised resources are rebuilt and changed, and so upon every release with client app modifications.
+    ///
+    private final String buildId;
+
     private final boolean independentTimeZone;
     private final String masterActionOptions;
 
@@ -160,7 +169,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.independentTimeZone = independentTimeZone;
         this.masterActionOptions = masterActionOptions.orElse(ALL_OFF).name();
         this.webUiBuilder = new WebUiBuilder(this);
-        this.dispatchingEmitter = new EventSourceDispatchingEmitter(this::appVersion);
+        this.dispatchingEmitter = new EventSourceDispatchingEmitter(this::appVersionAnnouncement);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 logger.info("Closing Event Source Dispatching Emitter with all registered emitters...");
@@ -186,6 +195,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         } catch (final Exception ex) {
             throw new MissingWebResourceException("Could not read checksums from file.", ex);
         }
+        buildId = sha256(join("", checksums.values()).getBytes(UTF_8)).substring(0, 7);
     }
 
     /**
@@ -640,6 +650,21 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public String title() {
         return title;
+    }
+
+    /// Overridden to combine [#appVersion()] with [#buildId].
+    /// A release that rebuilds resources without changing the version is then still announced to clients.
+    ///
+    @Override
+    public String deploymentId() {
+        return "%s|%s".formatted(appVersion(), buildId);
+    }
+
+    /// The payload announced to a client upon establishing an SSE connection.
+    /// Its first line is displayed to a user, and its second identifies the deployment for comparison.
+    ///
+    private String appVersionAnnouncement() {
+        return "%s\n%s".formatted(appVersion(), deploymentId());
     }
 
     @Override

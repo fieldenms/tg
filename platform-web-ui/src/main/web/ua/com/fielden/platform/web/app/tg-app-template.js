@@ -874,7 +874,7 @@ Polymer({
 
         // Listen for the server-pushed application-version announcement, dispatched on `window` by `tg-event-source.js`.
         // When the server reports a version different from the one this client was loaded with, the user is prompted to reload.
-        window.addEventListener('tg-application-version', event => this._handleAppVersionAnnouncement(event.detail?.version));
+        window.addEventListener('tg-application-version', event => this._handleAppVersionAnnouncement(event.detail));
     },
 
     attached: function () {
@@ -911,19 +911,22 @@ Polymer({
         window.removeEventListener("beforeunload", this._checkWhetherCanLeave);
     },
 
-    /// Prompts the user to reload when the server reports an application version different from the one this client was loaded with.
-    /// Guarded so that both versions must be known, must actually differ, and the user is prompted only once per newly reported version.
+    /// Prompts the user to reload when the server reports a deployment different from the one this client was loaded with.
+    /// Deployments are compared rather than versions, because a version can stay unchanged across a release.
+    /// The version is merely what a user is shown.
+    /// Guarded so that both deployments must be known and must differ, and the user is prompted once per deployment.
     ///
-    _handleAppVersionAnnouncement: function (serverAppVersion) {
-        const bootAppVersion = window.TG_APP?.appVersion;
-        if (serverAppVersion && bootAppVersion && serverAppVersion !== bootAppVersion && serverAppVersion !== this._notifiedAppVersion) {
-            this._notifiedAppVersion = serverAppVersion;
+    _handleAppVersionAnnouncement: function (announcement) {
+        const { version, deploymentId } = announcement ?? {};
+        const bootDeploymentId = window.TG_APP?.deploymentId;
+        if (deploymentId && bootDeploymentId && deploymentId !== bootDeploymentId && deploymentId !== this._notifiedDeploymentId) {
+            this._notifiedDeploymentId = deploymentId;
             // Reload is a filled button, coloured as the application top panel, which makes it the primary action.
             const reloadStyle = 'color: white; border-radius: 6px; '
                 + 'background: var(--tg-main-pannel-color, var(--paper-light-blue-700));';
             showStickyToast({
                 text: 'A new application version is available.',
-                detail: `${serverAppVersion} — reload to update.`,
+                detail: `${version} — reload to update.`,
                 actions: '<paper-button class="action" data-tap="later" style="color: var(--paper-grey-400);">Later</paper-button>'
                     + `<paper-button raised class="action" data-tap="reload" style="${reloadStyle}">Reload</paper-button>`,
                 handlers: {
