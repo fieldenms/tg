@@ -140,11 +140,12 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
 
     /// Announces the current application version, if any, to `emitter`.
     /// This lets a client detect that a newer application version has been deployed since it was loaded.
+    /// Announcing off the request thread keeps a failed write from closing the connection during its own registration.
     ///
     private void announceAppVersion(final IEventSourceEmitter emitter) {
         final var resolvedAppVersion = appVersion;
         if (resolvedAppVersion != null) {
-            emitAppVersion(emitter, resolvedAppVersion);
+            runAsync(() -> emitAppVersion(emitter, resolvedAppVersion));
         } else if (isAppVersionResolutionStarted.compareAndSet(false, true)) {
             runAsync(() -> resolveAppVersion(APP_VERSION_MAX_ATTEMPTS));
         }
