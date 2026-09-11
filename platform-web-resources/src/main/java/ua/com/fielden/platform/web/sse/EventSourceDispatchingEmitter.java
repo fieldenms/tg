@@ -12,11 +12,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.delayedExecutor;
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -107,7 +105,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
     public EventSourceDispatchingEmitter createAndRegisterEventSource(final Class<? extends IEventSource> eventSourceClass, final Supplier<IEventSource> eventSourceSupplier) throws IOException {
         if (isActive.get()) {
             eventSources.computeIfAbsent(eventSourceClass, argNotUsed -> {
-                LOGGER.info(format("Registering event source [%s].", eventSourceClass.getName()));
+                LOGGER.info(() -> "Registering event source [%s].".formatted(eventSourceClass.getName()));
                 final IEventSource eventSource = eventSourceSupplier.get();
                 eventSource.connect(this);
                 return eventSource;});
@@ -120,7 +118,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
 
     @Override
     public Result registerEmitter(final User user, final String sseUid, final Supplier<IEventSourceEmitter> emitterFactory) {
-        LOGGER.info(format("Registering event emitter for web client [%s, %s].", user, sseUid));
+        LOGGER.info(() -> "Registering event emitter for web client [%s, %s].".formatted(user, sseUid));
         if (isActive.get()) {
             // `computeIfAbsent` runs its mapping function only for a previously unseen client, i.e., a new or re-established connection.
             // The application version is announced only for such new emitters.
@@ -159,7 +157,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
                 emitter.event(APP_VERSION_EVENT_NAME, version);
             } catch (final Throwable ex) {
                 // A production emitter closes itself upon a write failure, so the client reconnects and is announced to again.
-                LOGGER.warn(format("Could not announce application version [%s] to an SSE client.", version), ex);
+                LOGGER.warn(() -> "Could not announce application version [%s] to an SSE client.".formatted(version), ex);
             }
         }
     }
@@ -179,7 +177,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
                 emitAppVersion(emitter, resolvedAppVersion);
             }
         } catch (final Throwable ex) {
-            LOGGER.warn(format("Could not resolve the application version. Attempts left: [%s].", attemptsLeft - 1), ex);
+            LOGGER.warn(() -> "Could not resolve the application version. Attempts left: [%s].".formatted(attemptsLeft - 1), ex);
             if (attemptsLeft > 1) {
                 runAsync(() -> resolveAppVersion(attemptsLeft - 1), delayedExecutor(APP_VERSION_RETRY_DELAY_MILLIS, MILLISECONDS));
             }
@@ -188,7 +186,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
 
     @Override
     public void deregisterEmitter(final User user, final String sseUid) {
-        LOGGER.info(format("Deregistering event emitter for web client [%s, %s].", user, sseUid));
+        LOGGER.info(() -> "Deregistering event emitter for web client [%s, %s].".formatted(user, sseUid));
         // No exceptions are expected during the emitter removal and closing, but let's be defensive.
         // Because we cannot do much in such a case, we simply log the error for further analysis.
         try {
@@ -197,7 +195,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
                 emitter.close();
             }
         } catch (final Throwable ex) {
-            LOGGER.error(format("Deregistering event emitter for web client [%s, %s] resulted in error.", user, sseUid), ex);
+            LOGGER.error(() -> "Deregistering event emitter for web client [%s, %s] resulted in error.".formatted(user, sseUid), ex);
         } finally {
             logRegisterSize();
         }
@@ -206,10 +204,11 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
     /// A helper method to report the number of SSE connections – a distinct by user and a total number.
     ///
     private void logRegisterSize() {
-        final KeySetView<T2<Long, String>, IEventSourceEmitter> keySet = register.keySet();
-        final long distinctUserConnections = keySet.stream().map(t2 -> t2._1).distinct().count();
-        final long totalConnections =  keySet.size();
-        LOGGER.info(format("SSE connections: [%s] distinct, [%s] total.", distinctUserConnections, totalConnections));
+        LOGGER.info(() -> {
+            final var keySet = register.keySet();
+            final var distinctUserConnections = keySet.stream().map(t2 -> t2._1).distinct().count();
+            return "SSE connections: [%s] distinct, [%s] total.".formatted(distinctUserConnections, keySet.size());
+        });
     }
     
     @Override
