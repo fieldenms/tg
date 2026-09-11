@@ -18,6 +18,9 @@ import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.CompletableFuture.delayedExecutor;
+import static java.util.concurrent.CompletableFuture.runAsync;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.apache.tika.utils.StringUtils.isBlank;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -47,6 +50,10 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
     ///
     public static final String APP_VERSION_EVENT_NAME = "application-version";
 
+    private static final int APP_VERSION_MAX_ATTEMPTS = 5;
+
+    private static final long APP_VERSION_RETRY_DELAY_MILLIS = 60_000L;
+
     /// A register of emitters. The key is a pair of user id and a client SSE id.
     /// [ConcurrentHashMap] is used as the register to support the concurrent nature of such register.
     /// It makes it thread-safe to register new emitters, close emitters and dispatch events to emitters concurrently.
@@ -62,6 +69,15 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
     /// A client uses this to detect that a newer application version has been deployed since it was loaded.
     ///
     private final Supplier<String> appVersionSupplier;
+
+    /// The application version, resolved at most once, or `null` while unresolved.
+    /// It identifies the deployed build, and so is constant for the lifetime of this process.
+    ///
+    private volatile String appVersion;
+
+    /// Ensures that resolution of the application version is started only once.
+    ///
+    private final AtomicBoolean isAppVersionResolutionStarted = new AtomicBoolean(false);
 
     /// Creates a dispatching emitter.
     ///
@@ -123,37 +139,49 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
     }
 
     /// Announces the current application version, if any, to `emitter`.
-    /// This lets a client detect that a newer application version has been deployed since it was loaded, and prompt the user to reload.
+    /// This lets a client detect that a newer application version has been deployed since it was loaded.
     ///
     private void announceAppVersion(final IEventSourceEmitter emitter) {
-        final var appVersion = currentAppVersion();
-        if (!isBlank(appVersion)) {
+        final var resolvedAppVersion = appVersion;
+        if (resolvedAppVersion != null) {
+            emitAppVersion(emitter, resolvedAppVersion);
+        } else if (isAppVersionResolutionStarted.compareAndSet(false, true)) {
+            runAsync(() -> resolveAppVersion(APP_VERSION_MAX_ATTEMPTS));
+        }
+    }
+
+    /// Emits `version` to `emitter`, unless `version` is empty.
+    ///
+    private void emitAppVersion(final IEventSourceEmitter emitter, final String version) {
+        if (!isBlank(version)) {
             try {
-                emitter.event(APP_VERSION_EVENT_NAME, appVersion);
+                emitter.event(APP_VERSION_EVENT_NAME, version);
             } catch (final Throwable ex) {
-                // A failure here is non-critical: the client will receive the announcement upon its next (re)connection.
-                LOGGER.warn(format("Could not announce application version [%s] to a newly connected SSE client.", appVersion), ex);
+                // A production emitter closes itself upon a write failure, so the client reconnects and is announced to again.
+                LOGGER.warn(format("Could not announce application version [%s] to an SSE client.", version), ex);
             }
         }
     }
 
-    /// Obtains the current application version, or `null` if it could not be obtained.
+    /// Resolves the application version and announces it to all registered emitters, retrying upon failure.
     ///
-    /// `IWebUiConfig.appVersion()`, which backs [#appVersionSupplier], is an application-level extension point.
-    /// An application may derive its version from a manifest, a properties file or a database, and so the supplier may throw.
-    /// Such a failure must not propagate: `SseServlet` would then deregister the emitter and respond with an error,
-    /// leaving the client to retry and fail upon every reconnection, and so lose the whole eventing subsystem for the sake of a cosmetic announcement.
+    /// Resolution runs off the request thread, so that a throwing [#appVersionSupplier] cannot affect SSE.
+    /// Retries are scheduled, for otherwise the remaining attempts would never happen while all clients stay connected.
+    /// The guard is as wide as [Throwable], because a misconfigured deployment fails with an [Error], not an exception.
     ///
-    /// The guard is deliberately as wide as [Throwable], as it is elsewhere in this class.
-    /// A misconfigured deployment fails with an [ExceptionInInitializerError] or a [NoClassDefFoundError] rather than with an exception,
-    /// and such a failure is both permanent and identical for every client – exactly what must not reach the eventing subsystem.
-    ///
-    private String currentAppVersion() {
+    private void resolveAppVersion(final int attemptsLeft) {
         try {
-            return appVersionSupplier.get();
+            final var suppliedAppVersion = appVersionSupplier.get();
+            final var resolvedAppVersion = suppliedAppVersion == null ? "" : suppliedAppVersion;
+            appVersion = resolvedAppVersion;
+            for (final var emitter : register.values()) {
+                emitAppVersion(emitter, resolvedAppVersion);
+            }
         } catch (final Throwable ex) {
-            LOGGER.warn("Could not obtain the current application version to announce to a newly connected SSE client.", ex);
-            return null;
+            LOGGER.warn(format("Could not resolve the application version. Attempts left: [%s].", attemptsLeft - 1), ex);
+            if (attemptsLeft > 1) {
+                runAsync(() -> resolveAppVersion(attemptsLeft - 1), delayedExecutor(APP_VERSION_RETRY_DELAY_MILLIS, MILLISECONDS));
+            }
         }
     }
 
