@@ -21,8 +21,10 @@ const stickyToastStyle = html`
             tg-paper-toast.sticky-toast {
                 max-width: 420px;
             }
-            /* The message itself carries the emphasis, so that it stands out from the detail below it. */
-            /* Roboto is loaded with weights 300, 400, 500 and 700 only, hence 500 rather than an intermediate weight. */
+            /**
+             * The message itself carries the emphasis, so that it stands out from the detail below it.
+             * Roboto is loaded with weights 300, 400, 500 and 700 only, hence 500 rather than an intermediate weight.
+             */
             .sticky-toast-text {
                 font-weight: 500;
                 color: white;
@@ -38,16 +40,20 @@ const stickyToastStyle = html`
                 @apply --layout-center;
                 @apply --layout-end-justified;
             }
-            /* The layout mixin above assigns a display value, which would otherwise defeat the hidden attribute. */
+            /**
+             * The layout mixin above assigns a display value, which would otherwise defeat the hidden attribute.
+             */
             .sticky-toast-actions[hidden] {
                 display: none;
             }
-            /* Default appearance of an actionable element in a message, marked with class "action". */
-            /* A message may override this with inline styles. */
-            /* These rules normalise whatever element a message supplies. */
-            /* The contract is 'data-tap', rather than any one element type. */
-            /* 'text-transform' resets the uppercased labels of a paper-button, as was the norm before Material Design 3. */
-            /* 'cursor' covers plain elements, which a paper-button would set itself. */
+            /**
+             * Default appearance of an actionable element in a message, marked with class "action".
+             * A message may override this with inline styles.
+             * These rules normalise whatever element a message supplies.
+             * The contract is 'data-tap', rather than any one element type.
+             * 'text-transform' resets the uppercased labels of a paper-button, as was the norm before Material Design 3.
+             * 'cursor' covers plain elements, which a paper-button would set itself.
+             */
             .sticky-toast .action {
                 margin-left: 8px;
                 color: var(--paper-light-blue-500);
