@@ -170,6 +170,20 @@ class TgStickyToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
         this.$.messageDetail.hidden = !msg.detail;
         this.$.messageActions.hidden = !msg.actions;
         this.show();
+        this._announce();
+    }
+
+    /// Announces the message to assistive technologies, through the live region of `iron-a11y-announcer`.
+    ///
+    /// `paper-toast` announces its own `text` upon opening, which stays empty here, because the message is slotted.
+    /// Assigning `text` is not an option, as `paper-toast` renders it in its label, alongside the slotted message.
+    /// Announcing from here also covers a message that replaces another, when the toast is already open and does not reopen.
+    ///
+    _announce () {
+        const announcement = `${this.$.messageText.textContent} ${this.$.messageDetail.textContent}`.trim();
+        if (announcement) {
+            this.fire('iron-announce', { text: announcement });
+        }
     }
 
     /// Clears the message, so that neither its DOM nor the closures of its handlers stay reachable once it has been dismissed.
