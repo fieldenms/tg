@@ -77,6 +77,11 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
     ///
     private final AtomicBoolean isAppVersionResolutionStarted = new AtomicBoolean(false);
 
+    /// A collection of event sources, specified for various Entity Centres.
+    /// The only reason for this collection is to prevent GC from collecting instantiated event sources, which are required for SSE eventing.
+    ///
+    private final Map<Class<? extends IEventSource>, IEventSource> eventSources = new HashMap<>();
+
     /// Creates a dispatching emitter.
     ///
     /// @param appVersionSupplier supplier of String-based version to be announced to each client upon establishing an SSE connection
@@ -93,11 +98,6 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
         }
         return t2(user.getId(), sseUid);
     }
-
-    /// A collection of event sources, specified for various Entity Centres.
-    /// The only reason for this collection is to prevent GC from collecting instantiated event sources, which are required for SSE eventing.
-    ///
-    private final Map<Class<? extends IEventSource>, IEventSource> eventSources = new HashMap<>();
 
     /// Creates and registers an instance of `eventSourceClass`, but only if such SSE class was not instantiated before.
     /// SSE classes may get specified as part of Entity Centre configurations.
@@ -179,9 +179,16 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
         } catch (final Throwable ex) {
             LOGGER.warn(() -> "Could not resolve the application version. Attempts left: [%s].".formatted(attemptsLeft - 1), ex);
             if (attemptsLeft > 1) {
-                runAsync(() -> resolveAppVersion(attemptsLeft - 1), delayedExecutor(APP_VERSION_RETRY_DELAY_MILLIS, MILLISECONDS));
+                runAsync(() -> resolveAppVersion(attemptsLeft - 1), delayedExecutor(appVersionRetryDelayMillis(), MILLISECONDS));
             }
         }
+    }
+
+    /// The delay before the next attempt to resolve the application version.
+    /// It is overridable, so that a test need not wait a minute between attempts.
+    ///
+    long appVersionRetryDelayMillis() {
+        return APP_VERSION_RETRY_DELAY_MILLIS;
     }
 
     @Override
