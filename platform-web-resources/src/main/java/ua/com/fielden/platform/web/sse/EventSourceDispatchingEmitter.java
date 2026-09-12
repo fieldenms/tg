@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.sse;
 
-import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
@@ -122,12 +121,12 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
         if (isActive.get()) {
             // `computeIfAbsent` runs its mapping function only for a previously unseen client, i.e., a new or re-established connection.
             // The application version is announced only for such new emitters.
-            final var isNewEmitter = new MutableBoolean(false);
+            final var isNewEmitter = new AtomicBoolean(false);
             final var emitter = register.computeIfAbsent(key(user, sseUid), argNotUsed -> {
-                isNewEmitter.setTrue();
+                isNewEmitter.set(true);
                 return emitterFactory.get();
             });
-            if (isNewEmitter.isTrue()) {
+            if (isNewEmitter.get()) {
                 announceAppVersion(emitter);
             }
             logRegisterSize();
