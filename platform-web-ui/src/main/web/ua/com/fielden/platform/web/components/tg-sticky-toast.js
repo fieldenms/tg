@@ -144,6 +144,9 @@ class TgStickyToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
         super.ready();
         // The refit function of paper-toast behaves erratically, hence it is disabled, as in other TG toasts.
         this.$.stickyToast.refit = function () {};
+        // Prevents a short message from being pushed to the right of the toast.
+        // The label is empty, as the message is slotted, so the `flex: 1` from `TgToastBehavior` would take the spare width.
+        this._toast().$$('#label').style.flex = 'none';
     }
 
     /// Displays `message`, keeping whatever was displayed before to be revealed once `message` gets dismissed.
