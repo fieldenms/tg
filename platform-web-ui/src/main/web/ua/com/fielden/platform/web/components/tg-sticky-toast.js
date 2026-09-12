@@ -179,6 +179,8 @@ class TgStickyToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
         this.$.messageText.textContent = '';
         this.$.messageDetail.textContent = '';
         this.$.messageActions.textContent = '';
+        this.$.messageDetail.hidden = true;
+        this.$.messageActions.hidden = true;
     }
 
     /// Makes this toast visible, relocating it into the shared toast container if needed.
