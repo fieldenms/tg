@@ -55,6 +55,21 @@ const stickyToastStyle = html`
                 text-transform: none;
                 cursor: pointer;
             }
+            /**
+             * A secondary action, such as 'Close' or 'Later', which dismisses the message.
+             */
+            .sticky-toast .action.secondary {
+                color: var(--paper-grey-400);
+            }
+            /**
+             * The primary action, such as 'Reload', which is what the message prompts for.
+             * It is filled with the colour of the application top panel, so that it stands out against secondary ones.
+             */
+            .sticky-toast .action.primary {
+                color: white;
+                border-radius: 6px;
+                background: var(--tg-main-pannel-color, var(--paper-light-blue-700));
+            }
             .sticky-toast a {
                 color: var(--paper-light-blue-500);
             }
@@ -136,6 +151,10 @@ class TgStickyToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
     ///
     /// An element in any of the above becomes actionable by carrying a `data-tap` attribute.
     /// Its value identifies the handler function in `message.handlers`.
+    ///
+    /// An action carries class `action`, and one of `primary` or `secondary`.
+    /// `primary` is what the message prompts for, such as `Reload`, and `secondary` dismisses it, such as `Close`.
+    /// A `primary` paper-button should also carry `raised`, which paper-button implements rather than styling.
     ///
     /// `message.id` identifies the message, defaulting to its text.
     /// A message that is already displayed, or that is still waiting beneath, gets ignored.
@@ -258,7 +277,7 @@ export const showStickyMessage = function (message) {
 
 /// Dismisses the message being displayed in the application sticky toast, revealing the one beneath it, if any.
 /// The toast itself is hidden only once the last message has been dismissed.
-/// This is what an action that concludes a message, such as `Close` or `Later`, should invoke.
+/// This is what an action that dismisses a message, such as `Close` or `Later`, should invoke.
 ///
 export const dismissStickyMessage = function () {
     stickyToastElement.dismiss();

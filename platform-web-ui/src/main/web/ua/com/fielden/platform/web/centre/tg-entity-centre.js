@@ -1060,7 +1060,7 @@ Polymer({
                     text: 'Custom layout was reset.',
                     detail: 'Due to the software update your custom layout needed to be reset to ensure its integrity. '
                         + 'Please adjust the new layout to fit your workflow.',
-                    actions: '<paper-button class="action" data-tap="close" style="color: var(--paper-grey-400);">Close</paper-button>',
+                    actions: '<paper-button class="action secondary" data-tap="close">Close</paper-button>',
                     handlers: {
                         close: () => dismissStickyMessage()
                     }

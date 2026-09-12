@@ -7,9 +7,8 @@ import '/resources/polymer/@polymer/app-route/app-location.js';
 import '/resources/polymer/@polymer/app-route/app-route.js';
 
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
-// Both are required for the application update message (see `_handleAppVersionAnnouncement`).
+// Required for the buttons of the application update message (see `_handleAppVersionAnnouncement`).
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
-import '/resources/polymer/@polymer/paper-styles/color.js';
 
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 
@@ -921,14 +920,11 @@ Polymer({
         const bootDeploymentId = window.TG_APP?.deploymentId;
         if (deploymentId && bootDeploymentId && deploymentId !== bootDeploymentId && deploymentId !== this._notifiedDeploymentId) {
             this._notifiedDeploymentId = deploymentId;
-            // Reload is a filled button, coloured as the application top panel, which makes it the primary action.
-            const reloadStyle = 'color: white; border-radius: 6px; '
-                + 'background: var(--tg-main-pannel-color, var(--paper-light-blue-700));';
             showStickyMessage({
                 text: 'A new application version is available.',
                 detail: `${version} — reload to update.`,
-                actions: '<paper-button class="action" data-tap="later" style="color: var(--paper-grey-400);">Later</paper-button>'
-                    + `<paper-button raised class="action" data-tap="reload" style="${reloadStyle}">Reload</paper-button>`,
+                actions: '<paper-button class="action secondary" data-tap="later">Later</paper-button>'
+                    + '<paper-button raised class="action primary" data-tap="reload">Reload</paper-button>',
                 handlers: {
                     reload: () => window.location.reload(),
                     later: () => dismissStickyMessage()
