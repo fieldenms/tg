@@ -37,6 +37,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 /// This ensures that any emitter registered with this class will have events from all the event sources dispatched to them.
 ///
 /// By design, there should be only a single instance of this class per application – one dispatching emitter per application.
+/// That instance is created by `AbstractWebUiConfig`, and an application reaches it as [IEventSourceEmitterRegister].
 ///
 public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEventSourceEmitterRegister {
 
