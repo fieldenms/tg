@@ -81,7 +81,6 @@ const stickyToastStyle = html`
             }
         </style>
     </custom-style>`;
-stickyToastStyle.setAttribute('style', 'display: none;');
 document.head.appendChild(stickyToastStyle.content);
 
 const template = html`

@@ -14,7 +14,7 @@ const paperToastStyle = html`
                 margin-left: 16px;
                 color: #03A9F4;
                 font-weight: 800;
-                cursor: pointer;
+                cursor: pointer;    
             }
             tg-paper-toast paper-spinner {
                 width: 1.5em;
@@ -46,7 +46,6 @@ const paperToastStyle = html`
             }
         </style>
     </custom-style>`;
-paperToastStyle.setAttribute('style', 'display: none;');
 document.head.appendChild(paperToastStyle.content);
 
 export const TgToastBehavior = {

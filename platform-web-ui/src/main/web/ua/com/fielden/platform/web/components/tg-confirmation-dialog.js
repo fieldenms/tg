@@ -67,7 +67,6 @@ const confirmationDialogStyle = html`
             }
         </style>
     </custom-style>`;
-confirmationDialogStyle.setAttribute('style', 'display: none;');
 document.head.appendChild(confirmationDialogStyle.content);
 
 const dialogModel = document.createElement('dom-bind');
