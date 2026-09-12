@@ -916,7 +916,7 @@ Polymer({
     /// Guarded so that both deployments must be known and must differ, and the user is prompted once per deployment.
     ///
     _handleAppVersionAnnouncement: function (announcement) {
-        const { version, deploymentId } = announcement ?? {};
+        const { version, deploymentId } = announcement || {};
         const bootDeploymentId = window.TG_APP?.deploymentId;
         if (deploymentId && bootDeploymentId && deploymentId !== bootDeploymentId && deploymentId !== this._notifiedDeploymentId) {
             this._notifiedDeploymentId = deploymentId;
