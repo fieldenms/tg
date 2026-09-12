@@ -238,13 +238,14 @@ document.body.appendChild(stickyToastElement);
 /// This works from anywhere in the application, with no need for the caller to have access to the toast.
 /// See `showMessage` of `tg-sticky-toast` for the supported shape of `message`.
 ///
-export const showStickyToast = function (message) {
+export const showStickyMessage = function (message) {
     stickyToastElement.showMessage(message);
 };
 
 /// Dismisses the message being displayed in the application sticky toast, revealing the one beneath it, if any.
-/// This is what an action that closes a message should invoke.
+/// The toast itself is hidden only once the last message has been dismissed.
+/// This is what an action that concludes a message, such as `Close` or `Later`, should invoke.
 ///
-export const hideStickyToast = function () {
+export const dismissStickyMessage = function () {
     stickyToastElement.dismiss();
 };

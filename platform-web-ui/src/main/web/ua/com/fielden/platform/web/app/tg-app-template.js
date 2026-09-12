@@ -19,7 +19,7 @@ import '/resources/master/tg-entity-master.js';
 import '/resources/actions/tg-ui-action.js';
 import '/resources/components/tg-message-panel.js';
 import '/resources/components/tg-global-error-handler.js';
-import { showStickyToast, hideStickyToast } from '/resources/components/tg-sticky-toast.js';
+import { showStickyMessage, dismissStickyMessage } from '/resources/components/tg-sticky-toast.js';
 import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -924,14 +924,14 @@ Polymer({
             // Reload is a filled button, coloured as the application top panel, which makes it the primary action.
             const reloadStyle = 'color: white; border-radius: 6px; '
                 + 'background: var(--tg-main-pannel-color, var(--paper-light-blue-700));';
-            showStickyToast({
+            showStickyMessage({
                 text: 'A new application version is available.',
                 detail: `${version} — reload to update.`,
                 actions: '<paper-button class="action" data-tap="later" style="color: var(--paper-grey-400);">Later</paper-button>'
                     + `<paper-button raised class="action" data-tap="reload" style="${reloadStyle}">Reload</paper-button>`,
                 handlers: {
                     reload: () => window.location.reload(),
-                    later: () => hideStickyToast()
+                    later: () => dismissStickyMessage()
                 }
             });
         }
