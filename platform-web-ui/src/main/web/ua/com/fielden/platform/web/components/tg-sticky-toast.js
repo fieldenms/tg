@@ -4,6 +4,7 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/components/tg-paper-toast.js';
 
 import { TgToastBehavior } from '/resources/components/tg-toast-behavior.js';
+import { setHtmlOrText } from '/resources/reflection/tg-polymer-utils.js';
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
@@ -131,6 +132,8 @@ class TgStickyToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
     /// `message.detail` is an optional less emphasised second row, also supporting markup.
     /// `message.actions` is an optional row of actionable elements, displayed at the end of the message.
     ///
+    /// Markup is assigned with `setHtmlOrText`, so a value carrying restricted tags is displayed as plain text instead.
+    ///
     /// An element in any of the above becomes actionable by carrying a `data-tap` attribute.
     /// Its value identifies the handler function in `message.handlers`.
     ///
@@ -161,9 +164,9 @@ class TgStickyToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
     ///
     _display (msg) {
         this._messageHandlers = msg.handlers;
-        this.$.messageText.innerHTML = msg.text;
-        this.$.messageDetail.innerHTML = msg.detail;
-        this.$.messageActions.innerHTML = msg.actions;
+        setHtmlOrText(this.$.messageText, msg.text);
+        setHtmlOrText(this.$.messageDetail, msg.detail);
+        setHtmlOrText(this.$.messageActions, msg.actions);
         this.$.messageDetail.hidden = !msg.detail;
         this.$.messageActions.hidden = !msg.actions;
         this.show();

@@ -11,7 +11,7 @@ import '/resources/polymer/@polymer/polymer/lib/elements/dom-repeat.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
-import { containsRestrictedTags } from '/resources/reflection/tg-polymer-utils.js';
+import { setHtmlOrText } from '/resources/reflection/tg-polymer-utils.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { ExpectedError } from '/resources/components/tg-global-error-handler.js';
 
@@ -240,11 +240,7 @@ export const TgConfirmationDialog = Polymer({
 
             dialogModel.title = title;
 
-            if (containsRestrictedTags(message) === true) {
-                dialogModel.$.msgPar.textContent = message;
-            } else {
-                dialogModel.$.msgPar.innerHTML = message;
-            }
+            setHtmlOrText(dialogModel.$.msgPar, message);
             
             dialogModel.buttons = buttons;
 
