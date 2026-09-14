@@ -13,42 +13,56 @@ import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
+import ua.com.fielden.platform.ioc.session.exceptions.TransactionCommitException;
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToThrowable;
 import ua.com.fielden.platform.security.user.User;
 
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED;
 
-/**
- * Intercepts methods annotated with {@link SessionRequired} to inject Hibernate session before the actual method execution. Nested invocation of methods annotated with
- * {@link SessionRequired} is supported. For example, method <code>findAll()</code> could invoke method <code>findByCriteria()</code> -- both with {@link SessionRequired}.
- * <p>
- * A very important functionality provided by this interceptor is transaction management:
- * <ul>
- * <li>If the current session has no active transaction then it is activated and the current method invocation is marked as the one that should commit it.</li>
- * <li>If the current session has an active transaction then the current method invocation is marked as the one that should NOT commit it.</li>
- * <li>In case of an exception, which could occur during method invocation, the transaction is rollbacked if it is active and the exception is propagated up.</li> *
- * </ul>
- *
- * The last item ensures that any exception at any level of method invocation would ensure transaction rollback. If transaction is not active at the time of rollback then that
- * means it has already been rollbacked.
- *
- * Please note that transaction can be started outside of this interceptor, which means it will not be committed within it, and the transaction originator is responsible for
- * commit. At the same time, if an exception occurs then transaction will be rolled back.
- *
- * @author TG Team
- *
- */
+/// Intercepts methods annotated with [SessionRequired] to inject Hibernate session before the actual method execution.
+/// Nested invocation of methods annotated with [SessionRequired] is supported.
+/// For example, method `findAll()` could invoke method `findByCriteria()` — both with [SessionRequired].
+///
+/// A very important functionality provided by this interceptor is transaction management:
+///   - If the current session has no active transaction then it is activated and the current method invocation is marked as the one that should commit it.
+///   - If the current session has an active transaction then the current method invocation is marked as the one that should NOT commit it.
+///   - In case of an exception, which could occur during method invocation, the transaction is rolled back if it is active and the exception is propagated up.
+///
+/// The last item ensures that any exception at any level of method invocation would ensure transaction rollback.
+/// If transaction is not active at the time of rollback then that means it has already been rolled back.
+/// Please note that transaction can be started outside of this interceptor, which means it will not be committed within it, and the transaction originator is responsible for commit.
+/// At the same time, if an exception occurs then transaction will be rolled back.
+///
+/// A failure to *commit* is reported rather than swallowed.
+/// Committing is the point at which a unit of work becomes durable, so a failure there means nothing was persisted, however successfully the method itself ran.
+/// [TransactionCommitException] is thrown for this, and only after the session has been closed, so that cleanup is never skipped.
+/// It is deliberately distinct from a business failure: the work was valid and its statements were accepted, but the
+/// transaction could not be made durable — typically because of an infrastructure failure, such as a database
+/// failover or a terminated connection.
+///
+/// Two further behaviours are not apparent from a call site:
+///   - The session is put into [FlushMode#COMMIT], so Hibernate never auto-flushes.
+///     DML reaches the database when something flushes it explicitly, and otherwise during the commit.
+///   - If an intercepted method returns a [Stream], the transaction outlives that method call and is committed when the stream is closed.
+///     Such a stream *must* be closed, ideally via try-with-resources, or its transaction and connection are never released.
+///
+/// Finally, a GUID is generated per transaction and assigned to the invocation owner, which is how a single unit of work is identified downstream — by auditing, for example.
+///
 public class SessionInterceptor implements MethodInterceptor {
-    private final Provider<? extends SessionFactory> sessionFactory;
+    public static final String
+            MSG_CLOSING_SESSION = "[%s] Closing session.",
+            MSG_CLOSED_SESSION = "[%s] Closed session.",
+            WARN_TRANSACTION_ROLLBACK = "[%s] Transaction completed (rolled back) with error.",
+            ERR_COULD_NOT_CLOSE_SESSION = "[%s] Could not close session.",
+            ERR_COULD_NOT_COMMIT = "[%s] Could not commit transaction.";
 
-    public static final String WARN_TRANSACTION_ROLLBACK = "[%s] Transaction completed (rolled back) with error.";
     private static final Logger LOGGER = getLogger(SessionInterceptor.class);
-    
+
+    private final Provider<? extends SessionFactory> sessionFactory;
     private final ThreadLocal<String> transactionGuid = new ThreadLocal<>();
 
     public SessionInterceptor(final Provider<? extends SessionFactory> sessionFactory) {
@@ -71,7 +85,7 @@ public class SessionInterceptor implements MethodInterceptor {
             // if should not commit, which means the session was initiated earlier in the call stack,
             // and support for nested calls is not allowed, then an exception should be thrown.
             if (!shouldCommit && !invocation.getStaticPart().getAnnotation(SessionRequired.class).allowNestedScope()) {
-                throw new SessionScopingException(format(ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED, invocation.getMethod().getDeclaringClass().getName(), invocation.getMethod().getName()));
+                throw new SessionScopingException(ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED.formatted(invocation.getMethod().getDeclaringClass().getName(), invocation.getMethod().getName()));
             }
             
             // now let's proceed with the actual method invocation, which may throw an exception... or even a throwable...
@@ -82,23 +96,23 @@ public class SessionInterceptor implements MethodInterceptor {
             if (shouldCommit && tr.isActive()) {
                 // if the result is a stream, then the current transaction becomes associated with that stream
                 // and needs to be committed once the stream has been processed
-                if (result instanceof Stream stream) {
+                if (result instanceof Stream<?> stream) {
                     return stream.onClose(() -> {
                         try {
-                            LOGGER.debug(format("[%s] Committing DB transaction on stream close.", user));
+                            LOGGER.debug(() -> "[%s] Committing DB transaction on stream close.".formatted(user));
                             commitTransactionAndCloseSession(session, tr, user);
-                            LOGGER.debug(format("[%s] Committed DB transaction on stream close.", user));
+                            LOGGER.debug(() -> "[%s] Committed DB transaction on stream close.".formatted(user));
                         } catch (final Exception ex) {
-                            LOGGER.fatal(format("[%s] Could not commit DB transaction on stream close.", user), ex);
+                            LOGGER.fatal(() -> "[%s] Could not commit DB transaction on stream close.".formatted(user), ex);
                             throw ex;
                         }
                     });
                 }
                 // otherwise, commit the current transaction
                 else {
-                    LOGGER.debug(format("[%s] Committing DB transaction", user));
+                    LOGGER.debug(() -> "[%s] Committing DB transaction".formatted(user));
                     commitTransactionAndCloseSession(session, tr, user);
-                    LOGGER.debug(format("[%s] Committed DB transaction", user));
+                    LOGGER.debug(() -> "[%s] Committed DB transaction".formatted(user));
                     return result;
                 }
             }
@@ -118,10 +132,10 @@ public class SessionInterceptor implements MethodInterceptor {
         invocationOwner.setSession(session);
         final boolean shouldCommit = !tr.isActive();
         if (!tr.isActive()) {
-            LOGGER.debug(format("[%s] Starting new DB transaction", user));
+            LOGGER.debug(() -> "[%s] Starting new DB transaction".formatted(user));
             tr.begin();
             session.setHibernateFlushMode(FlushMode.COMMIT);
-            LOGGER.debug(format("[%s] Started new DB transaction", user));
+            LOGGER.debug(() -> "[%s] Started new DB transaction".formatted(user));
             
             // generate a GUID for the current transaction
             if (!StringUtils.isEmpty(transactionGuid.get())) {
@@ -143,24 +157,25 @@ public class SessionInterceptor implements MethodInterceptor {
         return shouldCommit;
     }
 
-    private Exception completeTransactionWithError(final Session session, final Transaction tr, final Throwable ex, final User user) {
-        if (ex instanceof Result) {
-            LOGGER.debug(format(WARN_TRANSACTION_ROLLBACK, user), ex);  // most Result exceptions are validation errors, which are more relevant for debug messages
-        } else if (ex instanceof SessionScopingException) {
-            LOGGER.error(format(WARN_TRANSACTION_ROLLBACK, user), ex); // transactional scoping errors should be reported as errors
-        } else {
-            LOGGER.warn(format(WARN_TRANSACTION_ROLLBACK, user), ex); // otherwise, warning
+    private Exception completeTransactionWithError(final Session session, final Transaction tr, final Throwable th, final User user) {
+        switch (th) {
+            // Most Result exceptions are validation errors, which are more relevant for debug messages.
+            case Result _ -> LOGGER.debug(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), th);
+            case SessionScopingException _ -> LOGGER.error(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), th);
+            case TransactionCommitException _ -> {} // Already logged before.
+            default -> LOGGER.warn(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), th);
         }
         try {
-            if (tr.isActive()) { // if transaction is active and there was an exception then it should be rollbacked
-                LOGGER.debug(format("[%s] Rolling back DB transaction", user));
+            // If transaction is active and there was an exception, it should be rolled back.
+            if (tr.isActive()) {
+                LOGGER.debug(() -> "[%s] Rolling back DB transaction".formatted(user));
                 rollbackTransactionAndCloseSession(session, tr, user);
-                LOGGER.debug(format("[%s] Rolled back DB transaction", user));
+                LOGGER.debug(() -> "[%s] Rolled back DB transaction".formatted(user));
             }
         } finally {
             transactionGuid.remove();
         }
-        return ex instanceof Exception ? (Exception) ex : new TransactionRollbackDueToThrowable(ex);
+        return th instanceof Exception ex ? ex : new TransactionRollbackDueToThrowable(th);
     }
 
     private void commitTransactionAndCloseSession(final Session session, final Transaction tr, final User user) {
@@ -169,39 +184,38 @@ public class SessionInterceptor implements MethodInterceptor {
                 tr.commit();
             }
         } catch (final Exception ex) {
-            LOGGER.error(format("[%s] Could not commit transaction.", user), ex);
+            LOGGER.error(() -> ERR_COULD_NOT_COMMIT.formatted(user), ex);
+            // A failed commit means the unit of work was not persisted, and must not be reported as success.
+            // The `finally` block below completes before this exception propagates, so the session is always closed and
+            // never left as a dead current session.
+            throw new TransactionCommitException(ERR_COULD_NOT_COMMIT.formatted(user), ex);
         } finally {
             transactionGuid.remove();
-        }
-        
-        try {
-            LOGGER.debug(format("[%s] Closing session.", user));
-            if (session.isOpen()) {
-                session.close();
-            }
-            LOGGER.debug(format("[%s] Closed session.", user));
-        } catch (final Exception ex) {
-            LOGGER.error(format("[%s] Could not close session.", user), ex);
+            closeSession(session, user);
         }
     }
-    
+
     private static void rollbackTransactionAndCloseSession(final Session session, final Transaction tr, final User user) {
         try {
             if (tr.isActive()) {
                 tr.rollback();
             }
         } catch (final Exception ex) {
-            LOGGER.error(format("[%s] Could not rollback transaction. Transaction active: [%s].", user, tr.isActive()), ex);
+            LOGGER.error(() -> "[%s] Could not rollback transaction. Transaction active: [%s].".formatted(user, tr.isActive()), ex);
         }
-        
+
+        closeSession(session, user);
+    }
+
+    private static void closeSession(final Session session, final User user) {
         try {
-            LOGGER.debug(format("[%s] Closing session.", user));
+            LOGGER.debug(() -> MSG_CLOSING_SESSION.formatted(user));
             if (session.isOpen()) {
                 session.close();
             }
-            LOGGER.debug(format("[%s] Closed session.", user));
+            LOGGER.debug(() -> MSG_CLOSED_SESSION.formatted(user));
         } catch (final Exception ex) {
-            LOGGER.error(format("[%s] Could not close session.", user), ex);
+            LOGGER.error(() -> ERR_COULD_NOT_CLOSE_SESSION.formatted(user), ex);
         }
     }
 
