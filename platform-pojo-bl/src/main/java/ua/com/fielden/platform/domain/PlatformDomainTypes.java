@@ -120,6 +120,9 @@ public class PlatformDomainTypes {
         types.add(UserMaster_OpenUserAndRoleAssociation_MenuItem.class);
         types.add(UserDefinableHelp.class);
         types.add(PersistentEntityInfo.class);
+        types.add(OpenPersistentEntityInfoAction.class);
+        types.add(PersistentEntityInfoMaster_OpenMain_MenuItem.class);
+        types.add(AuditCompoundMenuItem.class);
 
         typesDependentOnWebUI.add(EntityExportAction.class);
         typesDependentOnWebUI.add(CentreConfigUpdater.class);
@@ -127,6 +130,7 @@ public class PlatformDomainTypes {
         typesDependentOnWebUI.add(CentreConfigEditAction.class);
         typesDependentOnWebUI.add(CentreConfigSaveAction.class);
         typesDependentOnWebUI.add(CentreConfigConfigureAction.class);
+        typesDependentOnWebUI.add(AuditCompoundMenuItem.class);
 
         typesNotDependentOnWebUI.addAll(types);
         typesNotDependentOnWebUI.removeAll(typesDependentOnWebUI);

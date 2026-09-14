@@ -17,7 +17,7 @@ import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
+import ua.com.fielden.platform.eql.stage2.IPropPathResolver;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
@@ -38,7 +38,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 /// The transformation of EQL into SQL happens in 4 stages:
 ///
 /// 1. **Stage 0: parsing**.
-///    A [sequence of EQL tokens][ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource] is transformed into a [stage 1 AST][ResultQuery1].
+///    A sequence of EQL tokens is transformed into a [stage 1 AST][ResultQuery1].
 ///    See [ua.com.fielden.platform.eql.antlr.EqlCompiler].
 /// 2. **Stage 1: property resolution**.
 ///    Properties are resolved to their respective sources.
@@ -65,6 +65,7 @@ public final class EqlQueryTransformer {
     private final QuerySourceInfoProvider querySourceInfoProvider;
     private final IDomainMetadata domainMetadata;
     private final IDbVersionProvider dbVersionProvider;
+    private final IPropPathResolver propPathResolver;
 
     // TODO: Make private once dependent EQL tests are refactored and use IoC.
     @Inject
@@ -74,7 +75,8 @@ public final class EqlQueryTransformer {
             final EqlTables eqlTables,
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IDomainMetadata domainMetadata,
-            final IDbVersionProvider dbVersionProvider)
+            final IDbVersionProvider dbVersionProvider,
+            final IPropPathResolver propPathResolver)
     {
         this.filter = filter;
         this.dates = dates;
@@ -82,6 +84,7 @@ public final class EqlQueryTransformer {
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.domainMetadata = domainMetadata;
         this.dbVersionProvider = dbVersionProvider;
+        this.propPathResolver = propPathResolver;
     }
 
     public <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform(
@@ -109,11 +112,14 @@ public final class EqlQueryTransformer {
         final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
 
-        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider, domainMetadata);
+        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata);
         final ResultQuery2 query2 = query1.transform(context1);
 
-        final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(querySourceInfoProvider, domainMetadata, gen);
-        final var context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), eqlTables, dbVersionProvider.dbVersion());
+        final var context2 = new TransformationContextFromStage2To3(
+                propPathResolver.resolve(query2.collectProps(), gen),
+                eqlTables,
+                dbVersionProvider.dbVersion(),
+                domainMetadata);
         return query2.transform(context2);
     }
 
@@ -133,8 +139,6 @@ public final class EqlQueryTransformer {
 
     /// A "foreign query" is a query whose single explicit yield is an entity-typed property.
     /// This predicate identifies whether `resultQuery` represents a "foreign query".
-    ///
-    /// An equivalent predicate is present in [EntityContainerFetcherImpl] as part of method [getModelResult][EntityContainerFetcherImpl#getModelResult(QueryProcessingModel)].
     ///
     private static boolean isForeignIdOnlyQuery(final ResultQuery3 resultQuery) {
         final Yield3 yield;

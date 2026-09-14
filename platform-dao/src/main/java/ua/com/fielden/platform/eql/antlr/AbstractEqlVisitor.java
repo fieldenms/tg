@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.antlr;
 
 import org.antlr.v4.runtime.Token;
+import ua.com.fielden.platform.eql.antlr.exceptions.EqlCompilationException;
 import ua.com.fielden.platform.eql.antlr.exceptions.EqlSyntaxException;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
@@ -33,6 +34,13 @@ abstract class AbstractEqlVisitor<T> extends StrictEQLBaseVisitor<T> {
             //TODO throw exception for all contexts except YIELD (as NULL operands can't be used in SQL conditions, groupings, etc).
             return null;
         }
+    }
+
+    protected Object requireParamValue(final String paramName) {
+        if (!transformer.hasParam(paramName)) {
+            throw new EqlCompilationException("The query is missing required parameter [%s].".formatted(paramName));
+        }
+        return getParamValue(paramName);
     }
 
     /**

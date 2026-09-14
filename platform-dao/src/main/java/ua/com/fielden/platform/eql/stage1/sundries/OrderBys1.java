@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.sundries;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.Limit;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
@@ -52,12 +51,10 @@ public record OrderBys1 (List<OrderBy1> models, Limit limit, long offset) implem
     }
 
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        return models.isEmpty()
-                ? ImmutableSet.of()
-                : models.stream()
-                        .filter(el -> el.operand() != null)
-                        .map(el -> el.operand().collectEntityTypes()).flatMap(Set::stream)
-                        .collect(toImmutableSet());
+        return models.stream()
+                .map(OrderBy1::collectEntityTypes)
+                .flatMap(Set::stream)
+                .collect(toImmutableSet());
     }
 
     public boolean isEmpty() {

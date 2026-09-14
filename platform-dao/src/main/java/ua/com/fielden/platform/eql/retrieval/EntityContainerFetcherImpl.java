@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.EntityContainer;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
-import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
@@ -26,14 +25,10 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.produceQueryWithPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.produceQueryWithoutPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.build;
 import static ua.com.fielden.platform.eql.retrieval.HibernateScalarsExtractor.getSortedScalars;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
 @Singleton
 final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
@@ -77,7 +72,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             final Integer pageCapacity)
     {
         try {
-            final var modelResult = getModelResult(queryModel);
+            final var modelResult = eqlQueryTransformer.getModelResult(queryModel, userProvider.getUsername());
             final List<EntityContainer<E>> result = listContainersAsIs(session, modelResult, pageNumber, pageCapacity);
             return new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache)
                     .enhance(session, result, modelResult.fetchModel(), queryModel.getParamValues());
@@ -95,7 +90,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             final Optional<Integer> fetchSize)
     {
         try {
-            final var modelResult = getModelResult(queryModel);
+            final var modelResult = eqlQueryTransformer.getModelResult(queryModel, userProvider.getUsername());
             final Stream<List<EntityContainer<E>>> stream = streamContainersAsIs(session, modelResult, fetchSize);
             final var entityContainerEnhancer = new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache);
             return stream.map(containers -> entityContainerEnhancer.enhance(session, containers, modelResult.fetchModel(), queryModel.getParamValues()));
@@ -103,37 +98,6 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             final var exception = ex instanceof EntityRetrievalException it ? it : new EntityRetrievalException(ERR_DURING_ENTITY_RETRIEVAL, ex);
             LOGGER.error(() -> "%s\nQuery: %s".formatted(exception.getMessage(), queryModel), exception);
             throw exception;
-        }
-    }
-
-    private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qpm) {
-        class $ {
-            // A "foreign query" is a query whose single explicit yield is an entity-typed property.
-            // This predicate identifies whether `queryModelResult` represents a "foreign query".
-            // An equivalent predicate is present in [EqlQueryTransformer] as method `isForeignIdOnlyQuery`.
-            static boolean isForeignIdOnlyQuery(final QueryModelResult<?> queryModelResult) {
-                return isPersistentEntityType(queryModelResult.resultType())
-                       && queryModelResult.yieldedColumns().size() == 1
-                       && ID.equals(queryModelResult.yieldedColumns().getFirst().name())
-                       // The type of ID can be either an entity or Long.
-                       // If it is an entity type, this is a foreign id-only query (a whole entity is being yielded).
-                       // Otherwise, ID is yielded as a number (a local id-only query).
-                       && isEntityType(queryModelResult.yieldedColumns().getFirst().propType().javaType());
-            }
-        }
-
-        final QueryModelResult<E> modelResult = eqlQueryTransformer.getModelResult(qpm, userProvider.getUsername());
-
-        // Foreign id-only queries should be wrapped to access the whole graph of the entities being yielded.
-        // This does not apply to entity aggregates where IDs might be yielded – they are treated as numbers.
-        if ($.isForeignIdOnlyQuery(modelResult)) {
-            final var idOnlyQuery = select(modelResult.resultType())
-                    .where().prop(ID).in().model((SingleResultQueryModel<?>) qpm.queryModel)
-                    .model();
-            final var idOnlyQpm = new QueryProcessingModel<>(idOnlyQuery, qpm.orderModel, qpm.fetchModel, qpm.getParamValues(), qpm.lightweight);
-            return eqlQueryTransformer.getModelResult(idOnlyQpm, userProvider.getUsername());
-        } else {
-            return modelResult;
         }
     }
 

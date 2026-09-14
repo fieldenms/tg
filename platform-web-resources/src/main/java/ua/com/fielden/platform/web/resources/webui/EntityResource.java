@@ -47,6 +47,7 @@ import static java.util.Optional.*;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.tiny.TinyHyperlink.CUSTOM_OBJECT_ACTION_IDENTIFIER;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.web.centre.CentreContext.CHOSENENTITY_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreContext.INSTANCEBASEDCONTINUATION_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
@@ -187,6 +188,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                                     null,
                                     Optional.empty(),
                                     null,
+                                    null,
                                     new HashMap<>(),
                                     null
                             ),
@@ -214,6 +216,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                                     createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, webUiConfig, factory, device(), sharingModel),
                                     actionConfig,
                                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
+                                    !centreContextHolder.proxiedPropertyNames().contains(CHOSENENTITY_PROPERTY_NAME) ? centreContextHolder.getChosenEntity() : null,
                                     !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>(),
                                     !centreContextHolder.proxiedPropertyNames().contains(INSTANCEBASEDCONTINUATION_PROPERTY_NAME) ? centreContextHolder.getInstanceBasedContinuation() : null
                             ),
@@ -400,6 +403,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     criteriaEntity,
                     actionConfig,
                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
+                    !centreContextHolder.proxiedPropertyNames().contains(CHOSENENTITY_PROPERTY_NAME) ? centreContextHolder.getChosenEntity() : null,
                     !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>(),
                     !centreContextHolder.proxiedPropertyNames().contains(INSTANCEBASEDCONTINUATION_PROPERTY_NAME) ? centreContextHolder.getInstanceBasedContinuation() : null
                     );

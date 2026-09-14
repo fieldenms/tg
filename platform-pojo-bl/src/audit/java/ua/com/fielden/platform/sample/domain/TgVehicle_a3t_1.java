@@ -1,4 +1,4 @@
-// Generation timestamp: 2026-01-16 10:46:36 EET
+// Generation timestamp: 2026-03-04 15:13:12 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -18,12 +18,13 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
 @AuditFor(
     value = TgVehicle.class,
@@ -102,11 +103,13 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
       value = "Model",
       desc = "[Model] at the time of the audited event."
   )
-  @SkipEntityExistsValidation
   private TgVehicleModel a3t_model;
 
   @IsProperty
   @MapTo
+  @PersistentType(
+      userType = ISimpleMoneyType.class
+  )
   @Final
   @Title(
       value = "Price",
@@ -116,6 +119,9 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
 
   @IsProperty
   @MapTo
+  @PersistentType(
+      userType = ISimpleMoneyType.class
+  )
   @Final
   @Title(
       value = "Purchase Price",
@@ -130,7 +136,6 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
       value = "Tg Vehicle",
       desc = "[Tg Vehicle] at the time of the audited event."
   )
-  @SkipEntityExistsValidation
   private TgVehicle a3t_replacedBy;
 
   @IsProperty
@@ -140,7 +145,6 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
       value = "Tg Org Unit5",
       desc = "[Tg Org Unit5] at the time of the audited event."
   )
-  @SkipEntityExistsValidation
   private TgOrgUnit5 a3t_station;
 
   @CompositeKeyMember(1)
@@ -151,7 +155,6 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
       value = "Tg Vehicle",
       desc = "The audited Tg Vehicle."
   )
-  @SkipEntityExistsValidation
   @IsProperty
   private TgVehicle auditedEntity;
 

@@ -1,20 +1,6 @@
 package ua.com.fielden.platform.dao;
 
-import static java.util.stream.Collectors.toMap;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.types.tuples.T3.t3;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityToOpenCompoundMaster;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -23,10 +9,18 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity_master.exceptions.CompoundMasterException;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
+
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 
 /**
  * This class should be extended by companion objects to various {@code Open<EntityName>MaserAction} entities that model an action for opening Compound Entity Masters.
@@ -73,8 +67,9 @@ import ua.com.fielden.platform.web.centre.IQueryEnhancer;
  */
 public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctionalEntityToOpenCompoundMaster<?>> extends CommonEntityDao<T>{
     private static final String THIS = "this";
+    public static final String ERR_UNEXPECTED_VALUE = "Unexpected value [%s] of type [%s].";
 
-    private final IEntityAggregatesOperations coAggregates;
+    protected final IEntityAggregatesOperations coAggregates;
     private final List<T3<String, Class<? extends AbstractEntity<?>>, BiFunction<IWhere0<? extends AbstractEntity<?>>, Object, ICompleted<? extends AbstractEntity<?>>>>> compoundMasterConfig = new ArrayList<>();
     private final List<T3<String, Class<? extends AbstractEntity<?>>, Map<String, Function<Object, Object>>>> parameters = new ArrayList<>();
     private final Map<String, Function<Object, Object>> additionalParameters = new HashMap<>();
@@ -108,19 +103,19 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
         parameters.stream().map(paramMap -> enhanceParametersWithCustomValue(paramMap._3, entity.getKey()))
                 .flatMap(m -> m.entrySet().stream())
                 .forEach(entry -> queryParams.put(entry.getKey(), entry.getValue()));
-        additionalParameters.entrySet().stream().forEach(entry -> queryParams.put(entry.getKey(), entry.getValue().apply(entity.getKey())));
+        additionalParameters.forEach((key, value) -> queryParams.put(key, value.apply(entity.getKey())));
         final EntityAggregates existEntity = coAggregates.getEntity(from(queryPart.modelAsAggregate()).with(queryParams).model());
         final Map<String, Integer> newPresence = new HashMap<>();
-        compoundMasterConfig.stream().forEach(pair -> newPresence.put(pair._1, existEntity.get(pair._1)));
-        parameters.stream().forEach(pair -> newPresence.put(pair._1, existEntity.get(pair._1)));
+        compoundMasterConfig.forEach(pair -> newPresence.put(pair._1, existEntity.get(pair._1)));
+        parameters.forEach(pair -> newPresence.put(pair._1, existEntity.get(pair._1)));
         entity.setEntityPresence(newPresence);
         return entity;
     }
 
     private Map<String, Integer> emptyPresence() {
         final Map<String, Integer> newPresence = new HashMap<>();
-        compoundMasterConfig.stream().forEach(pair -> newPresence.put(pair._1, 0));
-        parameters.stream().forEach(pair -> newPresence.put(pair._1, 0));
+        compoundMasterConfig.forEach(pair -> newPresence.put(pair._1, 0));
+        parameters.forEach(pair -> newPresence.put(pair._1, 0));
         return newPresence;
     }
 
@@ -167,7 +162,7 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
 
     public static <K extends AbstractEntity<?>> Map<String, Object> enhanceParametersWithCustomValue(final Map<String, Function<Object, Object>> parameters, final K entity) {
         final Map<String, Object> queryParams = new HashMap<>();
-        parameters.entrySet().stream().forEach(entry -> {
+        parameters.entrySet().forEach(entry -> {
             queryParams.put(entry.getKey(), entry.getValue().apply(entity));
         });
         return queryParams;
@@ -178,6 +173,7 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
             return THIS.contentEquals(cs) ? value : ((AbstractEntity<?>) value).get(cs.toString());
         }
 
-        throw new CompoundMasterException("Unexpected value [%s] of type [%s].".formatted(propName, propName.getClass().getSimpleName()));
+        throw new CompoundMasterException(ERR_UNEXPECTED_VALUE.formatted(propName, propName.getClass().getSimpleName()));
     }
+
 }

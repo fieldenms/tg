@@ -11,18 +11,20 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 /* Paper elements */
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
-import '/resources/polymer/@polymer/app-layout/app-drawer/app-drawer.js';
+import '/resources/components/tg-app-drawer.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 /* TG ELEMENTS */
+import { UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
 import { scrollContainerIfPointNearTheEdge, getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
 import '/resources/components/postal-lib.js';
+import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 const template = html`
     <style>
@@ -106,11 +108,11 @@ const template = html`
     <slot id="menuItemActions" name="menu-item-action"></slot>
 
     <app-drawer-layout id="drawerPanel" fullbleed on-app-drawer-transitioned="_appDrawerTransitioned">
-        <app-drawer id="drawer" disable-swipe="[[!touchEnabled]]" slot="drawer">
+        <tg-app-drawer id="drawer" disable-swipe="[[!touchEnabled]]" slot="drawer">
             <paper-listbox id="menu" attr-for-selected="data-route" selected="{{route}}" style="height: 100%; overflow: auto;">
                 <slot id="menuItems" name="menu-item"></slot>
             </paper-listbox>
-        </app-drawer>
+        </tg-app-drawer>
         <div class="master-container relative">
             <iron-pages id="mainPages" class="fit" attr-for-selected="data-route" selected="[[sectionRoute]]">
                 <slot name="menu-item-section"></slot>
@@ -825,20 +827,32 @@ Polymer({
                 if (!currentSection) {
                     throw 'Compound master’s menu item section [' + this.sectionRoute + '] does not exist.';
                 }
-                const cannotLeaveReason = currentSection.canLeave();
-                const cannotLeaveMessage = cannotLeaveReason ? cannotLeaveReason.msg : (this.isMasterWithMasterAndNonPersisted(currentSection) ? 'A new entity is being created. Please save or cancel your changes.' : undefined);
-                if (cannotLeaveMessage) {
-                    this.route = this.sectionRoute;
-                    this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage);
-                } else {
+                currentSection.canLeave(LeaveReason.NAVIGATED).then(obj => {
+                    if (this.isMasterWithMasterAndNonPersisted(currentSection)) {
+                        throw 'A new entity is being created. Please save or cancel your changes.'
+                    }
                     this.sectionRoute = newRoute;
                     if (currentSection.activated) {
                         currentSection._showBlockingPane();
                     }
-                }
+                }).catch(cannotLeaveReason => {
+                    // Reset route before any further rethrow or error handling.
+                    this.route = this.sectionRoute;
+                    if (cannotLeaveReason instanceof UnexpectedCustomError) {
+                        throw cannotLeaveReason;
+                    } else {
+                        const cannotLeaveMessage = cannotLeaveReason.message || cannotLeaveReason.msg || cannotLeaveReason;
+                        this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage, !!cannotLeaveReason.message);
+                    }
+                }).finally(() => {
+                    this.fire('tg-master-menu-route-change-completed', this.route);
+                });
             } else {
                 this.sectionRoute = newRoute;
+                this.fire('tg-master-menu-route-change-completed', this.route);
             }
+        } else {
+            this.fire('tg-master-menu-route-change-completed', this.route);
         }
     },
     
@@ -868,7 +882,7 @@ Polymer({
     },
 
     /**
-     * Returns 'true' if the specified 'section' represents a master with master, that contains non-persisted entity instance; 'false' otherwise.
+     * Returns 'true' if the specified 'section' represents a master with master, that contains persistent, but non-persisted entity instance; 'false' otherwise.
      * In case of 'true' the user will be warned to save or cancel and will be prevented from moving to another menu item on compound master.
      *
      * @param section
@@ -876,7 +890,7 @@ Polymer({
     isMasterWithMasterAndNonPersisted: function (section) {
         if (section && section._element && section._element.masterWithMaster && section._element.$.loader && section._element.$.loader.loadedElement) {
             const embeddedMaster = section._element.$.loader.loadedElement;
-            if (embeddedMaster._currBindingEntity && !embeddedMaster._currBindingEntity.isPersisted()) {
+            if (embeddedMaster._currBindingEntity && embeddedMaster._currBindingEntity.type().isPersistent() && !embeddedMaster._currBindingEntity.isPersisted()) {
                 return true;
             }
         }
@@ -884,8 +898,9 @@ Polymer({
     },
 
     /** Used by the master, which incorporates this menu to check if it can be closed. */
-    canLeave: function () {
-        return this._section(this.route) && this._section(this.route).canLeave();
+    canLeave: function (leaveReason = LeaveReason.CLOSED) {
+        const section = this._section(this.route);
+        return section ? section.canLeave(leaveReason) : Promise.resolve(true);
     },
 
     _sectionRouteChanged: function (newRoute, oldRoute) {

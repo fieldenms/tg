@@ -10,9 +10,8 @@ import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.security.tokens.*;
-import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
-import ua.com.fielden.security.tokens.open_compound_master.OpenUserMasterAction_CanOpen_Token;
 
 import java.util.Set;
 
@@ -120,7 +119,7 @@ public class SecurityTokenProviderAndNodeConstructionTest {
     }
 
     private static class SecurityTokenProviderWithExclusion extends SecurityTokenProvider {
-        static final Class<UserMaster_CanOpen_Token> EXCLUDED_TOKEN = UserMaster_CanOpen_Token.class;
+        static final Class<UserRoleMaster_CanOpen_Token> EXCLUDED_TOKEN = UserRoleMaster_CanOpen_Token.class;
 
         @Inject
         SecurityTokenProviderWithExclusion(final @Named("tokens.path") String path, final @Named("tokens.package") String packageName) {
@@ -138,7 +137,7 @@ public class SecurityTokenProviderAndNodeConstructionTest {
     }
 
     private static class SecurityTokenProviderWithExtra extends SecurityTokenProvider {
-        static final Class<OpenUserMasterAction_CanOpen_Token> EXTRA_TOKEN = OpenUserMasterAction_CanOpen_Token.class;
+        static final Class<FirstLevelSecurityToken1> EXTRA_TOKEN = FirstLevelSecurityToken1.class;
 
         @Inject
         SecurityTokenProviderWithExtra(final @Named("tokens.path") String path, final @Named("tokens.package") String packageName) {

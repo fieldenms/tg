@@ -1,4 +1,4 @@
-// Generation timestamp: 2026-01-12 16:58:42 EET
+// Generation timestamp: 2026-03-04 15:34:05 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -20,11 +20,13 @@ import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
 @AuditFor(TgVehicle.class)
 @EntityTitle("Tg Vehicle Audit")
@@ -114,12 +116,18 @@ public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
       value = "Price",
       desc = "[Price] at the time of the audited event."
   )
+  @PersistentType(
+      userType = ISimpleMoneyType.class
+  )
   @IsProperty
   private Money a3t_price;
 
   @Title(
       value = "Purchase Price",
       desc = "[Purchase Price] at the time of the audited event."
+  )
+  @PersistentType(
+      userType = ISimpleMoneyType.class
   )
   @IsProperty
   private Money a3t_purchasePrice;

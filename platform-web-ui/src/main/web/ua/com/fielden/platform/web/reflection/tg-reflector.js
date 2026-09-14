@@ -392,14 +392,17 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     /**
      * Returns the instance prop for the entity.
      *
-     * IMPORTANT: do not use '@prop' field directly!
+     * IMPORTANT: do not use 'prop@' field directly!
      */
     Entity.prototype.prop = function (name) {
-        this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
-        if (this._isObjectUndefined("@" + name)) {
-            this["@" + name] = new EntityInstanceProp(); // lazily initialise entity instance prop in case where it was not JSON-serialised (all information was 'default')
+        if (name === '') { // mirror AbstractEntity.getProperty: there is no meta-property associated with the entity itself
+            throw 'Meta-data for property [' + name + '] in entity [' + this.constructor.prototype.type.call(this).fullClassName() + '] could not be located.';
         }
-        return this["@" + name];
+        this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
+        if (this._isObjectUndefined(name + '@')) {
+            this[name + '@'] = new EntityInstanceProp(); // lazily initialise entity instance prop in case where it was not JSON-serialised (all information was 'default')
+        }
+        return this[name + '@'];
     }
 
     /**
@@ -562,7 +565,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     }
 
     /**
-     * Traverses all fetched properties in entity. It does not include 'id', 'version', '_type' and '@prop' instance meta-props.
+     * Traverses all fetched properties in entity. It does not include 'id', 'version', '_type' and 'prop@' instance meta-props.
      * 
      * Proxy: 
      *    a) proxied properties are missing in serialised entity graph -- this method disregards such properties;
@@ -573,7 +576,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     Entity.prototype.traverseProperties = function (propertyCallback) {
         var entity = this;
         for (var membName in entity) {
-            if (entity.hasOwnProperty(membName) && membName[0] !== "@" && membName !== "_type" && membName !== "id" && membName !== "version") {
+            if (entity.hasOwnProperty(membName) && membName[0] !== '@' && membName[membName.length - 1] !== '@' && membName !== "_type" && membName !== "id" && membName !== "version") {
                 if (!entity._isObjectUndefined(membName) && !entity._isIdOnlyProxy(membName)) {
                     propertyCallback(membName);
                 }
@@ -884,6 +887,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
         return typeof this['_compoundMenuItem'] === 'undefined' ? false : this['_compoundMenuItem'];
     }
 
+    /**
+     * Returns 'true' if the entity type implements 'ICustomisableCanLeave', indicating that its master provides a custom 'canLeave' implementation on the server.
+     *
+     */
+    EntityType.prototype.isCustomisableCanLeave = function () {
+        return typeof this['_isCustomisableCanLeave'] === 'undefined' ? false : this['_isCustomisableCanLeave'];
+    }
+
     /** 
      * Returns the property names for the key members in case of composite entity, 'undefined' otherwise.
      */
@@ -921,11 +932,19 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /**
-     * Returns 'true' if the entity type represents a persistent entity and contains versioning information like created/updated, version, etc.
+     * Returns 'true' if the entity type is persistent and contains version information (created/updated date, created/updated by, version number).
      *
      */
-    EntityType.prototype.isPersistentWithAuditData = function () {
-        return typeof this['_persistentWithAudit'] === 'undefined' ? false : this['_persistentWithAudit'];
+    EntityType.prototype.isPersistentWithVersionData = function () {
+        return typeof this['_persistentWithVersion'] === 'undefined' ? false : this['_persistentWithVersion'];
+    }
+
+    /**
+     * Returns 'true' if the entity type is audited (i.e., annotated with @Audit).
+     *
+     */
+    EntityType.prototype.isAudited = function () {
+        return typeof this['_audited'] === 'undefined' ? false : this['_audited'];
     }
 
     /**

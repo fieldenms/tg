@@ -33,6 +33,7 @@ import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation
 import '/resources/centre/tg-entity-centre-styles.js';
 import { tearDownEvent, getKeyEventTarget, getRelativePos, localStorageKeyForCentre, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
+import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 /**
  * Local storage keys for insertion point's custom user-driven states.
@@ -684,10 +685,11 @@ Polymer({
     /**
      * @returns Checks whether this insertion point can be left.
      */
-    canLeave: function () {
+    canLeave: function (leaveReason = LeaveReason.CLOSED) {
         if (this._element && typeof this._element.canLeave === 'function') {
-            return this._element.canLeave();
+            return this._element.canLeave(leaveReason);
         }
+        return Promise.resolve(true);
     },
 
     /**
@@ -891,10 +893,11 @@ Polymer({
     },
 
     /**
-     * The method, that is used during Back button pressing (see tg-app-template).
+     * This method is executed when the Back button is pressed (see tg-app-template). It returns a resolved promise, since the dialog is always closed successfully.
      */
     closeDialog: function () {
         this._toggleMaximise();
+        return Promise.resolve();
     },
 
     /******************** minimise button related logic *************************/

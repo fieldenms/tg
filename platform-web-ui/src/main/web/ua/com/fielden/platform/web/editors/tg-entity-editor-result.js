@@ -10,8 +10,6 @@ import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
 import '/resources/components/tg-scrollable-component.js';
-import '/resources/serialisation/tg-serialiser.js';
-
 
 import { matchedParts } from '/resources/editors/tg-highlighter.js';
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';

@@ -126,6 +126,9 @@ public class LogoutResource extends AbstractWebResource {
             getResponse().redirectSeeOther("/login");
             return new EmptyRepresentation();
         } finally {
+            // This handler may set the current user (above); clear it so a pooled worker thread does not retain it after the request.
+            // This resource is attached at the component level and is not covered by the application-level cleanup filter.
+            userProvider.clearUser();
             final Response response = getResponse();
             response.getCookieSettings().clear();
             response.getCookieSettings().add(mkAuthenticationCookieToExpire(domainName, path));

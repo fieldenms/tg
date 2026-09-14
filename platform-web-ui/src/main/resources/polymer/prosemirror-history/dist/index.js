@@ -380,7 +380,7 @@ function history(config = {}) {
                 beforeinput(view, e) {
                     let inputType = e.inputType;
                     let command = inputType == "historyUndo" ? undo : inputType == "historyRedo" ? redo : null;
-                    if (!command)
+                    if (!command || !view.editable)
                         return false;
                     e.preventDefault();
                     return command(view.state, view.dispatch);

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
+import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -19,7 +20,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 
 /// Interface that defines the API for retrieving saving and removing the [SecurityRoleAssociation] instances.
 ///
-public interface SecurityRoleAssociationCo extends IEntityDao<SecurityRoleAssociation> {
+public interface SecurityRoleAssociationCo extends IEntityDao<SecurityRoleAssociation>, ISaveWithFetch<SecurityRoleAssociation> {
 
     IFetchProvider<SecurityRoleAssociation> FETCH_PROVIDER = fetch(SecurityRoleAssociation.class)
             .with(SECURITY_TOKEN,

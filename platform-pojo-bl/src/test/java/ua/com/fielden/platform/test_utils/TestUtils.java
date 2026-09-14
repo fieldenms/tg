@@ -5,6 +5,7 @@ import org.junit.function.ThrowingRunnable;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
@@ -137,6 +138,31 @@ public final class TestUtils {
             fail(message);
         }
         return collection;
+    }
+
+    /// Runs `action` with the JVM default time zone temporarily set to `timeZone`, restoring the previous default afterwards.
+    ///
+    /// A checked exception raised by `action` is rethrown wrapped in a [RuntimeException]; unchecked throwables (including assertion failures) propagate unchanged.
+    /// Single-threaded test execution is assumed, in line with the project-wide convention.
+    ///
+    public static void withTimeZone(final TimeZone timeZone, final ThrowingRunnable action) {
+        final TimeZone original = TimeZone.getDefault();
+        TimeZone.setDefault(timeZone);
+        try {
+            action.run();
+        } catch (final RuntimeException | Error ex) {
+            throw ex;
+        } catch (final Throwable ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            TimeZone.setDefault(original);
+        }
+    }
+
+    /// Overload of [#withTimeZone(TimeZone, ThrowingRunnable)] accepting a time zone ID, as per [TimeZone#getTimeZone(String)].
+    ///
+    public static void withTimeZone(final String timeZoneId, final ThrowingRunnable action) {
+        withTimeZone(TimeZone.getTimeZone(timeZoneId), action);
     }
 
 }

@@ -15,7 +15,7 @@ import '/resources/images/tg-icons.js';
 
 import '/resources/egi/tg-egi-multi-action.js';
 import '/resources/egi/tg-secondary-action-button.js';
-import '/resources/egi/tg-secondary-action-dropdown.js';
+import '/resources/egi/tg-action-dropdown.js';
 import {EGI_CELL_PADDING, EGI_CELL_PADDING_TEMPLATE} from '/resources/egi/tg-egi-cell.js';
 import '/resources/egi/tg-responsive-toolbar.js';
 
@@ -30,8 +30,9 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages, getFirstEntityTypeAndProperty } from '/resources/reflection/tg-polymer-utils.js';
 import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
+import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
 
 const EGI_BOTTOM_MARGIN = "15px";
 const EGI_BOTTOM_MARGIN_TEMPLATE = html`15px`;
@@ -393,6 +394,7 @@ const template = html`
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
+    <slot id="secondary_action_selector" name="secondary-action" hidden></slot>
     <slot id="default_property_action" name="defaultPropertyAction" hidden></slot>
     <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
@@ -413,8 +415,13 @@ const template = html`
                 <div class="action-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
                     <!--Primary action stub header goes here-->
                 </div>
+                <!--
+                  mutable-data on both header dom-repeat tags (fixedHeadersTemplate and scrollableHeadersTemplate below) opts out of Polymer's default immutable-data dirty-checking on items.
+                  Required because the centre-side dom-repeat over dynamicColumns mutates columnTitle (and other fields) in place on existing <tg-property-column> elements, which Polymer's default dirty-checking would otherwise miss when these templates re-render.
+                  Performance impact is negligible — header column counts are small (tens).
+                -->
                 <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
-                    <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]">
+                    <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]" mutable-data>
                         <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                             <div class="table-header-column-content">
                                 <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
@@ -428,7 +435,7 @@ const template = html`
                         </div>
                     </template>
                 </div>
-                <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]">
+                <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]" mutable-data>
                     <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                         <div class="table-header-column-content">
                             <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
@@ -450,6 +457,14 @@ const template = html`
                 <slot name="save-button"></slot>
             </div>
             <!--Table body-->
+            <!--
+              This comment sits outside the body dom-repeat deliberately — template content is cloned per stamped instance, so an in-row comment would be replicated as a comment node for every row.
+              The per-column dom-repeat tags inside the row template do NOT need mutable-data.
+              The staleness-prone fields (property, keyProperty, valueProperty) are read inside <tg-egi-cell> via observers that re-fire on egiEntity change — picking up fresh column metadata at that point (the ordering fix in _postRun ensures dynamicColumns is applied before allRetrievedEntities triggers egi-model rebuild).
+              Other deep-path bindings that do appear there (e.g. column.width) are on properties that are either static or updated via Polymer's set() (e.g. column resizing), so they propagate through path notification regardless of mutable-data.
+              If a deep-path binding on a property mutated by the centre-side dynamicColumns dom-repeat (e.g. [[column.columnTitle]]) is ever added, mutable-data would be required on both body-row templates.
+              Cell tooltips are deliberately NOT bound in the cell tags — they are computed on demand by _provideCellTooltip (on hover), because eager per-cell computation is expensive at rows × columns scale while a tooltip is only ever read at hover time.
+            -->
             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                 <div class="table-data-row" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                     <div class="drag-anchor cell" show-left-shadow$="[[_dragAnchorShadowVisible(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow)]]" draggable$="[[_isDraggable(egiEntity.selected)]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]">
@@ -459,18 +474,18 @@ const template = html`
                         <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                     </div>
                     <div class="action-cell cell" show-left-shadow$="[[_primaryActionShadowVisible(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]" hidden$="[[!primaryAction]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" style$="[[_calcPrimaryActionStyle(canDragFrom, checkboxVisible, checkboxesWithPrimaryActionsFixed)]]">
-                        <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
+                        <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" chosen-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
                     </div>
                     <div class="fixed-columns-container" show-left-shadow$="[[_fixedColsShadowVisible(numOfFixedCols, _showLeftShadow)]]" hidden$="[[!numOfFixedCols]]" style$="[[_calcFixedColumnContainerStyle(canDragFrom, checkboxVisible, primaryAction, numOfFixedCols)]]">
                         <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                            <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
+                            <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
                         </template>
                     </div>
                     <template is="dom-repeat" items="[[columns]]" as="column">
-                        <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
+                        <tg-egi-cell class="cell" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                     </template>
                     <div class="action-cell cell" show-right-shadow$="[[_rightShadowVisible(_isSecondaryActionPresent, _showRightShadow)]]" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" hidden$="[[!_isSecondaryActionPresent]]" style$="[[_calcSecondaryActionStyle(secondaryActionsFixed)]]">
-                        <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
+                        <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" chosen-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDownForSecondaryActions]]"></tg-secondary-action-button>
                     </div>
                 </div>
             </template>
@@ -528,10 +543,10 @@ const template = html`
         </div>
         <!-- table lock layer -->
         <div class="lock-layer" lock$="[[lock]]"></div>
-        <!-- secondary action dropdown that will be used by each secondary aciton -->
-        <tg-secondary-action-dropdown id="secondaryActionDropDown" is-single="{{_isSingleSecondaryAction}}" is-present="{{_isSecondaryActionPresent}}" secondary-actions="{{_secondaryActions}}">
-            <slot id="secondary_action_selector" slot="actions" name="secondary-action"></slot>
-        </tg-secondary-action-dropdown>
+        <!-- Shared action dropdown used by both secondary actions (row-level) and property actions (cell-level). -->
+        <!-- The dropdown starts empty; on each open() the EGI hands it the relevant action group elements, which become and remain its light-DOM children until the next open() replaces them. -->
+        <!-- The EGI keeps its own references (_secondaryActions, column.customActions) so subsequent opens and cell taps continue to work regardless of where the elements live in the DOM tree. -->
+        <tg-action-dropdown id="actionDropDown"></tg-action-dropdown>
     </div>`;
 
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
@@ -577,6 +592,32 @@ function updateSelectAll (egi, egiModel) {
         egi.selectedAll = false;
         egi.semiSelectedAll = false;
     }
+};
+
+function entityIdOf(entity) {
+    return entity && typeof entity.get === 'function' ? entity.get('id') : null;
+};
+
+function buildEntityIndexMaps (entities) {
+    const byRef = new Map();
+    (entities || []).forEach((entity, index) => {
+        if (!byRef.has(entity)) {
+            byRef.set(entity, index);
+        }
+    });
+    // `byId` encodes the id-first half of `_areEqual`'s equality rule and is built lazily by `findEntityIndex` upon the first `byRef` miss — the dominant rendering path (same references) never needs it.
+    return { byRef: byRef, byId: null };
+};
+
+function buildEntityIdMap(entities) {
+    const byId = new Map();
+    (entities || []).forEach((entity, index) => {
+        const id = entityIdOf(entity);
+        if (id && !byId.has(id)) {
+            byId.set(id, index);
+        }
+    });
+    return byId;
 };
 
 function _insertMaster (container, egiMaster, entityIndex) {
@@ -836,7 +877,7 @@ Polymer({
         //Default action for property columns. It is invoked only if there were no other action specified for specific property column.
         _defaultPropertyAction: Object,
         //The callback to open drop down for secondary action.
-        _openDropDown: Function,
+        _openDropDownForSecondaryActions: Function,
 
         //Double tap related
         _tapOnce: Boolean
@@ -853,6 +894,15 @@ Polymer({
         this._serialiser = new TgSerialiser();
         this._totalsRowCount = 0;
         this._showProgress = false;
+
+        //Memoised entity → index maps used by findEntityIndex; invalidated on each `entities` assignment and rebuilt lazily.
+        this._entityIndexMaps = null;
+        //Batch-assignment flag: suppresses the per-row refresh observers (rendering hints / action indices) while primeGridData assigns them ahead of an entities-triggered egiModel rebuild.
+        this._suppressPerRowRefresh = false;
+        //The body cell for which a hover tooltip was last computed by _provideCellTooltip.
+        this._lastTooltipCell = null;
+        //Body cells currently carrying a computed `tooltip-text` attribute; lets model rebuilds clear them without scanning all stamped cells.
+        this._cellsWithTooltip = new Set();
 
         //Initialising shadows
         this._showTopShadow = false;
@@ -884,20 +934,42 @@ Polymer({
         //Initialising the primary action.
         this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
 
+        //Initialising secondary actions (slotted directly under the EGI; captured once at ready, mirroring primaryAction).
+        this._secondaryActions = this.$.secondary_action_selector.assignedNodes()
+            .filter(n => n.nodeType === Node.ELEMENT_NODE);
+        this._isSingleSecondaryAction = this._secondaryActions.length === 1;
+        this._isSecondaryActionPresent = this._secondaryActions.length > 0;
+
         //Initialising the default property action
         this._defaultPropertyAction = this.$.default_property_action.assignedNodes()[0];
 
         //Initialising event listeners.
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
 
+        //Compute body cell tooltips lazily on hover instead of eagerly for every stamped cell.
+        //`mouseover` / `touchstart` are dispatched before the events that TgTooltipBehavior reacts to on its (ancestor) trigger element, so the `tooltip-text` attribute is in place by the time it is read.
+        //`mousemove` covers a pointer already resting inside a cell whose tooltip was invalidated (model rebuild, in-place update) — no boundary crossing happens there; the identity guard keeps the recompute a no-op otherwise.
+        this._provideCellTooltip = this._provideCellTooltip.bind(this);
+        this.$.baseContainer.addEventListener("mouseover", this._provideCellTooltip);
+        this.$.baseContainer.addEventListener("mousemove", this._provideCellTooltip);
+        this.$.baseContainer.addEventListener("touchstart", this._provideCellTooltip, { passive: true });
+
         //Observe column DOM changes
         new FlattenedNodesObserver(this.$.column_selector, (info) => {
             this._columnDomChanged(info.addedNodes, info.removedNodes);
         });
 
-        //Init secondary action drop down trigger
-        this._openDropDown = function (currentEntity, currentIndices, currentAction) {
-            this.$.secondaryActionDropDown.open(currentEntity, currentIndices, currentAction);
+        //Trigger used by `tg-secondary-action-button` to open the shared dropdown — borrows the slotted secondary-action group elements into the dropdown for the open state and returns them on close.
+        this._openDropDownForSecondaryActions = function (currentEntity, chosenEntity, currentIndices, currentAction) {
+            this.$.actionDropDown.open(this._secondaryActions, currentEntity, chosenEntity, currentIndices, currentAction);
+        }.bind(this);
+
+        //Trigger used by the EGI cell's overflow button to open the shared dropdown with the clicked column's property-action groups.
+        //Resolves the row's per-group sub-action indices from `propertyActionIndices`, then hands the column's `customActions` to the dropdown for the open state.
+        this._openDropDownForPropertyActions = function (entity, column, positionTarget) {
+            const entityIndex = this.findEntityIndex(entity);
+            const groupIndices = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
+            this.$.actionDropDown.open(column.customActions, this._currentEntity(entity), this._chosenEntity(entity, column), groupIndices, positionTarget);
         }.bind(this);
 
         //Initiate entity master for inline editing
@@ -977,6 +1049,8 @@ Polymer({
             const egiEntity = this.egiModel[entityIndex];
             egiEntity.entity.set(propPath, entity.get(propPath));
             egiEntity._propertyChangedHandlers && egiEntity._propertyChangedHandlers[propPath] && egiEntity._propertyChangedHandlers[propPath]();
+            // In-place value / validation changes alter tooltip content without an egiModel rebuild — the hovered cell must not keep serving its cached tooltip.
+            this._invalidateHoveredCellTooltip();
         }
     },
 
@@ -995,7 +1069,31 @@ Polymer({
         }
     },
     
+    /**
+     * Returns the index of `entity` in `entities`, resolved through memoised identity / id maps.
+     *
+     * This method sits on the per-cell rendering path (`hasAction` bindings, cell tooltips) — a linear `_findEntity` scan here made rendering cost quadratic in the number of rows.
+     * The maps mirror `_areEqual`'s id-first matching rule (with `entityIdOf` as the shared id-extraction helper) and are rebuilt lazily after each `entities` assignment;
+     * inputs that miss both maps (e.g. equal-by-key instances without an id) fall back to the original linear scan.
+     */
     findEntityIndex: function (entity) {
+        if (!this._entityIndexMaps) {
+            this._entityIndexMaps = buildEntityIndexMaps(this.entities);
+        }
+        const indexByRef = this._entityIndexMaps.byRef.get(entity);
+        if (typeof indexByRef !== 'undefined') {
+            return indexByRef;
+        }
+        const id = entityIdOf(entity);
+        if (id) {
+            if (this._entityIndexMaps.byId === null) {
+                this._entityIndexMaps.byId = buildEntityIdMap(this.entities);
+            }
+            const indexById = this._entityIndexMaps.byId.get(id);
+            if (typeof indexById !== 'undefined') {
+                return indexById;
+            }
+        }
         return this._findEntity(entity, this.entities);
     },
     
@@ -1038,6 +1136,25 @@ Polymer({
         }
     },    
 
+    /**
+     * Primes all run-produced row data (rendering hints and action indices) in one batch, ahead of an imminent `entities` assignment.
+     *
+     * The arrays are assigned with per-row refresh suppressed: their observers (`_renderingHintsChanged`, `_primaryActionIndicesChanged`, `_secondaryActionIndicesChanged`)
+     * would otherwise walk the soon-to-be-replaced `egiModel` performing a per-row `set` each, while the `egiModel` rebuild triggered by the subsequent `entities` assignment consumes these arrays anyway.
+     * Individual property assignments remain fully supported for callers that update one aspect at a time outside of a run.
+     */
+    primeGridData: function (gridData) {
+        this._suppressPerRowRefresh = true;
+        try {
+            this.renderingHints = gridData.renderingHints;
+            this.primaryActionIndices = gridData.primaryActionIndices;
+            this.secondaryActionIndices = gridData.secondaryActionIndices;
+            this.propertyActionIndices = gridData.propertyActionIndices;
+        } finally {
+            this._suppressPerRowRefresh = false;
+        }
+    },
+
     //Filtering related functions
     filter: function () {
         const tempFilteredEntities = [];
@@ -1051,9 +1168,9 @@ Polymer({
 
     hasAction: function (entity, column) {
         const entityIdx = this.findEntityIndex(entity);
-        const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
+        const groupIndices = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
         return entity && (
-            (column.customActions && column.customActions.length > 0 && column.customActions[actionIdx])
+            (column.customActions && column.customActions.length > 0 && groupIndices && groupIndices.length > 0)
             || this.isHyperlinkProp(entity, column) === true
             || this.getAttachmentIfPossible(entity, column)
             || this.hasDefaultAction(entity, column)
@@ -1223,6 +1340,10 @@ Polymer({
 
     /**
      * Adjusts widths for columns based on current widths values, which could be altered by dragging column right border.
+     *
+     * `columnWidths` is keyed only by static (DSL-checked) property names.
+     * Dynamic columns receive their persisted width / growFactor directly from each `dynamicColumns.*Columns` entry.
+     * This is done via the `[[item.width]]` / `[[item.growFactor]]` bindings, so dynamic columns are skipped here.
      */
     adjustColumnWidths: function (columnWidths) {
         this.columns.filter(column => !column.collectionalProperty).forEach((column, columnIndex) => {
@@ -1247,7 +1368,9 @@ Polymer({
      */
     adjustColumnAvailability: function(availableColumns) {
         this.allColumns.forEach(col => {
-                col.isHidden = !availableColumns.includes(col.property);
+                // Checks whether a column with the given property exists in availableColumns.
+                // Dynamic columns are skipped because their availability cannot yet be controlled via the Authorization model. 
+                col.isHidden = !col.collectionalProperty && !availableColumns.includes(col.property);
         });
         this._updateColumns(this.fixedColumns.concat(this.columns));
     },
@@ -1264,7 +1387,7 @@ Polymer({
             }
         });
         const dynamicColumns = this.allColumns.filter(column => column.collectionalProperty);
-        resultantColumns.push(...dynamicColumns)
+        resultantColumns.push(...dynamicColumns);
         this._updateColumns(resultantColumns);
     },
 
@@ -1343,11 +1466,14 @@ Polymer({
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         const entityIndex = this.findEntityIndex(entity);
-        const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
+        // groupIndices[g] is the sub-action index chosen by the runtime selector of property-action group g on this column.
+        // Cell tap always runs the first group's selected sub-action; other groups are reachable through the overflow dropdown.
+        const groupIndices = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
+        const firstGroupSubActionIndex = groupIndices && groupIndices.length > 0 ? groupIndices[0] : -1;
         if (clickedLink) {
             const targetAttr = clickedLink.getAttribute("target");
             checkLinkAndOpen(clickedLink.getAttribute("href"), targetAttr ? targetAttr : "_self");
-        } else if (!column.runAction(this._currentEntity(entity), actionIndex)) {
+        } else if (!column.runAction(this._currentEntity(entity), this._chosenEntity(entity, column), firstGroupSubActionIndex)) {
             if (this.isHyperlinkProp(entity, column) === false) {
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
@@ -1355,7 +1481,7 @@ Polymer({
                         // No action needed; errors are gracefully handled within the downloadAttachment function.
                     });
                 } else if (this.hasDefaultAction(entity, column)) {
-                    column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
+                    column.runDefaultAction(this._currentEntity(entity), this._chosenEntity(entity, column), this._defaultPropertyAction);
                 }
             }
         }
@@ -1363,7 +1489,8 @@ Polymer({
 
     //Entities changed related functions
     _entitiesChanged: function (newEntities, oldEntities) {
-        this.filter();  
+        this._entityIndexMaps = null; // rebuilt lazily by findEntityIndex
+        this.filter();
     },
 
     _filteredEntitiesChanged: function (newValue) {
@@ -1398,11 +1525,18 @@ Polymer({
         });
         updateSelectAll(this, tempEgiModel);
         this.egiModel = tempEgiModel;
+        // Tooltips computed for the previous model are dropped and recomputed on the next pointer movement; only cells that actually received a tooltip are touched.
+        // The hovered cell is invalidated first — this also dismisses a displayed (frozen) or pending tooltip that would otherwise outlive its data.
+        this._invalidateHoveredCellTooltip();
+        this._cellsWithTooltip.forEach(cell => cell.removeAttribute("tooltip-text"));
+        this._cellsWithTooltip.clear();
         this._updateTableSizeAsync();
         this.fire("tg-egi-entities-loaded", newValue);
     },
 
     _updateColumns: function (resultantColumns) {
+        // Column reconfiguration can rebind the hovered cell to a different column without an egiModel rebuild — its cached tooltip must not survive.
+        this._invalidateHoveredCellTooltip();
         // First filter the columns to include only authorized (i.e., visible) columns.
         const availableColumns = resultantColumns.filter(col => !col.isHidden);
         this.fixedColumns = availableColumns.splice(0, this.numOfFixedCols);
@@ -2021,6 +2155,9 @@ Polymer({
     },
 
     _renderingHintsChanged: function (newValue) {
+        if (this._suppressPerRowRefresh) {
+            return; // primed ahead of an entities-triggered rebuild, which consumes the new value itself
+        }
         if (this.egiModel) {
             const noneFilteredOut = this.egiModel.length === this.entities.length;
             this.egiModel.forEach((egiEntity, egiEntIndex) => {
@@ -2032,6 +2169,9 @@ Polymer({
     },
 
     _primaryActionIndicesChanged: function (newValue) {
+        if (this._suppressPerRowRefresh) {
+            return; // primed ahead of an entities-triggered rebuild, which consumes the new value itself
+        }
         if (this.egiModel) {
             const noneFilteredOut = this.egiModel.length === this.entities.length;
             this.egiModel.forEach((egiEntity, index) => {
@@ -2041,6 +2181,9 @@ Polymer({
     },
 
     _secondaryActionIndicesChanged: function (newValue) {
+        if (this._suppressPerRowRefresh) {
+            return; // primed ahead of an entities-triggered rebuild, which consumes the new value itself
+        }
         if (this.egiModel) {
             const noneFilteredOut = this.egiModel.length === this.entities.length;
             this.egiModel.forEach((egiEntity, index) => {
@@ -2099,7 +2242,7 @@ Polymer({
 
     _currentEntity: function (entity) {
         const egi = this;
-        // Return old fashion javascript function (not arrow function). This function will be called by 
+        // Return old fashion javascript function (not arrow function). This function will be called by
         // action therefore this of the function will be the action (in case of arrow function this would be the EGI).
         return function () {
             //this - is the action that calls this function.
@@ -2107,13 +2250,119 @@ Polymer({
         };
     },
 
+    /**
+     * Resolves the entity behind `column.property` for a row, mirroring `_currentEntity` in shape.
+     *
+     * The returned function is invoked from the action (so `this` refers to the action). The resolution covers four shapes:
+     *   1. entity-typed leaf -> the value at the leaf, or null when the cell is empty
+     *   2. union-typed leaf  -> the active member instance, or null when the union has no active member
+     *   3. simple-typed leaf -> the entity that holds the leaf, determined by `getFirstEntityTypeAndProperty`:
+     *        - for a top-level simple property (e.g. `desc`, or the row-itself "this" column where `column.property` is empty) the holder is the row entity (via the `Entity.prototype.get('')` short-circuit),
+     *        - for a dotted path (e.g. `vehicle.make.name`) the holder is the entity at the deepest entity-typed prefix (`vehicle.make`), or null when that prefix is empty,
+     *        - when the holder prefix itself is a union, it is unwrapped to its active member (or null when there is no active member).
+     *        Non-common simple properties on a union are always addressed via a dot-notated path that names the specific member
+     *        (e.g. `unionProp.engineer.specificProp`), so the prefix already lands on the member entity directly.
+     *   4. dynamic column    -> the collection item from `column.collectionalProperty` whose key matches `column.property`
+     *
+     * Returns null whenever the resolved holder is empty — null entity-typed leaf (1), union with no active member (2),
+     * or dotted simple leaf whose entity-typed prefix is null (3). The resolver does not walk further up the property path
+     * when the immediate entity-typed prefix is empty; the caller's action producer is expected to handle the null case.
+     */
+    _chosenEntity: function (entity, column) {
+        const egi = this;
+        return function () {
+            // Reuse `_currentEntity` to derive the row entity, applying the same navigation-aware fallback to `egi.editingEntity`.
+            // Two binding details matter:
+            //   - `egi._currentEntity(...)` (not `this._currentEntity(...)`): inside this returned function `this` is the action, which has no `_currentEntity` method, so we go through the captured `egi`.
+            //   - `.call(this)`: `_currentEntity`'s inner function reads `this.supportsNavigation` from the action; we must invoke it with the action as `this` (i.e. our outer `this`), otherwise `supportsNavigation` would be undefined and the navigation branch would never fire.
+            const referenceEntity = egi._currentEntity(entity).call(this);
+            if (!referenceEntity || !column) {
+                return null;
+            }
+            // Case 4: dynamic column.
+            if (column.collectionalProperty) {
+                return egi.getCollectionalItem(referenceEntity, column);
+            }
+
+            const [, propName] = getFirstEntityTypeAndProperty(referenceEntity, column.property);
+            const propValue = referenceEntity.get(propName);
+
+            if (propValue) {
+                const propType = typeOf(propValue);
+                if (propType && propType.isUnionEntity()) {
+                    return propValue._activeEntity() || null;
+                }
+                return propValue;
+            }
+
+            return null;
+
+            // Returns the TG entity-type metadata for `v`, or `null` if `v` is not an entity-shaped value.
+            function typeOf (v) {
+                try {
+                    if (v && v.constructor && v.constructor.prototype && typeof v.constructor.prototype.type === 'function') {
+                        return v.constructor.prototype.type.call(v);
+                    }
+                } catch (e) {
+                    // not an entity — fall through.
+                }
+                return null;
+            }
+        };
+    },
+
+    /**
+     * Installs the `tooltip-text` attribute on the body cell under the pointer, computing the tooltip on demand.
+     *
+     * Cell tooltips used to be bound eagerly in the row templates, which computed rows × columns tooltip HTML strings on every model rebuild,
+     * while `TgTooltipBehavior` reads the attribute only at hover time (and `tg-tooltip` shows it after a further delay).
+     * Only body row cells participate — totals cells keep their eager `_getTotalTooltip` binding.
+     */
+    _provideCellTooltip: function (event) {
+        const cell = event.target && event.target.closest ? event.target.closest("tg-egi-cell") : null;
+        if (cell === this._lastTooltipCell) {
+            return;
+        }
+        this._lastTooltipCell = cell;
+        if (cell && cell.egiEntity && cell.column && cell.closest(".table-data-row")) {
+            const tooltip = this._getTooltip(cell.egiEntity.entity, cell.column, cell.column.customActions);
+            if (tooltip) {
+                cell.setAttribute("tooltip-text", tooltip);
+                this._cellsWithTooltip.add(cell);
+            } else {
+                cell.removeAttribute("tooltip-text");
+                this._cellsWithTooltip.delete(cell);
+            }
+        }
+    },
+
+    /**
+     * Drops the tooltip computed for the currently hovered cell so that the next pointer movement recomputes it.
+     * Used by the `egiModel` rebuild and by in-place update paths (`updateEntity`, column reconfiguration) that change what a visible tooltip should say.
+     *
+     * Refreshing the `tooltip-text` attribute alone is not enough: `tg-tooltip.show` is a no-op while a tooltip is already displayed (its content is frozen) and a pending show timer has captured the old text.
+     * Hence the displayed / pending tooltip is hidden as well — but only when the pointer is actually over the invalidated cell, leaving unrelated tooltips alone.
+     */
+    _invalidateHoveredCellTooltip: function () {
+        if (this._lastTooltipCell) {
+            this._lastTooltipCell.removeAttribute("tooltip-text");
+            this._cellsWithTooltip.delete(this._lastTooltipCell);
+            if (this._lastTooltipCell.matches(":hover")) {
+                hideTooltip();
+            }
+            this._lastTooltipCell = null;
+        }
+    },
+
     _getTooltip: function (entity, column, actions) {
         try {
             let tooltip = this.getValueTooltip(entity, column);
             const entityIdx = this.findEntityIndex(entity);
-            const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
+            // groupIndices is a list of sub-action indices, one per property-action group on the column.
+            // The tooltip surfaces one fragment per group, each describing the group's currently-selected sub-action.
+            const groupIndices = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
             const columnDescPart = this.getDescTooltip(entity, column);
-            const actionDescPart = this.getActionTooltip(entity, column, actions[actionIdx]);
+            const actionDescPart = this._getActionsTooltip(entity, column, actions, groupIndices);
             tooltip += (columnDescPart && tooltip && "<br><br>") + columnDescPart;
             tooltip += (actionDescPart && tooltip && "<br><br>") + actionDescPart;
             return tooltip;
@@ -2123,7 +2372,9 @@ Polymer({
     },
 
     getValueTooltip: function (entity, column) {
-        const validationResult = this.getRealEntity(entity, column).prop(this.getRealProperty(column)).validationResult();
+        const realProperty = this.getRealProperty(column);
+        // entity-itself columns (e.g., a key-only column) have no real property, so there is no per-property validation result to consult.
+        const validationResult = realProperty === '' ? null : this.getRealEntity(entity, column).prop(realProperty).validationResult();
         if (this._reflector.isWarning(validationResult) || this._reflector.isError(validationResult)) {
             const messages = resultMessages(validationResult);
             return messages.extended && ("<b>" + messages.extended + "</b>");
@@ -2148,17 +2399,56 @@ Polymer({
         return "";
     },
 
-    getActionTooltip: function (entity, column, action) {
-        if (action && (action.shortDesc || action.longDesc)) {
-            return this._generateActionTooltip(action);
-        } else if (this.getAttachmentIfPossible(entity, column)) {
-            return this._generateActionTooltip({
-                shortDesc: 'Download',
-                longDesc: 'Click to download attachment.'
-            });
-        } else if (!this.isHyperlinkProp(entity, column) && this.hasDefaultAction(entity, column)) {
-            return this._generateActionTooltip(this.hasDefaultAction(entity, column));
+    /**
+     * Builds the action portion of an EGI cell tooltip.
+     * Composes inner fragments in order: 
+     *  (1) deprecated `getActionTooltip(entity, column)` hook for subclassed EGIs that resolve a tooltip from row / column state; 
+     *  (2) per-group fan-out — one inner fragment per configured property-action group via `_generateActionTooltip` for its runtime-selected sub-action (`actions[g]` is the group element, `groupIndices[g]` its server-chosen sub-action index); 
+     *  (3) attachment / default-action fallback when nothing else produced a fragment.
+     * Collected fragments are wrapped in a single `<div>` labelled `With action:` (one) or `With actions:` (more than one), separated by `<br><br>` — mirrors the `tg-entity-editor` layout.
+     */
+    _getActionsTooltip: function (entity, column, actions, groupIndices) {
+        const innerTooltips = [];
+        const customActionTooltip = this.getActionTooltip(entity, column);
+        if (customActionTooltip) {
+            innerTooltips.push(customActionTooltip);
         }
+        if (actions && actions.length > 0 && groupIndices && groupIndices.length > 0) {
+            for (let g = 0; g < actions.length; g++) {
+                const group = actions[g]; 
+                const action = group && group.actions && group.actions[groupIndices[g]];
+                const actionTooltip = (action.shortDesc || action.longDesc) && this._generateActionTooltip(action);
+                if (actionTooltip) {
+                    innerTooltips.push(actionTooltip);
+                }
+            }
+        }
+        if (innerTooltips.length === 0) {
+            if (this.getAttachmentIfPossible(entity, column)) {
+                innerTooltips.push(this._generateActionTooltip({
+                    shortDesc: 'Download',
+                    longDesc: 'Click to download attachment.'
+                }));
+            } else if (!this.isHyperlinkProp(entity, column) && this.hasDefaultAction(entity, column)) {
+                innerTooltips.push(this._generateActionTooltip(this.hasDefaultAction(entity, column)));
+            }
+        }
+        const filtered = innerTooltips.filter(t => !!t);
+        if (filtered.length === 0) {
+            return "";
+        }
+        return `<div style='display:flex;'>
+            <div style='margin-right:10px;'>${filtered.length > 1 ? "With actions:" : "With action:"}</div>
+            <div style='flex-grow:1;'>${filtered.join("<br><br>")}</div>
+            </div>`;
+    },
+
+    /**
+     * Deprecated subclass hook for contributing a custom inner tooltip fragment from row / column state.
+     * Called once per cell by `_getActionsTooltip` and prepended to the per-group fragments when non-empty.
+     * Retained only for backward compatibility with subclassed EGIs that override it; do not override in new code — configure property actions via the DSL instead.
+     */
+    getActionTooltip: function (entity, column) {
         return "";
     },
     
@@ -2187,12 +2477,7 @@ Polymer({
         } else {
             longDesc = action.longDesc ? "<b>" + action.longDesc + "</b>" : "";
         }
-        const tooltip  = shortDesc + longDesc;
-        
-        return tooltip && `<div style='display:flex;'>
-            <div style='margin-right:10px;'>With action:</div>
-            <div style='flex-grow:1;'>${tooltip}</div> 
-            </div>`
+        return shortDesc + longDesc;
     },
 
     _getTotalTooltip: function (summary) {
@@ -2313,10 +2598,11 @@ Polymer({
      */
     canLeave: function () {
         if (this.isEditing()) {
-            return {
+            return Promise.reject({
                 msg: MSG_SAVE_OR_CANCEL
-            }
+            });
         }
+        return Promise.resolve(true);
     },
 
     //Performs custom tasks before leaving this EGI.

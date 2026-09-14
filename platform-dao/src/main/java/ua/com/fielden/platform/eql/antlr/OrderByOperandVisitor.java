@@ -20,8 +20,15 @@ final class OrderByOperandVisitor extends AbstractEqlVisitor<Stream<OrderBy1>> {
     }
 
     @Override
-    public Stream<OrderBy1> visitOrderByOperand_Single(final EQLParser.OrderByOperand_SingleContext ctx) {
-        final ISingleOperand1<? extends ISingleOperand2<?>> operand = ctx.singleOperand()
+    public Stream<OrderBy1> visitOrderByOperand_Expr(final EQLParser.OrderByOperand_ExprContext ctx) {
+        final ISingleOperand1<? extends ISingleOperand2<?>> operand = ctx.expr()
+                .accept(new SingleOperandVisitor(transformer));
+        return Stream.of(new OrderBy1(operand, isDesc(ctx.order())));
+    }
+
+    @Override
+    public Stream<OrderBy1> visitYieldOperandConcatOfOrderByOperand_Expr(final EQLParser.YieldOperandConcatOfOrderByOperand_ExprContext ctx) {
+        final ISingleOperand1<? extends ISingleOperand2<?>> operand = ctx.expr()
                 .accept(new SingleOperandVisitor(transformer));
         return Stream.of(new OrderBy1(operand, isDesc(ctx.order())));
     }
@@ -35,7 +42,16 @@ final class OrderByOperandVisitor extends AbstractEqlVisitor<Stream<OrderBy1>> {
     @Override
     public Stream<OrderBy1> visitOrderByOperand_OrderingModel(final EQLParser.OrderByOperand_OrderingModelContext ctx) {
         final OrderToken orderToken = (OrderToken) ctx.token;
-        final OrderBys1 innerModel = new EqlCompiler(transformer).compile(orderToken.model.getTokenSource(),
+        final OrderBys1 innerModel = new EqlCompiler(transformer).compile(orderToken.model.tokens(),
+                                                                          EqlCompilationResult.StandaloneOrderBy.class)
+                .model();
+        return innerModel.models().stream();
+    }
+
+    @Override
+    public Stream<OrderBy1> visitYieldOperandConcatOfOrderByOperand_OrderingModel(final EQLParser.YieldOperandConcatOfOrderByOperand_OrderingModelContext ctx) {
+        final OrderToken orderToken = (OrderToken) ctx.token;
+        final OrderBys1 innerModel = new EqlCompiler(transformer).compile(orderToken.model.tokens(),
                                                                           EqlCompilationResult.StandaloneOrderBy.class)
                 .model();
         return innerModel.models().stream();

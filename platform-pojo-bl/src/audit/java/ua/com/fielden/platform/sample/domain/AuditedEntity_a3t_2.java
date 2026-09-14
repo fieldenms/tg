@@ -1,7 +1,8 @@
-// Generation timestamp: 2026-01-16 10:46:36 EET
+// Generation timestamp: 2026-03-05 12:46:16 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
+import java.util.Date;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.audit.annotations.AuditFor;
@@ -15,11 +16,12 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 @AuditFor(
     value = AuditedEntity.class,
@@ -34,6 +36,18 @@ import ua.com.fielden.platform.types.RichText;
 @KeyType(DynamicEntityKey.class)
 @DenyIntrospection
 public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
+  @IsProperty
+  @MapTo
+  @PersistentType(
+      userType = IUtcDateTimeType.class
+  )
+  @Final
+  @Title(
+      value = "Date 2",
+      desc = "[Date 2] at the time of the audited event."
+  )
+  private Date a3t_date2;
+
   @IsProperty
   @MapTo
   @Final
@@ -76,8 +90,17 @@ public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
       value = "Union Entity",
       desc = "[Union Entity] at the time of the audited event."
   )
-  @SkipEntityExistsValidation
   private UnionEntity a3t_union;
+
+  public Date getA3t_date2() {
+    return this.a3t_date2;
+  }
+
+  @Observable
+  public AuditedEntity_a3t_2 setA3t_date2(final Date a3t_date2) {
+    this.a3t_date2 = a3t_date2;
+    return this;
+  }
 
   public boolean isA3t_invalidate() {
     return this.a3t_invalidate;

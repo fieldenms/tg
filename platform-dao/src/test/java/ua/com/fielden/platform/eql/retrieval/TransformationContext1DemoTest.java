@@ -1,30 +1,11 @@
 package ua.com.fielden.platform.eql.retrieval;
 
 
+import org.junit.Test;
+
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-
-import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
-
 public class TransformationContext1DemoTest extends AbstractEqlShortcutTest {
-    @Rule
-    public TestName name = new TestName();
-
-    @Before
-    public void setUp() {
-        // System.out.println("\nEXECUTING TEST [%s]:\n".formatted(name.getMethodName()));
-        TransformationContextFromStage1To2.showInternals();
-    }
-
-    @After
-    public void tearDown() {
-        TransformationContextFromStage1To2.hideInternals();
-    }
 
     @Test
     public void demo_1() {

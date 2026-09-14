@@ -3,6 +3,8 @@ import moment from '/resources/polymer/lib/moment-lib.js';
 export const timeZoneFormats = {
     "UTC": {
         "L": "YYYY-MM-DD",
+        "LT": "HH:mm",
+        "HH:mm:ss": "HH:mm:ss",
         "LTS": "HH:mm:ss.SSS",
         "L LT": "YYYY-MM-DD HH:mm",
         "L HH:mm:ss": "YYYY-MM-DD HH:mm:ss",

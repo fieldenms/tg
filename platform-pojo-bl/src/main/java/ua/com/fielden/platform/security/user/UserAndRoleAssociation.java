@@ -3,6 +3,7 @@ package ua.com.fielden.platform.security.user;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.utils.Pair;
 
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
@@ -25,12 +26,14 @@ public class UserAndRoleAssociation extends ActivatableAbstractEntity<DynamicEnt
 
     @IsProperty
     @CompositeKeyMember(1)
+    @Final
     @MapTo("ID_CRAFT")
     @SkipEntityExistsValidation(skipActiveOnly = true) // This is to allow deactivation of users without having to deactivate all their role associations.
     private User user;
 
     @IsProperty
     @CompositeKeyMember(2)
+    @Final
     @MapTo("ID_USER_ROLE")
     private UserRole userRole;
 

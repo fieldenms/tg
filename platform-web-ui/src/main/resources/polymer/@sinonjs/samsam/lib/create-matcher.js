@@ -27,7 +27,6 @@ var TYPE_MAP = require("./create-matcher/type-map")(createMatcher); // eslint-di
 
 /**
  * Creates a matcher object for the passed expectation
- *
  * @alias module:samsam.createMatcher
  * @param {*} expectation An expecttation
  * @param {string} message A message for the expectation
@@ -119,7 +118,7 @@ createMatcher.typeOf = function (type) {
 };
 
 createMatcher.instanceOf = function (type) {
-    /* istanbul ignore if */
+    /* c8 ignore start */
     if (
         typeof Symbol === "undefined" ||
         typeof Symbol.hasInstance === "undefined"
@@ -133,6 +132,7 @@ createMatcher.instanceOf = function (type) {
             "[Symbol.hasInstance]",
         );
     }
+    /* c8 ignore stop */
     return createMatcher(
         function (actual) {
             return actual instanceof type;

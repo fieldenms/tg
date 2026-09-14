@@ -42,6 +42,8 @@ public final class OperandToSqlAsString {
                 return operand.sql(metadata, dbVersion());
             } else if (operand.type().javaType() == Integer.class) {
                 return fromInteger(metadata, operand);
+            } else if (operand.type().javaType() == Long.class) {
+                return fromLong(metadata, operand);
             } else if (operand.type().javaType() == Date.class) {
                 return fromDate(metadata, operand);
             } else {
@@ -50,17 +52,20 @@ public final class OperandToSqlAsString {
         }
 
         default String fromInteger(final IDomainMetadata metadata, final ISingleOperand3 operand) {
-            // optimisation for integers: max integer value length is 10 chars
-            return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(10)");
+            // Integer at the level of supported RDBMSes is 4 bytes: max 10 digits + sign = 11 characters.
+            return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(11)");
+        }
+
+        default String fromLong(final IDomainMetadata metadata, final ISingleOperand3 operand) {
+            // Long at the level of supported RDBMSes is 8 bytes: max 19 digits + sign = 20 characters.
+            return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(20)");
         }
 
         default String fromDate(final IDomainMetadata metadata, final ISingleOperand3 operand) {
             return fromAny(metadata, operand);
         }
 
-        default String fromAny(final IDomainMetadata metadata, final ISingleOperand3 operand) {
-            return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR");
-        }
+        String fromAny(final IDomainMetadata metadata, final ISingleOperand3 operand);
 
     }
 
@@ -74,6 +79,11 @@ public final class OperandToSqlAsString {
             @Override
             public String fromDate(final IDomainMetadata metadata, final ISingleOperand3 operand) {
                 return "FORMATDATETIME(" + operand.sql(metadata, dbVersion()) + ", 'YYYY-MM-dd hh:mm:ss')";
+            }
+
+            @Override
+            public String fromAny(final IDomainMetadata metadata, final ISingleOperand3 operand) {
+                return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR");
             }
         },
 
@@ -100,6 +110,12 @@ public final class OperandToSqlAsString {
                         opSql, opSql,
                         opSql);
             }
+
+            @Override
+            public String fromAny(final IDomainMetadata metadata, final ISingleOperand3 operand) {
+                return dbVersion().castSql(operand.sql(metadata, dbVersion()), "VARCHAR(MAX)");
+            }
+
         },
 
         POSTGRESQL {
@@ -125,6 +141,11 @@ public final class OperandToSqlAsString {
                         opSql, opSql, opSql,
                         opSql);
             }
+
+            @Override
+            public String fromAny(final IDomainMetadata metadata, final ISingleOperand3 operand) {
+                return dbVersion().castSql(operand.sql(metadata, dbVersion()), "TEXT");
+            }
         },
 
         ORACLE {
@@ -140,7 +161,7 @@ public final class OperandToSqlAsString {
 
             @Override
             public String fromAny(final IDomainMetadata metadata, final ISingleOperand3 operand) {
-                return DbVersion.ORACLE.castSql(operand.sql(metadata, dbVersion()), "VARCHAR2");
+                return DbVersion.ORACLE.castSql(operand.sql(metadata, dbVersion()), "VARCHAR2(4000)");
             }
         }
     }

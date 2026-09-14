@@ -37,18 +37,51 @@ const TgEntityMasterTemplateBehaviorImpl = {
             }
         };
 
-        self._tgOpenPersistentEntityInfoMasterAttrs = {
-            entityType: "ua.com.fielden.platform.entity.PersistentEntityInfo", 
-            currentState: 'EDIT', 
-            centreUuid: self.uuid
+        self._getInfoMasterUri = function (_currEntity) {
+            if (_currEntity && _currEntity.type().isAudited()) {
+                return '/master_ui/ua.com.fielden.platform.entity.OpenPersistentEntityInfoAction';
+            }
+            return '/master_ui/ua.com.fielden.platform.entity.PersistentEntityInfo';
+        }
+
+        self._getInfoMasterElementName = function (_currEntity) {
+            if (_currEntity && _currEntity.type().isAudited()) {
+                return 'tg-OpenPersistentEntityInfoAction-master';
+            }
+            return 'tg-PersistentEntityInfo-master'
+        }
+
+        self._getInfoMasterAttrs = function (_currEntity) {
+            if (_currEntity && _currEntity.type().isAudited()) {
+                return {
+                    entityType: "ua.com.fielden.platform.entity.OpenPersistentEntityInfoAction", 
+                    currentState: 'EDIT', 
+                    centreUuid: self.uuid,
+                    prefDim: {
+                        width: function() {
+                            return 1048
+                        },
+                        height: function() {
+                            return 610
+                        },
+                        widthUnit: 'px',
+                        heightUnit: 'px'
+                    }
+                };
+            }
+            return {
+                entityType: "ua.com.fielden.platform.entity.PersistentEntityInfo", 
+                currentState: 'EDIT', 
+                centreUuid: self.uuid,
+            }
         };
 
         self._currentEntityForPersistentEntityInfo = function() {
             return () => self._currEntity;
         };
 
-        self._isPersistentEntityWithAuditData = function(_currEntity) {
-            return _currEntity && _currEntity.type().isPersistentWithAuditData();
+        self._isPersistentEntityWithVersionData = function(_currEntity) {
+            return _currEntity && _currEntity.type().isPersistentWithVersionData();
         };
 
         self._isEntityPersisted = function(_currEntity) {
@@ -56,7 +89,9 @@ const TgEntityMasterTemplateBehaviorImpl = {
         };
 
         self._modifyAuditInfoFunctionalEntity = function (bindingEntity, master, action) {
-            master.fire('tg-dynamic-title-changed', bindingEntity["@@origin"]["entityTitle"]);
+            if (!master._hasEmbededView()) { // If the given master has no embedded view, it is considered a simple master (not a compound master).
+                master.fire('tg-dynamic-title-changed', bindingEntity["@@origin"]["entityTitle"]);
+            }
         }
     },
 
@@ -93,6 +128,13 @@ const TgEntityMasterTemplateBehaviorImpl = {
     },
 
     addOwnKeyBindings: function () {
+        // `$` gets assigned when Polymer stamps the element's template, which happens upon its first connection.
+        // An embedded view that was loaded into a detached `tg-element-loader` has never been connected.
+        // A master that gets re-attached also runs its own `connectedCallback` ahead of those of its descendants.
+        // In both cases the embedded view registers its key bindings from its own `attached` callback, once it is connected.
+        if (!this.$) {
+            return;
+        }
         const keyBindings = this._ownKeyBindings;
         if (this.$.loader) {
             if (this.$.loader.wasLoaded) {
@@ -111,6 +153,10 @@ const TgEntityMasterTemplateBehaviorImpl = {
     },
 
     removeOwnKeyBindings: function () {
+        // See `addOwnKeyBindings` for why an element may not have `$` at this point.
+        if (!this.$) {
+            return;
+        }
         if (this.$.loader) {
             if (this.$.loader.wasLoaded) {
                 if (typeof this.$.loader.loadedElement.removeOwnKeyBindings === 'function') {
@@ -178,6 +224,13 @@ const TgEntityMasterTemplateBehaviorImpl = {
      */
     _ajaxSaver: function () {
         return this._masterDom()._ajaxSaver();
+    },
+
+    /**
+     * The core-ajax component for custom canLeave logic.
+     */
+    _canLeaveAjax: function () {
+        return this._masterDom()._canLeaveAjax();
     },
 
     /**

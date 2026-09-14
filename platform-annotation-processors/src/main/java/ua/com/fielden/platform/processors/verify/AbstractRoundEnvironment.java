@@ -72,7 +72,11 @@ public abstract class AbstractRoundEnvironment<EL, EV extends IElementVerifier<E
     }
 
     public final Set<? extends Element> getElementsAnnotatedWith(Class<? extends Annotation> a) {
-        return skipElements(roundEnv.getElementsAnnotatedWith(a).stream()).collect(toSet());
+        return streamElementsAnnotatedWith(a).collect(toSet());
+    }
+
+    public final Stream<? extends Element> streamElementsAnnotatedWith(Class<? extends Annotation> a) {
+        return skipElements(roundEnv.getElementsAnnotatedWith(a).stream());
     }
 
     public final Set<? extends Element> getElementsAnnotatedWithAny(Set<Class<? extends Annotation>> annotations){

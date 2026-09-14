@@ -185,7 +185,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                                 throw new EntityDeserialisationException(ERR_COULD_NOT_MODIFY_FIELD.formatted(versionField.getName(), entity.getType().getCanonicalName(), entity), ex);
                             }
                             final Optional<MetaProperty<?>> metaPropertyOpt = entity.getPropertyOptionally(childName);
-                            metaPropertyOpt.ifPresent(metaProperty -> deserialiseMetaProperty((MetaProperty<Object>) metaProperty, node.get("@" + childName), prop.field()));
+                            metaPropertyOpt.ifPresent(metaProperty -> deserialiseMetaProperty((MetaProperty<Object>) metaProperty, node.get(childName + "@"), prop.field()));
                         } catch (final RuntimeException ex) {
                             propErrorHandler.handle(entity, prop.field().getName(), childNode::toString, ex);
                         }

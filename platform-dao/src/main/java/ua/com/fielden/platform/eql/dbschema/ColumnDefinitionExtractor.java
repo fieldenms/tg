@@ -7,6 +7,7 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -209,7 +210,10 @@ public class ColumnDefinitionExtractor {
         if (isAuditEntityType(enclosingType) && propName.equals(AbstractAuditEntity.AUDIT_DATE) && propType == Date.class) {
             return Optional.of(new ColumnIndex(DESC));
         }
-        if (isPersistentEntityType(propType)) {
+        if (isPersistentEntityType(propType)
+            && !AbstractPersistentEntity.CREATED_BY.equals(propName)
+            && !AbstractPersistentEntity.LAST_UPDATED_BY.equals(propName))
+        {
             return Optional.of(new ColumnIndex(ASC));
         }
         else {

@@ -6,6 +6,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 import '/resources/file_operations/tg-attachment-uploader.js';
+import { applyAcceptedMimeTypes } from '/resources/file_operations/tg-file-processing-behavior.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
@@ -357,10 +358,10 @@ Polymer({
 
     /* Provides a reason why the attachment uploader list cannot be left... */
     canLeave: function () {
-        return {
+        return Promise.reject({
             imperative: true,
             msg: 'Uploading is still in progress...'
-        }
+        });
     },
 
     /* Ensures that shasow style is applied/removed depending on the size of the component. */
@@ -382,7 +383,7 @@ Polymer({
     },
 
     _mimeTypesAcceptedChanged: function (newValue, oldValue) {
-        this._uploadInput.setAttribute('accept', newValue);
+        applyAcceptedMimeTypes(this._uploadInput, newValue);
     },
 
     _dragenter: function (e) {

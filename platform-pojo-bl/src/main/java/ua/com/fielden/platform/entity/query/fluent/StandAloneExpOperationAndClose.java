@@ -14,7 +14,7 @@ public final class StandAloneExpOperationAndClose //
 
     @Override
     public ExpressionModel model() {
-        return new ExpressionModel(builder.model().getTokenSource());
+        return new ExpressionModel(builder.model().getTokens());
     }
 
     @Override

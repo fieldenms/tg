@@ -1,3 +1,5 @@
+import '/resources/components/postal-lib.js';
+
 /**
  * Timer identifier used to schedule SSE reconnection after an error.
  */

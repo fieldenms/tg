@@ -3,6 +3,18 @@ import { TgSseBehavior } from '/resources/sse/tg-sse-behavior.js';
 import { eventSource } from '/resources/components/tg-event-source.js';
 import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 
+// Applies `accept` to a file input, treating an unrestricted value as "no filter at all".
+// An explicit accept of any-type is not equivalent to omitting the attribute -- some browsers still present it as a named filter.
+// Omitting it keeps all files selectable on desktop, and keeps the camera among the sources offered on mobile devices.
+export const applyAcceptedMimeTypes = function (uploadInput, mimeTypes) {
+    const value = mimeTypes ? mimeTypes.trim() : '';
+    if (value === '' || value === '*/*') {
+        uploadInput.removeAttribute('accept');
+    } else {
+        uploadInput.setAttribute('accept', value);
+    }
+};
+
 const TgFileProcessingBehaviorImpl = {
 
     properties: {
@@ -26,6 +38,14 @@ const TgFileProcessingBehaviorImpl = {
         mimeTypesAccepted: {
             type: String,
             observer: '_mimeTypesAcceptedChanged'
+        },
+
+        /* An optional preference for a media capture device on mobile devices (e.g. `environment` for the outward-facing camera).
+           Leave unset for general-purpose uploading: when this is set and `accept` covers a capturable type,
+           mobile browsers open the camera directly instead of offering a choice of sources, making other files unreachable. */
+        captureSource: {
+            type: String,
+            observer: '_captureSourceChanged'
         },
 
         fpResponseHandler: {
@@ -122,7 +142,6 @@ const TgFileProcessingBehaviorImpl = {
         // let's create an invisible file input element to be used for opening a file dialog
         this._uploadInput = document.createElement("input");
         this._uploadInput.type = "file";
-        this._uploadInput.capture="environment"; // this is to indicate a preference for the outward-facing camera on mobile devices
         this._uploadInput.onchange = function () {
             try {
                 this._handleFiles(this._uploadInput.files);
@@ -143,7 +162,15 @@ const TgFileProcessingBehaviorImpl = {
     },
 
     _mimeTypesAcceptedChanged: function (newValue, oldValue) {
-        this._uploadInput.setAttribute('accept', newValue);
+        applyAcceptedMimeTypes(this._uploadInput, newValue);
+    },
+
+    _captureSourceChanged: function (newValue, oldValue) {
+        if (newValue) {
+            this._uploadInput.setAttribute('capture', newValue);
+        } else {
+            this._uploadInput.removeAttribute('capture');
+        }
     },
 
     /* A helper method to clean up resources post files processing or error handling. */
