@@ -789,8 +789,6 @@ Polymer({
         this._attrs = {entityType: "ua.com.fielden.platform.menu.MenuSaveAction", currentState: "EDIT", centreUuid: this.uuid};
         this._openUserMenuVisibilityAssociatorAttrs = {entityType: "ua.com.fielden.platform.menu.UserMenuVisibilityAssociator", currentState: "EDIT", centreUuid: this.uuid};
         this.tgOpenMasterAction.requireMasterEntity = 'false';
-        //Binding to 'this' functions those are used outside the scope of this component.
-        this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
 
         //Configure help action
         this._currentEntityForHelp = () => {
@@ -874,6 +872,9 @@ Polymer({
         // Listen for the server-pushed application-version announcement, dispatched on `window` by `tg-event-source.js`.
         // When the server reports a version different from the one this client was loaded with, the user is prompted to reload.
         window.addEventListener('tg-application-version', event => this._handleAppVersionAnnouncement(event.detail));
+
+        // Ask the user to confirm leaving the application.
+        window.addEventListener('beforeunload', this._checkWhetherCanLeave);
     },
 
     attached: function () {
@@ -902,12 +903,6 @@ Polymer({
             this._toastGreeting().isCritical = false;
             this._toastGreeting().show();
         });
-        
-        window.addEventListener("beforeunload", this._checkWhetherCanLeave);
-    },
-    
-    detached: function () {
-        window.removeEventListener("beforeunload", this._checkWhetherCanLeave);
     },
 
     /// Prompts the user to reload when the server reports a deployment different from the one this client was loaded with.
