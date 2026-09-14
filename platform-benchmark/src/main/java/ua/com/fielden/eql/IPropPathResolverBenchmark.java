@@ -14,6 +14,7 @@ import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
 import ua.com.fielden.platform.eql.stage2.IPropPathResolver;
@@ -86,6 +87,7 @@ public class IPropPathResolverBenchmark {
 
     private IPropPathResolver propPathResolver;
     private QueryModelToStage1Transformer gen;
+    private MoneyComponentInference moneyComponentInference;
 
     /// Retained so that [#beforeInvocation()] can rebuild `gen`.
     private IFilter filter;
@@ -179,7 +181,8 @@ public class IPropPathResolverBenchmark {
         gen = mkGen(0);
         domainMetadata = injector.getInstance(IDomainMetadata.class);
         querySourceInfoProvider = injector.getInstance(QuerySourceInfoProvider.class);
-        final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata);
+        moneyComponentInference = injector.getInstance(MoneyComponentInference.class);
+        final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata, gen, moneyComponentInference);
 
         singleProp = prepare(singlePropQuery(), context);
         dotNotation = prepare(dotNotationQuery(), context);

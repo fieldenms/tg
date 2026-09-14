@@ -1,14 +1,7 @@
 package ua.com.fielden.platform.entity;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import com.google.inject.Injector;
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -16,11 +9,16 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.sample.domain.TeProductPrice;
+import ua.com.fielden.platform.sample.domain.TeProductPriceWithCurrency;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
-
-import com.google.inject.Injector;
 import ua.com.fielden.platform.test_entities.CorrectEntityWithDynamicEntityKey;
+import ua.com.fielden.platform.types.Money;
+
+import java.util.Currency;
+
+import static org.junit.Assert.*;
 
 /**
  * Unit test to ensure correct composition of composite entity keys with DynamicEntityKey.
@@ -286,6 +284,39 @@ public class DynamicEntityKeyTest {
 
         assertTrue("Comparison result is incorrect", keyOne.compareTo(keyTwo) == 0);
         assertTrue("Keys should be equal", keyOne.equals(keyTwo));
+    }
+
+    @Test
+    public void if_Money_is_a_member_then_keys_are_equal_only_if_currencies_are_equal_01() {
+        final var entity1 = factory.newByKey(TeProductPriceWithCurrency.class, "Wheel", new Money("100", Currency.getInstance("USD")));
+        final DynamicEntityKey key1 = entity1.getKey();
+
+        final var entity2 = factory.newByKey(TeProductPriceWithCurrency.class, "Wheel", new Money("100", Currency.getInstance("USD")));
+        final DynamicEntityKey key2 = entity2.getKey();
+
+        assertEquals(key1, key2);
+    }
+
+    @Test
+    public void if_Money_is_a_member_then_keys_are_equal_only_if_currencies_are_equal_02() {
+        final var entity1 = factory.newByKey(TeProductPriceWithCurrency.class, "Wheel", new Money("100", Currency.getInstance("USD")));
+        final DynamicEntityKey key1 = entity1.getKey();
+
+        final var entity2 = factory.newByKey(TeProductPriceWithCurrency.class, "Wheel", new Money("100", Currency.getInstance("EUR")));
+        final DynamicEntityKey key2 = entity2.getKey();
+
+        assertNotEquals(key1, key2);
+    }
+
+    @Test
+    public void if_Money_is_a_member_then_keys_are_equal_only_if_currencies_are_equal_03() {
+        final var entity1 = factory.newByKey(TeProductPriceWithCurrency.class, "Wheel", new Money("99", Currency.getInstance("USD")));
+        final DynamicEntityKey key1 = entity1.getKey();
+
+        final var entity2 = factory.newByKey(TeProductPriceWithCurrency.class, "Wheel", new Money("100", Currency.getInstance("USD")));
+        final DynamicEntityKey key2 = entity2.getKey();
+
+        assertNotEquals(key1, key2);
     }
 
     @Test

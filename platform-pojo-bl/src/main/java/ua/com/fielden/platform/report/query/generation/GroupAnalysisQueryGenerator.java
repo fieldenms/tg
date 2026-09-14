@@ -1,13 +1,5 @@
 package ua.com.fielden.platform.report.query.generation;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -24,6 +16,10 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.util.*;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
 public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> implements IReportQueryGenerator<T> {
 
@@ -61,8 +57,7 @@ public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> i
 
         //Create base sub-query and query models.
         final EntityResultQueryModel<T> subQueryModel = DynamicQueryBuilder.createQuery(managedType, ReportQueryGenerationUtils.createQueryProperties(getRoot(), getCdtme()), dates).model();
-        //TODO the DynamicQueryBuilder.createAggregationQuery method must not receive genClass this is interim solution in order to distinguish money properties and add .mount prefix.
-        final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery(subQueryModel, distributionProperties, genClass, yieldMap).modelAsEntity(genClass);
+        final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery(subQueryModel, distributionProperties, yieldMap).modelAsEntity(genClass);
 
         final List<Pair<String, Ordering>> analysisOrderingProperties = new ArrayList<>();
         for (final Pair<String, Ordering> orderingProp : adtm().getSecondTick().orderedProperties(getRoot())) {

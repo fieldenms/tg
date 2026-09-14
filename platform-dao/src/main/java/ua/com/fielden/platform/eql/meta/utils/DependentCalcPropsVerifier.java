@@ -12,6 +12,7 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -44,11 +45,17 @@ public class DependentCalcPropsVerifier {
 
     private final QuerySourceInfoProvider querySourceInfoProvider;
     private final IDomainMetadata domainMetadata;
+    private final MoneyComponentInference moneyComponentInference;
 
     @Inject
-    protected DependentCalcPropsVerifier(final QuerySourceInfoProvider querySourceInfoProvider, final IDomainMetadata domainMetadata) {
+    protected DependentCalcPropsVerifier(
+            final QuerySourceInfoProvider querySourceInfoProvider,
+            final IDomainMetadata domainMetadata,
+            final MoneyComponentInference moneyComponentInference)
+    {
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.domainMetadata = domainMetadata;
+        this.moneyComponentInference = moneyComponentInference;
     }
 
     /// Verifies each of the given query source infos.
@@ -103,7 +110,7 @@ public class DependentCalcPropsVerifier {
     {
         try {
             final var exp1 = new EqlCompiler(gen).compile(calcProp._2().tokens(), EqlCompilationResult.StandaloneExpression.class).model();
-            final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata, List.of(List.of(source)));
+            final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata, gen, moneyComponentInference, List.of(List.of(source)));
             final var exp2 = exp1.transform(context);
             return exp2.collectProps()
                     .stream()

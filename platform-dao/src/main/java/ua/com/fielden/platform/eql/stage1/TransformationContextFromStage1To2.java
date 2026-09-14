@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage1;
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
+import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ImmutableListUtils;
@@ -20,6 +21,8 @@ import java.util.List;
 public record TransformationContextFromStage1To2 (
         QuerySourceInfoProvider querySourceInfoProvider,
         IDomainMetadata domainMetadata,
+        QueryModelToStage1Transformer stage1Transformer,
+        MoneyComponentInference moneyComponentInference,
         List<List<ISource2<?>>> sourcesStack)
 {
 
@@ -28,18 +31,22 @@ public record TransformationContextFromStage1To2 (
     public static TransformationContextFromStage1To2 mkContext(
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IDomainMetadata domainMetadata,
+            final QueryModelToStage1Transformer stage1Transformer,
+            final MoneyComponentInference moneyComponentInference,
             final List<List<ISource2<?>>> sources)
     {
-        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, ImmutableList.copyOf(sources));
+        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, stage1Transformer, moneyComponentInference, ImmutableList.copyOf(sources));
     }
 
     /// Creates an empty context.
     ///
     public static TransformationContextFromStage1To2 mkContext(
             final QuerySourceInfoProvider querySourceInfoProvider,
-            final IDomainMetadata domainMetadata)
+            final IDomainMetadata domainMetadata,
+            final QueryModelToStage1Transformer stage1Transformer,
+            final MoneyComponentInference moneyComponentInference)
     {
-        return mkContext(querySourceInfoProvider, domainMetadata, List.of());
+        return mkContext(querySourceInfoProvider, domainMetadata, stage1Transformer, moneyComponentInference, List.of());
     }
 
     /// Pushes the given source on top of the sources stack: `newStack = [s] + oldStack`.
@@ -52,15 +59,14 @@ public record TransformationContextFromStage1To2 (
     ///
     public TransformationContextFromStage1To2 pushSources(final Iterable<ISource2<?>> ss) {
         final var newSources = ImmutableListUtils.prepend(ImmutableList.copyOf(ss), sourcesStack);
-        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, newSources);
+        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, stage1Transformer, moneyComponentInference, newSources);
     }
 
     /// Overwrites the sources stack.
     ///
     public TransformationContextFromStage1To2 setSourcesStack(final Iterable<List<ISource2<?>>> stack) {
-        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, ImmutableList.copyOf(stack));
+        return new TransformationContextFromStage1To2(querySourceInfoProvider, domainMetadata, stage1Transformer, moneyComponentInference, ImmutableList.copyOf(stack));
     }
-
     /// Returns the sources on top of the stack.
     ///
     public List<ISource2<?>> peekSources() {

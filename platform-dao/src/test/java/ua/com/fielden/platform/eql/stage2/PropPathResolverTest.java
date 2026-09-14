@@ -107,14 +107,14 @@ public class PropPathResolverTest extends EqlTestCase {
             final Class<T> resultType)
     {
         final var gen = qb();
-        final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider(), metadata());
+        final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider(), metadata(), gen, moneyComponentInference());
         final var fetchModel = new EntityRetrievalModel<>(fetchOnly(resultType), metadata(), querySourceInfoProvider());
         final var props = gen.generateAsResultQuery(query, null, fetchModel).transform(context).collectProps();
 
         final var sourceIds = props.stream().map(prop -> prop.source.id()).distinct().toList();
         assertThat(sourceIds).as("the query is expected to have exactly one explicit source").hasSize(1);
 
-        final var result = new PropPathResolver(querySourceInfoProvider(), metadata()).resolve(props, gen);
+        final var result = new PropPathResolver(querySourceInfoProvider(), metadata(), moneyComponentInference()).resolve(props, gen);
         return result.joins().getOrDefault(sourceIds.getFirst(), List.of());
     }
 

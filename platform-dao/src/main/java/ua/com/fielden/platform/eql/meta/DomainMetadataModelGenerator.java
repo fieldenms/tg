@@ -5,11 +5,9 @@ import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.eql.dbschema.PropertyInliner;
-import ua.com.fielden.platform.meta.EntityMetadata;
-import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.meta.PropertyTypeMetadata;
+import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.*;
 import java.util.function.LongFunction;
@@ -76,8 +74,10 @@ public final class DomainMetadataModelGenerator {
                     }));
         });
 
-        // 2. Map each property from all properties in `entityTypes` to a `DomainTypeData` instance.
-        //    This covers union entities, primitive and component types.
+        // 2. Map each property type into a `DomainTypeData` instance.
+        //    This covers union entities and component types, all of which are reachable only through their use as property types.
+        //    This process assumes that each component type is used only in one representation (i.e., no two properties
+        //    use different representations of the same component type).
         final Stream<H> propHs = entityTypes.stream()
                 .map(domainMetadata::forEntity)
                 .map(EntityMetadata::properties)
@@ -91,7 +91,6 @@ public final class DomainMetadataModelGenerator {
                 .map(prop -> {
                     final Optional<Class<?>> optPropJavaType = switch (prop.type()) {
                         case PropertyTypeMetadata.Component it -> Optional.of(it.javaType());
-                        case PropertyTypeMetadata.Primitive it -> Optional.of(it.javaType());
                         // inherited from old code, not sure why entities with metadata are filtered
                         case PropertyTypeMetadata.Entity it when domainMetadata.forType(it.javaType()).isEmpty()
                                                                  || !entityTypes.contains(it.javaType())
@@ -100,7 +99,7 @@ public final class DomainMetadataModelGenerator {
                     };
                     return optPropJavaType.map(propJavaType -> new H(propJavaType, id -> {
                         final int propsCount = prop.asPersistent().flatMap(propertyInliner::inline)
-                                // ignore single-component composite types; not sure why, but this has been in the old code
+                                // Single-component types are treated as primitive (as if they had 0 sub-properties).
                                 .filter(props_ -> !prop.type().isComponent() || props_.size() > 1)
                                 .map(Collection::size)
                                 .orElse(0);
@@ -115,7 +114,12 @@ public final class DomainMetadataModelGenerator {
                     }));
                 }).flatMap(Optional::stream);
 
-        return collectToImmutableMap(distinct(Stream.concat(entityHs, propHs), H::type),
+        final Stream<H> primHs = TypeRegistry.PRIMITIVE_PROPERTY_TYPES
+                .stream()
+                .map(type -> new H(type, id -> domainTypeData(type, null, id, type.getName(), type.getSimpleName(), false,
+                                                              null, type.getSimpleName(), 0, ImmutableList.of(), ImmutableList.of())));
+
+        return collectToImmutableMap(distinct(StreamUtils.concat(entityHs, propHs, primHs), H::type),
                                      longs(1),
                                      (h, i) -> h.type(),
                                      (h, i) -> h.f().apply(i));
@@ -172,7 +176,7 @@ public final class DomainMetadataModelGenerator {
                 if (pm.isPersistent()) {
                     final var ppm = pm.asPersistent().orElseThrow();
                     final var optSubProps = propertyInliner.inline(ppm)
-                            // ignore single-component composite types, they are treated as primitive types
+                            // Single-component types are treated as primitive (as if they had 0 sub-properties).
                             .filter(props -> !ppm.type().isComponent() || props.size() > 1);
                     if (optSubProps.isPresent()) {
                         int subItemPosition = 0;

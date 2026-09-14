@@ -28,6 +28,10 @@ public record Yield1 (ISingleOperand1<? extends ISingleOperand2<?>> operand,
         return new Yield2(operand.transform(context), alias, hasNonnullableHint);
     }
 
+    public boolean hasAlias() {
+        return !alias.equals(ABSENT_ALIAS);
+    }
+
     @Override
     public String toString() {
         return toString(ToString.separateLines());
