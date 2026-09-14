@@ -15,6 +15,36 @@ import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js'
 import { GestureEventListeners } from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
 import { scrollContainerIfPointNearTheEdge, tearDownEvent, isTouchEnabled, getParentAnd, getRelativePos} from '/resources/reflection/tg-polymer-utils.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
+
+/**
+ * High-entropy user-agent details for the drag-and-drop diagnostics of issue #2819.
+ * The classic user-agent string is frozen by the browser, so on Android it always reports version `10` and model `K`.
+ * Only User-Agent Client Hints can identify the actual OS version, device model and rendering engine.
+ * This is a constant for the lifetime of the page, so it is resolved once and cached.
+ * The reported value is a device description, or `uach=unavailable` on engines without Client Hints, as confirmed on iOS Safari 26.6.
+ * It is `uach=error` if the query is rejected, and `uach=pending` if a session is reported before the query settles.
+ */
+let _uaDetails = null;
+
+const _resolveUaDetails = function () {
+    if (_uaDetails !== null) {
+        return;
+    }
+    _uaDetails = "uach=pending";
+    const uaData = navigator.userAgentData;
+    if (uaData && uaData.getHighEntropyValues) {
+        uaData.getHighEntropyValues(["platformVersion", "model", "fullVersionList"]).then(values => {
+            const brands = (values.fullVersionList || []).map(brand => `${brand.brand}/${brand.version}`).join(",");
+            _uaDetails = `plat=${uaData.platform}/${values.platformVersion || "?"} model=${values.model || "?"}` +
+                ` uaMobile=${uaData.mobile} brands=[${brands}]`;
+        }).catch(() => {
+            _uaDetails = "uach=error";
+        });
+    } else {
+        _uaDetails = "uach=unavailable";
+    }
+};
 
 const additionalTemplate = html`
     <style>
@@ -45,6 +75,14 @@ const additionalTemplate = html`
             @apply --layout-center;
             padding: 16px 16px 16px 0;
             border-bottom: 1px solid #DDD;
+        }
+        /* Long-pressing selectable text competes with drag initiation on touch devices; only reorderable lists are dragged. */
+        :host([can-reorder-items]) .item {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
         .item:hover {
             background-color: var(--google-grey-100);
@@ -359,13 +397,36 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         this.addEventListener("drop", this._dragDrop);
         this.addEventListener('dragend', this._endDrag.bind(this));
 
+        // Diagnostic listeners for issue #2819; these only count events and never interfere with them.
+        // Only reorderable lists are reported, so there is nothing to observe on the rest.
+        if (this.canReorderItems) {
+            this.addEventListener('pointerdown', this._dndPointerDown.bind(this));
+            this.addEventListener('pointermove', this._dndPointerMove.bind(this));
+            this.addEventListener('pointerup', this._dndPointerEnd.bind(this));
+            this.addEventListener('pointercancel', this._dndPointerEnd.bind(this));
+            this.addEventListener('contextmenu', e => this._dndRowFor(e) && this._countDnd("ctx"));
+            // `selectstart` is not composed, so it never leaves this shadow root and has to be observed there rather than on the host.
+            this.shadowRoot.addEventListener('selectstart', e => this._dndRowFor(e) && this._countDnd("sel"));
+        }
+
         this._touchEnabled = isTouchEnabled();
     }
 
     connectedCallback () {
         super.connectedCallback();
+        // Report the previous session in case it was not reported on disconnection.
+        this._reportDndDiag();
         this._originalChosenIds = null;
         this._phraseForSearching ="";
+        this._dndDiag = {taps: 0, held: 0, ctx: 0, sel: 0, pcancel: 0, dragstart: 0, dragInit: 0, dropped: 0, dragend: 0};
+        _resolveUaDetails();
+    }
+
+    disconnectedCallback () {
+        this._clearDragState();
+        this._dndCancelHoldTimer();
+        this._reportDndDiag();
+        super.disconnectedCallback();
     }
 
     _calcItemTooltip (item) {
@@ -444,6 +505,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
 
     _selectionHandler (e) {
         if (this._isSelectionEnabled(this._forReview)) {
+            this._countDnd("taps");
             this.$.input.toggleSelectionForItem(e.model.item);
             tearDownEvent(e);
         }
@@ -620,7 +682,12 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
 
     _computeStyleForDragAnchor (selected, _touchEnabled) {
-        return !selected || _touchEnabled ? "visibility: hidden;" : ""; 
+        if (!selected) {
+            return "visibility: hidden;";
+        }
+        // A touch device has no hover, so the handle of a selected row has to be shown outright rather than left to `.item:hover .drag-anchor`.
+        // It serves only as an affordance there, because on touch it is the row that carries `draggable` rather than the handle.
+        return _touchEnabled ? "visibility: visible;" : "";
     }
 
     _computeTitleStyle (canReorderItems) {
@@ -882,15 +949,25 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
 
     _startDrag (dragEvent) {
+        this._countDnd("dragstart");
         const target = dragEvent.composedPath()[0];
         if (target.nodeType === Node.ELEMENT_NODE && target.getAttribute("draggable") === 'true') {
             const elementToDrag = getParentAnd(target, element => element.hasAttribute("drag-element"));
             if (elementToDrag && elementToDrag.hasAttribute("selected")) {
+                this._countDnd("dragInit");
                 const relMousePos = getRelativePos(dragEvent.clientX, dragEvent.clientY, elementToDrag);
                 dragEvent.dataTransfer.effectAllowed = "copyMove";
-                dragEvent.dataTransfer.setDragImage(elementToDrag, relMousePos.x, relMousePos.y); 
+                const dragImage = this._createDragImage(elementToDrag, relMousePos);
+                dragEvent.dataTransfer.setDragImage(dragImage.element, dragImage.x, dragImage.y);
                 hideTooltip();
-                setTimeout(() => {
+                // Assignment of the dragging state is deferred, because it hides the row through `[is-dragging-item]`
+                // and, on a desktop, the drag handle that carries `draggable` through `drag-mode` on `iron-list`.
+                // Hiding the source of a drag synchronously within `dragstart` aborts the drag on WebKit.
+                // Assigning it synchronously was measured on macOS Safari 26.5 as two drags that started and ended without ever producing a drop.
+                // The same measurement on Chrome 151 for Android completed its drag, so the abort is specific to WebKit rather than common to every engine.
+                // The handle is retained so that the assignment can be cancelled when a drag ends before the timer runs.
+                this._dragStateTimer = setTimeout(() => {
+                    this._dragStateTimer = null;
                     const itemIndex = this._getIndexForElement(elementToDrag);
                     this._reorderingObject = {
                         origin: itemIndex,
@@ -919,23 +996,219 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
 
     _dragDrop (dragEvent) {
         if (this._reorderingObject) {
+            this._countDnd("dropped");
             const chosenIds = this.entity.get("chosenIds");
             this.entity.setAndRegisterPropertyTouch("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
-            delete this._reorderingObject;
-            this._draggingItem = null;
+            this._clearDragState();
             // Invoke validation after user has completed item reordering.
             this._invokeValidation.bind(this)();
         }
     }
 
     _endDrag (dragEvent) {
+        this._countDnd("dragend");
         if (this._reorderingObject) {
             this.moveItem(this._reorderingObject.from, this._reorderingObject.origin);
-            delete this._reorderingObject;
-            this._draggingItem = null;
+        }
+        this._clearDragState();
+    }
+
+    /**
+     * Cancels a pending assignment of the dragging state and clears whatever has already been assigned.
+     * This runs on every `dragend`, whether or not a drop occurred, so that nothing outlives a drag.
+     * A drag can end before the deferred assignment in `_startDrag` runs, which is the case on engines that abort a drag promptly.
+     * The state would then be assigned after the drag had ended and would never be cleared, leaving the row hidden by `[is-dragging-item]` indefinitely.
+     * A surviving `_reorderingObject` would also allow a later `dragover` to reorder items outside of a drag, which can leave the displayed order different from the order recorded in `chosenIds`.
+     */
+    _clearDragState () {
+        if (this._dragStateTimer) {
+            clearTimeout(this._dragStateTimer);
+            this._dragStateTimer = null;
+        }
+        this._removeDragImage();
+        delete this._reorderingObject;
+        this._draggingItem = null;
+    }
+
+    /**
+     * Creates the drag image for the specified row, as an untransformed copy of it placed inside a transparent container.
+     * `iron-list` positions every row with an inline `transform: translate3d(0, Ypx, 0)`, so only the first row of an unscrolled list has `Y` of `0`.
+     * WebKit appears to disregard that transform when it rasterises a drag image, painting the row outside the bounds of the resulting bitmap.
+     * The drag then has no visual representation for every row except the one at `Y` of `0`, as observed on macOS Safari 26.5 for issue #2819.
+     * Clearing `transform` on the copy removes that offset.
+     * The container is padded on touch, because a touch device centres the drag image on the touch point rather than honour the hot spot given to `setDragImage`.
+     * Sizing it so that the grab point falls at its centre makes the hot spot and the centre one and the same coordinate, which positions the row correctly either way.
+     * Padding costs up to twice the size of a row, so it is confined to touch, where a hot spot would otherwise be ignored.
+     * A wide row would otherwise exceed the largest drag image an engine will render, which Chrome truncates rather than scales, as seen on a maximised window holding a maximised dialog.
+     * The container is appended to this shadow root so that the same scoped rules style the copy as a row, and it is positioned off-screen so that it can be neither seen nor interacted with.
+     * The returned hot spot follows the copy, so that it is the grab point wherever within the container the copy has been placed.
+     */
+    _createDragImage (elementToDrag, grabPos) {
+        this._removeDragImage();
+        const rect = elementToDrag.getBoundingClientRect();
+        const row = elementToDrag.cloneNode(true);
+        // The copy must not be mistaken for a row by the drag handlers or by the diagnostics.
+        row.removeAttribute("drag-element");
+        row.removeAttribute("collectional-index");
+        row.removeAttribute("draggable");
+        // `cloneNode` copies the `style` attribute, so the inline transform of the row has to be cleared explicitly.
+        row.style.transform = "none";
+        row.style.position = "absolute";
+        row.style.width = `${rect.width}px`;
+        row.style.height = `${rect.height}px`;
+
+        // Padding the container out to twice the larger distance from the grab point to an edge leaves that point at the centre, with the row still wholly inside.
+        const padded = this._touchEnabled;
+        const width = padded ? 2 * Math.max(grabPos.x, rect.width - grabPos.x) : rect.width;
+        const height = padded ? 2 * Math.max(grabPos.y, rect.height - grabPos.y) : rect.height;
+        const left = padded ? width / 2 - grabPos.x : 0;
+        const top = padded ? height / 2 - grabPos.y : 0;
+        row.style.left = `${left}px`;
+        row.style.top = `${top}px`;
+
+        const dragImage = document.createElement("div");
+        dragImage.style.position = "fixed";
+        dragImage.style.top = "0";
+        dragImage.style.left = "-100000px";
+        dragImage.style.width = `${width}px`;
+        dragImage.style.height = `${height}px`;
+        dragImage.style.background = "transparent";
+        dragImage.style.pointerEvents = "none";
+        dragImage.style.setProperty("--paper-checkbox-animation-duration", "0s");
+        dragImage.appendChild(row);
+
+        this.shadowRoot.appendChild(dragImage);
+        this._settleDragImageCheckboxes(dragImage);
+        dragImage.offsetHeight; // forces layout, so that an engine rasterising synchronously within `setDragImage` finds the copy laid out
+        this._dragImage = dragImage;
+        return {element: dragImage, x: left + grabPos.x, y: top + grabPos.y};
+    }
+
+    /**
+     * Puts the checkboxes of a drag image straight into their settled state.
+     * `cloneNode` does not copy shadow DOM, so each cloned `paper-checkbox` is upgraded afresh and restarts `checkmark-expand`,
+     * an animation that expands the tick from `scale(0, 0)` over 140ms and supplies the only transform the tick ever has.
+     * A drag image is rasterised long before that completes, which captures a checked box as a plain blue square.
+     * `--paper-checkbox-animation-duration` is the documented way to collapse the animation, and the final transform is
+     * also assigned directly, because a zero duration still leaves the tick relying on the fill being applied in time.
+     */
+    _settleDragImageCheckboxes (dragImage) {
+        dragImage.querySelectorAll("paper-checkbox").forEach(checkbox => {
+            const checkmark = checkbox.shadowRoot && checkbox.shadowRoot.querySelector("#checkmark");
+            if (checkmark) {
+                checkmark.style.animation = "none";
+                checkmark.style.transform = "scale(1, 1) rotate(45deg)";
+            }
+        });
+    }
+
+    _removeDragImage () {
+        if (this._dragImage) {
+            this._dragImage.remove();
+            this._dragImage = null;
         }
     }
     
+    /**
+     * Returns the reorderable row that the specified event originated from, or `null`.
+     * The target of `selectstart` is a text node, so it is normalised to the closest element before walking up.
+     */
+    _dndRowFor (e) {
+        const target = e.composedPath()[0];
+        const startElement = target && (target.nodeType === Node.ELEMENT_NODE ? target : target.parentElement);
+        if (!startElement) {
+            return null;
+        }
+        return getParentAnd(startElement, element => element.hasAttribute("drag-element")) || null;
+    }
+
+    /**
+     * Starts a timer that counts a long press that neither became a drag nor ended within the threshold.
+     * A successful drag cancels the pointer stream well before the threshold, so `held` approximates long presses where nothing happened.
+     */
+    _dndPointerDown (e) {
+        this._dndCancelHoldTimer();
+        if (!this._dndDiag || !this._dndRowFor(e)) {
+            return;
+        }
+        this._dndHoldOrigin = {x: e.clientX, y: e.clientY};
+        this._dndHoldTimer = setTimeout(() => {
+            this._dndHoldTimer = null;
+            this._countDnd("held");
+        }, 600);
+    }
+
+    _dndPointerMove (e) {
+        if (this._dndHoldTimer && this._dndHoldOrigin) {
+            const dx = e.clientX - this._dndHoldOrigin.x;
+            const dy = e.clientY - this._dndHoldOrigin.y;
+            if (dx * dx + dy * dy > 100) { // a movement of more than 10px is not a long press
+                this._dndCancelHoldTimer();
+            }
+        }
+    }
+
+    _dndPointerEnd (e) {
+        if (e.type === "pointercancel") {
+            this._countDnd("pcancel");
+        }
+        this._dndCancelHoldTimer();
+    }
+
+    _dndCancelHoldTimer () {
+        if (this._dndHoldTimer) {
+            clearTimeout(this._dndHoldTimer);
+            this._dndHoldTimer = null;
+        }
+        this._dndHoldOrigin = null;
+    }
+
+    /**
+     * Increments a counter of the current drag-and-drop diagnostic session.
+     * See `_reportDndDiag` for the purpose of this instrumentation.
+     */
+    _countDnd (key) {
+        if (this._dndDiag) {
+            this._dndDiag[key] += 1;
+        }
+    }
+
+    /**
+     * Reports a single diagnostic breadcrumb per session with a reorderable list.
+     * This is temporary instrumentation for issue #2819, where column reordering is reported as not working on managed Android tablets.
+     * Reordering relies on the browser's own long-tap-to-drag gesture on touch devices, so there is otherwise no way to tell whether it fires at all in the field.
+     * A completed reorder on touch reads `held=0 sel=0 pcancel=1 dragstart=1 dragInit=1 dropped=1`.
+     * That reference signature was observed on a Samsung SM-T570 running Android 13 and on a Pixel 8 running Android 17, both with Chrome 151.
+     * `ctx` was `1` on the former and `0` on the latter, so a context menu accompanies a successful drag on some devices but not others.
+     * The remaining counters discriminate between the ways it can fail.
+     * `held` counts long presses that produced no drag, which separates a refused gesture from a user who never attempted one.
+     * `ctx` and `sel` count context menus and text selections on rows.
+     * A context menu is also raised during a successful long-tap drag, so `ctx` indicates pre-emption of the drag only when `dragstart` is `0`.
+     * A non-zero `sel` means that suppression of text selection is not in effect on the device.
+     * `pcancel` counts cancellation of the pointer stream, which is expected once per drag but, alongside `dragstart` of `0`, indicates that something outside the page is taking the touch.
+     * A non-zero `dragstart` with `dragInit` of `0` means the drag was initiated but the row was not recognised as draggable.
+     * A non-zero `dragInit` with `dropped` of `0` means that no drop was delivered.
+     * `_dragOver` marks the editor as a valid drop target, so a drop anywhere over it is counted, including one back at the starting position.
+     * What remains is an abandoned drag, such as a release outside the editor, and an engine that never delivers a drop at all, as observed on iOS Safari.
+     * `dragend` counts the engine signalling the end of a drag, which separates those two cases.
+     * Alongside `dropped` of `0`, a non-zero `dragend` means the drag was abandoned, while `dragend` of `0` means the engine never ended it.
+     * Reporting is done with `UnreportableError`, which reaches the server log via `/error` without a toast for the user.
+     * Only lists with reordering enabled are reported, which confines this to `Customise Columns` and keeps the volume to one line per dialog session.
+     * Nothing is used as a filter beyond that, so that an absent breadcrumb means a broken breadcrumb.
+     * The device kind stamped by `WebClientErrorLoggerResource` has been observed to be inaccurate, so device details travel in the payload.
+     */
+    _reportDndDiag () {
+        const diag = this._dndDiag;
+        if (!diag || !this.canReorderItems) {
+            return;
+        }
+        this._dndDiag = null;
+        Promise.reject(new UnreportableError(
+            `DND-DIAG touch=${this._touchEnabled} taps=${diag.taps} held=${diag.held} ctx=${diag.ctx} sel=${diag.sel}` +
+            ` pcancel=${diag.pcancel} dragstart=${diag.dragstart} dragInit=${diag.dragInit} dropped=${diag.dropped} dragend=${diag.dragend}` +
+            ` mtp=${navigator.maxTouchPoints} vw=${window.innerWidth} ${_uaDetails} ua=${navigator.userAgent}`));
+    }
+
     _getIndexForElement (element) {
         let currentElement = element;
         while (currentElement && !currentElement.hasAttribute("collectional-index")) {

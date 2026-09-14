@@ -12,8 +12,11 @@ function findDiffStart(a, b, pos) {
         if (!childA.sameMarkup(childB))
             return pos;
         if (childA.isText && childA.text != childB.text) {
-            for (let j = 0; childA.text[j] == childB.text[j]; j++)
+            let tA = childA.text, tB = childB.text, j = 0;
+            for (; tA[j] == tB[j]; j++)
                 pos++;
+            if (j && j < tA.length && j < tB.length && surrogateHigh(tA.charCodeAt(j - 1)) && surrogateLow(tA.charCodeAt(j)))
+                pos--;
             return pos;
         }
         if (childA.content.size || childB.content.size) {
@@ -37,11 +40,16 @@ function findDiffEnd(a, b, posA, posB) {
         if (!childA.sameMarkup(childB))
             return { a: posA, b: posB };
         if (childA.isText && childA.text != childB.text) {
-            let same = 0, minSize = Math.min(childA.text.length, childB.text.length);
-            while (same < minSize && childA.text[childA.text.length - same - 1] == childB.text[childB.text.length - same - 1]) {
-                same++;
+            let tA = childA.text, tB = childB.text, iA = tA.length, iB = tB.length;
+            while (iA > 0 && iB > 0 && tA[iA - 1] == tB[iB - 1]) {
+                iA--;
+                iB--;
                 posA--;
                 posB--;
+            }
+            if (iA && iB && iA < tA.length && surrogateHigh(tA.charCodeAt(iA - 1)) && surrogateLow(tA.charCodeAt(iA))) {
+                posA++;
+                posB++;
             }
             return { a: posA, b: posB };
         }
@@ -54,6 +62,8 @@ function findDiffEnd(a, b, posA, posB) {
         posB -= size;
     }
 }
+function surrogateLow(ch) { return ch >= 0xDC00 && ch < 0xE000; }
+function surrogateHigh(ch) { return ch >= 0xD800 && ch < 0xDC00; }
 
 /**
 A fragment represents a node's collection of child nodes.
@@ -311,7 +321,7 @@ class Fragment {
             return Fragment.empty;
         if (!Array.isArray(value))
             throw new RangeError("Invalid input for Fragment.fromJSON");
-        return new Fragment(value.map(schema.nodeFromJSON));
+        return Fragment.fromArray(value.map(schema.nodeFromJSON));
     }
     /**
     Build a fragment from an array of nodes. Ensures that adjacent
@@ -545,17 +555,6 @@ given an invalid replacement.
 */
 class ReplaceError extends Error {
 }
-/*
-ReplaceError = function(this: any, message: string) {
-  let err = Error.call(this, message)
-  ;(err as any).__proto__ = ReplaceError.prototype
-  return err
-} as any
-
-ReplaceError.prototype = Object.create(Error.prototype)
-ReplaceError.prototype.constructor = ReplaceError
-ReplaceError.prototype.name = "ReplaceError"
-*/
 /**
 A slice represents a piece cut out of a larger document. It
 stores not only a fragment, but also the depth up to which nodes on
@@ -601,7 +600,7 @@ class Slice {
     @internal
     */
     insertAt(pos, fragment) {
-        let content = insertInto(this.content, pos + this.openStart, fragment);
+        let content = insertInto(this.content, pos + this.openStart, fragment, this.openStart + 1, this.openEnd + 1);
         return content && new Slice(content, this.openStart, this.openEnd);
     }
     /**
@@ -675,14 +674,14 @@ function removeRange(content, from, to) {
         throw new RangeError("Removing non-flat range");
     return content.replaceChild(index, child.copy(removeRange(child.content, from - offset - 1, to - offset - 1)));
 }
-function insertInto(content, dist, insert, parent) {
+function insertInto(content, dist, insert, openStart, openEnd, parent) {
     let { index, offset } = content.findIndex(dist), child = content.maybeChild(index);
     if (offset == dist || child.isText) {
-        if (parent && !parent.canReplace(index, index, insert))
+        if (parent && openStart <= 0 && openEnd <= 0 && !parent.canReplace(index, index, insert))
             return null;
         return content.cut(0, dist).append(insert).append(content.cut(dist));
     }
-    let inner = insertInto(child.content, dist - offset - 1, insert, child);
+    let inner = insertInto(child.content, dist - offset - 1, insert, index == 0 ? openStart - 1 : 0, index == content.childCount - 1 ? openEnd - 1 : 0, child);
     return inner && content.replaceChild(index, child.copy(inner));
 }
 function replace($from, $to, slice) {
@@ -745,7 +744,8 @@ function addRange($start, $end, depth, target) {
         addNode($end.nodeBefore, target);
 }
 function close(node, content) {
-    node.type.checkContent(content);
+    if (!node.type.validContent(content))
+        throw new ReplaceError("Invalid content for node " + node.type.name);
     return node.copy(content);
 }
 function replaceThreeWay($from, $start, $end, $to, depth) {
@@ -1212,10 +1212,11 @@ class Node {
     */
     forEach(f) { this.content.forEach(f); }
     /**
-    Invoke a callback for all descendant nodes recursively between
+    Invoke a callback for all descendant nodes recursively overlapping
     the given two positions that are relative to start of this
-    node's content. The callback is invoked with the node, its
-    position relative to the original node (method receiver),
+    node's content. This includes all ancestors of the nodes
+    containing the two positions. The callback is invoked with the
+    node, its position relative to the original node (method receiver),
     its parent node, and its child index. When the callback returns
     false for a given node, that node's children will not be
     recursed over. The last parameter can be used to specify a
@@ -2055,13 +2056,12 @@ function computeAttrs(attrs, value) {
     return built;
 }
 function checkAttrs(attrs, values, type, name) {
-    for (let name in values)
-        if (!(name in attrs))
-            throw new RangeError(`Unsupported attribute ${name} for ${type} of type ${name}`);
-    for (let name in attrs) {
-        let attr = attrs[name];
-        if (attr.validate)
-            attr.validate(values[name]);
+    for (let attr in values)
+        if (!(attr in attrs))
+            throw new RangeError(`Unsupported attribute ${attr} for ${type} of type ${name}`);
+    for (let attr in attrs) {
+        if (attrs[attr].validate)
+            attrs[attr].validate(values[attr]);
     }
 }
 function initAttrs(typeName, attrs) {
@@ -2681,7 +2681,7 @@ class DOMParser {
     }
 }
 const blockTags = {
-    address: true, article: true, aside: true, blockquote: true, canvas: true,
+    address: true, article: true, aside: true, blockquote: true, body: true, canvas: true,
     dd: true, div: true, dl: true, fieldset: true, figcaption: true, figure: true,
     footer: true, form: true, h1: true, h2: true, h3: true, h4: true, h5: true,
     h6: true, header: true, hgroup: true, hr: true, li: true, noscript: true, ol: true,
@@ -3303,6 +3303,8 @@ class DOMSerializer {
     @internal
     */
     serializeNodeInner(node, options) {
+        if (node.isText)
+            return doc(options).createTextNode(node.text);
         let { dom, contentDOM } = renderSpec(doc(options), this.nodes[node.type.name](node), null, node.attrs);
         if (contentDOM) {
             if (node.isLeaf)
@@ -3337,6 +3339,9 @@ class DOMSerializer {
         return toDOM && renderSpec(doc(options), toDOM(mark, inline), null, mark.attrs);
     }
     static renderSpec(doc, structure, xmlNS = null, blockArraysIn) {
+        // Kludge for backwards-compatibility with accidental original behavious
+        if (typeof structure == "string")
+            return { dom: doc.createTextNode(structure) };
         return renderSpec(doc, structure, xmlNS, blockArraysIn);
     }
     /**
@@ -3408,11 +3413,9 @@ function suspiciousAttributesInner(attrs) {
     return result;
 }
 function renderSpec(doc, structure, xmlNS, blockArraysIn) {
-    if (typeof structure == "string")
-        return { dom: doc.createTextNode(structure) };
-    if (structure.nodeType != null)
+    if (structure.nodeType == 1)
         return { dom: structure };
-    if (structure.dom && structure.dom.nodeType != null)
+    if (structure.dom && structure.dom.nodeType == 1)
         return structure;
     let tagName = structure[0], suspicious;
     if (typeof tagName != "string")
@@ -3447,6 +3450,9 @@ function renderSpec(doc, structure, xmlNS, blockArraysIn) {
             if (i < structure.length - 1 || i > start)
                 throw new RangeError("Content hole must be the only child of its parent node");
             return { dom, contentDOM: dom };
+        }
+        else if (typeof child == "string") {
+            dom.appendChild(doc.createTextNode(child));
         }
         else {
             let { dom: inner, contentDOM: innerContent } = renderSpec(doc, child, xmlNS, blockArraysIn);

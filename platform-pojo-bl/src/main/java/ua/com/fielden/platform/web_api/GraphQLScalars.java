@@ -28,12 +28,8 @@ import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
-/**
- * TG-specific GraphQL Web API scalar type implementations.
- * 
- * @author TG Team
- *
- */
+/// TG-specific GraphQL Web API scalar type implementations.
+///
 public class GraphQLScalars {
     private static final Logger LOGGER = getLogger(GraphQLScalars.class);
     private static final String ERR_UNEXPECTED_TYPE = "Expected [%s] but was [%s].";
@@ -42,64 +38,39 @@ public class GraphQLScalars {
 
     @Inject
     private static IDates dates;
-    
-    /**
-     * Creates builder for scalar type and assigns name and description derived from the specified {@code title}.
-     * 
-     * @param title
-     * @return
-     */
+
+    /// Creates builder for scalar type and assigns name and description derived from the specified `title`.
+    ///
     private static Builder newScalarType(final String title) {
         return newScalar().name(title).description("%s type.".formatted(title));
     }
-    
-    /**
-     * Returns left {@link Either} for unexpected data error showing the type name for that unexpected data.
-     * 
-     * @param expected
-     * @param unexpected
-     * @return
-     */
+
+    /// Returns left [Either] for unexpected data error showing the type name for that unexpected data.
     private static <R> Either<String, R> error(final String expected, final Object unexpected) {
         return left(ERR_UNEXPECTED_TYPE.formatted(expected, unexpected.getClass().getSimpleName()));
     }
-    
+
     /////////////////////////////////////////////////////////////// SCALAR TYPES WITHOUT ARGUMENTS ///////////////////////////////////////////////////////////////
-    
-    /**
-     * Private interface for output scalar {@link Coercing} to increase level of abstraction for implementing scalars.
-     * 
-     * @author TG Team
-     *
-     * @param <O> -- output type to which fetched data converts
-     */
-    private static interface TgOutputCoercing<O> {
-        
-        /**
-         * Scalar type title.
-         * 
-         * @return
-         */
+
+    /// Private interface for output scalar [Coercing] to increase level of abstraction for implementing scalars.
+    ///
+    /// @param <O> -- output type to which fetched data converts
+    ///
+    private interface TgOutputCoercing<O> {
+
+        /// Scalar type title.
         String title();
-        /**
-         * Converts {@code dataFetcherResult} to either value of type {@code O} if successful or otherwise returns error message.
-         * 
-         * @param dataFetcherResult
-         * @return
-         */
+        /// Converts `dataFetcherResult` to either value of type `O` if successful or otherwise returns error message.
         Either<String, O> convertDataFetcherResult(final Object dataFetcherResult);
-        
+
     }
-    
-    /**
-     * Private interface for scalar {@link Coercing} to increase level of abstraction for implementing scalars that do not support arguments.
-     * 
-     * @author TG Team
-     *
-     * @param <O> -- output type to which fetched data converts
-     */
-    private static interface TgCoercingNoArguments<O> extends Coercing<Object, O>, TgOutputCoercing<O> {
-        
+
+    /// Private interface for scalar [Coercing] to increase level of abstraction for implementing scalars that do not support arguments.
+    ///
+    /// @param <O> -- output type to which fetched data converts
+    ///
+    private interface TgCoercingNoArguments<O> extends Coercing<Object, O>, TgOutputCoercing<O> {
+
         @Override
         default O serialize(final Object dataFetcherResult) {
             return convertDataFetcherResult(dataFetcherResult).orElseThrow(error -> {
@@ -108,14 +79,14 @@ public class GraphQLScalars {
                 return ex;
             });
         }
-        
+
         @Override
         default Object parseValue(final Object variableInput) {
             final var ex = new CoercingParseValueException(ERR_ARGUMENT_VARIABLES_ARE_NOT_SUPPORTED.formatted(title()));
             LOGGER.error(ex.getMessage(), ex);
             throw ex;
         }
-        
+
         @Override
         default Object parseLiteral(final Object argumentInput) {
             final var ex = new CoercingParseLiteralException(ERR_ARGUMENT_LITERALS_ARE_NOT_SUPPORTED.formatted(title()));
@@ -123,17 +94,16 @@ public class GraphQLScalars {
             throw ex;
         }
     }
-    
-    /**
-     * GraphQL scalar implementation for {@link Hyperlink} type.
-     */
+
+    /// GraphQL scalar implementation for [Hyperlink] type.
+    ///
     public static final GraphQLScalarType GraphQLHyperlink = newScalarType("Hyperlink").coercing(new TgCoercingNoArguments<String>() {
-        
+
         @Override
         public String title() {
             return "Hyperlink";
         };
-        
+
         @Override
         public Either<String, String> convertDataFetcherResult(final Object dataFetcherResult) {
             if (dataFetcherResult instanceof Hyperlink) {
@@ -142,19 +112,18 @@ public class GraphQLScalars {
                 return error(title(), dataFetcherResult);
             }
         }
-        
+
     }).build();
-    
-    /**
-     * GraphQL scalar implementation for {@link Colour} type.
-     */
+
+    /// GraphQL scalar implementation for [Colour] type.
+    ///
     public static final GraphQLScalarType GraphQLColour = newScalarType("Colour").coercing(new TgCoercingNoArguments<String>() {
-        
+
         @Override
         public String title() {
             return "Colour";
         };
-        
+
         @Override
         public Either<String, String> convertDataFetcherResult(final Object dataFetcherResult) {
             if (dataFetcherResult instanceof Colour) {
@@ -163,21 +132,18 @@ public class GraphQLScalars {
                 return error(title(), dataFetcherResult);
             }
         }
-        
+
     }).build();
-    
+
     /////////////////////////////////////////////////////////////// SCALAR TYPES ///////////////////////////////////////////////////////////////
-    
-    /**
-     * Private interface for scalar {@link Coercing} to increase level of abstraction for implementing scalars.
-     * 
-     * @author TG Team
-     *
-     * @param <I> -- input type to which argument literals / variables convert
-     * @param <O> -- output type to which fetched data converts
-     */
+
+    /// Private interface for scalar [Coercing] to increase level of abstraction for implementing scalars.
+    ///
+    /// @param <I> -- input type to which argument literals / variables convert
+    /// @param <O> -- output type to which fetched data converts
+    ///
     private static interface TgCoercing<I, O> extends Coercing<I, O>, TgOutputCoercing<O> {
-        
+
         @Override
         default O serialize(final Object dataFetcherResult) {
             return convertDataFetcherResult(dataFetcherResult).orElseThrow(error -> {
@@ -186,15 +152,11 @@ public class GraphQLScalars {
                 return ex;
             });
         }
-        
-        /**
-         * Converts {@code variableInput} to either value of type {@code I} if successful or otherwise returns error message.
-         * 
-         * @param variableInput
-         * @return
-         */
+
+        /// Converts `variableInput` to either value of type `I` if successful or otherwise returns error message.
+        ///
         Either<String, I> convertVariableInput(final Object variableInput);
-        
+
         @Override
         default I parseValue(final Object variableInput) {
             return convertVariableInput(variableInput).orElseThrow(error -> {
@@ -203,15 +165,11 @@ public class GraphQLScalars {
                 return ex;
             });
         }
-        
-        /**
-         * Converts {@code literalInput} to either value of type {@code I} if successful or otherwise returns error message.
-         * 
-         * @param literalInput
-         * @return
-         */
+
+        /// Converts `literalInput` to either value of type `I` if successful or otherwise returns error message.
+        ///
         Either<String, I> convertLiteralInput(final Object literalInput);
-        
+
         @Override
         default I parseLiteral(final Object literalInput) {
             return convertLiteralInput(literalInput).orElseThrow(error -> {
@@ -220,21 +178,20 @@ public class GraphQLScalars {
                 return ex;
             });
         }
-        
+
     }
-    
-    /**
-     * GraphQL scalar implementation for {@link Money} type.
-     */
+
+    /// GraphQL scalar implementation for [Money] type.
+    ///
     public static final GraphQLScalarType GraphQLMoney = newScalarType("Money").coercing(new TgCoercing<Money, BigDecimal>() {
-        
+
         @Override
         public String title() {
             return "Money";
         };
-        
+
         //////////////////////////////////////////////// SERIALISE RESULTS ////////////////////////////////////////////////
-        
+
         @Override
         public Either<String, BigDecimal> convertDataFetcherResult(final Object dataFetcherResult) {
             if (dataFetcherResult instanceof Money) {
@@ -243,9 +200,9 @@ public class GraphQLScalars {
                 return error(title(), dataFetcherResult);
             }
         }
-        
+
         //////////////////////////////////////////////// PARSE ARGUMENT VARIABLES ////////////////////////////////////////////////
-        
+
         @Override
         public Either<String, Money> convertVariableInput(final Object variableInput) {
             if (variableInput instanceof Number) {
@@ -258,9 +215,9 @@ public class GraphQLScalars {
                 return error("number-like " + title(), variableInput);
             }
         }
-        
+
         //////////////////////////////////////////////// PARSE ARGUMENT LITERALS ////////////////////////////////////////////////
-        
+
         @Override
         public Either<String, Money> convertLiteralInput(final Object literalInput) {
             if (literalInput instanceof IntValue) {
@@ -272,31 +229,128 @@ public class GraphQLScalars {
                 return error("number-like " + title(), literalInput);
             }
         }
-        
+
     }).build();
-    
+
+    /// GraphQL scalar implementation for 64-bit `Long` values.
+    /// Defined in TG rather than sourced from `graphql-java-extended-scalars`, so that the Web API does not depend on that library.
+    ///
+    public static final GraphQLScalarType GraphQLLong = newScalarType("Long").coercing(new TgCoercing<Long, Long>() {
+
+        @Override
+        public String title() {
+            return "Long";
+        }
+
+        //////////////////////////////////////////////// SERIALISE RESULTS ////////////////////////////////////////////////
+
+        @Override
+        public Either<String, Long> convertDataFetcherResult(final Object dataFetcherResult) {
+            if (dataFetcherResult instanceof Number) {
+                return right(((Number) dataFetcherResult).longValue());
+            } else {
+                return error(title(), dataFetcherResult);
+            }
+        }
+
+        //////////////////////////////////////////////// PARSE ARGUMENT VARIABLES ////////////////////////////////////////////////
+
+        @Override
+        public Either<String, Long> convertVariableInput(final Object variableInput) {
+            if (variableInput instanceof Number) {
+                return right(((Number) variableInput).longValue());
+            } else {
+                return error("number-like " + title(), variableInput);
+            }
+        }
+
+        //////////////////////////////////////////////// PARSE ARGUMENT LITERALS ////////////////////////////////////////////////
+
+        @Override
+        public Either<String, Long> convertLiteralInput(final Object literalInput) {
+            if (literalInput instanceof IntValue) {
+                // `longValueExact` rejects literals outside the 64-bit range rather than silently truncating them.
+                try {
+                    return right(((IntValue) literalInput).getValue().longValueExact());
+                } catch (final ArithmeticException e) {
+                    return left("%s literal [%s] is outside the 64-bit range.".formatted(title(), ((IntValue) literalInput).getValue()));
+                }
+            } else {
+                return error("number-like " + title(), literalInput);
+            }
+        }
+
+    }).build();
+
+    /// GraphQL scalar implementation for `BigDecimal` values.
+    /// Defined in TG rather than sourced from `graphql-java-extended-scalars`, so that the Web API does not depend on that library.
+    ///
+    public static final GraphQLScalarType GraphQLBigDecimal = newScalarType("BigDecimal").coercing(new TgCoercing<BigDecimal, BigDecimal>() {
+
+        @Override
+        public String title() {
+            return "BigDecimal";
+        }
+
+        //////////////////////////////////////////////// SERIALISE RESULTS ////////////////////////////////////////////////
+
+        @Override
+        public Either<String, BigDecimal> convertDataFetcherResult(final Object dataFetcherResult) {
+            // The value is returned as is, preserving its scale.
+            if (dataFetcherResult instanceof BigDecimal) {
+                return right((BigDecimal) dataFetcherResult);
+            } else {
+                return error(title(), dataFetcherResult);
+            }
+        }
+
+        //////////////////////////////////////////////// PARSE ARGUMENT VARIABLES ////////////////////////////////////////////////
+
+        @Override
+        public Either<String, BigDecimal> convertVariableInput(final Object variableInput) {
+            if (variableInput instanceof Number) {
+                try {
+                    return right(new BigDecimal(variableInput.toString()));
+                } catch (final NumberFormatException e) {
+                    return error("number-like " + title(), variableInput);
+                }
+            } else {
+                return error("number-like " + title(), variableInput);
+            }
+        }
+
+        //////////////////////////////////////////////// PARSE ARGUMENT LITERALS ////////////////////////////////////////////////
+
+        @Override
+        public Either<String, BigDecimal> convertLiteralInput(final Object literalInput) {
+            if (literalInput instanceof IntValue) {
+                return right(new BigDecimal(((IntValue) literalInput).getValue()));
+            } else if (literalInput instanceof FloatValue) {
+                return right(((FloatValue) literalInput).getValue());
+            } else {
+                return error("number-like " + title(), literalInput);
+            }
+        }
+
+    }).build();
+
     private static final DateTimeFormatter dateTimePrinter = new DateTimeFormatterBuilder()
         .append(date())
         .appendLiteral(' ')
         .append(time())
         .toFormatter();
-    
-    /**
-     * Creates simplistic {@link Date} representation that has string-based 'value' and 'millis'.
-     * 
-     * @param date
-     * @return
-     */
+
+    /// Creates simplistic [Date] representation that has string-based 'value' and 'millis'.
+    ///
     public static Map<String, Object> createDateRepr(final Date date) {
         return linkedMapOf(
             t2("value", dateTimePrinter.print(dates.zoned(date))),
             t2("millis", date.getTime())
         );
     }
-    
-    /**
-     * GraphQL scalar implementation for {@link Date} type.
-     */
+
+    /// GraphQL scalar implementation for [Date] type.
+    ///
     public static final GraphQLScalarType GraphQLDate = newScalar().name("Date")
             .description("Date type.\n\nInput formats:  \n20221002  \n\"2022\"  \n\"2022-10\"  \n\"2022-10-02\"  \n\"2022-10-02 14\"  \n\"2022-10-02 14:07\"  \n\"2022-10-02 14:07:19\"  \n\"2022-10-02 14:07:19.999\"")
             .coercing(new TgCoercing<Date, Map<String, Object>>() {
@@ -308,14 +362,14 @@ public class GraphQLScalars {
                 .appendOptional(timeElementParser().getParser())
                 .toParser())
             .toFormatter();
-        
+
         @Override
         public String title() {
             return "Date";
         }
-        
+
         //////////////////////////////////////////////// SERIALISE RESULTS ////////////////////////////////////////////////
-        
+
         @Override
         public Either<String, Map<String, Object>> convertDataFetcherResult(final Object dataFetcherResult) {
             if (dataFetcherResult instanceof Date) {
@@ -324,9 +378,9 @@ public class GraphQLScalars {
                 return error(title(), dataFetcherResult);
             }
         }
-        
+
         //////////////////////////////////////////////// PARSE ARGUMENT ... ////////////////////////////////////////////////
-        
+
         private Either<String, Date> parseFrom(final String input, final DateTimeFormatter formatter) {
             try {
                 return right(formatter.withZone(dates.timeZone()).parseDateTime(input).toDate()); // request time-zone is used here (or default for independent time-zone mode)
@@ -334,17 +388,17 @@ public class GraphQLScalars {
                 return left(ERR_UNEXPECTED_TYPE.formatted("number-like or string-based " + title(), input));
             }
         }
-        
+
         private Either<String, Date> basicDateFrom(final String input) {
             return parseFrom(input, basicDateParser);
         }
-        
+
         private Either<String, Date> dateTimeFrom(final String input) {
             return parseFrom(input, dateTimeParser);
         }
-        
+
         //////////////////////////////////////////////// ... VARIABLES ////////////////////////////////////////////////
-        
+
         @Override
         public Either<String, Date> convertVariableInput(final Object variableInput) {
             if (variableInput instanceof Number) {
@@ -355,9 +409,9 @@ public class GraphQLScalars {
                 return error("number-like or string-based " + title(), variableInput);
             }
         }
-        
+
         //////////////////////////////////////////////// ... LITERALS ////////////////////////////////////////////////
-        
+
         @Override
         public Either<String, Date> convertLiteralInput(final Object literalInput) {
             if (literalInput instanceof IntValue) {
@@ -369,7 +423,7 @@ public class GraphQLScalars {
                 return error("number-like or string-based " + title(), literalInput);
             }
         }
-        
+
     }).build();
-    
+
 }

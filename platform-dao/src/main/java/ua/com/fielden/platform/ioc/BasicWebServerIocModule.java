@@ -130,6 +130,8 @@ public class BasicWebServerIocModule extends CompanionIocModule {
             LOGGER.warn(WARN_INSUFFICIENT_MAX_QUERY_DEPTH.formatted(maxQueryDepth));
         }
         bindConstant().annotatedWith(Names.named(maxQueryDepthKey)).to(insufficientMaxQueryDepth ? DEFAULT_MAX_QUERY_DEPTH : maxQueryDepth);
+        // user management
+        bindConstant().annotatedWith(Names.named("users.selfEdit")).to(props.getProperty("users.selfEdit", "true"));
         // authentication parameters
         bindConstant().annotatedWith(Names.named("auth.mode")).to(props.getProperty("auth.mode", AuthMode.RSO.name()));
         bindConstant().annotatedWith(Names.named("auth.sso.provider")).to(props.getProperty("auth.sso.provider", "Identity Provider"));
@@ -150,7 +152,6 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         bindConstant().annotatedWith(Names.named("dates.timeFormat.web")).to(props.getProperty("dates.timeFormat.web", IDates.DEFAULT_TIME_FORMAT_WEB));
         bindConstant().annotatedWith(Names.named("dates.timeFormatWithMillis.web")).to(props.getProperty("dates.timeFormatWithMillis.web", IDates.DEFAULT_TIME_FORMAT_WEB_WITH_MILLIS));
 
-        bind(IApplicationSettings.class).to(ApplicationSettings.class);
         requireBinding(ISecurityTokenProvider.class);
         // serialisation related binding
         requireBinding(ISerialisationClassProvider.class);
@@ -171,6 +172,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         }
 
         requestStaticInjection(MultiInheritanceEntityVerificationService.class);
+        requestStaticInjection(DependentCalcPropsVerificationService.class);
         requestStaticInjection(EntityQueryCriteriaUtils.class);
     }
 

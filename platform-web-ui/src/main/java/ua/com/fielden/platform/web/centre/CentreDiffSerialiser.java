@@ -35,8 +35,8 @@ public class CentreDiffSerialiser extends ObjectMapper {
      */
     public byte[] serialise(final Map<String, Object> diff) {
         try {
-            // logger.error("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(diff), Charsets.UTF_8) + "|.");
-            final byte[] bytes = writeValueAsBytes(diff); // default encoding is Charsets.UTF_8
+            // logger.error("Serialised pretty JSON = |" + new String(writerWithDefaultPrettyPrinter().writeValueAsBytes(diff), StandardCharsets.UTF_8) + "|.");
+            final byte[] bytes = writeValueAsBytes(diff); // default encoding is StandardCharsets.UTF_8
             return bytes;
         } catch (final JsonProcessingException ex) {
             throw new SerialisationException("Error during centre diff serialisation.", ex);

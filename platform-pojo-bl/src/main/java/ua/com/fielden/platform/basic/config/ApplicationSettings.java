@@ -7,13 +7,10 @@ import jakarta.inject.Singleton;
 
 import java.io.File;
 import java.util.Map;
+import java.nio.file.FileSystems;
 
-/**
- * Default implementation of the contract for generally used in the application settings.
- * 
- * @author TG Team
- * 
- */
+/// Default implementation for [IApplicationSettings].
+///
 @Singleton
 public class ApplicationSettings implements IApplicationSettings {
     private final String appName;
@@ -28,6 +25,7 @@ public class ApplicationSettings implements IApplicationSettings {
     private final String fromAddress;
     private final String currencySymbol;
     private final Map<String, String> currencySymbolMap;
+    private final boolean usersSelfEdit;
 
     // TODO Reduce visibility once EQL tests use IoC.
     @Inject
@@ -43,7 +41,8 @@ public class ApplicationSettings implements IApplicationSettings {
             final @Named("email.smtp") String smtpServer,
             final @Named("email.fromAddress") String fromAddress,
             final @Named("currency.symbol") String currencySymbol,
-            final @Named("currencySymbolMap") Map<String, String> currencySymbolMap)
+            final @Named("currencySymbolMap") Map<String, String> currencySymbolMap,
+            final @Named("users.selfEdit") String usersSelfEdit)
     {
         this.appName = appName;
         this.pathToStorage = prepareSettings(pathToStorage);
@@ -57,6 +56,7 @@ public class ApplicationSettings implements IApplicationSettings {
         this.fromAddress = fromAddress;
         this.currencySymbol = currencySymbol;
         this.currencySymbolMap = ImmutableMap.copyOf(currencySymbolMap);
+        this.usersSelfEdit = Boolean.parseBoolean(usersSelfEdit);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class ApplicationSettings implements IApplicationSettings {
 
     @Override
     public String pathToStorageFor(final Class<?> type) {
-        return pathToStorage + type.getSimpleName() + "_autocompleters" + System.getProperty("file.separator");
+        return pathToStorage + type.getSimpleName() + "_autocompleters" + FileSystems.getDefault().getSeparator();
     }
 
     @Override
@@ -104,7 +104,8 @@ public class ApplicationSettings implements IApplicationSettings {
         return appName;
     }
 
-    /** A helper method for correct processing of user home portion specified in the path. */
+    /// A helper method for correct processing of user home portion specified in the path.
+    ///
     public String prepareSettings(final String pathToStoreReportSettings) {
         String reportsPath = pathToStoreReportSettings;
         if (reportsPath.startsWith("~")) {
@@ -138,6 +139,11 @@ public class ApplicationSettings implements IApplicationSettings {
     @Override
     public AuthMode authMode() {
         return authMode;
+    }
+
+    @Override
+    public boolean usersSelfEdit() {
+        return usersSelfEdit;
     }
 
 }

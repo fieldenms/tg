@@ -4,8 +4,6 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
-
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
@@ -25,21 +23,19 @@ public class AppIndexResourceFactory extends Restlet {
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
     private final IDates dates;
-    private final ICriteriaGenerator criteriaGenerator;
-    
+
     public AppIndexResourceFactory(
             final IWebResourceLoader webResourceLoader, 
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
-            final IDates dates,
-            final ICriteriaGenerator criteriaGenerator) {
+            final IDates dates
+    ) {
         this.webResourceLoader = webResourceLoader;
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
         this.deviceProvider = deviceProvider;
         this.dates = dates;
-        this.criteriaGenerator = criteriaGenerator;
     }
 
     @Override
@@ -47,7 +43,7 @@ public class AppIndexResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET == request.getMethod()) {
-            new AppIndexResource(webResourceLoader, webUiConfig, userProvider, deviceProvider, dates, criteriaGenerator, getContext(), request, response).handle();
+            new AppIndexResource(webResourceLoader, webUiConfig, userProvider, deviceProvider, dates, getContext(), request, response).handle();
         }
     }
 

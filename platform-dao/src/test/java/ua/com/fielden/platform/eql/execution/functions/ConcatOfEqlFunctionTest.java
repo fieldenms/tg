@@ -204,6 +204,29 @@ public class ConcatOfEqlFunctionTest extends AbstractEqlExecutionTestCase {
                 .isEqualTo("26/03/2026 11:15; 26/03/2026 10:00");
     }
 
+    @Test
+    public void concatOf_of_unicode_and_nonunicode_string() {
+        final var qry = select(
+                select().yield().val("Zero").as("num").yield().val(0).as("i").modelAsAggregate(),
+                select().yield().val("Один").as("num").yield().val(1).as("i").modelAsAggregate())
+                .yield().concatOf().prop("num").orderBy().prop("i").asc().separator().val(", ").as(RESULT)
+                .modelAsAggregate();
+        assertThat(retrieveResult(qry))
+                .isInstanceOf(String.class)
+                .isEqualTo("Zero, Один");
+    }
+
+    @Test
+    public void concatOf_with_unicode_separator() {
+        final var qry = select(
+                select().yield().val("Zero").as("num").yield().val(0).as("i").modelAsAggregate(),
+                select().yield().val("Один").as("num").yield().val(1).as("i").modelAsAggregate())
+                .yield().concatOf().prop("num").orderBy().prop("i").asc().separator().val(" та ").as(RESULT)
+                .modelAsAggregate();
+        assertThat(retrieveResult(qry))
+                .isInstanceOf(String.class)
+                .isEqualTo("Zero та Один");
+    }
 
     @Override
     protected void populateDomain() {

@@ -12,6 +12,7 @@ import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action
 import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { openShareAction } from '/resources/reflection/tg-share-utils.js';
 import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
+import { UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
 
 /**
  * A local insertion point manager for the entity centre to manage detached or maximized insertion points.
@@ -821,20 +822,25 @@ const TgEntityCentreBehaviorImpl = {
         }
     },
 
+    /**
+     * Pushes the current page of run data into the EGI and synchronises centre-level `retrievedEntities` / `renderingHints`.
+     *
+     * The EGI side arrays are primed before `retrievedEntities` is assigned, so the single `egiModel` rebuild (triggered by the EGI `entities` assignment inside the `retrievedEntities` observer) consumes fresh values in one pass.
+     * Assigning them after `retrievedEntities` (as was done previously) made the rebuild read stale values and then triggered a redundant per-row refresh pass for each array.
+     * `renderingHints` is assigned the same array reference that was primed, so the EGI-forwarding observer dirty-checks it into a no-op.
+     */
     _setPageData: function (startIdx, endIdx) {
-        if (typeof startIdx === 'undefined') {
-            this.retrievedEntities = this.allFilteredEntities;
-            this.renderingHints = this.allFilteredRenderingHints;
-            this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices;
-            this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices;
-            this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices;
-        } else {
-            this.retrievedEntities = this.allFilteredEntities.slice(startIdx, endIdx);
-            this.renderingHints = this.allFilteredRenderingHints.slice(startIdx, endIdx);
-            this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices.slice(startIdx, endIdx);
-            this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices.slice(startIdx, endIdx);
-            this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices.slice(startIdx, endIdx);
-        }
+        const page = arr => typeof startIdx === 'undefined' ? arr : arr.slice(startIdx, endIdx);
+        const entities = page(this.allFilteredEntities);
+        const renderingHints = page(this.allFilteredRenderingHints);
+        this.$.egi.primeGridData({
+            renderingHints: renderingHints,
+            primaryActionIndices: page(this.allFilteredPrimaryActionIndices),
+            secondaryActionIndices: page(this.allFilteredSecondaryActionIndices),
+            propertyActionIndices: page(this.allFilteredPropertyActionIndices)
+        });
+        this.retrievedEntities = entities;
+        this.renderingHints = renderingHints;
     },
 
     _setPageNumber: function (number) {
@@ -915,12 +921,13 @@ const TgEntityCentreBehaviorImpl = {
                 }
                 const pageCapacity = result.resultConfig.pageCapacity;
                 this.$.selection_criteria.pageCapacity = pageCapacity;
+                // Must be assigned before allRetrievedEntities so that the dom-repeat over dynamicColumns propagates fresh property / keyProperty / valueProperty to <tg-property-column> elements before tg-egi-cell instances recompute their values from column metadata.
+                this.dynamicColumns = result.dynamicColumns;
                 this.allRenderingHints = result.renderingHints;
                 this.allPrimaryActionIndices = result.primaryActionIndices;
                 this.allSecondaryActionIndices = result.secondaryActionIndices;
                 this.allPropertyActionIndices = result.propertyActionIndices;
                 this.allRetrievedEntities = result.resultEntities;
-                this.dynamicColumns = result.dynamicColumns;
                 this.selectionCriteriaEntity = result.criteriaEntity;
                 this.$.egi.adjustColumnWidths(result.columnWidths);
                 this.$.egi.visibleRowsCount = result.resultConfig.visibleRowsCount;
@@ -1386,6 +1393,9 @@ const TgEntityCentreBehaviorImpl = {
                         this._preferredViewUpdaterAction._run();
                     }
                 }).catch(e => {
+                    if (e instanceof UnexpectedCustomError) {
+                        throw e;
+                    }
                     e.msg && this._showToastWithMessage(e.msg);
                 });
             }   

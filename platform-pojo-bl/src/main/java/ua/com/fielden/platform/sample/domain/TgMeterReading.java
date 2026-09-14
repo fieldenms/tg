@@ -11,13 +11,13 @@ import java.util.Date;
 @MapEntityTo("METER_READING")
 @CompanionObject(ITgMeterReading.class)
 public class TgMeterReading extends AbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @Title("Vehicle")
     @CompositeKeyMember(1)
     @MapTo("ID_EQDET")
     private TgVehicle vehicle;
+
     @IsProperty
     @Title(value = "Reading Date", desc = "Reading Date")
     @CompositeKeyMember(2)
@@ -29,59 +29,29 @@ public class TgMeterReading extends AbstractEntity<DynamicEntityKey> {
     @Title(value = "Reading", desc = "Reading")
     @MapTo("LAST_READING")
     private Integer reading;
+
     @IsProperty
     @Title(value = "Work Order")
     @MapTo("ID_WODET")
     private TgWorkOrder workOrder;
+
     @IsProperty
     @Title(value = "Fuel Usage", desc = "Fuel usage instance associated with this meter reading")
     @MapTo("ID_FUEL_USAGE")
     private TgFuelUsage fuelUsage;
 
-    /////////////////////////////////////////////
-    //////////////// GETTERS ////////////////////
-    /////////////////////////////////////////////
-
-    public TgVehicle getVehicle() {
-        return vehicle;
-    }
-
-    public Date getReadingDate() {
-        return readingDate;
-    }
-
-    public Integer getReading() {
-        return reading;
-    }
-
-    public TgWorkOrder getWorkOrder() {
-        return workOrder;
-    }
-
     public TgFuelUsage getFuelUsage() {
         return fuelUsage;
     }
 
-    /////////////////////////////////////////////
-    //////////////// SETTERS ////////////////////
-    /////////////////////////////////////////////
-
     @Observable
-    public TgMeterReading setVehicle(final TgVehicle vehicle) {
-        this.vehicle = vehicle;
+    public TgMeterReading setFuelUsage(final TgFuelUsage fuelUsage) {
+        this.fuelUsage = fuelUsage;
         return this;
     }
 
-    @Observable
-    public TgMeterReading setReadingDate(final Date readingDate) {
-        this.readingDate = readingDate;
-        return this;
-    }
-
-    @Observable
-    public TgMeterReading setReading(final Integer reading) {
-        this.reading = reading;
-        return this;
+    public TgWorkOrder getWorkOrder() {
+        return workOrder;
     }
 
     @Observable
@@ -90,9 +60,33 @@ public class TgMeterReading extends AbstractEntity<DynamicEntityKey> {
         return this;
     }
 
+    public Integer getReading() {
+        return reading;
+    }
+
     @Observable
-    public TgMeterReading setFuelUsage(final TgFuelUsage fuelUsage) {
-        this.fuelUsage = fuelUsage;
+    public TgMeterReading setReading(final Integer reading) {
+        this.reading = reading;
+        return this;
+    }
+
+    public Date getReadingDate() {
+        return readingDate;
+    }
+
+    @Observable
+    public TgMeterReading setReadingDate(final Date readingDate) {
+        this.readingDate = readingDate;
+        return this;
+    }
+
+    public TgVehicle getVehicle() {
+        return vehicle;
+    }
+
+    @Observable
+    public TgMeterReading setVehicle(final TgVehicle vehicle) {
+        this.vehicle = vehicle;
         return this;
     }
 

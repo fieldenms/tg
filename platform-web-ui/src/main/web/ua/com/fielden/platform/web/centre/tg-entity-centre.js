@@ -17,6 +17,7 @@ import '/resources/actions/tg-ui-action.js';
 import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 import { resetCustomSettings } from '/resources/centre/tg-entity-centre-insertion-point.js';
+import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 
 import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
@@ -236,7 +237,6 @@ const template = html`
         }
     </style>
     <style include="paper-material-styles iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <tg-serialiser id="serialiser"></tg-serialiser>
 
     <iron-ajax id="ajaxDiscarder" headers="[[_headers]]" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" reject-with-request on-error="_processDiscarderError"></iron-ajax>
 
@@ -414,6 +414,7 @@ Polymer({
     behaviors: [ IronResizableBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior ],
 
     created: function () {
+        this.__serialiser = new TgSerialiser();
         this._startDrag = this._startDrag.bind(this);
         this._endDrag = this._endDrag.bind(this);
         this._dragDrop = this._dragDrop.bind(this);
@@ -745,14 +746,14 @@ Polymer({
      * The component for entity serialisation.
      */
     _serialiser: function () {
-        return this.$.serialiser;
+        return this.__serialiser;
     },
 
     /**
      * The reflector component.
      */
     _reflector: function () {
-        return this.$.serialiser.$.reflector;
+        return this._serialiser().reflector();
     },
 
     /**

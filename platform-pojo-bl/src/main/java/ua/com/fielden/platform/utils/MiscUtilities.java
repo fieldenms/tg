@@ -157,7 +157,7 @@ public class MiscUtilities {
             return right;
         }
         if (right.isEmpty()) {
-            return right;
+            return left;
         }
         else {
             final var result = new Properties();

@@ -192,6 +192,13 @@ public class ElementFinder {
         return streamSuperclassesBelow(typeElement, rootType).toList();
     }
 
+    /// Returns `true` if `typeElement` has a superclass (direct or transitive) whose fully-qualified name is `superclassFqn`.
+    ///
+    public boolean isSubClass(final TypeElement typeElement, final CharSequence superclassFqn) {
+        return streamSuperclasses(typeElement)
+                .anyMatch(superclass -> superclass.getQualifiedName().contentEquals(superclassFqn));
+    }
+
     /**
      * Returns a stream of variable elements, representing declared fields of the type element.
      *

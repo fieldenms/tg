@@ -133,6 +133,17 @@ export const TgSseBehavior = {
                 self._timerIdForDataHandling = null;
             }
         }, delay);
+    },
+
+    /**
+     * Cancels a scheduled (delayed and not yet executed) dataHandler execution, if any.
+     * Suitable for situations where the need for data handling has been satisfied by other means (e.g. an Entity Centre was refreshed by a user before a delayed reaction to an SSE event took place).
+     */
+    cancelDataHandling: function () {
+        if (this._timerIdForDataHandling) {
+            clearTimeout(this._timerIdForDataHandling);
+            this._timerIdForDataHandling = null;
+        }
     }
 
 }; // end of behaviour declaration

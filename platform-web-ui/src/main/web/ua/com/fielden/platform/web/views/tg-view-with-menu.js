@@ -10,7 +10,7 @@ import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
 import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js'
 
-import '/resources/polymer/@polymer/app-layout/app-drawer/app-drawer.js';
+import '/resources/components/tg-app-drawer.js';
 import '/resources/polymer/@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
 
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
@@ -30,8 +30,7 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js';
-import { tearDownEvent, allDefined, isMobileApp, isIPhoneOs, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
-import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
+import { tearDownEvent, allDefined, isMobileApp, isIPhoneOs, isTouchEnabled, getParentAnd, rewriteHistoryEntryUri } from '/resources/reflection/tg-polymer-utils.js';
 
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
@@ -175,7 +174,7 @@ const template = html`
     <slot id="menuItemAction" name="menuItemAction"></slot>
     <app-drawer-layout id="drawerPanel" fullbleed force-narrow>
 
-        <app-drawer disable-swipe="[[!touchEnabled]]" slot="drawer" on-app-drawer-transitioned="_appDrawerTransitioned">
+        <tg-app-drawer disable-swipe="[[!touchEnabled]]" slot="drawer" on-app-drawer-transitioned="_appDrawerTransitioned">
             <div id="menuToolBar" class="tool-bar layout horizontal center">
                 <div class="flex">[[menuItem.key]]</div>
             </div>
@@ -242,7 +241,7 @@ const template = html`
                     </tg-sublistbox>
                 </template>
             </paper-listbox>
-        </app-drawer>
+        </tg-app-drawer>
 
         <div class="main-content">
 
@@ -338,7 +337,7 @@ function _changeVisibilityForGroupItem(groupIndex) {
 }
 
 Polymer({
-    _template: template, 
+    _template: template,
 
     is: "tg-view-with-menu",
 
@@ -506,22 +505,6 @@ Polymer({
         return this._selectedPage;
     },
 
-    canLeave: async function (leaveReason = LeaveReason.CLOSED) {
-        const items = this.shadowRoot.querySelectorAll("tg-menu-item-view");
-        const changedViews = [];
-        for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-            try {
-                await items[itemIndex].canLeave(leaveReason);
-            } catch (e) {
-                changedViews.push(items[itemIndex].submoduleId);
-            }
-        }
-        if (changedViews.length > 0) {
-            throw changedViews;
-        }
-        return true;
-    },
-
     searchMenu: function (event) {
         this.$.menuSearcher.searchMenu();
     },
@@ -654,8 +637,45 @@ Polymer({
         if (menuItem.key === decodeURIComponent(this.selectedModule)) {
             const parts = selectedSubmodule.substring(1).split('?');
             const selectedSubmodulePart = parts[0];
-            this._selectMenu(selectedSubmodulePart);
-            this._selectPage(selectedSubmodulePart, parts[1]);
+            // `selectedSubmodule` can arrive from an F3 global search transition that did not carry a `configUuid`.
+            // In this case Entity Centre named configuration for this page must be restored.
+            // See `tg-menu-search-input._menuListClosed`, which fires `tg-menu-search-item-selected`, caught by `tg-app-template._onMenuSearchItemSelected`.
+            // In such cases `selectedSubmodule` === '/Work%20Orders', not '/Work%20Orders/8469d323-...'.
+            //
+            // The F3-target path is recorded on `tg-app-template`, a single instance reachable from any `tg-view-with-menu` via `getParentAnd`.
+            // `getParentAnd` traverses both `parentElement` and shadow-host links.
+            // A `tg-app-template`-level state is needed because an F3 search can switch modules.
+            // The destination `tg-view-with-menu` is not the one whose subtree hosted the originating event.
+            //
+            // Recovery is gated on the recorded path matching the current full selected path.
+            // This gate ensures the recovery does not misfire for other URI-without-UUID sources:
+            //   * manual address-bar editing (user removed the UUID on purpose — expected to load default config),
+            //   * Back / Forward navigation (user has explicitly chosen that history entry),
+            //   * URI updates we initiate ourselves through `_updateURI` (e.g. New / Duplicate Entity Centre actions),
+            //   * an F3 to the page already on screen that leaves a stale recorded path
+            //       — path-equality fails on the next unrelated URI change, so recovery is correctly skipped and the staleness self-heals here.
+            //
+            // The path is cleared unconditionally so a later `_updatePage`, e.g. one triggered by a `menuItem` change, cannot re-consume it.
+            const appTemplate = getParentAnd(this, el => el.matches('tg-app-template'));
+            const pendingMenuSearchPath = appTemplate && appTemplate._pendingMenuSearchPath;
+            if (appTemplate) {
+                appTemplate._pendingMenuSearchPath = null;
+            }
+            // `_pendingMenuSearchPath` is the full F3 menu path (e.g. `'Work%20Orders/Work%20Orders'`).
+            // `selectedSubmodulePart` carries only the submodule portion (e.g. `'Work%20Orders'`).
+            // Reconstruct the full path here so both sides are comparable.
+            const fullSelectedPath = this.selectedModule + '/' + selectedSubmodulePart;
+            const uuid = this._centreConfigInfo()?.[selectedSubmodulePart]?.configUuid;
+            // To narrow down the possible impact, don't adjust in the case where `?...` part is present.
+            if (!parts[1] && uuid && !selectedSubmodulePart.includes('/' + uuid) && pendingMenuSearchPath === fullSelectedPath) {
+                // Manually rewrite history not to contain link without UUID, but only resultant link with UUID.
+                this._updateURI({ detail: { newConfigUuid: uuid, configUuid: '' } });
+                // Do the actual adjustment.
+                this._updateSelectedModuleWith(selectedSubmodulePart);
+            } else {
+                this._selectMenu(selectedSubmodulePart);
+                this._selectPage(selectedSubmodulePart, parts[1]);
+            }
         }
     },
 
@@ -833,14 +853,13 @@ Polymer({
         const hrefNoParamsNoSlash = hrefNoParams.endsWith('/') ? hrefNoParams.substring(0, hrefNoParams.length - 1) : hrefNoParams;
         const hrefNoParamsNoSlashNoUuid = configUuid === '' ? hrefNoParamsNoSlash : hrefNoParamsNoSlash.substring(0, hrefNoParamsNoSlash.lastIndexOf(configUuid) - 1 /* slash also needs removal */);
         const hrefReplacedUuid = hrefNoParamsNoSlashNoUuid + (newConfigUuid === '' ? '' : '/' + newConfigUuid);
-        if (hrefReplacedUuid !== window.location.href) { // when configuration is loaded through some action then potentially new URI will be formed matching new loaded configuration;
-            window.history.replaceState(window.history.state, '', hrefReplacedUuid); // in that case need to replace current history entry with new URI;
-            window.dispatchEvent(new CustomEvent('location-changed', {
-                detail: {
-                    avoidStateAdjusting: true
-                }
-            })); // in tg-app-template 'location-changed' listener no state changes should occur (everything was done here); however 'location-changed' event must be dispatched for 'app-location' to process it; it ensures ability to manually edit URI to the value before rewriting so that this editing triggers page change
-        } // if the URI hasn't been changed then URI is already matching to new loaded configuration and history transition has been recorded earlier (e.g. when manually changing URI in address bar)
+        // When configuration is loaded through some action then potentially new URI will be formed matching new loaded configuration.
+        // In that case the current history entry needs to be rewritten with that new URI.
+        // If the URI hasn't been changed then it is already matching to new loaded configuration.
+        // A history transition has then been recorded earlier, e.g. when manually changing URI in address bar.
+        if (hrefReplacedUuid !== window.location.href) {
+            rewriteHistoryEntryUri(hrefReplacedUuid);
+        }
     },
     
     /**

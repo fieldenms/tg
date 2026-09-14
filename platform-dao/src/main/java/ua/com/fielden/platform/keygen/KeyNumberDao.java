@@ -6,8 +6,11 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.IntStream;
@@ -20,6 +23,12 @@ import static java.util.stream.Collectors.toCollection;
 public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumber {
 
     public static final String ERR_NO_NUMBER_FOR_KEY = "No number associated with key [%s].";
+
+    @Override
+    @SessionRequired
+    public Either<Long, KeyNumber> save(final KeyNumber entity, final Optional<fetch<KeyNumber>> maybeFetch) {
+        return super.save(entity, maybeFetch);
+    }
 
     /// {@inheritDoc}
     ///
@@ -36,7 +45,7 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
 
         final int nextNo = Integer.parseInt(number.getValue(), radix) + 1;
         number.setValue(Integer.toString(nextNo, radix).toUpperCase());
-        save(number);
+        save(number, Optional.empty());
         return nextNo;
     }
 
@@ -59,7 +68,7 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
 
         final SortedSet<Integer> keys = IntStream.iterate(Integer.parseInt(number.getValue(), radix) + 1, n -> n + 1).limit(count).boxed().collect(toCollection(TreeSet::new));
         number.setValue(Integer.toString(keys.last(), radix).toUpperCase());
-        save(number);
+        save(number, Optional.empty());
         return keys;
     }
 
@@ -87,7 +96,7 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
         else {
             number = new_().setKey(key).setValue("0");
         }
-        save(number);
+        save(number, Optional.empty());
     }
 
 }

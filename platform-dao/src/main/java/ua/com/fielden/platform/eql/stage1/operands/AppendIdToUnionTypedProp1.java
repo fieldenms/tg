@@ -21,7 +21,7 @@ public final class AppendIdToUnionTypedProp1 {
     /// Otherwise, returns an empty optional.
     ///
     public Optional<Prop1> apply(final Prop1 prop1, final TransformationContextFromStage1To2 context) {
-        final var resolution = Prop1.resolveProp(prop1, context);
+        final var resolution = Prop1.resolveProp(prop1, context.sourcesStack());
         if (resolution.getPath().getLast() instanceof QuerySourceItemForUnionType<?>) {
             return Optional.of(new Prop1("%s.%s".formatted(prop1.propPath(), ID), prop1.external()));
         }
