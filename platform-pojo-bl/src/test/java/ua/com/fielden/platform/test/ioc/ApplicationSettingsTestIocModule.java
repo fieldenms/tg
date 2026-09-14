@@ -37,7 +37,8 @@ public class ApplicationSettingsTestIocModule extends AbstractPlatformIocModule 
             "auth.mode",
             "email.smtp",
             "email.fromAddress",
-            "currency.symbol"
+            "currency.symbol",
+            "users.selfEdit"
     );
 
     private final Properties properties;

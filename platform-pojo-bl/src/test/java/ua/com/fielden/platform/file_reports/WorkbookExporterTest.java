@@ -54,7 +54,8 @@ public class WorkbookExporterTest {
                 t2("tokens.package", "ua.com.fielden.platform.security.tokens"),
                 t2("workflow", "development"),
                 t2("auth.mode", "SSO"),
-                t2("currency.symbol", "$")
+                t2("currency.symbol", "$"),
+                t2("users.selfEdit", "false")
         ));
         return new ApplicationInjectorFactory()
                 .add(new CommonEntityTestIocModuleWithPropertyFactory(properties))
