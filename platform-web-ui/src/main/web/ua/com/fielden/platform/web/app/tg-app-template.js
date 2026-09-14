@@ -7,6 +7,8 @@ import '/resources/polymer/@polymer/app-route/app-location.js';
 import '/resources/polymer/@polymer/app-route/app-route.js';
 
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
+// Required for the buttons of the application update message (see `_handleAppVersionAnnouncement`).
+import '/resources/polymer/@polymer/paper-button/paper-button.js';
 
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 
@@ -16,6 +18,7 @@ import '/resources/master/tg-entity-master.js';
 import '/resources/actions/tg-ui-action.js';
 import '/resources/components/tg-message-panel.js';
 import '/resources/components/tg-global-error-handler.js';
+import { showStickyMessage, dismissStickyMessage } from '/resources/components/tg-sticky-toast.js';
 import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -713,9 +716,14 @@ Polymer({
         this.selectAfterRender = selected;
     },
     
+    /// Asks a user to confirm leaving the application.
+    /// The wording once supplied was `Do you really want to close the application?`.
+    /// It is recorded here only, because browsers ignore any message a handler supplies and show their own.
+    ///
     _checkWhetherCanLeave: function (e) {
-        e.returnValue = "Do you really want to close the application?";
-        return e.returnValue;
+        // Cancelling the event is how the standard asks for the dialog, and `returnValue` is what older browsers require.
+        e.preventDefault();
+        e.returnValue = true;
     },
 
      /// Animation finish event handler.
@@ -786,8 +794,6 @@ Polymer({
         this._attrs = {entityType: "ua.com.fielden.platform.menu.MenuSaveAction", currentState: "EDIT", centreUuid: this.uuid};
         this._openUserMenuVisibilityAssociatorAttrs = {entityType: "ua.com.fielden.platform.menu.UserMenuVisibilityAssociator", currentState: "EDIT", centreUuid: this.uuid};
         this.tgOpenMasterAction.requireMasterEntity = 'false';
-        //Binding to 'this' functions those are used outside the scope of this component.
-        this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
 
         //Configure help action
         this._currentEntityForHelp = () => {
@@ -867,6 +873,13 @@ Polymer({
 
         //Add click event listener to handle click on links
         window.addEventListener('click', this._checkURL.bind(this));
+
+        // Listen for the server-pushed application-version announcement, dispatched on `window` by `tg-event-source.js`.
+        // When the server reports a version different from the one this client was loaded with, the user is prompted to reload.
+        window.addEventListener('tg-application-version', event => this._handleAppVersionAnnouncement(event.detail));
+
+        // Ask the user to confirm leaving the application.
+        window.addEventListener('beforeunload', this._checkWhetherCanLeave);
     },
 
     attached: function () {
@@ -895,14 +908,31 @@ Polymer({
             this._toastGreeting().isCritical = false;
             this._toastGreeting().show();
         });
-        
-        window.addEventListener("beforeunload", this._checkWhetherCanLeave);
     },
-    
-    detached: function () {
-        window.removeEventListener("beforeunload", this._checkWhetherCanLeave);
+
+    /// Prompts the user to reload when the server reports a deployment different from the one this client was loaded with.
+    /// Deployments are compared rather than versions, because a version can stay unchanged across a release.
+    /// The version is merely what a user is shown.
+    /// Guarded so that both deployments must be known and must differ, and the user is prompted once per deployment.
+    ///
+    _handleAppVersionAnnouncement: function (announcement) {
+        const { version, deploymentId } = announcement || {};
+        const bootDeploymentId = window.TG_APP?.deploymentId;
+        if (deploymentId && bootDeploymentId && deploymentId !== bootDeploymentId && deploymentId !== this._notifiedDeploymentId) {
+            this._notifiedDeploymentId = deploymentId;
+            showStickyMessage({
+                text: 'A new application version is available.',
+                detail: `${version} — reload to update.`,
+                actions: '<paper-button class="action secondary" data-tap="later">Later</paper-button>'
+                    + '<paper-button raised class="action primary" data-tap="reload">Reload</paper-button>',
+                handlers: {
+                    reload: () => window.location.reload(),
+                    later: () => dismissStickyMessage()
+                }
+            });
+        }
     },
-    
+
     /// Renumbers the current history entry, keeping its URI.
     ///
     /// This is the `location-changed` listener, which `<app-location>` fires after it has recorded a URI change.

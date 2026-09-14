@@ -8,6 +8,8 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+
 const template = html`
     <style>
         :host {
@@ -123,6 +125,11 @@ Polymer({
     },
 
     observers: ["_shoudDisplayMsg(isRecomendedClient, closed)"],
+
+    /// Makes tooltips work for this panel in its own right, including on pages such as `login.html`.
+    /// Such pages may have no enclosing component to provide tooltip support.
+    ///
+    behaviors: [ TgTooltipBehavior ],
 
     ready: function () {
         this.isRecomendedClient = isMobile.any() || isDesktop.isSafari() || isDesktop.isChrome() || isDesktop.isFirefox();

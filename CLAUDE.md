@@ -168,6 +168,9 @@ Common cases: validator error messages, named query aliases, related token strin
 
 **Use `StandardActions` and `Compound` helpers** for common centre/master actions.
 
+**Client-side imports:** a `.js` module must import every asset it uses, including side-effectful ones such as components, styles and behaviours, even when another module already imports them transitively.
+Remove such an import only when the module has genuinely stopped using the asset, never because the graph happens to provide it elsewhere.
+
 **SQL migration scripts** for new persistent entities (in TG-based applications):
 - Use `GenDdl` to generate DDL.
   Table names: uppercased entity class + `_`.
