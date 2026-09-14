@@ -10,8 +10,6 @@ import ua.com.fielden.platform.utils.Pair;
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -40,11 +38,8 @@ public final class HibernateToJdbcSqlTypeCorrespondence {
      */
     // funnily enough Hibernate itself performs such conversion in certain Dialect implementations
     public static String genericSqlTypeName(final int sqlType, final Dialect dialect) {
-        final var map = GENERIC_TYPE_NAMES.computeIfAbsent(dialect, $ -> new ConcurrentHashMap<>());
-        return map.computeIfAbsent(sqlType, $ -> substringBefore(dialect.getTypeName(sqlType), '('));
+        return substringBefore(dialect.getTypeName(sqlType), '(');
     }
-    // where
-    private static final Map<Dialect, Map<Integer, String>> GENERIC_TYPE_NAMES = new ConcurrentHashMap<>(1); // expect at most 1 dialect
 
     /**
      * Infers the name of a Hibernate type to use in a {@code CAST} SQL expression.

@@ -9,6 +9,7 @@ import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -39,9 +40,9 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
@@ -73,6 +74,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(Ticker.class).to(TickerForSessionCache.class);
         bind(IDates.class).to(DatesForTesting.class);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
+        bind(IApplicationSettings.class).to(ApplicationSettingsForTesting.class);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
 
@@ -152,6 +154,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(IEntityTwo.class).to(EntityTwoDao.class);
         bind(EntityThreeCo.class).to(EntityThreeDao.class);
         bind(IUnionEntity.class).to(UnionEntityDao.class);
+        bind(TgNoopActionCo.class).to(TgNoopActionDao.class);
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
@@ -231,7 +234,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         return CacheBuilder.newBuilder()
                 // all authenticators should be evicted from the cache in 2 minutes time after that have been
                 // put into the cache
-                .expireAfterWrite(2, TimeUnit.MINUTES)
+                .expireAfterWrite(Duration.ofMinutes(2))
                 // the ticker controls the eviction time
                 // the injected instance is initialised with IUniversalConstants.now() as its start time
                 .ticker(ticker)

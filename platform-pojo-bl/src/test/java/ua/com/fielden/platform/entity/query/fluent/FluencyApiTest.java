@@ -12,17 +12,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-/**
- * This test suite verifies properties of the EQL fluent API.
- * It does not cover all possible permutations at this stage, but should be enhanced gradually.
- */
+/// This test suite verifies properties of the EQL fluent API.
+/// It does not cover all possible permutations at this stage, but should be enhanced gradually.
+///
 public class FluencyApiTest {
 
     private static final Set<Method> objectMethods = Set.of(Object.class.getMethods());
     private static final Set<String> additionalMethodNames =
             Arrays.stream(AbstractQueryLink.class.getDeclaredMethods()).map(Method::getName).collect(toSet());
 
-    private static final String[] functions = new String[] { "round", "now", "caseWhen", "lowerCase", "upperCase", "ifNull",
+    private static final String[] functions = new String[] { "round", "ceil", "floor", "now", "caseWhen", "lowerCase", "upperCase", "ifNull",
             "dateOf", "hourOf", "dayOf", "monthOf", "yearOf", "minuteOf", "secondOf", "count", "concat", "absOf", "addTimeIntervalOf", "dayOfWeekOf" };
 
     private static final String[] aggregateFunctions = new String[] { "maxOf", "minOf", "sumOf", "countOf", "avgOf", "concatOf",

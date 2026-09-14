@@ -40,12 +40,13 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
 
     @Override
     public Prop2 transform(final TransformationContextFromStage1To2 context) {
-        final var thisTr = AppendIdToUnionTypedProp1.INSTANCE.apply(this, context).orElse(this);
-        return thisTr.transform_(context);
+        return AppendIdToUnionTypedProp1.INSTANCE.apply(this, context).map(it -> it.transform(context)).orElseGet(() -> transformBase(context));
     }
 
-    private Prop2 transform_(final TransformationContextFromStage1To2 context) {
-        final var resolution = resolveProp(this, context);
+    /// An alternative to [#transform(TransformationContextFromStage1To2)] that does not apply [AppendIdToUnionTypedProp1].
+    ///
+    public Prop2 transformBase(final TransformationContextFromStage1To2 context) {
+        final var resolution = resolveProp(this, context.sourcesStack());
         final var shouldBeTreatedAsId = propPath.endsWith("." + ID) && isEntityType(resolution.lastPart().javaType());
         return new Prop2(resolution.source, enhancePath(resolution.getPath()), shouldBeTreatedAsId);
     }
@@ -90,8 +91,8 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
         return asIsResolution.isSuccessful() ? new PropResolution(source, asIsResolution.getResolved()) : null;
     }
 
-    public static PropResolution resolveProp(final Prop1 prop, final TransformationContextFromStage1To2 context) {
-        return context.sourcesForNestedQueries.stream()
+    public static PropResolution resolveProp(final Prop1 prop, final List<List<ISource2<? extends ISource3>>> sources) {
+        return sources.stream()
                 .skip(prop.external ? 1 : 0)
                 .map(item -> maybeResolveProp(prop, item))
                 .flatMap(Optional::stream)

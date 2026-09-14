@@ -106,6 +106,16 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
     }
 
     @Override
+    public IFunctionLastArgument<T, ET> ceil() {
+        return createFunctionLastArgument(builder.ceil());
+    }
+
+    @Override
+    public IFunctionLastArgument<T, ET> floor() {
+        return createFunctionLastArgument(builder.floor());
+    }
+
+    @Override
     public T now() {
         return nextForSingleOperand(builder.now());
     }

@@ -2,7 +2,9 @@ package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.api.actions.multi.FunctionalMultiActionElement;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
+import ua.com.fielden.platform.web.centre.api.impl.DynamicColumn;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
@@ -13,12 +15,33 @@ import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.*;
 
-/// The implementation for all result set columns (dom element).
+/// Server-side representation of an EGI result-set column — renders into a `tg-property-column` element.
+/// Each `addProp(...)` / `addProps(...)` call on the Entity Centre DSL produces one instance.
+///
+/// A column carries an ordered list of property-action groups ([FunctionalMultiActionElement]), one per `withAction(...)` / `withMultiAction(...)` / `withActionSupplier(...)` call on that property.
+/// The column also owns the `chosen-property` decision for its property actions and sets it on the slotted `tg-ui-action` children of each group at render time — using the column's `propertyName` for static columns and the `[[item.GROUP_PROP_VALUE]]` per-cell binding for dynamic columns; this keeps [FunctionalMultiActionElement] agnostic of the column type.
+///
+/// At runtime the client treats the column as the source of truth for its actions (`column.customActions`); cell tap routes through the column's `runAction(...)` to invoke the first group's currently-selected sub-action.
+/// When the column has more than one action group the cell additionally renders a triple-dot overflow button that opens the shared EGI dropdown (`tg-action-dropdown`) listing all groups.
 ///
 public class PropertyColumnElement implements IRenderable, IImportable {
-    //The minimal column width. It is used only when specified width is greater than minimal.
+    /// The floor for *manual drag-resize* of a column.
+    /// This is **not** a CSS `min-width` — CSS `min-width` is the column's natural width and is set from `column.width`.
+    /// `MIN_COLUMN_WIDTH` only enters the picture as the lower bound for the per-column `minWidth` attribute.
+    /// JS resize handler uses it to clamp the new width during a drag (see `_trackColumnSize`).
+    ///
     public static final int MIN_COLUMN_WIDTH = 16;
     public static final int DEFAULT_COLUMN_WIDTH = 80;
+
+    /// The drag-resize floor exposed on the rendered column (HTML `min-width` attribute / `DYN_COL_MIN_WIDTH` JSON key).
+    /// Equals `MIN_COLUMN_WIDTH` for any reasonable column.
+    /// Degrades to the column's `width` only when the user has explicitly chosen a width smaller than `MIN_COLUMN_WIDTH`.
+    /// Shared by static columns (see [#minWidthBinding()]) and dynamic columns (see [DynamicColumn#getResizeFloor()]).
+    /// This is for the two to have a single source of truth.
+    ///
+    public static int resizeFloor(final int width) {
+        return Math.min(MIN_COLUMN_WIDTH, width);
+    }
 
     private final String propertyName;
     private final boolean isDynamic;
@@ -28,7 +51,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     private final String widgetPath;
     private final Object propertyType;
     private final Pair<String, String> titleDesc;
-    private final List<FunctionalActionElement> actions = new ArrayList<>();
+    private final List<FunctionalMultiActionElement> actions = new ArrayList<>();
     private final List<SummaryElement> summary;
     private boolean debug = false;
     private final int growFactor;
@@ -39,7 +62,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
 
     /// Creates [PropertyColumnElement] from `entityType` type and `propertyName` and the name&path of widget.
     ///
-    public PropertyColumnElement(final String propertyName, final Optional<AbstractWidget> widget, final boolean isDynamic, final boolean isSortable, final int width, final int growFactor, final boolean wordWrap, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final List<FunctionalActionElement> actions) {
+    public PropertyColumnElement(final String propertyName, final Optional<AbstractWidget> widget, final boolean isDynamic, final boolean isSortable, final int width, final int growFactor, final boolean wordWrap, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final List<FunctionalMultiActionElement> actions) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-property-column");
         this.widgetPath = "egi/tg-property-column";
         this.propertyName = propertyName;
@@ -143,11 +166,11 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     }
 
     private Object wordWrapBinding() {
-        return isDynamic ? format("[[item.%s]]", DYN_COL_WORDWRAP) : Boolean.valueOf(wordWrap);
+        return isDynamic ? format("[[item.%s]]", DYN_COL_WORD_WRAP) : Boolean.valueOf(wordWrap);
     }
 
     private String minWidthBinding() {
-        return isDynamic ? format("[[item.%s]]", DYN_COL_MIN_WIDTH) : String.valueOf(MIN_COLUMN_WIDTH > width ? width : MIN_COLUMN_WIDTH);
+        return isDynamic ? format("[[item.%s]]", DYN_COL_MIN_WIDTH) : String.valueOf(resizeFloor(width));
     }
 
     private String widthBinding() {
@@ -181,7 +204,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         return new LinkedHashMap<>();
     }
 
-    public List<FunctionalActionElement> getActions() {
+    public List<FunctionalMultiActionElement> getActions() {
         return unmodifiableList(actions);
     }
 
@@ -197,15 +220,22 @@ public class PropertyColumnElement implements IRenderable, IImportable {
 
     private DomElement renderColumnElement () {
         final DomElement columnElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
-        for (final FunctionalActionElement actionElement : actions) {
-            if (actionElement.getFunctionalActionKind() == FunctionalActionKind.PROP) {
-                final DomElement actionDomElement = actionElement.render();
-                actionDomElement.attr("slot", "property-action");
-                if (isDynamic) {
-                    actionDomElement.attr("chosen-property", format("[[item.%s]]", DYN_COL_GROUP_PROP_VALUE));
-                }
-                columnElement.add(actionDomElement);
-            }
+        // Set `chosen-property` on each multi-action group — the column is the single point of truth.
+        // All sub-actions of all groups on a given column share the same value.
+        // Dynamic columns use the per-cell group-prop-value binding (resolved in the column's template).
+        // Static columns use the column's own property name.
+        // `tg-egi-multi-action` propagates this onto both:
+        //   1. Its rendered shadow `tg-ui-action` buttons (dropdown path)
+        //   2. Its slotted `tg-ui-action` light-DOM children (cell-tap path).
+        // Setting on the group rather than on each slotted child is essential for dynamic columns.
+        // This is because when the outer `dom-repeat` shifts items on refresh, only a direct property of the group element fires binding effects.
+        // A per-child attribute change on a slotted node does not, leaving the Shadow DOM buttons with a stale `chosen-property`.
+        final String chosenPropertyValue = isDynamic ? format("[[item.%s]]", DYN_COL_GROUP_PROP_VALUE) : propertyName;
+        for (final FunctionalMultiActionElement actionElement : actions) {
+            final DomElement actionDomElement = actionElement.render();
+            actionDomElement.attr("slot", "property-action");
+            actionDomElement.attr("chosen-property", chosenPropertyValue);
+            columnElement.add(actionDomElement);
         }
         summary.forEach(summary -> columnElement.add(summary.render()));
         return columnElement;

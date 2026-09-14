@@ -7,6 +7,7 @@ import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
@@ -36,12 +37,42 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 /// - `createIndicesSchema` — generates DDL for creation of all unique and non-unique indices.
 /// - `createFkSchema` — generates DDL for creation of all foreign keys; it is expected that all referenced tables are present when this DDL is executed.
 ///
+/// ## Default `id` column takes precedence over an override
+///
+/// The `_ID` column is always generated from `AbstractEntity.id` via [ColumnDefinitionExtractor#extractIdProperty].
+/// A subclass MAY redeclare `id` with `@IsProperty` (to expose it on a master/centre, use it as a `@CompositeKeyMember`, etc.).
+/// When such a redeclaration is present, an accompanying `@MapTo` is REQUIRED to carry exactly the value `"_ID"`.
+/// Any other value — or the empty default `""`, which would map to `"ID_"` — is rejected with a [DbSchemaException].
+/// The override's `@MapTo("_ID")` is treated as a no-op confirming the default column name.
+/// The override does NOT contribute to the column definition emitted by this class.
+///
+/// As a consequence, the following annotations on an overridden `id` are **dismissed from DDL generation**:
+///
+/// - `@CompositeKeyMember(N)` — does not contribute to the unique composite index.
+///    The PK on `_ID` already enforces uniqueness, so the index would be redundant.
+///    When `id` is the only composite key member, the composite index is suppressed entirely (see [#createIndicesSchema]) to avoid an empty `CREATE UNIQUE INDEX … ON T()`.
+/// - `@Optional` — does not relax the column's `NOT NULL` constraint; `_ID` is always `NOT NULL` because it is the PK.
+/// - `@Required` — already the default for `_ID`; redundant.
+/// - `@Unique` — does not produce a separate unique index. The PK already enforces uniqueness.
+/// - `@PersistentType` — does not change the column's SQL type; `_ID` is always emitted with the default `Long`-to-SQL mapping.
+/// - `@IsProperty(length, scale, precision)` — not applied. These attributes are not meaningful for the `Long`-typed `id`.
+/// - `@MapTo(defaultValue = ...)` — not applied. A `DEFAULT` clause on a PK column is not generated.
+///
+/// In short, the override is a model-level declaration only (visible to TG reflection, fetch providers, metamodels, validators, etc.).
+/// The DDL is governed exclusively by `AbstractEntity.id`.
+///
 public class TableDdl {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    // Trailing clause shared by the `@MapTo`-on-overridden-`id` rejection messages below.
+    private static final String ID_OVERRIDE_MAP_TO_RULE = " When [id] overrides, only @MapTo(\"_ID\") is permitted (matching the default ID column).";
+    private static final String
+            ERR_ID_OVERRIDE_NON_DEFAULT_MAP_TO_COLUMN_NAME = "Property [id] in entity type [%s] is annotated with @MapTo(\"%s\")." + ID_OVERRIDE_MAP_TO_RULE,
+            ERR_ID_OVERRIDE_MAP_TO_EMPTY_COLUMN_NAME = "Property [id] in entity type [%s] is annotated with @MapTo without a value (would default to \"ID_\")." + ID_OVERRIDE_MAP_TO_RULE;
+
     public final Class<? extends AbstractEntity<?>> entityType;
-    /** Maps a property path to its column definition. */
+    /// Maps a property path to its column definition.
     private final Map<String, ColumnDefinition> columns;
     private final String tableName;
 
@@ -54,6 +85,9 @@ public class TableDdl {
     private static Map<String, ColumnDefinition> populateColumns(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         final var columns = ImmutableMap.<String, ColumnDefinition> builder();
 
+        // The `id`, `key` and `version` columns are always sourced from the AbstractEntity-level declarations.
+        // For `id` this is intentional even when a subclass redeclares it — see the class javadoc on
+        // "Default `id` column takes precedence over an override".
         columns.put(ID, columnDefinitionExtractor.extractIdProperty(entityType));
 
         columnDefinitionExtractor.extractSimpleKeyProperty(entityType).ifPresent(colDef -> columns.put(KEY, colDef));
@@ -61,7 +95,7 @@ public class TableDdl {
         columns.put(VERSION, columnDefinitionExtractor.extractVersionProperty(entityType));
 
         for (final Field propField : findRealProperties(entityType, MapTo.class)) {
-            if (!shouldIgnore(propField)) {
+            if (!shouldIgnore(propField, entityType)) {
                 final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, propField.getName());
                 final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, entityType, propField.getName());
                 final PersistentType persistedType = getPropertyAnnotation(PersistentType.class, entityType, propField.getName());
@@ -75,8 +109,41 @@ public class TableDdl {
         return columns.buildOrThrow();
     }
 
-    private static boolean shouldIgnore(final Field propField) {
-        return KEY.equals(propField.getName());
+    private static boolean shouldIgnore(final Field propField, final Class<? extends AbstractEntity<?>> entityType) {
+        // Ignore `key` and `id` `@IsProperty` fields as they are defined specially.
+        return KEY.equals(propField.getName()) || isIdPropertyOrThrowIfInvalid(propField, entityType);
+    }
+
+    /// Determines whether a [MapTo] + [IsProperty]-annotated `propField` represents a subclass redeclaration of `id`,
+    /// and validates the `@MapTo` value on that field.
+    ///
+    /// The default `id` column wins (see the class javadoc): the override may exist for model-level reasons
+    /// (e.g. exposing `id` on a centre/master or declaring it as `@CompositeKeyMember`), but it must agree with the default column name `"_ID"`.
+    /// Any other `@MapTo` value — including the empty default which would map to `"ID_"` — is rejected with a [DbSchemaException].
+    /// When the override is valid, this method returns `true` so the surrounding iteration skips re-emitting the column.
+    ///
+    /// Annotations on the override other than `@MapTo("_ID")` itself are silently dismissed for DDL purposes.
+    /// The class javadoc lists which ones and explains why each dismissal is safe.
+    ///
+    /// Throws [DbSchemaException] if `propField` represents `id`, but fails validation.
+    ///
+    private static boolean isIdPropertyOrThrowIfInvalid(final Field propField, final Class<? extends AbstractEntity<?>> entityType) {
+        final var isIdProperty = ID.equals(propField.getName());
+        if (isIdProperty) {
+            // `findRealProperties(MapTo.class)` filters fields that have both `@IsProperty` and `@MapTo`.
+            // So `@MapTo` is guaranteed to be present here.
+            // The id column is always generated as `_ID` by `extractIdProperty`.
+            // So an override is only acceptable when it matches that column name exactly.
+            final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, ID);
+            final String value = mapTo.value();
+            if (value.isEmpty()) {
+                throw new DbSchemaException(ERR_ID_OVERRIDE_MAP_TO_EMPTY_COLUMN_NAME.formatted(entityType.getSimpleName()));
+            }
+            if (!"_ID".equals(value)) {
+                throw new DbSchemaException(ERR_ID_OVERRIDE_NON_DEFAULT_MAP_TO_COLUMN_NAME.formatted(entityType.getSimpleName(), value));
+            }
+        }
+        return isIdProperty;
     }
 
     public String getTableName() {
@@ -125,15 +192,28 @@ public class TableDdl {
 
     /// Generates DDL statements for all unique and non-unique indices, including those representing a business key.
     ///
+    /// For composite-key entities a unique index over all `@CompositeKeyMember` columns is emitted, but only when
+    /// at least one such column is present in this table. This guard matters when the only declared composite key
+    /// member is the overridden `id` property: its `@CompositeKeyMember` is dismissed (see the class javadoc),
+    /// so emitting the index would produce an empty column list — invalid SQL. The PK on `_ID` already enforces
+    /// uniqueness in that scenario, so skipping the redundant composite index is safe.
+    ///
     public List<String> createIndicesSchema(final Dialect dialect) {
         final Map<Boolean, List<ColumnDefinition>> uniqueAndNot = columnDefinitions().stream().collect(Collectors.partitioningBy(col -> col.unique));
         final List<String> result = new LinkedList<>();
-        if (isCompositeEntity(entityType)) {
+        if (isCompositeEntity(entityType) && hasCompositeKeyMembers()) {
             result.add(createUniqueCompositeIndicesSchema(columnDefinitions().stream(), dialect));
         }
         result.addAll(createUniqueIndicesSchema(uniqueAndNot.get(true).stream(), dialect));
         result.addAll(createNonUniqueIndicesSchema(uniqueAndNot.get(false).stream(), dialect));
         return result;
+    }
+
+    /// Returns `true` if any column in this table carries a `@CompositeKeyMember` ordering — that is,
+    /// if there is at least one column to include in the unique composite index.
+    ///
+    private boolean hasCompositeKeyMembers() {
+        return columnDefinitions().stream().anyMatch(col -> col.compositeKeyMemberOrder.isPresent());
     }
 
     private String createUniqueCompositeIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {

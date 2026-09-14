@@ -101,6 +101,10 @@ public class LoginCompleteResetResource extends AbstractWebResource {
         } catch (final Exception ex) {
             LOGGER.fatal(ex);
             throw new SecurityException(ERR_RESETTING_PASSWORD, ex);
+        } finally {
+            // This handler sets the current user to SU (above); clear it so a pooled worker thread does not retain it after the request.
+            // This resource is attached at the component level and is not covered by the application-level cleanup filter.
+            up.clearUser();
         }
     }
 
@@ -174,6 +178,10 @@ public class LoginCompleteResetResource extends AbstractWebResource {
             LOGGER.fatal(ex);
             getResponse().setEntity(new JsonRepresentation(format(msgTemplate, ex.getMessage())));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+        } finally {
+            // This handler sets the current user (SU, then the matched user) above; clear it so a pooled worker thread does not retain it after the request.
+            // This resource is attached at the component level and is not covered by the application-level cleanup filter.
+            up.clearUser();
         }
     }
 

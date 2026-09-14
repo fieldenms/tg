@@ -243,6 +243,10 @@ public interface EntityQueryProgressiveInterfaces {
 
         IRoundFunctionArgument<T, ET> round();
 
+        IFunctionLastArgument<T, ET> ceil();
+
+        IFunctionLastArgument<T, ET> floor();
+
         /**
          * Start of an expression for concatenation of one, two or more operands.
          *

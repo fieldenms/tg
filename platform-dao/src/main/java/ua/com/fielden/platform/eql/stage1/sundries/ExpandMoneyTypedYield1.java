@@ -60,9 +60,9 @@ public final class ExpandMoneyTypedYield1 {
             return Optional.empty();
         }
 
-        return context.domainMetadata.forPropertyOpt(query.resultType, yield.alias())
+        return context.domainMetadata().forPropertyOpt(query.resultType, yield.alias())
                 .filter(pm -> pm.type().javaType().equals(Money.class))
-                .map(mdResultProp -> context.domainMetadata.propertyMetadataUtils().subProperties(mdResultProp)
+                .map(mdResultProp -> context.domainMetadata().propertyMetadataUtils().subProperties(mdResultProp)
                                      .stream()
                                      .map(subProp -> expandComponent(yield, context, query, subProp.name()))
                                      .flatMap(Optional::stream));
@@ -83,11 +83,11 @@ public final class ExpandMoneyTypedYield1 {
         return switch (componentName) {
             case AMOUNT -> Optional.of(new Yield1(yield.operand(), yield.alias() + "." + AMOUNT, yield.hasNonnullableHint()));
             case CURRENCY -> {
-                final var currencyModel = context.moneyComponentInference.infer(yield.operand(), CURRENCY, context.moneyComponentInference.predicateIsMoneyWithComponent(context, CURRENCY))
+                final var currencyModel = context.moneyComponentInference().infer(yield.operand(), CURRENCY, context.moneyComponentInference().predicateIsMoneyWithComponent(context, CURRENCY))
                         .orElseThrow(err -> new EqlStage1ProcessingException(format(ERR_COULD_NOT_INFER, componentAlias, componentAlias, yield.alias(), err)));
                 LOGGER.debug(() -> format("Inferred yield for [%s] in a query with result type [%s].\nInferred expression: %s",
                                           componentAlias, query.resultType, currencyModel));
-                final var expr1 = new EqlCompiler(context.stage1Transformer).compile(currencyModel.tokens(), EqlCompilationResult.StandaloneExpression.class).model();
+                final var expr1 = new EqlCompiler(context.stage1Transformer()).compile(currencyModel.tokens(), EqlCompilationResult.StandaloneExpression.class).model();
                 yield Optional.of(new Yield1(expr1, componentAlias, yield.hasNonnullableHint()));
             }
             default -> throw new EqlStage1ProcessingException(format(ERR_UNSUPPORTED_COMPONENT, Money.class.getSimpleName(), componentName));

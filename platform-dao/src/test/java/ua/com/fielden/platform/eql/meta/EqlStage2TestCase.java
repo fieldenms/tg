@@ -80,14 +80,14 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
         final var qb = qb(paramValues);
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider(), metadata(), qb, moneyComponentInference());
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider(), metadata(), qb, moneyComponentInference());
         return qb.generateAsResultQuery(countQry, null, null).transform(context);
     }
 
     protected static <T extends AbstractEntity<?>> T2<QueryModelToStage1Transformer, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
         final QueryModelToStage1Transformer qb = qb(paramValues);
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider(), metadata(), qb, moneyComponentInference());
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider(), metadata(), qb, moneyComponentInference());
         return t2(qb, qb.generateAsResultQuery(countQry, null, null).transform(context));
     }
 
@@ -97,19 +97,19 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry, final OrderingModel order) {
         final var qb = qb();
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider(), metadata(), qb, moneyComponentInference());
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider(), metadata(), qb, moneyComponentInference());
         return qb.generateAsResultQuery(qry, order, new EntityRetrievalModel<T>(EntityQueryUtils.fetch(qry.getResultType()), metadata(), querySourceInfoProvider())).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry, final OrderingModel order) {
         final var qb = qb();
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider(), metadata(), qb, moneyComponentInference());
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider(), metadata(), qb, moneyComponentInference());
         return qb.generateAsResultQuery(qry, order, null).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
         final var qb = qb();
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider(), metadata(), qb, moneyComponentInference());
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider(), metadata(), qb, moneyComponentInference());
         return qb.generateAsResultQuery(qry, null, null).transform(context);
     }
 
@@ -255,15 +255,15 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static Source2BasedOnPersistentType source(final Integer id, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
-        return new Source2BasedOnPersistentType(querySourceInfoProvider().getModelledQuerySourceInfo(sourceType), alias, id, true, false);
+        return new Source2BasedOnPersistentType(querySourceInfoProvider().getModelledQuerySourceInfo(sourceType), alias, id, true);
     }
 
     protected static Source2BasedOnPersistentType source(final Integer id, final Class<? extends AbstractEntity<?>> sourceType) {
-        return new Source2BasedOnPersistentType(querySourceInfoProvider().getModelledQuerySourceInfo(sourceType), id, true, false);
+        return new Source2BasedOnPersistentType(querySourceInfoProvider().getModelledQuerySourceInfo(sourceType), id, true);
     }
 
     protected static Source2BasedOnQueries source(final QuerySourceInfo<?> querySourceInfo, final Integer id, final SourceQuery2... queries) {
-        return new Source2BasedOnQueries(Arrays.asList(queries), null, id, querySourceInfo, false, true, false);
+        return new Source2BasedOnQueries(Arrays.asList(queries), null, id, querySourceInfo, false, true);
     }
 
     protected static ResultQuery2 qryCountAll(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {

@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.query.generation.ioc.HelperTestIocModule;
 import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage2.PropPathResolver;
 import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.DomainMetadataUtils;
@@ -93,7 +94,7 @@ public abstract class EqlTestCase {
                 calculatedPropertyExpressionProvider,
                 MONEY_COMPONENT_INFERENCE);
         EQL_TABLES = new EqlTables(DOMAIN_METADATA, domainMetadataUtils);
-        EQL_QUERY_TRANSFORMER = new EqlQueryTransformer(filter, dates, EQL_TABLES, QUERY_SOURCE_INFO_PROVIDER, DOMAIN_METADATA, MONEY_COMPONENT_INFERENCE, dbVersionProvider);
+        EQL_QUERY_TRANSFORMER = new EqlQueryTransformer(filter, dates, EQL_TABLES, QUERY_SOURCE_INFO_PROVIDER, DOMAIN_METADATA, MONEY_COMPONENT_INFERENCE, dbVersionProvider, new PropPathResolver(QUERY_SOURCE_INFO_PROVIDER, DOMAIN_METADATA, MONEY_COMPONENT_INFERENCE));
     }
     
     protected static final QueryModelToStage1Transformer qb() {

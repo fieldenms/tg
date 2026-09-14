@@ -7,7 +7,6 @@ import "/resources/polymer/@polymer/paper-styles/shadow.js";
 
 import '/resources/element_loader/tg-element-loader.js';
 import { TgReflector } from '/app/tg-reflector.js';
-import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -281,13 +280,6 @@ Polymer({
             return elementToLoad.wasLoaded;
         }
         return true;
-    },
-
-    canLeave: function (leaveReason = LeaveReason.CLOSED) {
-        const elementToLoad = this.shadowRoot.querySelector("#elementToLoad");
-        if (elementToLoad && elementToLoad.wasLoaded && typeof elementToLoad.loadedElement.canLeave === 'function') {
-            return elementToLoad.loadedElement.canLeave(leaveReason);
-        }
-        return Promise.resolve(true);
     }
+
 });

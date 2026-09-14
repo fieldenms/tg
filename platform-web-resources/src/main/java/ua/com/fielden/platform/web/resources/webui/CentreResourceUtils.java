@@ -30,7 +30,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.either.Either;
@@ -38,7 +37,6 @@ import ua.com.fielden.platform.types.either.Left;
 import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -79,6 +77,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreContext.CHOSENENTITY_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreContext.INSTANCEBASEDCONTINUATION_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.CHANGED;
@@ -370,7 +369,33 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     //---------------------------- CUSTOM OBJECTS [END] ----------------------------//
 
+    /// Loads the surrogate centre identified by `surrogateName`, applies `centreConsumer` to it, and commits the result back.
+    /// Used by all `centre*Adjuster` wirings in [#createCriteriaValidationPrototype] to share the load-mutate-commit triplet.
+    /// Returns the mutated centre.
+    /// Callers like `centreAdjuster` use it as the applied centre without a redundant reload.
+    ///
+    private static ICentreDomainTreeManagerAndEnhancer loadMutateAndCommitCentre(
+        final String surrogateName,
+        final Consumer<ICentreDomainTreeManagerAndEnhancer> centreConsumer,
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final DeviceProfile device,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder
+    ) {
+        final var centre = updateCentre(user, miType, surrogateName, saveAsName, device, webUiConfig, companionFinder);
+        centreConsumer.accept(centre);
+        commitCentreWithoutConflicts(user, miType, surrogateName, saveAsName, device, centre, null /* newDesc */, webUiConfig, companionFinder);
+        return centre;
+    }
+
     private static Map<String, Map<String, Integer>> createColumnWidths(final IAddToResultTickManager secondTick, final Class<?> root) {
+        // Only static (checked) properties are emitted.
+        // Dynamic-column overrides are baked into each `dynamicColumns.*Columns` entry.
+        // See `CriteriaResource.createDynamicProperties` for that.
+        // They reach the client via the per-column `[[item.width]]` / `[[item.growFactor]]` bindings.
+        // So they don't need a second pass through this payload.
         return secondTick.checkedProperties(root)
                .stream()
                .map(property -> Pair.pair(
@@ -550,20 +575,14 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // performs mutation function centreConsumer against FRESH and PREVIOUSLY_RUN centres and saves them into persistent storage; returns applied FRESH centre
         validationPrototype.setCentreAdjuster(centreConsumer -> {
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
-            centreConsumer.accept(freshCentre);
-            commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, null /* newDesc */, webUiConfig, companionFinder);
-            final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
-            centreConsumer.accept(previouslyRunCentre);
-            commitCentreWithoutConflicts(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, previouslyRunCentre, null /* newDesc */, webUiConfig, companionFinder);
-            return freshCentre;
+            final var centre = loadMutateAndCommitCentre(FRESH_CENTRE_NAME, centreConsumer, user, miType, saveAsName, device, webUiConfig, companionFinder);
+            loadMutateAndCommitCentre(PREVIOUSLY_RUN_CENTRE_NAME, centreConsumer, user, miType, saveAsName, device, webUiConfig, companionFinder);
+            return centre;
         });
         // performs mutation function centreConsumer (column widths adjustments) against PREVIOUSLY_RUN centre and copies column widths / grow factors directly to FRESH centre; saves them both into persistent storage
         validationPrototype.setCentreColumnWidthsAdjuster(centreConsumer -> {
             // we have diffs that need to be applied against 'previouslyRun' centre
-            final ICentreDomainTreeManagerAndEnhancer centre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
-            centreConsumer.accept(centre);
-            commitCentreWithoutConflicts(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, centre, null /* newDesc */, webUiConfig, companionFinder);
+            loadMutateAndCommitCentre(PREVIOUSLY_RUN_CENTRE_NAME, centreConsumer, user, miType, saveAsName, device, webUiConfig, companionFinder);
 
             // however those diffs are not applicable to 'fresh' centre due to ability of 'fresh' centre to differ from 'previouslyRun' centre
             // the only way to get such mismatch is to press Discard on selection criteria
@@ -572,8 +591,18 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
             freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre. getSecondTick().getWidthsAndGrowFactors());
+            freshCentre.getSecondTick().setDynamicWidthsAndGrowFactors(previouslyRunCentre.getSecondTick().getDynamicWidthsAndGrowFactors());
+            freshCentre.getSecondTick().setDynamicLastSeenMap(previouslyRunCentre.getSecondTick().getDynamicLastSeenMap());
             commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, null /* newDesc */, webUiConfig, companionFinder);
         });
+        // SAVED-half of the silent adjuster — the FRESH and PREVIOUSLY_RUN halves are covered by `centreAdjuster`.
+        // `EnhancedCentreEntityQueryCriteria.adjustCentreSilently` composes the two so all three surrogates are kept in sync.
+        // The combined effect is invisible to dirty-state tracking — indicator stays grey and SAVE stays disabled.
+        // Intended for housekeeping mutations such as the dynamic-column eviction sweep / lastSeen bumping.
+        // See `CriteriaResource.refreshAndEvictDynamicEntries` for the canonical caller.
+        validationPrototype.setCentreSilentAdjuster(centreConsumer ->
+            loadMutateAndCommitCentre(SAVED_CENTRE_NAME, centreConsumer, user, miType, saveAsName, device, webUiConfig, companionFinder)
+        );
         // performs deletion of current owned configuration
         validationPrototype.setCentreDeleter(() ->
             // removes the associated surrogate centres
@@ -911,6 +940,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             if (config.withMasterEntity) {
                 context.setMasterEntity(restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, user, critGenerator, entityFactory, centreContextHolder, 0, device, sharingModel));
             }
+            if (config.withChosenEntity) {
+                context.setChosenEntity(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains(CHOSENENTITY_PROPERTY_NAME) ? centreContextHolder.getChosenEntity() : null);
+            }
             if (config.withComputation()) {
                 context.setComputation(config.computation.get());
             }
@@ -941,6 +973,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
             final Optional<EntityActionConfig> config,
             final String chosenProperty,
+            final AbstractEntity<?> chosenEntity,
             final Map<String, Object> customObject,
             final AbstractEntity<?> instanceBasedContinuation
     ) {
@@ -952,6 +985,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             context.setComputation(config.get().context.get().computation.get());
         }
         context.setChosenProperty(chosenProperty);
+        context.setChosenEntity(chosenEntity);
         context.setCustomObject(customObject);
         context.setInstanceBasedContinuation(instanceBasedContinuation);
         return context;
