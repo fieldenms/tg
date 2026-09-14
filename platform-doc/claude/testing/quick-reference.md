@@ -38,6 +38,14 @@ If an interactive check contradicts such a passing test, suspect the environment
 
 Do not use `FETCH_PROVIDER` for read-only access to basic properties.
 
+## Asserting on Query Results
+
+A test class typically shares one `populateDomain()` dataset across all its tests, so assert over the rows a test depends on rather than over every row by default.
+Scope the query to fixtures the test owns (`where().prop("key").in().values("CAR1", "CAR2")`), order explicitly (`orderBy().prop("key").asc()`), and assert exact values with `extracting(...).containsExactly(tuple(...), ...)`.
+Asserting over the whole result is appropriate when the dataset is designed as a whole for the test case and the test means to verify its full shape; keep the assertion exact so that a fixture change updates the test deliberately.
+An unordered `containsExactly` is flaky either way; an unscoped `allSatisfy` with a conditional on the key neither pins the rows nor fails clearly.
+See `reference.md`, Assertions, for the worked example.
+
 ## Test Data Caching
 
 `saveDataPopulationScriptToFile()` and `useSavedDataPopulationScript()` — both must return `false` before committing.
