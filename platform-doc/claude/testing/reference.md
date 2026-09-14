@@ -16,6 +16,31 @@ Prefer AssertJ for:
 - **Collections:** `assertThat(list).hasSize(3).containsExactly("a", "b", "c")`
 - **Descriptive messages:** `.as("context")` is cleaner than JUnit's message parameter
 
+**Query results against shared fixtures.**
+A test class typically shares one `populateDomain()` dataset across all its tests, so an assertion over every row couples the test to fixtures added later for unrelated tests.
+When a test depends on only some of the fixtures, scope the query to them, impose an explicit order when the assertion is order-sensitive, and assert exact values:
+```java
+final var qry = select(TgVehicle.class)
+        .where().prop("key").in().values("CAR1", "CAR2")
+        .yield().prop("id").as("id")
+        .yield().prop("key").as("key")
+        .yield().prop("price").as("price")
+        .modelAsEntity(TgVehicle.class);
+
+final var vehicles = co(TgVehicle.class).getAllEntities(from(qry)
+                                                                .with(fetchKeyAndDescOnly(TgVehicle.class).with("price"))
+                                                                .with(orderBy().prop("key").asc().model())
+                                                                .model());
+assertThat(vehicles)
+        .extracting(TgVehicle::getKey, TgVehicle::getPrice)
+        .containsExactly(tuple("CAR1", Money.of("20")), tuple("CAR2", Money.of("200")));
+```
+`containsExactly` checks the row count and every value together, so a missing, extra, or wrong row fails with a readable diff.
+The database guarantees no result order: without an `orderBy`, use `containsExactlyInAnyOrder`.
+Asserting over the whole result is appropriate when the dataset is designed as a whole for the test case and the test means to verify its full shape.
+In that case a fixture change should update the test deliberately, so keep the assertion exact rather than conditional.
+The pattern to avoid is an unscoped `allSatisfy` with a conditional on the key: it neither pins the rows nor fails clearly when a fixture is added.
+
 ### Indirect Testing Pattern
 
 Business logic (validators, definers) resides in `pojo-bl` but is tested **indirectly through DAO tests**:
