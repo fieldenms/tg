@@ -16,7 +16,7 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithRichText;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappingsProvider;
 import ua.com.fielden.platform.sample.domain.TgUnionHolder;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
@@ -30,7 +30,7 @@ import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDb
 public class MappingGenerationTest {
 
     private static final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
-    private static final HibernateTypeMappings hibernateTypeMappings = new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get();
+    private static final HibernateTypeMappings hibernateTypeMappings = new PlatformHibernateTypeMappingsProvider(dbVersionProvider).get();
 
     @Test
     public void hibernate_mappings_are_generated() {

@@ -15,12 +15,8 @@ import java.sql.Types;
 import java.util.Optional;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.persistence.types.exceptions.UserTypeException.invalidPersistedRepresentation;
 
-/**
- * Class that helps Hibernate to map {@link PropertyDescriptor} class into the database.
- *
- * @author TG Team
- */
 public class PropertyDescriptorType implements UserType, IPropertyDescriptorType {
 
     private static final Logger LOGGER = getLogger(PropertyDescriptorType.class);
@@ -51,12 +47,16 @@ public class PropertyDescriptorType implements UserType, IPropertyDescriptorType
     }
 
     @Override
-    public Object instantiate(final Object argument, final EntityFactory factory) {
-        if (argument == null) {
-            return null;
-        }
-
-        return PropertyDescriptor.fromString((String) argument, Optional.of(factory)).beginInitialising();
+    public PropertyDescriptor<?> instantiate(final Object argument, final EntityFactory factory) {
+        return switch (argument) {
+            case String s -> {
+                final var pd = PropertyDescriptor.fromString(s, Optional.of(factory));
+                pd.beginInitialising();
+                yield pd;
+            }
+            case null -> null;
+            default -> throw invalidPersistedRepresentation("Property Descriptor", argument);
+        };
     }
 
     @Override

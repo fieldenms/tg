@@ -621,7 +621,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private Optional<String> getSinglePropertyOfComponentType(final PropertyMetadata pm) {
-            if (pm.hibType() instanceof ICompositeUserTypeInstantiate hibUserType) {
+            if (pm.hibType() instanceof ICompositeUserTypeInstantiate<?> hibUserType) {
                 final String[] propNames = hibUserType.getPropertyNames();
                 if (propNames.length == 1) {
                     return Optional.of(propNames[0]);
