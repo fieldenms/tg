@@ -25,6 +25,7 @@ import java.util.Currency;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
@@ -142,6 +143,27 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         assertThat(vehicles)
                 .isNotEmpty()
                 .allSatisfy(vehicle -> assertNull(vehicle.getPrice()));
+    }
+
+    /// Before the expansion of single-component yield aliases, such yields could only be used in source queries.
+    /// In a top-level query, the yielded value could not be assigned to the Money-typed property during entity instantiation.
+    ///
+    @Test
+    public void Money_typed_property_with_a_single_component_yielded_in_a_top_level_query_can_be_executed() {
+        final var qry = select(TgVehicle.class)
+                .where().prop("key").in().values("CAR1", "CAR2")
+                .yield().prop("id").as("id")
+                .yield().prop("key").as("key")
+                .yield().prop("price").as("price")
+                .modelAsEntity(TgVehicle.class);
+
+        final var vehicles = co(TgVehicle.class).getAllEntities(from(qry)
+                                                                        .with(fetchKeyAndDescOnly(TgVehicle.class).with("price"))
+                                                                        .with(orderBy().prop("key").asc().model())
+                                                                        .model());
+        assertThat(vehicles)
+                .extracting(TgVehicle::getKey, TgVehicle::getPrice)
+                .containsExactly(tuple("CAR1", Money.of("20")), tuple("CAR2", Money.of("200")));
     }
 
     private List<EntityAggregates> run(final AggregatedResultQueryModel qry) {
