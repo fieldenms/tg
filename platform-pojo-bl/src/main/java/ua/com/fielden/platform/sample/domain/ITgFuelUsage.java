@@ -10,6 +10,7 @@ public interface ITgFuelUsage extends IEntityDao<TgFuelUsage> {
     IFetchProvider<TgFuelUsage> FETCH_PROVIDER = fetch(TgFuelUsage.class).with(
             "vehicle",
             "date",
+            "location",
             "qty",
             "pricePerLitre",
             "fuelType");
