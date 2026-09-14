@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.tiny;
 
+import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -15,7 +16,7 @@ import java.util.Optional;
 import static ua.com.fielden.platform.tiny.TinyHyperlink.HASH;
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 
-public interface TinyHyperlinkCo extends IEntityDao<TinyHyperlink> {
+public interface TinyHyperlinkCo extends IEntityDao<TinyHyperlink>, ISaveWithFetch<TinyHyperlink> {
 
     IFetchProvider<TinyHyperlink> FETCH_PROVIDER = fetch(TinyHyperlink.class).with(HASH);
 

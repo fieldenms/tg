@@ -4,11 +4,15 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import ua.com.fielden.platform.basic.config.ApplicationSettings;
+import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperTestIocModule;
+import ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator;
 import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage2.PropPathResolver;
 import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.DomainMetadataUtils;
@@ -79,12 +83,28 @@ public abstract class EqlTestCase {
                                                     dbVersionProvider)
                 .build();
         final var domainMetadataUtils = new DomainMetadataUtils(new PlatformTestDomainTypes(), DOMAIN_METADATA);
+        final var appSettings = new ApplicationSettings(
+                "TG Test",
+                "",
+                "../platform-pojo-bl/target/classes",
+                "ua.com.fielden.platform",
+                "../platform-pojo-bl/target/classes",
+                "ua.com.fielden.platform.security.tokens",
+                "development",
+                AuthMode.RSO.name(),
+                "non-existing-server",
+                "platform@fielden.com.au",
+                "$",
+                Map.of(),
+                "false"
+        );
         final var calculatedPropertyExpressionProvider = new DefaultCalculatedPropertyExpressionProvider(
                 injector.getInstance(IUserProvider.class),
                 dates,
                 filter,
                 DOMAIN_METADATA,
-                new MoneyComponentInference(DOMAIN_METADATA));
+                new MoneyComponentInference(DOMAIN_METADATA),
+                new CompositeKeyEqlExpressionGenerator(DOMAIN_METADATA, appSettings));
         MONEY_COMPONENT_INFERENCE = new MoneyComponentInference(DOMAIN_METADATA);
         QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(
                 DOMAIN_METADATA,
@@ -93,7 +113,7 @@ public abstract class EqlTestCase {
                 calculatedPropertyExpressionProvider,
                 MONEY_COMPONENT_INFERENCE);
         EQL_TABLES = new EqlTables(DOMAIN_METADATA, domainMetadataUtils);
-        EQL_QUERY_TRANSFORMER = new EqlQueryTransformer(filter, dates, EQL_TABLES, QUERY_SOURCE_INFO_PROVIDER, DOMAIN_METADATA, MONEY_COMPONENT_INFERENCE, dbVersionProvider);
+        EQL_QUERY_TRANSFORMER = new EqlQueryTransformer(filter, dates, EQL_TABLES, QUERY_SOURCE_INFO_PROVIDER, DOMAIN_METADATA, MONEY_COMPONENT_INFERENCE, dbVersionProvider, new PropPathResolver(QUERY_SOURCE_INFO_PROVIDER, DOMAIN_METADATA, MONEY_COMPONENT_INFERENCE));
     }
     
     protected static final QueryModelToStage1Transformer qb() {

@@ -62,8 +62,8 @@ public final class EntityActionConfig {
             throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
         }
 
-        if (functionalEntity == null && !context.withCurrentEtity) {
-            throw new IllegalArgumentException("Dynamic action can be created only with current entity in context.");
+        if (functionalEntity == null && !context.withCurrentEtity && !context.withChosenEntity) {
+            throw new IllegalArgumentException("Dynamic action can be created only with current entity or chosen entity in context.");
         }
 
         this.actionIdentifier = Optional.ofNullable(actionIdentifier).map(CharSequence::toString);

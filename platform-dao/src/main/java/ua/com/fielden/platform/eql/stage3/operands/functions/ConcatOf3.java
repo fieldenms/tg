@@ -34,7 +34,7 @@ public class ConcatOf3 extends TwoOperandsFunction3 {
 
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        final String exprSql = operandToSqlAsString(metadata, dbVersion, operand1);
+        final String exprSql = exprSql(operand1, metadata, dbVersion);
         final String sepSql = operand2.sql(metadata, dbVersion);
 
         if (orderItems.isEmpty()) {
@@ -48,6 +48,13 @@ public class ConcatOf3 extends TwoOperandsFunction3 {
         return switch (dbVersion) {
             case MSSQL -> format("STRING_AGG(%s, %s) WITHIN GROUP (ORDER BY %s)", exprSql, sepSql, orderBySql);
             default -> format("STRING_AGG(%s, %s ORDER BY %s)", exprSql, sepSql, orderBySql);
+        };
+    }
+
+    private static String exprSql(final ISingleOperand3 operand, final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return switch (dbVersion) {
+            case MSSQL -> DbVersion.MSSQL.castSql(operandToSqlAsString(metadata, dbVersion, operand), "NVARCHAR(MAX)");
+            default -> operandToSqlAsString(metadata, dbVersion, operand);
         };
     }
 

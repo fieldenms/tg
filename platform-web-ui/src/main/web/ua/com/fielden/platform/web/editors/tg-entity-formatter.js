@@ -165,7 +165,7 @@ function createCompositeTitle (entity, template, reflector) {
         exitNumber (ctx) {
             // Function to construct dot-notation path to a key member and its value's string representation.
             const constructPathAndValue = (value, numbers, acc) => {
-                const convertedValue = reflector.tg_toString(value, entity.type(), acc);
+                const convertedValue = reflector.tg_toString(value, entity.type(), acc, {display: true});
                 if (!convertedValue) { // convertedValue is empty (most likely '')
                     return [undefined, undefined]; // return undefined to indicate the need to skip this key member
                 } else if (numbers.length === 0) { // numbers are empty -- processing ended successfully
@@ -227,7 +227,7 @@ function createCompositeTitleWithoutTemplate (entity, titles, reflector) {
         if (entity.get(keyName) !== null) {
             titles.push({
                 title: entityType.prop(keyName).title(),
-                value: reflector ? reflector.tg_toString(entity.get(keyName), entity.type(), keyName) : entity.get(keyName),
+                value: reflector ? reflector.tg_toString(entity.get(keyName), entity.type(), keyName, {display: true}) : entity.get(keyName),
                 propertyName: keyName,
                 type: entity.type()
             });

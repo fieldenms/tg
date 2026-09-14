@@ -41,7 +41,7 @@ final class YieldOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ext
 
     @Override
     public ISingleOperand1<? extends ISingleOperand2<?>> visitYieldOperandFunction(final YieldOperandFunctionContext ctx) {
-        final var argument = ctx.singleOperand().accept(new SingleOperandVisitor(transformer));
+        final var argument = ctx.argument.accept(new SingleOperandVisitor(transformer));
         return chooseFunction(ctx.yieldOperandFunctionName()).apply(argument);
     }
 
@@ -71,7 +71,7 @@ final class YieldOperandVisitor extends AbstractEqlVisitor<ISingleOperand1<? ext
 
     @Override
     public ISingleOperand1<? extends ISingleOperand2<?>> visitYieldOperandConcatOf(final YieldOperandConcatOfContext ctx) {
-        final var expr = ctx.expr.accept(new SingleOperandVisitor(transformer));
+        final var expr = ctx.argExpr.accept(new SingleOperandVisitor(transformer));
         final Value1 separator = switch (ctx.separator.token) {
             case ValToken tok -> {
                 if (!(tok.value instanceof CharSequence cs)) {

@@ -3,7 +3,7 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
-import { formatInteger, formatDecimal, formatMoney, DEFAULT_SCALE } from '/resources/reflection/tg-numeric-utils.js';
+import { formatInteger, formatDecimal, formatMoney, formatFixedPoint, formatMoneyFixedPoint, DEFAULT_SCALE } from '/resources/reflection/tg-numeric-utils.js';
 
 /**
  * If the precion for entity type property wasn't defined then the default one should be used.
@@ -392,14 +392,17 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     /**
      * Returns the instance prop for the entity.
      *
-     * IMPORTANT: do not use '@prop' field directly!
+     * IMPORTANT: do not use 'prop@' field directly!
      */
     Entity.prototype.prop = function (name) {
-        this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
-        if (this._isObjectUndefined("@" + name)) {
-            this["@" + name] = new EntityInstanceProp(); // lazily initialise entity instance prop in case where it was not JSON-serialised (all information was 'default')
+        if (name === '') { // mirror AbstractEntity.getProperty: there is no meta-property associated with the entity itself
+            throw 'Meta-data for property [' + name + '] in entity [' + this.constructor.prototype.type.call(this).fullClassName() + '] could not be located.';
         }
-        return this["@" + name];
+        this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
+        if (this._isObjectUndefined(name + '@')) {
+            this[name + '@'] = new EntityInstanceProp(); // lazily initialise entity instance prop in case where it was not JSON-serialised (all information was 'default')
+        }
+        return this[name + '@'];
     }
 
     /**
@@ -562,7 +565,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     }
 
     /**
-     * Traverses all fetched properties in entity. It does not include 'id', 'version', '_type' and '@prop' instance meta-props.
+     * Traverses all fetched properties in entity. It does not include 'id', 'version', '_type' and 'prop@' instance meta-props.
      * 
      * Proxy: 
      *    a) proxied properties are missing in serialised entity graph -- this method disregards such properties;
@@ -573,7 +576,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     Entity.prototype.traverseProperties = function (propertyCallback) {
         var entity = this;
         for (var membName in entity) {
-            if (entity.hasOwnProperty(membName) && membName[0] !== "@" && membName !== "_type" && membName !== "id" && membName !== "version") {
+            if (entity.hasOwnProperty(membName) && membName[0] !== '@' && membName[membName.length - 1] !== '@' && membName !== "_type" && membName !== "id" && membName !== "version") {
                 if (!entity._isObjectUndefined(membName) && !entity._isIdOnlyProxy(membName)) {
                     propertyCallback(membName);
                 }
@@ -1213,7 +1216,7 @@ const _equalsEx = function (value1, value2) {
     } else if (Array.isArray(value1)) {
         return _arraysEqualsEx(value1, value2);
     } else if (value1 !== null && _isMoney(value1)) {
-        return value2 !== null && _isMoney(value2) && _equalsEx(_moneyVal(value1), _moneyVal(value2));
+        return value2 !== null && _isMoney(value2) && _equalsEx(_moneyVal(value1), _moneyVal(value2)) && _equalsEx(value1.currency, value2.currency);
     } else if (value1 !== null && _isColour(value1)) {
         return value2 !== null && _isColour(value2) && _equalsEx(_colourVal(value1), _colourVal(value2));
     } else if (value1 !== null && _isHyperlink(value1)) {
@@ -1457,16 +1460,32 @@ const _toStringForCollection = function (bindingValue, rootEntityType, property,
 };
 
 /**
- * Converts composite entity's keyNamesAndValues to string.
+ * Converts an entity's composite key to a string.
  * 
- * @param keyNamesAndValues -- non-empty array of elements (also arrays) consisting on [0] index of composite key property name and on [1] index of actual value of that composite key
+ * @param keyNamesAndValues -- non-empty 2D array of composite key member names and values: [[name, value]]
  * @param entityType -- the type of composite entity
  * @param separator -- string value to glue string representations of values with
- * @param mappingFunction -- maps resulting elements before actual element-by-element toString conversion and glueing them all together; this is optional
+ * @param mappingFunction -- an optional mapping function applied to each key member value before converting it to a string
  */
 const _toStringForKeys = function (keyNamesAndValues, entityType, separator, mappingFunction) {
     return keyNamesAndValues
-        .map(keyNameAndValue => _toString(_convert(mappingFunction ? mappingFunction(keyNameAndValue[1]) : keyNameAndValue[1]), entityType, keyNameAndValue[0]))
+        .map(keyNameAndValue => {
+            const converted = _convert(mappingFunction ? mappingFunction(keyNameAndValue[1]) : keyNameAndValue[1]);
+            const prop = entityType.prop(keyNameAndValue[0]);
+            // Special case: the format of Money.amount must strictly match its persisted representation.
+            // To achieve that, use the fixed-point representation with the property's scale.
+            if (converted !== null && prop.type() === "Money") {
+                return formatMoneyFixedPoint(converted, prop.scale(), { separator: " " });
+            }
+            // Special case: the format of BigDecimal must strictly match its persisted representation.
+            // To achieve that, use the fixed-point representation with the property's scale.
+            if (converted !== null && prop.type() === "BigDecimal") {
+                return formatFixedPoint(converted, prop.scale());
+            }
+            else {
+                return _toString(converted, entityType, keyNameAndValue[0]);
+            }
+         })
         .filter(str => str !== '') // filter out empty strings not to include them into resulting string (especially important for functions that use 'mappingFunction')
         .join(separator);
 };

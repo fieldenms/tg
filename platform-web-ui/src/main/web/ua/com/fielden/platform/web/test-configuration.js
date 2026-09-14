@@ -15,5 +15,8 @@ window.TG_APP = {
     "ideaUri": "https://www.google.com",
     "panelColor": "#c2185b",
     "watermark": "TG Demo",
-    "watermarkStyle": "position:fixed;top:11px;left:50%;transform:translate(-50%, 0%);font-size:16pt;opacity:0.5;z-index:99;color:white;"
+    "watermarkStyle": "position:fixed;top:11px;left:50%;transform:translate(-50%, 0%);font-size:16pt;opacity:0.5;z-index:99;color:white;",
+    "currencySymbolMap": {
+        "AUD": "A$"
+    }
 }

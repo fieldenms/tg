@@ -19,6 +19,6 @@ public interface ICentreTopLevelActionsWithSse<T extends AbstractEntity<?>> exte
 	 * @param eventSourceClass
 	 * @return
 	 */
-    ICentreSseWithPromptRefresh<T> hasEventSource(final Class<? extends IEventSource> eventSourceClass);
+    ICentreSseWithMinAutoRefreshInterval<T> hasEventSource(final Class<? extends IEventSource> eventSourceClass);
 
 }

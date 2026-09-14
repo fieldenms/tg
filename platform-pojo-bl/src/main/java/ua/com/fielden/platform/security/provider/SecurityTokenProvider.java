@@ -20,7 +20,6 @@ import ua.com.fielden.platform.security.tokens.attachment.*;
 import ua.com.fielden.platform.security.tokens.functional.PersistentEntityInfo_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.DashboardRefreshFrequencyMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.persistent.*;
 import ua.com.fielden.platform.security.tokens.security_matrix.SecurityRoleAssociation_CanReadModel_Token;
@@ -32,6 +31,10 @@ import ua.com.fielden.platform.security.tokens.user.*;
 import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.security.tokens.compound_master_menu.UserMaster_OpenMain_MenuItem_CanAccess_Token;
+import ua.com.fielden.security.tokens.compound_master_menu.UserMaster_OpenUserAndRoleAssociation_MenuItem_CanAccess_Token;
+import ua.com.fielden.security.tokens.open_compound_master.OpenUserMasterAction_CanOpen_Token;
+import ua.com.fielden.security.tokens.open_simple_master.UserAndRoleAssociationMaster_CanOpen_Token;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -63,7 +66,9 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             ReUser_CanRead_Token.class,
             ReUser_CanReadModel_Token.class,
             User_CanDelete_Token.class,
-            UserMaster_CanOpen_Token.class,
+            OpenUserMasterAction_CanOpen_Token.class,
+            UserMaster_OpenMain_MenuItem_CanAccess_Token.class,
+            UserMaster_OpenUserAndRoleAssociation_MenuItem_CanAccess_Token.class,
             UserRole_CanSave_Token.class,
             UserRole_CanRead_Token.class,
             UserRole_CanReadModel_Token.class,
@@ -71,6 +76,8 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             UserRoleMaster_CanOpen_Token.class,
             UserAndRoleAssociation_CanRead_Token.class,
             UserAndRoleAssociation_CanReadModel_Token.class,
+            UserAndRoleAssociation_CanSave_Token.class,
+            UserAndRoleAssociationMaster_CanOpen_Token.class,
             SecurityRoleAssociation_CanRead_Token.class,
             SecurityRoleAssociation_CanSave_Token.class,
             SecurityRoleAssociation_CanReadModel_Token.class,

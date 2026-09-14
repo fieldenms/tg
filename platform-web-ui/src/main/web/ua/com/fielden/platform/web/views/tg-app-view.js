@@ -12,7 +12,6 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
 import { TgAppAnimationBehavior } from '/resources/views/tg-app-animation-behavior.js'; 
-import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 
 const template = html`
     <style>
@@ -147,22 +146,6 @@ Polymer({
 
     selectSubroute: function (subroute) {
         this.$.view._selectMenu(subroute);
-    },
-
-    canLeave: async function(leaveReason = LeaveReason.CLOSED) {
-        try {
-            await this.$.view.canLeave(leaveReason);
-            return true;
-        } catch (viewThatWasChanged) {
-            const viewsDesc = [];
-            if (Array.isArray(viewThatWasChanged)) {
-                viewThatWasChanged.forEach(function (element) {
-                    viewsDesc.push(this.menuItem.key + " \u2192 " +  element);
-                }.bind(this));
-                throw viewsDesc;
-            }
-            throw viewThatWasChanged;
-        }
     },
 
     _calcStyleForItem: function (menuItem) {

@@ -8,6 +8,7 @@ import graphql.GraphQL;
 import graphql.analysis.MaxQueryDepthInstrumentation;
 import graphql.schema.*;
 import graphql.schema.GraphQLObjectType.Builder;
+import graphql.validation.QueryComplexityLimits;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -110,7 +111,7 @@ public class GraphQLService implements IWebApi {
             final Set<Class<? extends AbstractEntity<?>>> allTypes = new LinkedHashSet<>(domainTypes);
             allTypes.addAll(domainTypesOf(applicationDomainProvider, EntityUtils::isUnionEntityType));
             // dictionary must have all the types that are referenced by all types that should support querying
-            final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes);
+            final Map<Class<? extends AbstractEntity<?>>, GraphQLNamedType> dictionary = createDictionary(allTypes);
 
             LOGGER.info("\tBuilding query type...");
             final GraphQLObjectType queryType = createQueryType(domainTypes, coFinder, dates, codeRegistryBuilder, authorisationModel, securityTokenProvider);
@@ -161,7 +162,16 @@ public class GraphQLService implements IWebApi {
                             newExecutionInput()
                                     .query(query(input))
                                     .operationName(operationName(input).orElse(null))
-                                    .variables(variables(input)))
+                                    .variables(variables(input))
+                                    // Align graphql-java's default query-complexity limits (introduced in 26.0) with the configured maximum query depth,
+                                    // so that raising `web.api.maxQueryDepth` above graphql-java's default of 100 is not silently capped at 100.
+                                    // The field-count guard is retained at its default, as a safeguard against pathologically large queries.
+                                    .graphQLContext(ctx -> ctx.put(
+                                            QueryComplexityLimits.KEY,
+                                            QueryComplexityLimits.newLimits()
+                                                    .maxDepth(maxQueryDepth)
+                                                    .maxFieldsCount(QueryComplexityLimits.DEFAULT_MAX_FIELDS_COUNT)
+                                                    .build())))
                     .toSpecification();
             final var errors = errors(result);
             if (!errors.isEmpty()) {
@@ -182,7 +192,7 @@ public class GraphQLService implements IWebApi {
      * @param entityTypes
      * @return
      */
-    private static Map<Class<? extends AbstractEntity<?>>, GraphQLType> createDictionary(final Set<Class<? extends AbstractEntity<?>>> entityTypes) {
+    private static Map<Class<? extends AbstractEntity<?>>, GraphQLNamedType> createDictionary(final Set<Class<? extends AbstractEntity<?>>> entityTypes) {
         return entityTypes.stream()
             .map(GraphQLService::createGraphQLTypeFor)
             .flatMap(optType -> optType.map(Stream::of).orElseGet(Stream::empty))

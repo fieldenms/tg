@@ -3,6 +3,7 @@ package ua.com.fielden.platform.ioc;
 import com.google.inject.Provides;
 import com.google.inject.Stage;
 import com.google.inject.name.Names;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.AbstractAuditEntity;
@@ -35,7 +36,10 @@ import ua.com.fielden.platform.web_api.GraphQLService;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -43,6 +47,8 @@ import static ua.com.fielden.platform.audit.AuditUtils.getAuditTypeVersion;
 import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T2.toMap;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
 import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_MAX_QUERY_DEPTH;
 
@@ -63,6 +69,7 @@ import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_M
 /// where values of [Workflows] are mapped to [Stage].
 ///
 public class BasicWebServerIocModule extends CompanionIocModule {
+
     private static final Logger LOGGER = getLogger(BasicWebServerIocModule.class);
 
     private final Properties props;
@@ -123,6 +130,8 @@ public class BasicWebServerIocModule extends CompanionIocModule {
             LOGGER.warn(WARN_INSUFFICIENT_MAX_QUERY_DEPTH.formatted(maxQueryDepth));
         }
         bindConstant().annotatedWith(Names.named(maxQueryDepthKey)).to(insufficientMaxQueryDepth ? DEFAULT_MAX_QUERY_DEPTH : maxQueryDepth);
+        // user management
+        bindConstant().annotatedWith(Names.named("users.selfEdit")).to(props.getProperty("users.selfEdit", "true"));
         // authentication parameters
         bindConstant().annotatedWith(Names.named("auth.mode")).to(props.getProperty("auth.mode", AuthMode.RSO.name()));
         bindConstant().annotatedWith(Names.named("auth.sso.provider")).to(props.getProperty("auth.sso.provider", "Identity Provider"));
@@ -143,7 +152,6 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         bindConstant().annotatedWith(Names.named("dates.timeFormat.web")).to(props.getProperty("dates.timeFormat.web", IDates.DEFAULT_TIME_FORMAT_WEB));
         bindConstant().annotatedWith(Names.named("dates.timeFormatWithMillis.web")).to(props.getProperty("dates.timeFormatWithMillis.web", IDates.DEFAULT_TIME_FORMAT_WEB_WITH_MILLIS));
 
-        bind(IApplicationSettings.class).to(ApplicationSettings.class);
         requireBinding(ISecurityTokenProvider.class);
         // serialisation related binding
         requireBinding(ISerialisationClassProvider.class);
@@ -164,8 +172,31 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         }
 
         requestStaticInjection(MultiInheritanceEntityVerificationService.class);
+        requestStaticInjection(DependentCalcPropsVerificationService.class);
         requestStaticInjection(EntityQueryCriteriaUtils.class);
     }
+
+    @Provides
+    @Named("currencySymbolMap")
+    Map<String, String> provideCurrencySymbolMap() {
+        return props.stringPropertyNames()
+                .stream()
+                .map(key -> {
+                    final var matcher = CURRENCY_CODE_SYMBOL_PATTERN.matcher(key);
+                    if (!matcher.matches()) {
+                        return null;
+                    }
+                    final var code = matcher.group(1);
+                    if (code == null) {
+                        return null;
+                    }
+                    return t2(code, props.getProperty(key));
+                })
+                .filter(Objects::nonNull)
+                .collect(toMap());
+    }
+
+    private static final Pattern CURRENCY_CODE_SYMBOL_PATTERN = Pattern.compile("currency\\.(\\w+)\\.symbol");
 
     public Properties getProps() {
         return props;

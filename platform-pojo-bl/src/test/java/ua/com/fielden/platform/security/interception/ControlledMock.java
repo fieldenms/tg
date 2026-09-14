@@ -2,16 +2,28 @@ package ua.com.fielden.platform.security.interception;
 
 import ua.com.fielden.platform.security.Authorise;
 
-/**
- * This class models a controller with fake business logic located in methods with and without authorisation annotation.
- * 
- * @author TG Team
- * 
- */
+import java.util.concurrent.CountDownLatch;
+
+/// This class models a controller with fake business logic located in methods with and without authorisation annotation.
+///
 public class ControlledMock {
 
     @Authorise(NoAccessToken.class)
     public void methodWithNoAccess() {
+    }
+
+    /// Used by concurrency tests.
+    /// Enters an authorised method and parks inside it — keeping the authorisation "started" window open — until released.
+    /// This makes it possible to deterministically check the behaviour of another thread that calls an `@Authorise` method while this one is in progress.
+    ///
+    @Authorise(AccessToken.class)
+    public void authorisedMethodThatBlocksUntilReleased(final CountDownLatch entered, final CountDownLatch release) {
+        entered.countDown();
+        try {
+            release.await();
+        } catch (final InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Authorise(AccessToken.class)

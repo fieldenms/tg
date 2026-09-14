@@ -151,6 +151,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("require-selection-criteria", conf().context.get().withSelectionCrit ? "true" : "false");
             attrs.put("require-selected-entities", conf().context.get().withCurrentEtity ? "ONE" : (conf().context.get().withAllSelectedEntities ? "ALL" : "NONE"));
             attrs.put("require-master-entity", conf().context.get().withMasterEntity ? "true" : "false");
+            attrs.put("require-chosen-entity", conf().context.get().withChosenEntity ? "true" : "false");
             if (!conf().context.get().relatedContexts.isEmpty()) {
                 attrs.put("related-contexts", "[[" + actionsHolderName + "." + numberOfAction + ".relatedContexts]]");
             }
@@ -161,6 +162,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("require-selection-criteria", "null");
             attrs.put("require-selected-entities", "null");
             attrs.put("require-master-entity", "null");
+            attrs.put("require-chosen-entity", "null");
         }
 
         return attrs;
@@ -274,6 +276,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.append("requireSelectionCriteria: ").append(config.context.get().withSelectionCrit ? "'true'" : "'false'").append(",\n");
             attrs.append("requireSelectedEntities: ").append(config.context.get().withCurrentEtity ? "'ONE'" : (config.context.get().withAllSelectedEntities ? "'ALL'" : "'NONE'")).append(",\n");
             attrs.append("requireMasterEntity: ").append(config.context.get().withMasterEntity ? "'true'" : "'false'").append(",\n");
+            attrs.append("requireChosenEntity: ").append(config.context.get().withChosenEntity ? "'true'" : "'false'").append(",\n");
         }
         attrs.append("shortDesc: ").append(jsString(config.shortDesc.orElse(""))).append(",\n");
         attrs.append("longDesc: ").append(jsString(config.longDesc.orElse(""))).append(",\n");
@@ -315,7 +318,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         });
         attrs.append("requireSelectionCriteria: ").append(context.withSelectionCrit ? "'true'" : "'false'").append(",\n");
         attrs.append("requireSelectedEntities: ").append(context.withCurrentEtity ? "'ONE'" : (context.withAllSelectedEntities ? "'ALL'" : "'NONE'")).append(",\n");
-        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "'true'" : "'false'").append("\n");
+        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "'true'" : "'false'").append(",\n");
+        attrs.append("requireChosenEntity: ").append(context.withChosenEntity ? "'true'" : "'false'").append("\n");
 
         return attrs.toString();
     }

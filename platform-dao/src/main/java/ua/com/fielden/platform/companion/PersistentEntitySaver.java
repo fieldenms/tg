@@ -92,16 +92,17 @@ import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDe
 ///
 public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements IEntityActuator<T> {
 
-    public static final String ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES = "Could not resolve conflicting changes.";
-    public static final String ERR_OPTIMISTIC_LOCK = "%s [%s] was updated or deleted by another user. Please try saving again.";
-    public static final String ERR_CONFLICTING_CONCURRENT_CHANGE = "There was a conflicting change by another user. Please try saving again.";
-    public static final String ERR_ALREADY_EXISTS = "%s [%s] already exists.";
-    public static final String ERR_NOW_CONSTANT_MISSING_VALUE = "The now() constant has not been assigned!";
-    public static final String ERR_NO_VALUE_FOR_AUTO_ASSIGNABLE_PROP = "Property %s@%s is marked as assignable before save, but no value could be determined.";
-    public static final String ERR_NO_CURRENT_USER = "The current user is not defined.";
-    public static final String ERR_NULL_OR_NON_PERSISTENT_ENTITY = "Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.";
-    public static final String ERR_UNINSTRUMENTED_ENTITY = "Uninstrumented entity of type [%s] cannot be saved.";
-    public static final String ERR_PROXIED_VERSION = "Entity of type [%s] with unfetched [version] cannot be saved. Use at least fetchOnly (ID_AND_VERSION) when fetching entities intended for saving.";
+    public static final String
+            ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES = "Could not resolve conflicting changes.",
+            ERR_OPTIMISTIC_LOCK = "%s [%s] was updated or deleted by another user. Please try saving again.",
+            ERR_CONFLICTING_CONCURRENT_CHANGE = "There was a conflicting change by another user. Please try saving again.",
+            ERR_ALREADY_EXISTS = "%s [%s] already exists.",
+            ERR_NOW_CONSTANT_MISSING_VALUE = "The now() constant has not been assigned!",
+            ERR_NO_VALUE_FOR_AUTO_ASSIGNABLE_PROP = "Property %s@%s is marked as assignable before save, but no value could be determined.",
+            ERR_NO_CURRENT_USER = "The current user is not defined.",
+            ERR_NULL_OR_NON_PERSISTENT_ENTITY = "Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.",
+            ERR_UNINSTRUMENTED_ENTITY = "Uninstrumented entity of type [%s] cannot be saved.",
+            ERR_PROXIED_VERSION = "Entity of type [%s] with unfetched [version] cannot be saved. Use at least fetchOnly (ID_AND_VERSION) when fetching entities intended for saving.";
 
     private final Supplier<Session> session;
     private final Supplier<String> transactionGuid;

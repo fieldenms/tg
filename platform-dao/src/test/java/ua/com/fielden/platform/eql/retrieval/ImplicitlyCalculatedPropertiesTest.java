@@ -1,59 +1,24 @@
 package ua.com.fielden.platform.eql.retrieval;
 
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import org.junit.Ignore;
 import org.junit.Test;
-
+import ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.sample.domain.TeFuelUsageByType;
-import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgReBogieWithHighLoad;
-import ua.com.fielden.platform.sample.domain.TgReMaxVehicleReading;
-import ua.com.fielden.platform.sample.domain.TgReVehicleWithHighPrice;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
-import ua.com.fielden.platform.sample.domain.TgVehicleTechDetails;
+import ua.com.fielden.platform.sample.domain.*;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+/// This test suite covers EQL expressions for implicitly calculated properties.
+///
+/// EQL expressions for composite keys are covered separately in [CompositeKeyEqlExpressionGenerator].
+///
 public class ImplicitlyCalculatedPropertiesTest extends AbstractEqlShortcutTest {
 
     @Test
     public void expression_for_id_of_synthetic_entity_is_correct() {
         final EntityResultQueryModel<TgAverageFuelUsage> act = select(TgAverageFuelUsage.class).where().prop("id").isNotNull().model();
         final EntityResultQueryModel<TgAverageFuelUsage> exp = select(TgAverageFuelUsage.class).where().prop("key").isNotNull().model();
-        assertModelResultsAreEqual(exp, act);
-    }
-
-    @Test
-    public void expression_for_composite_key_of_persistent_entity_is_correct() {
-        final EntityResultQueryModel<TgFuelUsage> act = select(TgFuelUsage.class).where().
-                prop("key").
-                isNotNull().
-                model();
-
-        final EntityResultQueryModel<TgFuelUsage> exp = select(TgFuelUsage.class).where().
-                concat().prop("vehicle.key").with().val(" ").with().prop("date").end().
-                isNotNull().
-                model();
-
-        assertModelResultsAreEqual(exp, act);
-    }
-
-    @Test
-    public void expression_for_composite_key_of_synthetic_entity_is_correct() {
-        final EntityResultQueryModel<TeFuelUsageByType> act = select(TeFuelUsageByType.class).where().
-                prop("key").
-                isNotNull().
-                model();
-
-        final EntityResultQueryModel<TeFuelUsageByType> exp = select(TeFuelUsageByType.class).where().
-                concat().prop("vehicle.key").with().val(" ").with().prop("fuelType.key").end().
-                isNotNull().
-                model();
-
         assertModelResultsAreEqual(exp, act);
     }
 

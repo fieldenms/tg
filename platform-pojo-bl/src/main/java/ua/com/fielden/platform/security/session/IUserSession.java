@@ -1,18 +1,15 @@
 package ua.com.fielden.platform.security.session;
 
-import java.util.Date;
-import java.util.Optional;
-
+import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.security.user.User;
 
-/**
- * Companion object for entity {@link UserSession}.
- *
- * @author TG Team
- *
- */
-public interface IUserSession extends IEntityDao<UserSession> {
+import java.util.Date;
+import java.util.Optional;
+
+/// Companion object for entity [UserSession].
+///
+public interface IUserSession extends IEntityDao<UserSession>, ISaveWithFetch<UserSession> {
 
     /**
      * Constructs an updated user session for the specified user, but only if the provided {@code authenticator} is valid for the

@@ -1,71 +1,74 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.logging.log4j.LogManager.getLogger;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
-
 import org.apache.logging.log4j.Logger;
 import org.restlet.Component;
-import org.restlet.Server;
 import org.restlet.data.Parameter;
 import org.restlet.data.Protocol;
-
 import org.restlet.util.Series;
 import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
+import ua.com.fielden.platform.utils.MiscUtilities;
 
-/**
- * Web UI Testing Server launching class for full web server with platform Web UI web application and domain-driven persistent storage.
- *
- * @author TG Team
- *
- */
+import java.util.List;
+import java.util.Optional;
+
+import static java.util.stream.Collectors.collectingAndThen;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T2.toMap;
+import static ua.com.fielden.platform.utils.MiscUtilities.propertiesUnionLeft;
+import static ua.com.fielden.platform.utils.MiscUtilities.readProperties;
+
+/// Launches the test application.
+///
 public class Start {
-    private static final Logger LOGGER = getLogger(Start.class);
 
-    public static void main(final String[] args) throws IOException {
-        final var props = new Properties();
-        final String propsFileSuffix; // is used to load either application-PostreSql.properties or application-SqlServer.properties
-        // Three system properties are required: databaseUri, databaseUser and databasePasswd.
-        final var databseUri = System.getProperty("databaseUri");
-        if (isEmpty(databseUri)) {
-            throw new ApplicationConfigurationException("Property 'databaseUri' is required.");
-        } else {
-            final String jdbcUri;
-            if (databseUri.contains("5432")) {
-                propsFileSuffix = "PostgreSql";
-                jdbcUri = "jdbc:postgresql:" + databseUri; 
-            } else {
-                propsFileSuffix = "SqlServer";
-                jdbcUri = "jdbc:sqlserver:" + databseUri; 
- 
+    private static final Logger LOGGER = getLogger();
+
+    public static void main(final String[] args) {
+
+        final String configFilePath;
+        if (args.length >= 1) {
+            configFilePath = args[0];
+        }
+        else {
+            final var databaseUri = System.getProperty("databaseUri");
+            if (isEmpty(databaseUri)) {
+                throw new ApplicationConfigurationException("System property [databaseUri] is required.");
             }
-            props.put("hibernate.connection.url", jdbcUri);
-        }
-        final var dbUser = System.getProperty("databaseUser");
-        if (isEmpty(dbUser)) {
-            throw new ApplicationConfigurationException("Property 'databaseUser' is required.");
-        } else {
-            props.put("hibernate.connection.username", dbUser);
-        }
-        final var dbPasswd = System.getProperty("databasePasswd");
-        if (isEmpty(dbPasswd)) {
-            throw new ApplicationConfigurationException("Property 'databasePasswd' is required.");
-        } else {
-            props.put("hibernate.connection.password", dbPasswd);
-        }
-        // Default application-PostreSql.properties and application-SqlServer.properties do not have any of the properties already assigned from system properties databaseUri, databaseUser and databasePasswd.
-        // However, if some alternative application.properties is provided, which contains those properties, the values from the file will get used.
-        final String configFileName = args.length == 1 ? args[0] : "src/main/resources/application-%s.properties".formatted(propsFileSuffix);
-        try (final FileInputStream in = new FileInputStream(configFileName)) {
-            props.load(in);
+            else {
+                configFilePath = databaseUri.contains("5432")
+                        ? "src/main/resources/application-PostgreSql.properties"
+                        : "src/main/resources/application-SqlServer.properties";
+            }
         }
 
-        LOGGER.info("Starting...");
-        final Component component = new TgTestApplicationConfiguration(props);
-        component.getServers().add(Protocol.HTTP, Integer.parseInt(props.getProperty("port")));
+        LOGGER.info("Application properties file: %s".formatted(configFilePath));
+
+        final var requiredPropertyNames = List.of("databaseUri", "databaseUser", "databasePasswd", "port");
+
+        // Properties from the file take precedence over System properties.
+        final var properties = propertiesUnionLeft(readProperties(configFilePath),
+                                                   requiredPropertyNames.stream()
+                                                           .map(prop -> Optional.ofNullable(System.getProperty(prop)).map(v -> t2(prop, v)))
+                                                           .flatMap(Optional::stream)
+                                                           .collect(collectingAndThen(toMap(), MiscUtilities::mkProperties)));
+
+        final var missingPropertyNames = requiredPropertyNames.stream().filter(prop -> !properties.containsKey(prop)).toList();
+        if (!missingPropertyNames.isEmpty()) {
+            throw new ApplicationConfigurationException("Required application properties are missing: %s".formatted(String.join(", ", missingPropertyNames)));
+        }
+
+        properties.put("hibernate.connection.url",
+                       Optional.of(properties.getProperty("databaseUri"))
+                               .map(uri -> uri.contains("5432") ? "jdbc:postgresql:" + uri : "jdbc:sqlserver:" + uri)
+                               .orElseThrow());
+        properties.put("hibernate.connection.username", properties.get("databaseUser"));
+        properties.put("hibernate.connection.password", properties.get("databasePasswd"));
+
+        LOGGER.info("Starting the web server...");
+        final Component component = new TgTestApplicationConfiguration(properties);
+        component.getServers().add(Protocol.HTTP, Integer.parseInt(properties.getProperty("port")));
         // Jetty needs additional settings to react to a shutdown signal, sent to JVM.
         final var server = component.getServers().getFirst();
         final Series<Parameter> parameters = server.getContext().getParameters();
@@ -73,13 +76,13 @@ public class Start {
         parameters.add("shutdown.timeout", "1");
         parameters.add("shutdown.gracefully", "true");
 
-
         try {
             component.start();
-            LOGGER.info("started");
-        } catch (final Exception e) {
-            e.printStackTrace();
+            LOGGER.info("Started the web server.");
+        } catch (final Exception ex) {
+            LOGGER.error("An error occurred, exiting.", ex);
             System.exit(100);
         }
     }
+
 }

@@ -8,6 +8,7 @@ import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.query.IEntityAggregates;
+import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.menu.Action;
 import ua.com.fielden.platform.menu.UserMenuInvisibilityAssociationBatchActionCo;
 import ua.com.fielden.platform.menu.UserMenuInvisibilityAssociationBatchActionDao;
@@ -47,6 +48,8 @@ public class CompanionIocModule extends CommonFactoryIocModule {
 
         bind(UserMenuInvisibilityAssociationBatchActionCo.class).to(UserMenuInvisibilityAssociationBatchActionDao.class);
         install(new EntityCompanionGenerationIocModule());
+
+        requestStaticInjection(WorkbookExporter.class);
     }
 
     protected void bindDomainCompanionObjects(final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {

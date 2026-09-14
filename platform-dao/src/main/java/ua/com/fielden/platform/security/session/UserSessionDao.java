@@ -11,6 +11,7 @@ import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.annotations.SessionCache;
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import java.security.SignatureException;
@@ -70,6 +72,12 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         this.crypto = crypto;
         this.cache = cache;
         this.ssoSessionController = ssoSessionController;
+    }
+
+    @Override
+    @SessionRequired
+    public Either<Long, UserSession> save(final UserSession entity, final Optional<fetch<UserSession>> maybeFetch) {
+        return super.save(entity, maybeFetch);
     }
 
     @Override

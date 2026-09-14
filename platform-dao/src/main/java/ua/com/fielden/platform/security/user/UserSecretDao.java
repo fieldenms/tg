@@ -1,17 +1,7 @@
 package ua.com.fielden.platform.security.user;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.security.SignatureException;
-import java.util.Collection;
-import java.util.Optional;
-
-import org.apache.logging.log4j.Logger;
-
 import com.google.inject.Inject;
-
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -19,15 +9,21 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
+import ua.com.fielden.platform.types.either.Either;
 
-/**
- * DAO implementation of {@link UserSecretCo}.
- *
- * @author TG Team
- *
- */
+import java.security.SignatureException;
+import java.util.Collection;
+import java.util.Optional;
+
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+/// DAO implementation of [UserSecretCo].
+///
 @EntityType(UserSecret.class)
 public class UserSecretDao extends CommonEntityDao<UserSecret> implements UserSecretCo {
 
@@ -40,6 +36,12 @@ public class UserSecretDao extends CommonEntityDao<UserSecret> implements UserSe
             final IFilter filter) {
         super(filter);
         this.crypto = crypto;
+    }
+
+    @Override
+    @SessionRequired
+    public Either<Long, UserSecret> save(final UserSecret entity, final Optional<fetch<UserSecret>> maybeFetch) {
+        return super.save(entity, maybeFetch);
     }
 
     @Override

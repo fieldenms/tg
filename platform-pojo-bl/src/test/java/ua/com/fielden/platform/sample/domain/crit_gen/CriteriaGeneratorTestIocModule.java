@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.sample.domain.crit_gen;
 
+import com.google.inject.Provides;
 import com.google.inject.name.Names;
+import jakarta.inject.Named;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -19,6 +21,8 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
+import java.util.Map;
+
 public class CriteriaGeneratorTestIocModule extends EntityTestIocModuleWithPropertyFactory {
 
     @Override
@@ -35,6 +39,7 @@ public class CriteriaGeneratorTestIocModule extends EntityTestIocModuleWithPrope
         bindConstant().annotatedWith(Names.named("workflow")).to("development");
         bindConstant().annotatedWith(Names.named("auth.mode")).to("SSO");
         bindConstant().annotatedWith(Names.named("currency.symbol")).to("$");
+        bindConstant().annotatedWith(Names.named("users.selfEdit")).to("true");
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class);
         bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
@@ -49,6 +54,12 @@ public class CriteriaGeneratorTestIocModule extends EntityTestIocModuleWithPrope
         bind(IDates.class).to(DatesForTesting.class);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
         bind(IAuthorisationModel.class).to(NoAuthorisation.class);
+    }
+
+    @Provides
+    @Named("currencySymbolMap")
+    Map<String, String> provideCurrencySymbolMap() {
+        return Map.of();
     }
 
 }

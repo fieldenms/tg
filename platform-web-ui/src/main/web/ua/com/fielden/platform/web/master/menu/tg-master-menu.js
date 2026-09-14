@@ -11,12 +11,13 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 /* Paper elements */
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
-import '/resources/polymer/@polymer/app-layout/app-drawer/app-drawer.js';
+import '/resources/components/tg-app-drawer.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 /* TG ELEMENTS */
+import { UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
 import { scrollContainerIfPointNearTheEdge, getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
@@ -107,11 +108,11 @@ const template = html`
     <slot id="menuItemActions" name="menu-item-action"></slot>
 
     <app-drawer-layout id="drawerPanel" fullbleed on-app-drawer-transitioned="_appDrawerTransitioned">
-        <app-drawer id="drawer" disable-swipe="[[!touchEnabled]]" slot="drawer">
+        <tg-app-drawer id="drawer" disable-swipe="[[!touchEnabled]]" slot="drawer">
             <paper-listbox id="menu" attr-for-selected="data-route" selected="{{route}}" style="height: 100%; overflow: auto;">
                 <slot id="menuItems" name="menu-item"></slot>
             </paper-listbox>
-        </app-drawer>
+        </tg-app-drawer>
         <div class="master-container relative">
             <iron-pages id="mainPages" class="fit" attr-for-selected="data-route" selected="[[sectionRoute]]">
                 <slot name="menu-item-section"></slot>
@@ -835,9 +836,14 @@ Polymer({
                         currentSection._showBlockingPane();
                     }
                 }).catch(cannotLeaveReason => {
-                    const cannotLeaveMessage = cannotLeaveReason.message || cannotLeaveReason.msg || cannotLeaveReason;
+                    // Reset route before any further rethrow or error handling.
                     this.route = this.sectionRoute;
-                    this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage, !!cannotLeaveReason.message);
+                    if (cannotLeaveReason instanceof UnexpectedCustomError) {
+                        throw cannotLeaveReason;
+                    } else {
+                        const cannotLeaveMessage = cannotLeaveReason.message || cannotLeaveReason.msg || cannotLeaveReason;
+                        this.parent._openToastForError('Can’t leave “' + currentSection.sectionTitle + '”.', cannotLeaveMessage, !!cannotLeaveReason.message);
+                    }
                 }).finally(() => {
                     this.fire('tg-master-menu-route-change-completed', this.route);
                 });

@@ -235,7 +235,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                             
                             // write actual meta-property
                             if (!existingMetaProps.isEmpty()) {
-                                generator.writeFieldName("@" + name);
+                                generator.writeFieldName(name + "@");
                                 generator.writeStartObject();
                                 for (final Map.Entry<String, Object> nameAndVal : existingMetaProps.entrySet()) {
                                     generator.writeFieldName(nameAndVal.getKey());
