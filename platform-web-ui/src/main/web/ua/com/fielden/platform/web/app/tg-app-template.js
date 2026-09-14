@@ -716,9 +716,14 @@ Polymer({
         this.selectAfterRender = selected;
     },
     
+    /// Asks a user to confirm leaving the application.
+    /// The wording once supplied was `Do you really want to close the application?`.
+    /// It is recorded here only, because browsers ignore any message a handler supplies and show their own.
+    ///
     _checkWhetherCanLeave: function (e) {
-        e.returnValue = "Do you really want to close the application?";
-        return e.returnValue;
+        // Cancelling the event is how the standard asks for the dialog, and `returnValue` is what older browsers require.
+        e.preventDefault();
+        e.returnValue = true;
     },
 
      /// Animation finish event handler.
