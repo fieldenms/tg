@@ -126,6 +126,24 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         getInstance(EntityWithTaxMoneyDao.class).getAllEntities(from(qry).model());
     }
 
+    /// Yielding `null` into `price : Money` in a source query leaves the type of that yield to be inferred from the target property.
+    /// Without expansion of the yield into `price.amount`, the inferred type would be `Money`, for which no SQL-level cast exists under PostgreSQL.
+    ///
+    @Test
+    public void null_yielded_into_Money_typed_property_with_a_single_component_in_a_source_query_can_be_executed() {
+        final var qry = select(select(TgVehicle.class)
+                                       .yield().prop("id").as("id")
+                                       .yield().prop("key").as("key")
+                                       .yield().val(null).as("price")
+                                       .modelAsEntity(TgVehicle.class))
+                .model();
+
+        final var vehicles = co(TgVehicle.class).getAllEntities(from(qry).with(fetchKeyAndDescOnly(TgVehicle.class).with("price")).model());
+        assertThat(vehicles)
+                .isNotEmpty()
+                .allSatisfy(vehicle -> assertNull(vehicle.getPrice()));
+    }
+
     private List<EntityAggregates> run(final AggregatedResultQueryModel qry) {
         return aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
     }
