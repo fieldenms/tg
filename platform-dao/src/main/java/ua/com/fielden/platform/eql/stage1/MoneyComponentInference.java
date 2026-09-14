@@ -98,7 +98,7 @@ public class MoneyComponentInference {
             final CharSequence componentName)
     {
         return prop1 -> {
-            final var resolution = Prop1.resolveProp(prop1, context);
+            final var resolution = Prop1.resolveProp(prop1, context.sourcesStack());
             return resolution.getPath().getLast() instanceof QuerySourceItemForComponentType<?> item
                    && item.javaType().equals(Money.class)
                    && item.getSubitems().containsKey(componentName.toString());

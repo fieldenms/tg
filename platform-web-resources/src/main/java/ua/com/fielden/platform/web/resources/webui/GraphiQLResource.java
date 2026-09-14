@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.restlet.data.MediaType.TEXT_HTML;
 import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
 

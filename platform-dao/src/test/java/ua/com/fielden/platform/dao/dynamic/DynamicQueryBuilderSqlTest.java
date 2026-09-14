@@ -1406,7 +1406,7 @@ public class DynamicQueryBuilderSqlTest extends AbstractDaoTestCase {
         /*    */.condition(cond().prop(alias + ".desc").iLike().anyOfValues("%Some string value%").model()) //
         /*  */.model()).and()//
         /*  */.condition(cond().prop(alias + ".location").isNotNull().and() //
-        /*    */.condition(cond().prop(alias + ".location.id").in().model(select(TgBogieLocation.class).where().prop(KEY).iLike().anyOfValues("some val 1%", "some val 2%").model()).model())//
+        /*    */.condition(cond().prop(alias + ".location").in().model(select(TgBogieLocation.class).where().prop(KEY).iLike().anyOfValues("some val 1%", "some val 2%").model()).model())//
         /*  */.model()).and()//
         /*    */.condition(cond().prop(alias + ".location.workshop").isNotNull().and()//
         /*	    */.condition(cond().prop(alias + ".location.workshop").in().model(select(TgWorkshop.class).where().prop(KEY).iLike().anyOfValues("some val 1%", "some val 2%").model()).model())//
@@ -1430,6 +1430,7 @@ public class DynamicQueryBuilderSqlTest extends AbstractDaoTestCase {
     }
 
     //-------------------------  property authorisation tests -------------------------------//
+
     @Test
     public void authorised_prop_should_be_present_in_query() {
         test_atomic_query_composition_for_range_type("authorisedProp");

@@ -18,7 +18,7 @@ import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
+import ua.com.fielden.platform.eql.stage2.IPropPathResolver;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
@@ -67,6 +67,7 @@ public final class EqlQueryTransformer {
     private final IDomainMetadata domainMetadata;
     private final MoneyComponentInference moneyComponentInference;
     private final IDbVersionProvider dbVersionProvider;
+    private final IPropPathResolver propPathResolver;
 
     // TODO: Make private once dependent EQL tests are refactored and use IoC.
     @Inject
@@ -77,7 +78,8 @@ public final class EqlQueryTransformer {
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IDomainMetadata domainMetadata,
             final MoneyComponentInference moneyComponentInference,
-            final IDbVersionProvider dbVersionProvider)
+            final IDbVersionProvider dbVersionProvider,
+            final IPropPathResolver propPathResolver)
     {
         this.filter = filter;
         this.dates = dates;
@@ -86,6 +88,7 @@ public final class EqlQueryTransformer {
         this.domainMetadata = domainMetadata;
         this.moneyComponentInference = moneyComponentInference;
         this.dbVersionProvider = dbVersionProvider;
+        this.propPathResolver = propPathResolver;
     }
 
     public <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform(
@@ -113,11 +116,14 @@ public final class EqlQueryTransformer {
         final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
 
-        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider, domainMetadata, gen, moneyComponentInference);
+        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata, gen, moneyComponentInference);
         final ResultQuery2 query2 = query1.transform(context1);
 
-        final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(querySourceInfoProvider, domainMetadata, gen, moneyComponentInference);
-        final var context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), eqlTables, dbVersionProvider.dbVersion(), domainMetadata);
+        final var context2 = new TransformationContextFromStage2To3(
+                propPathResolver.resolve(query2.collectProps(), gen),
+                eqlTables,
+                dbVersionProvider.dbVersion(),
+                domainMetadata);
         return query2.transform(context2);
     }
 

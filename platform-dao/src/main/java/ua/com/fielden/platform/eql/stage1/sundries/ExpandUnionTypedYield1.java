@@ -37,7 +37,7 @@ public class ExpandUnionTypedYield1 {
             final AbstractQuery1 query)
     {
         if (yield.operand() instanceof Prop1 prop1) {
-            final var resolution = Prop1.resolveProp(prop1, context);
+            final var resolution = Prop1.resolveProp(prop1, context.sourcesStack());
             if (resolution.getPath().getLast() instanceof QuerySourceItemForUnionType<?> item) {
                 final var yields = item.getProps().values().stream()
                         .filter(subItem -> isEntityType(subItem.javaType()) && !subItem.hasExpression())

@@ -440,7 +440,7 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
     /// A convenience overload of [#unionWith(fetch)] that accepts an optional fetch model.
     /// Returns `this` if `maybeThat` is empty.
     ///
-    public fetch<T> unionWith(final Optional<fetch<?>> maybeThat) {
+    public fetch<T> unionWith(final Optional<? extends fetch<?>> maybeThat) {
         return maybeThat.map(this::unionWith).orElse(this);
     }
 

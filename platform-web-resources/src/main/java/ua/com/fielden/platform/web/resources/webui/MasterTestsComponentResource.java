@@ -12,7 +12,7 @@ import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.IDates;
@@ -51,6 +51,6 @@ public class MasterTestsComponentResource extends AbstractWebResource {
     @Get
     @Override
     public Representation get() {
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(master.render().toString().getBytes(Charsets.UTF_8)), MediaType.TEXT_HTML));
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(master.render().toString().getBytes(StandardCharsets.UTF_8)), MediaType.TEXT_HTML));
     }
 }

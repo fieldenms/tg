@@ -5,12 +5,12 @@ let timersModule, timersPromisesModule;
 if (typeof require === "function" && typeof module === "object") {
     try {
         timersModule = require("timers");
-    } catch (e) {
+    } catch {
         // ignored
     }
     try {
         timersPromisesModule = require("timers/promises");
-    } catch (e) {
+    } catch {
         // ignored
     }
 }
@@ -40,6 +40,66 @@ if (typeof require === "function" && typeof module === "object") {
  */
 
 /**
+ * @callback FakeTimersFunction
+ * @param {...unknown[]} args
+ * @returns {unknown}
+ */
+
+/**
+ * @callback VoidVarArgsFunc
+ * @param {...unknown[]} args - optional arguments to call the callback with
+ * @returns {void}
+ */
+
+/**
+ * @callback NextTick
+ * @param {VoidVarArgsFunc} callback - the callback to run
+ * @param {...unknown[]} args - optional arguments to call the callback with
+ * @returns {void}
+ */
+
+/**
+ * @callback SetImmediate
+ * @param {VoidVarArgsFunc} callback - the callback to run
+ * @param {...unknown[]} args - optional arguments to call the callback with
+ * @returns {NodeImmediate}
+ */
+
+/**
+ * @callback SetTimeout
+ * @param {VoidVarArgsFunc} callback - the callback to run
+ * @param {number} [delay] - optional delay in milliseconds
+ * @param {...unknown[]} args - optional arguments to call the callback with
+ * @returns {TimerId} - the timeout identifier
+ */
+
+/**
+ * @callback ClearTimeout
+ * @param {TimerId} [id] - the timeout identifier to clear
+ * @returns {void}
+ */
+
+/**
+ * @callback SetInterval
+ * @param {VoidVarArgsFunc} callback - the callback to run
+ * @param {number} [delay] - optional delay in milliseconds
+ * @param {...unknown[]} args - optional arguments to call the callback with
+ * @returns {TimerId} - the interval identifier
+ */
+
+/**
+ * @callback ClearInterval
+ * @param {TimerId} [id] - the interval identifier to clear
+ * @returns {void}
+ */
+
+/**
+ * @callback QueueMicrotask
+ * @param {VoidVarArgsFunc} callback - the callback to run
+ * @returns {void}
+ */
+
+/**
  * @callback TimeRemaining
  * @returns {number}
  */
@@ -59,94 +119,18 @@ if (typeof require === "function" && typeof module === "object") {
  * Queues a function to be called during a browser's idle periods
  * @callback RequestIdleCallback
  * @param {RequestIdleCallbackCallback} callback
- * @param {{timeout: number}} [options] - an options object
+ * @param {{timeout?: number}} [options] - an options object
  * @returns {number} the id
  */
 
 /**
- * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask"} FakeMethod
- */
-
-/**
- * @typedef {number | NodeImmediate | Timer} TimerId
- */
-
-/**
- * @callback NextTick
- * @param {VoidVarArgsFunc} callback - the callback to run
- * @param {...*} args - optional arguments to call the callback with
- * @returns {void}
- */
-
-/**
- * @callback SetImmediate
- * @param {VoidVarArgsFunc} callback - the callback to run
- * @param {...*} args - optional arguments to call the callback with
- * @returns {NodeImmediate}
- */
-
-/**
- * @callback SetTimeout
- * @param {VoidVarArgsFunc} callback - the callback to run
- * @param {number} [delay] - optional delay in milliseconds
- * @param {...*} args - optional arguments to call the callback with
- * @returns {TimerId} - the timeout identifier
- */
-
-/**
- * @callback ClearTimeout
- * @param {TimerId} [id] - the timeout identifier to clear
- * @returns {void}
- */
-
-/**
- * @callback SetInterval
- * @param {VoidVarArgsFunc} callback - the callback to run
- * @param {number} [delay] - optional delay in milliseconds
- * @param {...*} args - optional arguments to call the callback with
- * @returns {TimerId} - the interval identifier
- */
-
-/**
- * @callback ClearInterval
- * @param {TimerId} [id] - the interval identifier to clear
- * @returns {void}
- */
-
-/**
- * @callback QueueMicrotask
- * @param {VoidVarArgsFunc} callback - the callback to run
- * @returns {void}
- */
-
-/**
- * @callback VoidVarArgsFunc
- * @param {...*} args - optional arguments to call the callback with
- * @returns {void}
- */
-
-/**
- * @callback PerformanceNow
- * @returns {number}
- */
-
-/**
- * @typedef Performance
- * @property {PerformanceNow} now - returns the current high-resolution time
- * @property {(name: string) => void} [mark] - adds a mark
- * @property {(name: string, start?: string, end?: string) => void} [measure] - adds a measure
- * @property {number} [timeOrigin] - the time origin
- */
-
-/**
  * @callback AnimationFrameCallback
- * @param {number} time - the current time
- * @returns {void}
+ * @param {number} timestamp
  */
 
 /**
  * @callback RequestAnimationFrame
- * @param {AnimationFrameCallback} callback - schedules a frame callback
+ * @param {AnimationFrameCallback} callback
  * @returns {TimerId} - the request id
  */
 
@@ -179,14 +163,34 @@ if (typeof require === "function" && typeof module === "object") {
  */
 
 /**
+ * @typedef {object} TemporalDuration
+ * @property {number} years - years component
+ * @property {number} months - months component
+ * @property {number} weeks - weeks component
+ * @property {number} days - days component
+ * @property {number} hours - hours component
+ * @property {number} minutes - minutes component
+ * @property {number} seconds - seconds component
+ * @property {number} milliseconds - milliseconds component
+ * @property {number} microseconds - microseconds component
+ * @property {number} nanoseconds - nanoseconds component
+ * @property {(options: {unit: string, relativeTo?: unknown}) => number} total - converts to a single unit
+ */
+
+/**
+ * @typedef {object} TemporalTimelike
+ * @property {number} epochMilliseconds - milliseconds since the Unix epoch (present on Temporal.Instant and Temporal.ZonedDateTime)
+ */
+
+/**
  * @callback Tick
- * @param {string | number} tickValue - advancement in milliseconds or a string
- * @returns {number}
+ * @param {number|string|TemporalDuration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
+ * @returns {number} will return the new `now` value
  */
 
 /**
  * @callback TickAsync
- * @param {string | number} tickValue - advancement in milliseconds or a string
+ * @param {number|string|TemporalDuration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
  * @returns {Promise<number>}
  */
 
@@ -232,13 +236,13 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * @callback SetSystemTime
- * @param {number | Date} [systemTime] - the time to set
+ * @param {number|Date|TemporalTimelike} [now] initial mocked time, as milliseconds since epoch, a Date, a Temporal.Instant, or a Temporal.ZonedDateTime
  * @returns {void}
  */
 
 /**
  * @callback Jump
- * @param {number} ms - advancement in milliseconds
+ * @param {number|string|TemporalDuration} tickValue milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
  * @returns {number}
  */
 
@@ -249,20 +253,82 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * @callback SetTickMode
- * @param {TimerTickMode} mode - the new tick mode
+ * @param {SetTickModeConfig} tickModeConfig - The new configuration for how the clock should tick.
  * @returns {void}
  */
 
 /**
  * @callback Hrtime
- * @param {number[]} [prevTime] - previous high-resolution time
- * @returns {number[]}
+ * @param {Array<number>} [prev]
+ * @returns {Array<number>}
  */
 
 /**
  * @callback WithGlobal
- * @param {*} globalObject - the global object to mock
+ * @param {object} _global Namespace to mock (e.g. `window`)
  * @returns {FakeTimers}
+ */
+
+/**
+ * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal"} FakeMethod
+ */
+
+/**
+ * @typedef {number | NodeImmediate | Timer} TimerId
+ */
+
+/* eslint-disable jsdoc/reject-any-type */
+/**
+ * @typedef {Record<string, any> & {
+ *   setTimeout?: SetTimeout,
+ *   clearTimeout?: ClearTimeout,
+ *   setInterval?: SetInterval,
+ *   clearInterval?: ClearInterval,
+ *   setImmediate?: SetImmediate,
+ *   clearImmediate?: ClearImmediate,
+ *   queueMicrotask?: QueueMicrotask,
+ *   requestAnimationFrame?: RequestAnimationFrame,
+ *   cancelAnimationFrame?: CancelAnimationFrame,
+ *   requestIdleCallback?: RequestIdleCallback,
+ *   cancelIdleCallback?: CancelIdleCallback,
+ *   process?: any,
+ *   performance?: any,
+ *   Performance?: any,
+ *   Intl?: any,
+ *   Temporal?: any,
+ *   Promise?: typeof Promise,
+ *   Date: typeof Date & { isFake?: boolean, toSource?: () => string, clock?: any }
+ * }} GlobalObject
+ */
+
+/**
+ * @typedef {object} TimerHeap
+ * @property {Timer[]} timers - the heap-ordered timers
+ * @property {() => Timer | undefined} peek - returns the next timer without removing it
+ * @property {(timer: Timer) => void} push - adds a timer to the heap
+ * @property {() => Timer | undefined} pop - removes and returns the next timer
+ * @property {(timer: Timer) => void} remove - removes a specific timer
+ */
+
+/**
+ * @typedef {object} ClockTickMode
+ * @property {TickMode} mode - active tick mode
+ * @property {number} counter - increments whenever the mode changes
+ * @property {number} [delta] - interval length in milliseconds
+ */
+
+/**
+ * @typedef {object} SetTickModeConfig
+ * @property {TickMode} mode - desired tick mode
+ * @property {number} [delta] - interval length in milliseconds
+ */
+
+/**
+ * @typedef {Record<string, any> & { clock: Clock }} IntlWithClock
+ */
+
+/**
+ * @typedef {Record<string, any> & { now: () => number }} PerformanceLike
  */
 
 /**
@@ -271,13 +337,14 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {ClearTimeout} clearTimeout - native `clearTimeout`
  * @property {SetInterval} setInterval - native `setInterval`
  * @property {ClearInterval} clearInterval - native `clearInterval`
- * @property {Date} Date - native `Date`
+ * @property {typeof Date} Date - native `Date`
  * @property {typeof Intl} [Intl] - native `Intl`
+ * @property {any} [Temporal] - native `Temporal`
  * @property {SetImmediate} [setImmediate] - native `setImmediate`, if available
  * @property {ClearImmediate} [clearImmediate] - native `clearImmediate`, if available
  * @property {Hrtime} [hrtime] - native `process.hrtime`, if available
  * @property {NextTick} [nextTick] - native `process.nextTick`, if available
- * @property {Performance} [performance] - native `performance`, if available
+ * @property {PerformanceLike} [performance] - native `performance`, if available
  * @property {RequestAnimationFrame} [requestAnimationFrame] - native `requestAnimationFrame`, if available
  * @property {QueueMicrotask} [queueMicrotask] - whether `queueMicrotask` exists
  * @property {CancelAnimationFrame} [cancelAnimationFrame] - native `cancelAnimationFrame`, if available
@@ -292,7 +359,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {number} [previous] - previous timer time used during ticking
  * @property {number | null} [oldNow] - previous value of `now`
  * @property {Timer} [timer] - timer currently being processed
- * @property {any} [firstException] - first exception raised while processing timers
+ * @property {unknown} [firstException] - first exception raised while processing timers
  * @property {number} [nanosTotal] - accumulated nanoseconds from fractional ticks
  * @property {number} [msFloat] - accumulated fractional milliseconds
  * @property {number} [ms] - accumulated whole milliseconds
@@ -301,7 +368,7 @@ if (typeof require === "function" && typeof module === "object") {
 /**
  * @typedef {object} TimerInitialProps
  * @property {VoidVarArgsFunc} func - callback or string to execute
- * @property {*[]} [args] - arguments passed to the callback
+ * @property {unknown[]} [args] - arguments passed to the callback
  * @property {'Timeout' | 'Interval' | 'Immediate' | 'AnimationFrame' | 'IdleCallback'} [type] - timer kind
  * @property {number} [delay] - requested delay in milliseconds
  * @property {number} [callAt] - scheduled execution time
@@ -318,7 +385,7 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * @callback CreateClockCallback
- * @param {number|Date} [start] initial mocked time, as milliseconds since epoch or a Date
+ * @param {number|Date|TemporalTimelike} [start] initial mocked time, as milliseconds since epoch, a Date, a Temporal.Instant, or a Temporal.ZonedDateTime
  * @param {number} [loopLimit] maximum number of timers run before aborting with an infinite-loop error
  * @returns {Clock}
  */
@@ -337,11 +404,10 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {WithGlobal} withGlobal - creates a fake-timers instance for a provided global object
  */
 
-/* eslint-disable jsdoc/require-property-description */
 /**
  * @typedef {object} Clock
  * @property {number} now - current mocked time in milliseconds
- * @property {typeof Date & {clock?: Clock}} Date - fake Date constructor bound to this clock
+ * @property {typeof Date & {clock?: Clock, isFake?: boolean, toSource?: () => string}} Date - fake Date constructor bound to this clock
  * @property {number} loopLimit - maximum number of timers before assuming an infinite loop
  * @property {RequestIdleCallback} requestIdleCallback - schedules an idle callback
  * @property {CancelIdleCallback} cancelIdleCallback - cancels a scheduled idle callback
@@ -369,30 +435,31 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {Reset} reset - clears all timers and resets the clock
  * @property {SetSystemTime} setSystemTime - sets the clock to a specific wall-clock time
  * @property {Jump} jump - advances time and returns the new `now`
- * @property {Performance} performance - fake performance object
+ * @property {any} performance - fake performance object
  * @property {Hrtime} hrtime - faked `process.hrtime`
  * @property {Uninstall} uninstall - restores native timers
  * @property {string[]} methods - names of faked methods
  * @property {boolean} [shouldClearNativeTimers] - inherited from config
- * @property {{methodName:string, original:any}[] | undefined} timersModuleMethods - saved Node timers module methods
- * @property {{methodName:string, original:any}[] | undefined} timersPromisesModuleMethods - saved Node timers/promises methods
+ * @property {{methodName:string, original:unknown}[] | undefined} timersModuleMethods - saved Node timers module methods
+ * @property {{methodName:string, original:unknown}[] | undefined} timersPromisesModuleMethods - saved Node timers/promises methods
  * @property {Map<VoidVarArgsFunc, AbortSignal>} abortListenerMap - active abort listeners
  * @property {SetTickMode} setTickMode - switches the auto-tick mode
  * @property {Map<number, Timer>} [timers] - internal timer storage
- * @property {any} [timerHeap] - internal timer heap
+ * @property {TimerHeap} [timerHeap] - internal timer heap
  * @property {boolean} [duringTick] - internal flag
  * @property {boolean} isNearInfiniteLimit - internal flag indicating the loop limit is nearly reached
- * @property {any} [attachedInterval] - internal flag
- * @property {any} [tickMode] - internal flag
+ * @property {TimerId} [attachedInterval] - internal flag
+ * @property {ClockTickMode} [tickMode] - internal flag
  * @property {Timer[]} [jobs] - internal flag
- * @property {any} [Intl] - fake Intl object
+ * @property {IntlWithClock} [Intl] - fake Intl object
+ * @property {any} [Temporal] - fake Temporal object
  */
-/* eslint-enable jsdoc/require-property-description */
+/* eslint-enable jsdoc/reject-any-type */
 
 /**
  * Configuration object for the `install` method.
  * @typedef {object} Config
- * @property {number|Date} [now] initial mocked time, as milliseconds since epoch or a Date
+ * @property {number|Date|TemporalTimelike} [now] initial mocked time, as milliseconds since epoch, a Date, a Temporal.Instant, or a Temporal.ZonedDateTime
  * @property {FakeMethod[]} [toFake] method names that should be faked
  * @property {FakeMethod[]} [toNotFake] method names that should remain native
  * @property {number} [loopLimit] maximum number of timers run before aborting with an infinite-loop error
@@ -400,14 +467,13 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {number} [advanceTimeDelta] interval in milliseconds used when `shouldAdvanceTime` is enabled
  * @property {boolean} [shouldClearNativeTimers] forwards clear calls to native methods when the timer is not fake
  * @property {boolean} [ignoreMissingTimers] suppresses errors when a requested timer is missing from the global object
- * @property {object} [target] global object to install onto
+ * @property {GlobalObject} [target] global object to install onto
  */
 
-/* eslint-disable jsdoc/require-property-description */
 /**
  * The internal structure to describe a scheduled fake timer
  * @typedef {TimerInitialProps} Timer
- * @property {*[]} args - arguments passed to the callback
+ * @property {unknown[]} args - arguments passed to the callback
  * @property {number} callAt - scheduled execution time
  * @property {number} createdAt - time at which the timer was created
  * @property {number} id - unique timer identifier
@@ -436,13 +502,12 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {NodeImmediateRef} ref - marks the timer as referenced
  * @property {NodeImmediateUnref} unref - marks the timer as unreferenced
  */
-/* eslint-enable jsdoc/require-property-description */
 
 /* eslint-disable complexity */
 
 /**
  * Mocks available features in the specified global namespace.
- * @param {*} _global Namespace to mock (e.g. `window`)
+ * @param {GlobalObject} _global Namespace to mock (e.g. `window`)
  * @returns {FakeTimers}
  */
 function withGlobal(_global) {
@@ -503,6 +568,11 @@ function withGlobal(_global) {
     isPresent.clearImmediate =
         _global.clearImmediate && typeof _global.clearImmediate === "function";
     isPresent.Intl = _global.Intl && typeof _global.Intl === "object";
+    isPresent.Temporal =
+        _global.Temporal !== null &&
+        typeof _global.Temporal === "object" &&
+        typeof _global.Temporal.Now !== "undefined" &&
+        typeof _global.Temporal.Instant !== "undefined";
 
     if (_global.clearTimeout) {
         _global.clearTimeout(timeoutResult);
@@ -515,6 +585,7 @@ function withGlobal(_global) {
               Object.getOwnPropertyDescriptors(_global.Intl),
           )
         : undefined;
+    const NativeTemporal = isPresent.Temporal ? _global.Temporal : undefined;
     let uniqueTimerId = idCounterStart;
     /** @type {number} */
     let uniqueTimerOrder = 0;
@@ -632,18 +703,26 @@ function withGlobal(_global) {
 
     /**
      * Used to grok the `now` parameter to createClock.
-     * @param {Date|number} epoch the system time
+     * @param {Date|number|TemporalTimelike} epoch the system time
      * @returns {number}
      */
     function getEpoch(epoch) {
         if (!epoch) {
             return 0;
         }
-        if (epoch instanceof Date) {
-            return epoch.getTime();
-        }
         if (typeof epoch === "number") {
             return epoch;
+        }
+        if (typeof (/** @type {Date} */ (epoch).getTime) === "function") {
+            return /** @type {Date} */ (epoch).getTime();
+        }
+        if (
+            typeof (
+                /** @type {TemporalTimelike} */ (epoch).epochMilliseconds
+            ) === "number"
+        ) {
+            // Temporal.Instant and Temporal.ZonedDateTime both have epochMilliseconds
+            return /** @type {TemporalTimelike} */ (epoch).epochMilliseconds;
         }
         throw new TypeError("now should be milliseconds since UNIX epoch");
     }
@@ -721,7 +800,7 @@ function withGlobal(_global) {
             Object.defineProperty(infiniteLoopError, "stack", {
                 value: stack,
             });
-        } catch (e) {
+        } catch {
             // noop
         }
 
@@ -729,27 +808,21 @@ function withGlobal(_global) {
     }
 
     /**
-     * @returns {typeof Date}
+     * @returns {typeof Date & { clock: Clock }}
      */
     function createDate() {
         class ClockDate extends NativeDate {
-            /**
-             * @param {number} year
-             * @param {number} month
-             * @param {number} date
-             * @param {number} hour
-             * @param {number} minute
-             * @param {number} second
-             * @param {number} ms
-             */
-            // eslint-disable-next-line no-unused-vars
-            constructor(year, month, date, hour, minute, second, ms) {
-                // Defensive and verbose to avoid potential harm in passing
-                // explicit undefined when user does not pass argument
-                if (arguments.length === 0) {
+            /** @type {Clock} */
+            static clock;
+
+            constructor(...args) {
+                // Preserve fake time when Date is called without arguments.
+                if (args.length === 0) {
                     super(ClockDate.clock.now);
                 } else {
-                    super(...arguments);
+                    // The subclass is intentionally thin for explicit args.
+                    // @ts-expect-error Date constructor overloads are intentionally dynamic.
+                    super(...args);
                 }
 
                 // ensures identity checks using the constructor prop still works
@@ -773,21 +846,26 @@ function withGlobal(_global) {
             };
         }
 
-        if (NativeDate.toSource) {
+        const NativeDateWithToSource =
+            /** @type {typeof Date & { toSource?: () => string }} */ (
+                NativeDate
+            );
+
+        if (NativeDateWithToSource.toSource) {
             ClockDate.toSource = function toSource() {
-                return NativeDate.toSource();
+                return NativeDateWithToSource.toSource();
             };
         }
 
         ClockDate.toString = function toString() {
-            return NativeDate.toString();
+            return NativeDateWithToSource.toString();
         };
 
         // noinspection UnnecessaryLocalVariableJS
         /**
          * A normal Class constructor cannot be called without `new`, but Date can, so we need
          * to wrap it in a Proxy in order to ensure this functionality of Date is kept intact
-         * @type {Function}
+         * @type {typeof ClockDate}
          */
         const ClockDateProxy = new Proxy(ClockDate, {
             // handler for [[Call]] invocations (i.e. not using `new`)
@@ -804,7 +882,9 @@ function withGlobal(_global) {
             },
         });
 
-        return /** @type {any} */ (ClockDateProxy);
+        return /** @type {typeof Date & { clock: Clock }} */ (
+            /** @type {unknown} */ (ClockDateProxy)
+        );
     }
 
     /**
@@ -813,19 +893,21 @@ function withGlobal(_global) {
      * Most of the properties are the original native ones,
      * but we need to take control of those that have a
      * dependency on the current clock.
-     * @returns {object} the partly fake Intl implementation
+     * @param {Clock} clock
+     * @returns {IntlWithClock} the partly fake Intl implementation
      */
-    function createIntl() {
-        const ClockIntl = {};
+    function createIntl(clock) {
+        /** @type {IntlWithClock} */
+        const IntlWithClock = { clock: clock };
         /*
          * All properties of Intl are non-enumerable, so we need
          * to do a bit of work to get them out.
          */
         Object.getOwnPropertyNames(NativeIntl).forEach(
-            (property) => (ClockIntl[property] = NativeIntl[property]),
+            (property) => (IntlWithClock[property] = NativeIntl[property]),
         );
 
-        ClockIntl.DateTimeFormat = function (...args) {
+        IntlWithClock.DateTimeFormat = function (...args) {
             const realFormatter = new NativeIntl.DateTimeFormat(...args);
             const formatter = {};
 
@@ -838,21 +920,73 @@ function withGlobal(_global) {
 
             ["format", "formatToParts"].forEach((method) => {
                 formatter[method] = function (date) {
-                    return realFormatter[method](date || ClockIntl.clock.now);
+                    return realFormatter[method](
+                        date || IntlWithClock.clock.now,
+                    );
                 };
             });
 
             return formatter;
         };
 
-        ClockIntl.DateTimeFormat.prototype = Object.create(
+        IntlWithClock.DateTimeFormat.prototype = Object.create(
             NativeIntl.DateTimeFormat.prototype,
         );
 
-        ClockIntl.DateTimeFormat.supportedLocalesOf =
+        IntlWithClock.DateTimeFormat.supportedLocalesOf =
             NativeIntl.DateTimeFormat.supportedLocalesOf;
 
-        return ClockIntl;
+        return IntlWithClock;
+    }
+
+    //eslint-disable-next-line jsdoc/require-jsdoc
+    function createTemporal(clock, getNanos) {
+        const fakeNow = {
+            instant() {
+                return NativeTemporal.Instant.fromEpochNanoseconds(
+                    BigInt(clock.now) * 1_000_000n + BigInt(getNanos()),
+                );
+            },
+            timeZoneId() {
+                return NativeTemporal.Now.timeZoneId();
+            },
+            zonedDateTimeISO(timeZone) {
+                const tz = timeZone ?? NativeTemporal.Now.timeZoneId();
+                return fakeNow.instant().toZonedDateTimeISO(tz);
+            },
+            plainDateTimeISO(timeZone) {
+                return fakeNow.zonedDateTimeISO(timeZone).toPlainDateTime();
+            },
+            plainDateISO(timeZone) {
+                return fakeNow.zonedDateTimeISO(timeZone).toPlainDate();
+            },
+            plainTimeISO(timeZone) {
+                return fakeNow.zonedDateTimeISO(timeZone).toPlainTime();
+            },
+        };
+
+        const TemporalWithClock = Object.create(
+            Object.getPrototypeOf(NativeTemporal),
+        );
+        [
+            ...Object.getOwnPropertyNames(NativeTemporal),
+            ...Object.getOwnPropertySymbols(NativeTemporal),
+        ].forEach((prop) => {
+            Object.defineProperty(
+                TemporalWithClock,
+                prop,
+                Object.getOwnPropertyDescriptor(NativeTemporal, prop),
+            );
+        });
+        // Temporal.Now is writable:false in the spec so we must use defineProperty
+        Object.defineProperty(TemporalWithClock, "Now", {
+            value: fakeNow,
+            writable: true,
+            enumerable: false,
+            configurable: true,
+        });
+
+        return TemporalWithClock;
     }
 
     //eslint-disable-next-line jsdoc/require-jsdoc
@@ -1433,7 +1567,7 @@ function withGlobal(_global) {
      * @param {Clock} clock
      * @param {TimerId} timerId
      * @param {string} ttype
-     * @returns {*}
+     * @returns {void}
      */
     function clearTimer(clock, timerId, ttype) {
         if (!timerId) {
@@ -1490,85 +1624,6 @@ function withGlobal(_global) {
     }
 
     /**
-     * @param {Clock} clock
-     * @returns {Timer[]}
-     */
-    function uninstall(clock) {
-        let method, i, l;
-        const installedHrTime = "_hrtime";
-        const installedNextTick = "_nextTick";
-
-        for (i = 0, l = clock.methods.length; i < l; i++) {
-            method = clock.methods[i];
-            if (method === "hrtime" && _global.process) {
-                _global.process.hrtime = clock[installedHrTime];
-            } else if (method === "nextTick" && _global.process) {
-                _global.process.nextTick = clock[installedNextTick];
-            } else if (method === "performance") {
-                const originalPerfDescriptor = Object.getOwnPropertyDescriptor(
-                    clock,
-                    `_${method}`,
-                );
-                if (
-                    originalPerfDescriptor &&
-                    originalPerfDescriptor.get &&
-                    !originalPerfDescriptor.set
-                ) {
-                    Object.defineProperty(
-                        _global,
-                        method,
-                        originalPerfDescriptor,
-                    );
-                } else if (originalPerfDescriptor.configurable) {
-                    _global[method] = clock[`_${method}`];
-                }
-            } else {
-                if (clock[method] && clock[method].hasOwnProperty) {
-                    _global[method] = clock[`_${method}`];
-                } else {
-                    try {
-                        delete _global[method];
-                    } catch (ignore) {
-                        /* eslint no-empty: "off" */
-                    }
-                }
-            }
-            if (clock.timersModuleMethods !== undefined) {
-                for (let j = 0; j < clock.timersModuleMethods.length; j++) {
-                    const entry = clock.timersModuleMethods[j];
-                    timersModule[entry.methodName] = entry.original;
-                }
-            }
-            if (clock.timersPromisesModuleMethods !== undefined) {
-                for (
-                    let j = 0;
-                    j < clock.timersPromisesModuleMethods.length;
-                    j++
-                ) {
-                    const entry = clock.timersPromisesModuleMethods[j];
-                    timersPromisesModule[entry.methodName] = entry.original;
-                }
-            }
-        }
-
-        clock.setTickMode({ mode: "manual" });
-
-        // Prevent multiple executions which will completely remove these props
-        clock.methods = [];
-
-        for (const [listener, signal] of clock.abortListenerMap.entries()) {
-            signal.removeEventListener("abort", listener);
-            clock.abortListenerMap.delete(listener);
-        }
-
-        // return pending timers, to enable checking what timers remained on uninstall
-        if (!clock.timerHeap) {
-            return [];
-        }
-        return clock.timerHeap.timers.slice();
-    }
-
-    /**
      * @param {object} target the target containing the method to replace
      * @param {string} method the keyname of the method on the target
      * @param {Clock} clock
@@ -1583,6 +1638,8 @@ function withGlobal(_global) {
         if (method === "Date") {
             target[method] = clock[method];
         } else if (method === "Intl") {
+            target[method] = clock[method];
+        } else if (method === "Temporal") {
             target[method] = clock[method];
         } else if (method === "performance") {
             const originalPerfDescriptor = Object.getOwnPropertyDescriptor(
@@ -1684,12 +1741,16 @@ function withGlobal(_global) {
         timers.Intl = NativeIntl;
     }
 
+    if (isPresent.Temporal) {
+        timers.Temporal = NativeTemporal;
+    }
+
     const originalSetTimeout = _global.setImmediate || _global.setTimeout;
     const originalClearInterval = _global.clearInterval;
     const originalSetInterval = _global.setInterval;
 
     /**
-     * @param {Date|number} [start] the system time - non-integer values are floored
+     * @param {Date|number|TemporalTimelike} [start] the system time - non-integer values are floored
      * @param {number} [loopLimit] maximum number of timers that will be run when calling runAll()
      * @returns {Clock}
      */
@@ -1697,15 +1758,17 @@ function withGlobal(_global) {
         /** @type {number} */
         // eslint-disable-next-line no-param-reassign
         start = Math.floor(getEpoch(start));
+        const startTimestamp = start;
         // eslint-disable-next-line no-param-reassign
         loopLimit = loopLimit || 1000;
         /** @type {number} */
         let nanos = 0;
+        let uninstalled = false;
         /** @type {number[]} */
         const adjustedSystemTime = [0, 0]; // [millis, nanoremainder]
 
         /** @type {Clock} */
-        const clock = /** @type {any} */ ({
+        const clock = /** @type {Clock} */ ({
             now: start,
             Date: createDate(),
             loopLimit: loopLimit,
@@ -1717,13 +1780,13 @@ function withGlobal(_global) {
 
         //eslint-disable-next-line jsdoc/require-jsdoc
         function getTimeToNextFrame() {
-            return 16 - ((clock.now - /** @type {any} */ (start)) % 16);
+            return 16 - ((clock.now - startTimestamp) % 16);
         }
 
         //eslint-disable-next-line jsdoc/require-jsdoc
         function hrtime(prev) {
             const millisSinceStart =
-                clock.now - adjustedSystemTime[0] - /** @type {any} */ (start);
+                clock.now - adjustedSystemTime[0] - startTimestamp;
             const secsSinceStart = Math.floor(millisSinceStart / 1000);
             const remainderInNanos =
                 (millisSinceStart - secsSinceStart * 1e3) * 1e6 +
@@ -1769,22 +1832,25 @@ function withGlobal(_global) {
         if (isPresent.hrtimeBigint) {
             hrtime.bigint = function () {
                 const parts = hrtime();
-                return BigInt(parts[0]) * BigInt(1e9) + BigInt(parts[1]); // eslint-disable-line
+                return BigInt(parts[0]) * BigInt(1e9) + BigInt(parts[1]);
             };
         }
 
         if (isPresent.Intl) {
-            clock.Intl = createIntl();
+            clock.Intl = createIntl(clock);
             clock.Intl.clock = clock;
         }
 
+        if (isPresent.Temporal) {
+            clock.Temporal = createTemporal(clock, () => nanos);
+        }
+
         /**
-         * @param {TimerTickMode} tickModeConfig - The new configuration for how the clock should tick.
+         * @param {SetTickModeConfig} tickModeConfig - The new configuration for how the clock should tick.
          */
         clock.setTickMode = function (tickModeConfig) {
-            const { mode: newMode, delta: newDelta } = /** @type {any} */ (
-                tickModeConfig
-            );
+            const { mode: newMode, delta: newDelta } =
+                /** @type {SetTickModeConfig} */ (tickModeConfig);
             const { mode: oldMode, delta: oldDelta } = clock.tickMode;
             if (newMode === oldMode && newDelta === oldDelta) {
                 return;
@@ -1848,8 +1914,8 @@ function withGlobal(_global) {
 
         /**
          * Temporarily pauses nextAsync auto-ticking while an async operation runs.
-         * @param {Promise<*>} promise
-         * @returns {Promise<*>}
+         * @param {Promise<unknown>} promise
+         * @returns {Promise<unknown>}
          */
         function pauseAutoTickUntilFinished(promise) {
             if (clock.tickMode.mode !== "nextAsync") {
@@ -1857,7 +1923,9 @@ function withGlobal(_global) {
             }
             clock.setTickMode({ mode: "manual" });
             return promise.finally(() => {
-                clock.setTickMode({ mode: "nextAsync" });
+                if (!uninstalled) {
+                    clock.setTickMode({ mode: "nextAsync" });
+                }
             });
         }
 
@@ -1877,7 +1945,7 @@ function withGlobal(_global) {
 
         clock.requestIdleCallback = function requestIdleCallback(
             func,
-            { timeout } = /** @type {any} */ ({}),
+            { timeout } = /** @type {{ timeout?: number }} */ ({}),
         ) {
             /**
              * @type {IdleDeadline}
@@ -1941,7 +2009,7 @@ function withGlobal(_global) {
 
         clock.setInterval = function setInterval(func, timeout) {
             // eslint-disable-next-line no-param-reassign
-            timeout = parseInt(/** @type {any} */ (timeout), 10);
+            timeout = parseInt(String(timeout), 10);
             return addTimer(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 2),
@@ -1955,7 +2023,7 @@ function withGlobal(_global) {
         };
 
         if (isPresent.setImmediate) {
-            clock.setImmediate = /** @type {any} */ (
+            clock.setImmediate = /** @type {SetImmediate} */ (
                 function setImmediate(func) {
                     return addTimer(clock, {
                         func: func,
@@ -2013,15 +2081,44 @@ function withGlobal(_global) {
             runJobs(clock);
         };
 
+        //eslint-disable-next-line jsdoc/require-jsdoc
+        function durationToMs(duration) {
+            // relativeTo uses the real system timezone — fake-timers fakes time, not place.
+            // Calendar-unit durations (months, years) will resolve DST/length using the host tz.
+            const relativeTo = NativeTemporal.Instant.fromEpochMilliseconds(
+                clock.now,
+            ).toZonedDateTimeISO(NativeTemporal.Now.timeZoneId());
+            return duration.total({ unit: "millisecond", relativeTo });
+        }
+
         /**
-         * @param {number|string} tickValue milliseconds or a string parseable by parseTime
+         * @param {number|string|TemporalDuration} tickValue
+         * @returns {number} milliseconds as a float
+         */
+        function tickValueToMs(tickValue) {
+            if (typeof tickValue === "number") {
+                return tickValue;
+            }
+            if (
+                isPresent.Temporal &&
+                tickValue !== null &&
+                typeof tickValue === "object" &&
+                typeof (/** @type {TemporalDuration} */ (tickValue).total) ===
+                    "function"
+            ) {
+                return durationToMs(
+                    /** @type {TemporalDuration} */ (tickValue),
+                );
+            }
+            return parseTime(/** @type {string} */ (tickValue));
+        }
+
+        /**
+         * @param {number|string|TemporalDuration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
          * @returns {ClockState} a mutable state object for the tick execution
          */
         function createTickState(tickValue) {
-            const msFloat =
-                typeof tickValue === "number"
-                    ? tickValue
-                    : parseTime(tickValue);
+            const msFloat = tickValueToMs(tickValue);
             const ms = Math.floor(msFloat);
             const remainder = nanoRemainder(msFloat);
             let nanosTotal = nanos + remainder;
@@ -2037,7 +2134,7 @@ function withGlobal(_global) {
                 nanosTotal -= 1e6;
             }
 
-            return /** @type {any} */ ({
+            return /** @type {ClockState} */ ({
                 msFloat: msFloat,
                 ms: ms,
                 nanosTotal: nanosTotal,
@@ -2100,8 +2197,8 @@ function withGlobal(_global) {
         /**
          * @param {ClockState} state mutable tick state
          * @param {boolean} isAsync whether this is an async tick
-         * @param {Function} nextPromiseTick callback for async promise settlement
-         * @param {Function} compensationCheck callback for clock change compensation
+         * @param {FakeTimersFunction} nextPromiseTick callback for async promise settlement
+         * @param {FakeTimersFunction} compensationCheck callback for clock change compensation
          * @returns {boolean} whether an early return was triggered (async mode)
          */
         function runTimersInRange(
@@ -2115,7 +2212,7 @@ function withGlobal(_global) {
                 state.tickFrom,
                 state.tickTo,
             );
-            // eslint-disable-next-line no-unmodified-loop-condition
+
             while (state.timer && state.tickFrom <= state.tickTo) {
                 if (hasTimer(clock, state.timer.id)) {
                     state.tickFrom = state.timer.callAt;
@@ -2147,7 +2244,7 @@ function withGlobal(_global) {
         /**
          * @param {ClockState} state mutable tick state
          * @param {boolean} isAsync whether this is an async tick
-         * @param {Function} resolve promise resolve function
+         * @param {FakeTimersFunction} resolve promise resolve function
          * @returns {number|undefined} the new clock.now or nothing for async
          */
         function finalizeTick(state, isAsync, resolve) {
@@ -2182,10 +2279,10 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {number|string} tickValue milliseconds or a string parseable by parseTime
+         * @param {number|string|TemporalDuration} tickValue milliseconds or a string parseable by parseTime
          * @param {boolean} isAsync whether this is an async tick
-         * @param {Function} [resolve] promise resolve function
-         * @param {Function} [reject] promise reject function
+         * @param {FakeTimersFunction} [resolve] promise resolve function
+         * @param {FakeTimersFunction} [reject] promise reject function
          * @returns {number|undefined} the new clock.now or nothing for async
          */
         function doTick(tickValue, isAsync, resolve, reject) {
@@ -2238,7 +2335,7 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
+         * @param {string|number|TemporalDuration} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
          * @returns {number} will return the new `now` value
          */
         clock.tick = function tick(tickValue) {
@@ -2264,7 +2361,7 @@ function withGlobal(_global) {
         };
 
         /**
-         * @param {Function} callback function to run inside native setTimeout
+         * @param {(resolve: (value: unknown) => void, reject: (reason?: unknown) => void) => void} callback function to run inside native setTimeout
          * @returns {Promise}
          */
         function runAsyncWithNativeTimeout(callback) {
@@ -2319,7 +2416,7 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             /**
-             * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
+             * @param {string|number|TemporalDuration} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
              * @returns {Promise}
              */
             clock.tickAsync = function tickAsync(tickValue) {
@@ -2359,8 +2456,8 @@ function withGlobal(_global) {
             clock.runAllAsync = function runAllAsync() {
                 let i = 0;
                 /**
-                 * @param {Function} resolve promise resolve function
-                 * @param {Function} reject promise reject function
+                 * @param {(value: unknown) => void} resolve promise resolve function
+                 * @param {(reason?: unknown) => void} reject promise reject function
                  */
                 function doRun(resolve, reject) {
                     try {
@@ -2445,14 +2542,11 @@ function withGlobal(_global) {
         };
 
         /**
-         * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
+         * @param {string|number|TemporalDuration} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
          * @returns {number} the new `now` value
          */
         clock.jump = function jump(tickValue) {
-            const msFloat =
-                typeof tickValue === "number"
-                    ? tickValue
-                    : parseTime(tickValue);
+            const msFloat = tickValueToMs(tickValue);
             const ms = Math.floor(msFloat);
 
             forEachActiveTimer(clock, (timer) => {
@@ -2476,6 +2570,97 @@ function withGlobal(_global) {
         if (isPresent.hrtime) {
             clock.hrtime = hrtime;
         }
+
+        /**
+         * @returns {Timer[]}
+         */
+        clock.uninstall = function () {
+            uninstalled = true;
+            clock.setTickMode({ mode: "manual" });
+
+            if (clock.methods) {
+                const installedHrTime = "_hrtime";
+                const installedNextTick = "_nextTick";
+                let method, i, l;
+                for (i = 0, l = clock.methods.length; i < l; i++) {
+                    method = clock.methods[i];
+                    if (method === "hrtime" && _global.process) {
+                        _global.process.hrtime = clock[installedHrTime];
+                    } else if (method === "nextTick" && _global.process) {
+                        _global.process.nextTick = clock[installedNextTick];
+                    } else if (method === "performance") {
+                        const originalPerfDescriptor =
+                            Object.getOwnPropertyDescriptor(
+                                clock,
+                                `_${method}`,
+                            );
+                        if (
+                            originalPerfDescriptor &&
+                            originalPerfDescriptor.get &&
+                            !originalPerfDescriptor.set
+                        ) {
+                            Object.defineProperty(
+                                _global,
+                                method,
+                                originalPerfDescriptor,
+                            );
+                        } else if (originalPerfDescriptor.configurable) {
+                            _global[method] = clock[`_${method}`];
+                        }
+                    } else {
+                        if (clock[method] && clock[method].hasOwnProperty) {
+                            _global[method] = clock[`_${method}`];
+                        } else {
+                            try {
+                                delete _global[method];
+                            } catch {
+                                /* eslint no-empty: "off" */
+                            }
+                        }
+                    }
+                    if (clock.timersModuleMethods !== undefined) {
+                        for (
+                            let j = 0;
+                            j < clock.timersModuleMethods.length;
+                            j++
+                        ) {
+                            const entry = clock.timersModuleMethods[j];
+                            timersModule[entry.methodName] = entry.original;
+                        }
+                    }
+                    if (clock.timersPromisesModuleMethods !== undefined) {
+                        for (
+                            let j = 0;
+                            j < clock.timersPromisesModuleMethods.length;
+                            j++
+                        ) {
+                            const entry = clock.timersPromisesModuleMethods[j];
+                            timersPromisesModule[entry.methodName] =
+                                entry.original;
+                        }
+                    }
+                }
+
+                // Prevent multiple executions which will completely remove these props
+                clock.methods = [];
+            }
+
+            if (clock.abortListenerMap) {
+                for (const [
+                    listener,
+                    signal,
+                ] of clock.abortListenerMap.entries()) {
+                    signal.removeEventListener("abort", listener);
+                    clock.abortListenerMap.delete(listener);
+                }
+            }
+
+            // return pending timers, to enable checking what timers remained on uninstall
+            if (!clock.timerHeap) {
+                return [];
+            }
+            return clock.timerHeap.timers.slice();
+        };
 
         return clock;
     }
@@ -2565,25 +2750,26 @@ function withGlobal(_global) {
         const clock = createClock(config.now, config.loopLimit);
         clock.shouldClearNativeTimers = config.shouldClearNativeTimers;
 
-        clock.uninstall = function () {
-            return uninstall(clock);
-        };
-
         clock.abortListenerMap = new Map();
 
         if (hasToFake) {
-            clock.methods = config.toFake || [];
+            clock.methods = /** @type {FakeMethod[]} */ (config.toFake || []);
             if (clock.methods.length === 0) {
-                clock.methods = Object.keys(timers);
+                clock.methods = /** @type {FakeMethod[]} */ (
+                    Object.keys(timers)
+                );
             }
         } else if (hasToNotFake) {
-            const methodsToNotFake = config.toNotFake || [];
-            clock.methods = Object.keys(timers).filter(
-                (method) =>
-                    !methodsToNotFake.includes(/** @type {any} */ (method)),
+            const methodsToNotFake = /** @type {string[]} */ (
+                config.toNotFake || []
+            );
+            clock.methods = /** @type {FakeMethod[]} */ (
+                Object.keys(timers).filter(
+                    (method) => !methodsToNotFake.includes(method),
+                )
             );
         } else {
-            clock.methods = Object.keys(timers);
+            clock.methods = /** @type {FakeMethod[]} */ (Object.keys(timers));
         }
 
         if (config.shouldAdvanceTime === true) {
@@ -2784,12 +2970,13 @@ function withGlobal(_global) {
                         [Symbol.asyncIterator]: () => {
                             const createResolvable = () => {
                                 let resolve, reject;
-                                const promise = /** @type {any} */ (
-                                    new Promise((res, rej) => {
-                                        resolve = res;
-                                        reject = rej;
-                                    })
-                                );
+                                const promise =
+                                    /** @type {Promise<unknown> & { resolve: (value: unknown) => void; reject: (reason: unknown) => void }} */ (
+                                        new Promise((res, rej) => {
+                                            resolve = res;
+                                            reject = rej;
+                                        })
+                                    );
                                 promise.resolve = resolve;
                                 promise.reject = reject;
                                 return promise;
@@ -2917,12 +3104,11 @@ function withGlobal(_global) {
     };
 }
 
-/* eslint-enable complexity */
-
 /** @type {FakeTimers} */
 const defaultImplementation = withGlobal(globalObject);
 
 exports.timers = defaultImplementation.timers;
 exports.createClock = defaultImplementation.createClock;
 exports.install = defaultImplementation.install;
+/** @type {WithGlobal} */
 exports.withGlobal = withGlobal;

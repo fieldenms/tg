@@ -6,13 +6,11 @@ import com.google.inject.name.Names;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.restlet.Application;
-import org.restlet.Context;
-import org.restlet.Restlet;
+import org.restlet.*;
+import org.restlet.routing.Filter;
 import org.restlet.routing.Router;
 import org.restlet.routing.Template;
 import org.restlet.security.Authenticator;
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
@@ -20,6 +18,7 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.*;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.AppIndexResource;
 import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
 
 /// Represents a web application that is running on the server.
@@ -90,7 +89,7 @@ public abstract class AbstractWebUiResources extends Application {
         // Attach application configuration resource.
         guardedRouter.attach("/app/configuration", new ApplicationConfigurationResourceFactory(webApp, injector));
         // Attach main application resource.
-        guardedRouter.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates, injector.getInstance(ICriteriaGenerator.class)));
+        guardedRouter.attach(AppIndexResource.BINDING_PATH, new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates));
         guardedRouter.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider, dates));
         guardedRouter.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(webResourceLoader, deviceProvider, dates));
         guardedRouter.attach("/app/tg-app-actions.js", new TgAppActionsResourceFactory(webResourceLoader, deviceProvider, dates));
@@ -141,7 +140,22 @@ public abstract class AbstractWebUiResources extends Application {
 
         mainRouter.attach(guard);
 
-        return mainRouter;
+        // Jetty/Restlet reuse worker threads across requests, and the current user is held in a thread-local (see `IUserProvider`).
+        // Wrap the whole application chain so that the current user is always cleared once a request has been fully handled — including when handling throws.
+        // This prevents a pooled thread from carrying a previous request's user into any subsequent work that reads the thread's ambient user.
+        // The user is established deep in the chain (during authentication by the guard) and cleared here, at the top, on the same thread that handled the request.
+        final Filter userCleanupFilter = new Filter(getContext(), mainRouter) {
+            @Override
+            protected int doHandle(final Request request, final Response response) {
+                try {
+                    return super.doHandle(request, response);
+                } finally {
+                    userProvider.clearUser();
+                }
+            }
+        };
+
+        return userCleanupFilter;
     }
 
     /// Attaches all resources relevant to entity masters (entity resource, entity validation resource, UI resources etc.).

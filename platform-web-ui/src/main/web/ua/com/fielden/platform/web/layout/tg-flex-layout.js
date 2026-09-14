@@ -379,7 +379,8 @@ template.setAttribute('strip-whitespace', '');
                 observer: "_filterChanged"
             },
             _subheaders: {
-                type: Array
+                type: Array,
+                value: () => []
             },
             _htmlElements: {
                 type: Object
@@ -392,8 +393,6 @@ template.setAttribute('strip-whitespace', '');
             "_contextChanged(context.*)"],
 
         ready: function () {
-            this._subheaders = [];
-            
             this._editorErrorHandler = this._editorErrorHandler.bind(this);
             this.addEventListener('editor-error-appeared', this._editorErrorHandler);
         },
@@ -463,11 +462,14 @@ template.setAttribute('strip-whitespace', '');
         _debugChanged: function (newValue, oldValue) {
             this.toggleClass("debug", newValue);
         },
+        // Upper bounds are a hair below the next lower bound rather than a whole pixel below it.
+        // Viewport widths are not necessarily integral -- device pixel ratios and page zoom produce fractional ones --
+        // and a whole-pixel gap leaves widths such as 979.5 matching no query at all.
         _calcMobileQuery: function () {
-            return "max-width: " + (this.$.appConfig.minTabletWidth - 1) + "px";
+            return "max-width: " + (this.$.appConfig.minTabletWidth - 0.02) + "px";
         },
         _calcTabletQuery: function () {
-            return "(min-width: " + this.$.appConfig.minTabletWidth + "px) and (max-width: " + (this.$.appConfig.minDesktopWidth - 1) + "px)";
+            return "(min-width: " + this.$.appConfig.minTabletWidth + "px) and (max-width: " + (this.$.appConfig.minDesktopWidth - 0.02) + "px)";
         },
         _calcDesktopQuery: function () {
             return "min-width: " + this.$.appConfig.minDesktopWidth + "px";

@@ -199,6 +199,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgCentreDiffSerialisationNonPersistentCompositeChild.class);
         add(TgCategoryAttachment.class);
         add(TgDateTestEntity.class);
+        add(TgEntityWithIsPropertyOverriddenId.class);
     }
 
     @Override

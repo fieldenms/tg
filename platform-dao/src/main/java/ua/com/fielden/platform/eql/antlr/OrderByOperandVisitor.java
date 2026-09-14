@@ -20,15 +20,15 @@ final class OrderByOperandVisitor extends AbstractEqlVisitor<Stream<OrderBy1>> {
     }
 
     @Override
-    public Stream<OrderBy1> visitOrderByOperand_Single(final EQLParser.OrderByOperand_SingleContext ctx) {
-        final ISingleOperand1<? extends ISingleOperand2<?>> operand = ctx.singleOperand()
+    public Stream<OrderBy1> visitOrderByOperand_Expr(final EQLParser.OrderByOperand_ExprContext ctx) {
+        final ISingleOperand1<? extends ISingleOperand2<?>> operand = ctx.expr()
                 .accept(new SingleOperandVisitor(transformer));
         return Stream.of(new OrderBy1(operand, isDesc(ctx.order())));
     }
 
     @Override
-    public Stream<OrderBy1> visitYieldOperandConcatOfOrderByOperand_Single(final EQLParser.YieldOperandConcatOfOrderByOperand_SingleContext ctx) {
-        final ISingleOperand1<? extends ISingleOperand2<?>> operand = ctx.singleOperand()
+    public Stream<OrderBy1> visitYieldOperandConcatOfOrderByOperand_Expr(final EQLParser.YieldOperandConcatOfOrderByOperand_ExprContext ctx) {
+        final ISingleOperand1<? extends ISingleOperand2<?>> operand = ctx.expr()
                 .accept(new SingleOperandVisitor(transformer));
         return Stream.of(new OrderBy1(operand, isDesc(ctx.order())));
     }

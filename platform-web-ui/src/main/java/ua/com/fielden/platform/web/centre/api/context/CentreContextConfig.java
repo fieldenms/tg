@@ -9,18 +9,15 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
-/**
- * An entity centre context configuration to be used for determining the parts of an entity centre, which should be serialised to construct an execution context
- * {@link CentreContext} for execution of an associated action.
- *
- * @author TG Team
- *
- */
+/// An entity centre context configuration to be used for determining the parts of an entity centre, which should be serialised to construct an execution context.
+/// The materialised context is [CentreContext] for execution of an associated action.
+///
 public final class CentreContextConfig {
     public final Boolean withCurrentEtity;
     public final Boolean withAllSelectedEntities;
     public final Boolean withSelectionCrit;
     public final Boolean withMasterEntity;
+    public final Boolean withChosenEntity;
     public final Optional<CentreContextConfig> parentCentreContext;
     public final Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computation;
     public final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts = new LinkedHashMap<>();
@@ -30,6 +27,7 @@ public final class CentreContextConfig {
             final boolean withAllSelectedEntities,
             final boolean withSelectionCrit,
             final boolean withMasterEntity,
+            final boolean withChosenEntity,
             final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation,
             final Optional<Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig>> optionalRelatedContexts,
             final Optional<CentreContextConfig> parentCentreContext
@@ -38,6 +36,7 @@ public final class CentreContextConfig {
         this.withAllSelectedEntities = withAllSelectedEntities;
         this.withSelectionCrit = withSelectionCrit;
         this.withMasterEntity = withMasterEntity;
+        this.withChosenEntity = withChosenEntity;
         this.computation = Optional.ofNullable(computation);
         optionalRelatedContexts.ifPresent(relatedContexts -> this.relatedContexts.putAll(relatedContexts));
         this.parentCentreContext = parentCentreContext;
@@ -55,6 +54,7 @@ public final class CentreContextConfig {
         result = prime * result + withCurrentEtity.hashCode();
         result = prime * result + withMasterEntity.hashCode();
         result = prime * result + withSelectionCrit.hashCode();
+        result = prime * result + withChosenEntity.hashCode();
         // WARN: CentreContextConfig instances with referentially different 'computation' values yield different hash codes.
         result = prime * result + computation.hashCode();
         result = prime * result + relatedContexts.hashCode();
@@ -78,6 +78,7 @@ public final class CentreContextConfig {
                 (this.withCurrentEtity == that.withCurrentEtity) &&
                 (this.withMasterEntity == that.withMasterEntity)  &&
                 (this.withSelectionCrit == that.withSelectionCrit) &&
+                (this.withChosenEntity == that.withChosenEntity) &&
                 computation.equals(that.computation) &&
                 relatedContexts.equals(that.relatedContexts) &&
                 parentCentreContext.equals(that.parentCentreContext);
