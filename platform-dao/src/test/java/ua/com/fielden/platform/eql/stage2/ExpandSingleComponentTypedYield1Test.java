@@ -4,7 +4,9 @@ import org.junit.Test;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 
-import static org.junit.Assert.assertEquals;
+import java.math.BigDecimal;
+
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class ExpandSingleComponentTypedYield1Test extends EqlStage2TestCase {
@@ -33,6 +35,32 @@ public class ExpandSingleComponentTypedYield1Test extends EqlStage2TestCase {
                                           .yield().prop("yearlyCost.amount").as("yearlyCost.amount")
                                           .modelAsEntity(TgWorkOrder.class))
                 .model();
+
+        assertEquals(qry(query2), qry(query1));
+    }
+
+    @Test
+    public void nonnullable_hint_is_preserved_when_yield_into_Money_typed_property_with_amount_only_is_transformed() {
+        final var query1 = select(TgWorkOrder.class)
+                .yield().prop("yearlyCost").asRequired("yearlyCost")
+                .modelAsEntity(TgWorkOrder.class);
+
+        final var query2 = select(TgWorkOrder.class)
+                .yield().prop("yearlyCost.amount").asRequired("yearlyCost.amount")
+                .modelAsEntity(TgWorkOrder.class);
+
+        assertEquals(qry(query2), qry(query1));
+    }
+
+    @Test
+    public void nonnullable_hint_is_preserved_when_non_null_value_yielded_into_Money_typed_property_with_amount_only_is_transformed() {
+        final var query1 = select(TgWorkOrder.class)
+                .yield().val(new BigDecimal("100")).asRequired("yearlyCost")
+                .modelAsEntity(TgWorkOrder.class);
+
+        final var query2 = select(TgWorkOrder.class)
+                .yield().val(new BigDecimal("100")).asRequired("yearlyCost.amount")
+                .modelAsEntity(TgWorkOrder.class);
 
         assertEquals(qry(query2), qry(query1));
     }

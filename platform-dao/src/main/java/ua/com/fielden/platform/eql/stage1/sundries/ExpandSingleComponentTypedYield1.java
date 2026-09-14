@@ -47,7 +47,7 @@ public class ExpandSingleComponentTypedYield1 {
                     .map(pm -> {
                         final var subProps = domainMetadata.propertyMetadataUtils().subProperties(pm, SubPropertyNaming.PATH);
                         if (subProps.size() == 1) {
-                            return new Yield1(yield.operand(), subProps.getFirst().name(), false);
+                            return new Yield1(yield.operand(), subProps.getFirst().name(), yield.hasNonnullableHint());
                         }
                         else {
                             return null;
