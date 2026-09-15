@@ -41,6 +41,8 @@ public class ColumnDefinition {
     public final int scale;
     public final int precision;
     public final String defaultValue;
+    /// An SQL expression, present for computed columns in SQL Server.
+    public final Optional<String> maybeExpression;
     public final Optional<ColumnIndex> maybeIndex;
     public final boolean indexApplicable;
 
@@ -55,6 +57,7 @@ public class ColumnDefinition {
             final int scale,
             final int precision,
             final String defaultValue,
+            final Optional<String> maybeExpression,
             final Optional<ColumnIndex> maybeIndex,
             final Dialect dialect)
     {
@@ -71,6 +74,7 @@ public class ColumnDefinition {
         this.scale = scale <= -1 ? DEFAULT_NUMERIC_SCALE : scale;
         this.precision = precision <= -1 ? DEFAULT_NUMERIC_PRECISION : precision;
         this.defaultValue = defaultValue;
+        this.maybeExpression = maybeExpression;
         this.sqlTypeName = sqlTypeName(dialect);
         this.maybeIndex = maybeIndex;
         this.indexApplicable = switch (dbVersion(dialect)) {
@@ -93,15 +97,18 @@ public class ColumnDefinition {
         sb.append(name);
         sb.append(" ");
 
-        sb.append(sqlTypeName);
-
-        if (!ignoreRequiredness && !nullable) {
-            sb.append(" NOT NULL");
+        if (maybeExpression.isPresent()) {
+            sb.append("AS (").append(maybeExpression.get()).append(")");
         }
-
-        if (!defaultValue.isEmpty()) {
-            sb.append(" DEFAULT ");
-            sb.append(defaultValue);
+        else {
+            sb.append(sqlTypeName);
+            if (!ignoreRequiredness && !nullable) {
+                sb.append(" NOT NULL");
+            }
+            if (!defaultValue.isEmpty()) {
+                sb.append(" DEFAULT ");
+                sb.append(defaultValue);
+            }
         }
 
         return sb.toString();

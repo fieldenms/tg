@@ -269,14 +269,22 @@ public class TableDdl {
                         return "";
                     }
                     else {
-                        return "CREATE INDEX %s ON %s(%s %s)".formatted(
-                                indexName(this.tableName, col.name),
-                                this.tableName,
-                                col.name,
-                                switch (index.order()) {
-                                    case ASC -> "ASC";
-                                    case DESC -> "DESC";
-                                });
+                        if (index.maybeExpression().isPresent()) {
+                            return "CREATE INDEX %s on %s %s".formatted(
+                                    indexName(this.tableName, col.name),
+                                    this.tableName,
+                                    index.maybeExpression().get());
+                        }
+                        else {
+                            return "CREATE INDEX %s ON %s(%s %s)".formatted(
+                                    indexName(this.tableName, col.name),
+                                    this.tableName,
+                                    col.name,
+                                    switch (index.order()) {
+                                        case ASC -> "ASC";
+                                        case DESC -> "DESC";
+                                    });
+                        }
                     }
                 }).orElse(""))
                 .filter(s -> !s.isEmpty())
