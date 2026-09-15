@@ -114,6 +114,7 @@ public class ColumnDefinitionExtractor {
                                                             sField.getType(), jdbcSqlTypeFor((Type) hibType),
                                                             sIsProperty.length(), sIsProperty.scale(), sIsProperty.precision(),
                                                             sMapTo.defaultValue(),
+                                                            empty(),
                                                             maybeIndexFor(propUnionEntityType, sField.getType(), sField.getName()),
                                                             dialect);
                             }));
@@ -123,7 +124,7 @@ public class ColumnDefinitionExtractor {
                                        new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                             columnName, propType,
                                                             jdbcSqlTypeFor(t),
-                                                            length, scale, precision, mapTo.defaultValue(),
+                                                            length, scale, precision, mapTo.defaultValue(), empty(),
                                                             maybeIndexFor(enclosingEntityType, propType, propName),
                                                             dialect));
             } else if (hibType instanceof UserType t) {
@@ -131,7 +132,7 @@ public class ColumnDefinitionExtractor {
                                        new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                             columnName, propType,
                                                             jdbcSqlTypeFor(t),
-                                                            length, scale, precision, mapTo.defaultValue(),
+                                                            length, scale, precision, mapTo.defaultValue(), empty(),
                                                             maybeIndexFor(enclosingEntityType, propType, propName),
                                                             dialect));
             } else if (hibType instanceof CompositeUserType compositeUserType) {
@@ -185,7 +186,7 @@ public class ColumnDefinitionExtractor {
 
                                            final Optional<ColumnIndex> sMaybeIndex;
                                            if (RichText.class.isAssignableFrom(propType) && RichText.SEARCH_TEXT.equals(sField.getName())) {
-                                               sMaybeIndex = Optional.of(new ColumnIndex(ASC));
+                                               sMaybeIndex = Optional.of(new ColumnIndex(ASC, empty()));
                                            } else {
                                                sMaybeIndex = maybeIndexFor(sType, sField.getType(), sName);
                                            }
@@ -193,7 +194,7 @@ public class ColumnDefinitionExtractor {
                                            return new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                                        sColumnName, sField.getType(), sSqlType,
                                                                        sLength, sScale, sPrecision,
-                                                                       sMapTo.defaultValue(), sMaybeIndex, dialect);
+                                                                       sMapTo.defaultValue(), empty(), sMaybeIndex, dialect);
                                        })
                 );
             } else {
@@ -208,13 +209,13 @@ public class ColumnDefinitionExtractor {
             final String propName)
     {
         if (isAuditEntityType(enclosingType) && propName.equals(AbstractAuditEntity.AUDIT_DATE) && propType == Date.class) {
-            return Optional.of(new ColumnIndex(DESC));
+            return Optional.of(new ColumnIndex(DESC, empty()));
         }
         if (isPersistentEntityType(propType)
             && !AbstractPersistentEntity.CREATED_BY.equals(propName)
             && !AbstractPersistentEntity.LAST_UPDATED_BY.equals(propName))
         {
-            return Optional.of(new ColumnIndex(ASC));
+            return Optional.of(new ColumnIndex(ASC, empty()));
         }
         else {
             return empty();
