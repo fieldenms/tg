@@ -4,12 +4,15 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
+import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.types.RichText;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -19,10 +22,13 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ua.com.fielden.platform.audit.AuditUtils.isAuditEntityType;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
+import static ua.com.fielden.platform.eql.dbschema.Index.Order.ASC;
+import static ua.com.fielden.platform.eql.dbschema.Index.Order.DESC;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
@@ -69,7 +75,8 @@ public class TableDdl {
     private static final String ID_OVERRIDE_MAP_TO_RULE = " When [id] overrides, only @MapTo(\"_ID\") is permitted (matching the default ID column).";
     private static final String
             ERR_ID_OVERRIDE_NON_DEFAULT_MAP_TO_COLUMN_NAME = "Property [id] in entity type [%s] is annotated with @MapTo(\"%s\")." + ID_OVERRIDE_MAP_TO_RULE,
-            ERR_ID_OVERRIDE_MAP_TO_EMPTY_COLUMN_NAME = "Property [id] in entity type [%s] is annotated with @MapTo without a value (would default to \"ID_\")." + ID_OVERRIDE_MAP_TO_RULE;
+            ERR_ID_OVERRIDE_MAP_TO_EMPTY_COLUMN_NAME = "Property [id] in entity type [%s] is annotated with @MapTo without a value (would default to \"ID_\")." + ID_OVERRIDE_MAP_TO_RULE,
+            WARN_INDEX_NOT_SUPPORTED = "Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s].";
 
     public final Class<? extends AbstractEntity<?>> entityType;
     /// Maps a property path to its column definition.
@@ -79,9 +86,9 @@ public class TableDdl {
 
     public TableDdl(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         this.entityType = entityType;
-        this.columns = populateColumns(columnDefinitionExtractor, entityType);
-        this.indexes = populateIndexes(entityType);
         this.tableName = tableName(entityType);
+        this.columns = populateColumns(columnDefinitionExtractor, entityType);
+        this.indexes = populateIndexes(entityType, columnDefinitionExtractor.dialect());
     }
 
     private static Map<String, ColumnDefinition> populateColumns(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
@@ -201,15 +208,27 @@ public class TableDdl {
     /// uniqueness in that scenario, so skipping the redundant composite index is safe.
     ///
     public List<String> createIndicesSchema(final Dialect dialect) {
-        final Map<Boolean, List<ColumnDefinition>> uniqueAndNot = columnDefinitions().stream().collect(Collectors.partitioningBy(col -> col.unique));
         final List<String> result = new LinkedList<>();
         if (isCompositeEntity(entityType) && hasCompositeKeyMembers()) {
             result.add(createUniqueCompositeIndicesSchema(columnDefinitions().stream(), dialect));
         }
-        result.addAll(createUniqueIndicesSchema(uniqueAndNot.get(true).stream(), dialect));
-        result.addAll(createNonUniqueIndicesSchema(uniqueAndNot.get(false).stream(), dialect));
+        result.addAll(createUniqueIndicesSchema(columnDefinitions().stream().filter(col -> col.unique), dialect));
         result.addAll(indexes.stream().map(this::indexToSql).toList());
         return result;
+    }
+
+    /// Generates DDL statements for all indexes defined on the specified column.
+    ///
+    /// Unique indexes are not included — they are generated as part of [#createIndicesSchema(Dialect)],
+    /// which produces the complete set of indexes for this table.
+    ///
+    /// It is **not** an error for the specified column to be absent from this table — an empty list is returned.
+    ///
+    public List<String> createIndicesSchema(final ColumnDefinition column) {
+        return indexes.stream()
+                .filter(index -> index instanceof Index.Column it && it.column().equals(column.name))
+                .map(this::indexToSql)
+                .collect(toList());
     }
 
     private String indexToSql(final Index index) {
@@ -257,8 +276,7 @@ public class TableDdl {
                 .filter(col -> col.nullable ? MSSQL == dbVersion || POSTGRESQL == dbVersion : true)
                 .filter(col -> {
                     if (!col.indexApplicable) {
-                        LOGGER.warn(() -> "Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s]."
-                                          .formatted(col.sqlTypeName, dbVersion, col.name, entityType.getSimpleName()));
+                        LOGGER.warn(() -> WARN_INDEX_NOT_SUPPORTED.formatted(col.sqlTypeName, dbVersion, col.name, entityType.getSimpleName()));
                         return false;
                     } else {
                         return true;
@@ -280,38 +298,6 @@ public class TableDdl {
                     sb.append(";");
                     return sb.toString();
                 })
-                .collect(toList());
-    }
-
-    public List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
-        final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
-        return cols
-                .map(col -> col.maybeIndex.map(index -> {
-                    if (!col.indexApplicable) {
-                        LOGGER.warn(() -> "Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s]."
-                                          .formatted(col.sqlTypeName, dbVersion, col.name, entityType.getSimpleName()));
-                        return "";
-                    }
-                    else {
-                        if (index.maybeExpression().isPresent()) {
-                            return "CREATE INDEX %s on %s %s".formatted(
-                                    indexName(this.tableName, col.name),
-                                    this.tableName,
-                                    index.maybeExpression().get());
-                        }
-                        else {
-                            return "CREATE INDEX %s ON %s(%s %s)".formatted(
-                                    indexName(this.tableName, col.name),
-                                    this.tableName,
-                                    col.name,
-                                    switch (index.order()) {
-                                        case ASC -> "ASC";
-                                        case DESC -> "DESC";
-                                    });
-                        }
-                    }
-                }).orElse(""))
-                .filter(s -> !s.isEmpty())
                 .collect(toList());
     }
 
@@ -386,8 +372,80 @@ public class TableDdl {
         }
     }
 
-    private List<Index> populateIndexes(final Class<? extends AbstractEntity<?>> entityType) {
-        return List.of();
+    /// Collects definitions of all non-unique indexes for this table.
+    ///
+    /// An index is derived from the property that a column originates from:
+    ///
+    /// - A property of a persistent entity type is indexed in ascending order.
+    ///   Properties [AbstractPersistentEntity#createdBy] and [AbstractPersistentEntity#lastUpdatedBy] are excluded, as their low selectivity makes an index counterproductive.
+    ///   This rule also covers union-typed properties, where each union member has a column of its own.
+    /// - Property [AbstractAuditEntity#auditDate] is indexed in descending order, reflecting the order in which audit records are usually retrieved.
+    /// - Component [RichText#searchText] of a [RichText]-typed property is indexed in ascending order to support searching.
+    ///
+    /// Columns that are unique are skipped — a unique index is generated for them by [#createUniqueIndicesSchema(Stream, Dialect)].
+    /// Columns whose SQL type does not support indexing in the target RDBMS are skipped with a warning.
+    ///
+    private List<Index> populateIndexes(final Class<? extends AbstractEntity<?>> entityType, final Dialect dialect) {
+        final var dbVersion = HibernateHelpers.getDbVersion(dialect);
+        return columns.entrySet().stream()
+                .map(entry -> {
+                    final var property = entry.getKey();
+                    final var col = entry.getValue();
+                    if (!col.unique) {
+                        return indexOrder(entityType, property, col)
+                                .map(order -> {
+                                    if (col.indexApplicable) {
+                                        return Index.Column(indexName(this.tableName, col.name), order, col.name);
+                                    }
+                                    else {
+                                        LOGGER.warn(() -> WARN_INDEX_NOT_SUPPORTED.formatted(col.sqlTypeName, dbVersion, col.name, entityType.getSimpleName()));
+                                        return null;
+                                    }
+                                })
+                                .orElse(null);
+                    }
+                    else {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    /// Determines whether a column, originating from the specified property path, should be indexed, and in what order.
+    /// Refer to [#populateIndexes(Class, Dialect)] for a description of the rules that govern this decision.
+    ///
+    private static Optional<Index.Order> indexOrder(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final String property,
+            final ColumnDefinition column)
+    {
+        if (isAuditEntityType(entityType) && AbstractAuditEntity.AUDIT_DATE.equals(property) && column.javaType == Date.class) {
+            return Optional.of(DESC);
+        }
+        else if (isRichTextSearchText(entityType, property)) {
+            return Optional.of(ASC);
+        }
+        else if (isPersistentEntityType(column.javaType)
+                 && !AbstractPersistentEntity.CREATED_BY.equals(property)
+                 && !AbstractPersistentEntity.LAST_UPDATED_BY.equals(property))
+        {
+            return Optional.of(ASC);
+        }
+        else {
+            return Optional.empty();
+        }
+    }
+
+    /// Returns `true` if the specified property path identifies the `searchText` component of a `RichText`-typed property.
+    ///
+    private static boolean isRichTextSearchText(final Class<? extends AbstractEntity<?>> entityType, final String property) {
+        final int idx = property.lastIndexOf('.');
+        if (idx <= 0 || !RichText.SEARCH_TEXT.equals(property.substring(idx + 1))) {
+            return false;
+        }
+        final Class<?> enclosingPropType = PropertyTypeDeterminator.determinePropertyType(entityType, property.substring(0, idx));
+        return enclosingPropType != null && RichText.class.isAssignableFrom(enclosingPropType);
     }
 
 }

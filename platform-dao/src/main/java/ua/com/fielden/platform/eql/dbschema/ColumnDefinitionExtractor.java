@@ -5,9 +5,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -21,7 +19,6 @@ import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.lang.reflect.Field;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,11 +28,8 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static ua.com.fielden.platform.audit.AuditUtils.isAuditEntityType;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
-import static ua.com.fielden.platform.eql.dbschema.ColumnIndex.Order.ASC;
-import static ua.com.fielden.platform.eql.dbschema.ColumnIndex.Order.DESC;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.jdbcSqlTypeFor;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
@@ -115,7 +109,6 @@ public class ColumnDefinitionExtractor {
                                                             sIsProperty.length(), sIsProperty.scale(), sIsProperty.precision(),
                                                             sMapTo.defaultValue(),
                                                             empty(),
-                                                            maybeIndexFor(propUnionEntityType, sField.getType(), sField.getName()),
                                                             dialect);
                             }));
         } else {
@@ -125,7 +118,6 @@ public class ColumnDefinitionExtractor {
                                                             columnName, propType,
                                                             jdbcSqlTypeFor(t),
                                                             length, scale, precision, mapTo.defaultValue(), empty(),
-                                                            maybeIndexFor(enclosingEntityType, propType, propName),
                                                             dialect));
             } else if (hibType instanceof UserType t) {
                 return ImmutableMap.of(propName,
@@ -133,7 +125,6 @@ public class ColumnDefinitionExtractor {
                                                             columnName, propType,
                                                             jdbcSqlTypeFor(t),
                                                             length, scale, precision, mapTo.defaultValue(), empty(),
-                                                            maybeIndexFor(enclosingEntityType, propType, propName),
                                                             dialect));
             } else if (hibType instanceof CompositeUserType compositeUserType) {
                 final List<Pair<String, Integer>> subProps = jdbcSqlTypeFor(compositeUserType);
@@ -184,17 +175,10 @@ public class ColumnDefinitionExtractor {
                                            final String sColumnName = subProps.size() == 1 ? parentColumn
                                                    : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(sColumnNameSuggestion) ? sName.toUpperCase() : sColumnNameSuggestion));
 
-                                           final Optional<ColumnIndex> sMaybeIndex;
-                                           if (RichText.class.isAssignableFrom(propType) && RichText.SEARCH_TEXT.equals(sField.getName())) {
-                                               sMaybeIndex = Optional.of(new ColumnIndex(ASC, empty()));
-                                           } else {
-                                               sMaybeIndex = maybeIndexFor(sType, sField.getType(), sName);
-                                           }
-
                                            return new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                                        sColumnName, sField.getType(), sSqlType,
                                                                        sLength, sScale, sPrecision,
-                                                                       sMapTo.defaultValue(), empty(), sMaybeIndex, dialect);
+                                                                       sMapTo.defaultValue(), empty(), dialect);
                                        })
                 );
             } else {
@@ -203,23 +187,10 @@ public class ColumnDefinitionExtractor {
         }
     }
 
-    private Optional<ColumnIndex> maybeIndexFor(
-            final Class<?> enclosingType,
-            final Class<?> propType,
-            final String propName)
-    {
-        if (isAuditEntityType(enclosingType) && propName.equals(AbstractAuditEntity.AUDIT_DATE) && propType == Date.class) {
-            return Optional.of(new ColumnIndex(DESC, empty()));
-        }
-        if (isPersistentEntityType(propType)
-            && !AbstractPersistentEntity.CREATED_BY.equals(propName)
-            && !AbstractPersistentEntity.LAST_UPDATED_BY.equals(propName))
-        {
-            return Optional.of(new ColumnIndex(ASC, empty()));
-        }
-        else {
-            return empty();
-        }
+    /// Returns the RDBMS dialect that this extractor generates column definitions for.
+    ///
+    Dialect dialect() {
+        return dialect;
     }
 
     private boolean isNullable(final Class<?> propType, final boolean required) {

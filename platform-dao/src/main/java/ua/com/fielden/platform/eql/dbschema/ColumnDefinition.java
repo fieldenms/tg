@@ -43,7 +43,6 @@ public class ColumnDefinition {
     public final String defaultValue;
     /// An SQL expression, present for computed columns in SQL Server.
     public final Optional<String> maybeExpression;
-    public final Optional<ColumnIndex> maybeIndex;
     public final boolean indexApplicable;
 
     public ColumnDefinition(
@@ -58,7 +57,6 @@ public class ColumnDefinition {
             final int precision,
             final String defaultValue,
             final Optional<String> maybeExpression,
-            final Optional<ColumnIndex> maybeIndex,
             final Dialect dialect)
     {
         if (StringUtils.isEmpty(name)) {
@@ -76,7 +74,6 @@ public class ColumnDefinition {
         this.defaultValue = defaultValue;
         this.maybeExpression = maybeExpression;
         this.sqlTypeName = sqlTypeName(dialect);
-        this.maybeIndex = maybeIndex;
         this.indexApplicable = switch (dbVersion(dialect)) {
             // Not all columns can be indexable.
             // Refer to https://learn.microsoft.com/en-us/sql/t-sql/statements/create-index-transact-sql for more details.
