@@ -74,11 +74,13 @@ public class TableDdl {
     public final Class<? extends AbstractEntity<?>> entityType;
     /// Maps a property path to its column definition.
     private final Map<String, ColumnDefinition> columns;
+    private final List<Index> indexes;
     private final String tableName;
 
     public TableDdl(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         this.entityType = entityType;
         this.columns = populateColumns(columnDefinitionExtractor, entityType);
+        this.indexes = populateIndexes(entityType);
         this.tableName = tableName(entityType);
     }
 
@@ -206,7 +208,29 @@ public class TableDdl {
         }
         result.addAll(createUniqueIndicesSchema(uniqueAndNot.get(true).stream(), dialect));
         result.addAll(createNonUniqueIndicesSchema(uniqueAndNot.get(false).stream(), dialect));
+        result.addAll(indexes.stream().map(this::indexToSql).toList());
         return result;
+    }
+
+    private String indexToSql(final Index index) {
+        return switch (index) {
+            case Index.Column it -> "CREATE INDEX %s ON %s(%s %s)".formatted(
+                    it.name(),
+                    this.tableName,
+                    it.column(),
+                    switch (it.order()) {
+                        case ASC -> "ASC";
+                        case DESC -> "DESC";
+                    });
+            case Index.Expression it -> "CREATE INDEX %s ON %s((%s) %s)".formatted(
+                    it.name(),
+                    this.tableName,
+                    it.expression(),
+                    switch (it.order()) {
+                        case ASC -> "ASC";
+                        case DESC -> "DESC";
+                    });
+        };
     }
 
     /// Returns `true` if any column in this table carries a `@CompositeKeyMember` ordering — that is,
@@ -360,6 +384,10 @@ public class TableDdl {
         } else {
             return mapEntityTo.value();
         }
+    }
+
+    private List<Index> populateIndexes(final Class<? extends AbstractEntity<?>> entityType) {
+        return List.of();
     }
 
 }
