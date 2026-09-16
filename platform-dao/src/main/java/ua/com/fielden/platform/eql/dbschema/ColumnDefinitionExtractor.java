@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
@@ -34,8 +35,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.jdbcSqlTypeFor;
 import static ua.com.fielden.platform.eql.dbschema.TableDdl.mkUnionExprSql;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
@@ -244,6 +244,14 @@ public class ColumnDefinitionExtractor {
     
     static String nameClause(final String propName, final String columnNameSuggestion) {
         return (isNotBlank(columnNameSuggestion) ? columnNameSuggestion : propName.toUpperCase() + "_");
+    }
+
+    public static String mkColumnName(final Class<?> type, final CharSequence property) {
+        final var mapTo = getPropertyAnnotation(MapTo.class, type, property.toString());
+        if (mapTo == null) {
+            throw new InvalidArgumentException("Missing @%s on [%s.%s].".formatted(MapTo.class.getSimpleName(), type.getName(), property));
+        }
+        return nameClause(property.toString(), mapTo.value());
     }
 
 }
