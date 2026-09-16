@@ -437,7 +437,7 @@ public class TableDdl {
         };
     }
 
-    private static String mkUnionExprSql(final Class<? extends AbstractUnionEntity> unionType, final String columnName) {
+    static String mkUnionExprSql(final Class<? extends AbstractUnionEntity> unionType, final String columnName) {
         final var unionProps = Finder.unionProperties(unionType);
         if (unionProps.isEmpty()) {
             throw new EntityDefinitionException(format("%s has no union members.", unionType.getSimpleName()));
@@ -468,9 +468,10 @@ public class TableDdl {
         else if (isRichTextSearchText(entityType, property)) {
             return Optional.of(ASC);
         }
-        else if (isPersistentEntityType(column.javaType)
-                 && !AbstractPersistentEntity.CREATED_BY.equals(property)
-                 && !AbstractPersistentEntity.LAST_UPDATED_BY.equals(property))
+        else if ((isPersistentEntityType(column.javaType)
+                  && !AbstractPersistentEntity.CREATED_BY.equals(property)
+                  && !AbstractPersistentEntity.LAST_UPDATED_BY.equals(property))
+                 || isUnionEntityType(column.javaType))
         {
             return Optional.of(ASC);
         }
