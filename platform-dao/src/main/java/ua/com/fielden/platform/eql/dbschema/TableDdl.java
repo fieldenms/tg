@@ -7,10 +7,13 @@ import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.RichText;
 
@@ -20,6 +23,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.audit.AuditUtils.isAuditEntityType;
@@ -27,11 +32,13 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
+import static ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor.ERR_MISSING_MAP_TO_IN_UNION_ENTITY;
+import static ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor.nameClause;
 import static ua.com.fielden.platform.eql.dbschema.Index.Order.ASC;
 import static ua.com.fielden.platform.eql.dbschema.Index.Order.DESC;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
+import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /// Generates DDL to create a table, primary key, indices (including unique) and foreign key constraints for the specified persistent type.
@@ -387,7 +394,7 @@ public class TableDdl {
     ///
     private List<Index> populateIndexes(final Class<? extends AbstractEntity<?>> entityType, final Dialect dialect) {
         final var dbVersion = HibernateHelpers.getDbVersion(dialect);
-        return columns.entrySet().stream()
+        final var columnIndexes = columns.entrySet().stream()
                 .map(entry -> {
                     final var property = entry.getKey();
                     final var col = entry.getValue();
@@ -410,6 +417,41 @@ public class TableDdl {
                 })
                 .filter(Objects::nonNull)
                 .toList();
+        final var unionExprIndexes = populateUnionIndexes(entityType, this.tableName, dialect);
+        return concatList(columnIndexes, unionExprIndexes);
+    }
+
+    private static List<Index> populateUnionIndexes(final Class<? extends AbstractEntity<?>> entityType, final String tableName, final Dialect dialect) {
+        return switch (HibernateHelpers.getDbVersion(dialect)) {
+            case POSTGRESQL -> findRealProperties(entityType, MapTo.class)
+                    .stream()
+                    .filter(prop -> isUnionEntityType(prop.getType()))
+                    .map(prop -> {
+                        final var mapTo = getPropertyAnnotation(MapTo.class, entityType, prop.getName());
+                        final var colName = nameClause(prop.getName(), mapTo.value());
+                        final var expr = mkUnionExprSql((Class<? extends AbstractUnionEntity>) prop.getType(), colName);
+                        return Index.Expression(indexName(tableName, colName), Index.Order.ASC, expr);
+                    })
+                    .toList();
+            default -> List.of();
+        };
+    }
+
+    private static String mkUnionExprSql(final Class<? extends AbstractUnionEntity> unionType, final String columnName) {
+        final var unionProps = Finder.unionProperties(unionType);
+        if (unionProps.isEmpty()) {
+            throw new EntityDefinitionException(format("%s has no union members.", unionType.getSimpleName()));
+        }
+        return unionProps.stream()
+                .map(member -> {
+                    final var sMapTo = getAnnotation(member, MapTo.class);
+                    if (sMapTo == null) {
+                        throw new DbSchemaException(ERR_MISSING_MAP_TO_IN_UNION_ENTITY.formatted(member.getName(), unionType));
+                    }
+                    final var memberCol = columnName + "_" + (isEmpty(sMapTo.value()) ? member.getName().toUpperCase() : sMapTo.value());
+                    return "WHEN %s IS NOT NULL THEN %s".formatted(memberCol, memberCol);
+                })
+                .collect(joining(" ", "CASE ", " END"));
     }
 
     /// Determines whether a column, originating from the specified property path, should be indexed, and in what order.
