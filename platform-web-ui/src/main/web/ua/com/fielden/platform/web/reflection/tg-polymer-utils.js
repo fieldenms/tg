@@ -320,17 +320,74 @@ export const containsRestrictedTags = function (htmlText) {
 }
 
 /**
- * Returns 'true' if client application was loaded on mobile device, 'false' otherwise (see AbstractWebResource and DeviceProfile for more details).
- * 
- * It is recommended to use word "Mobi" for mobile device detection, see https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent for more info.
- * 
+ * Device profiles supported by the application.
+ *
+ * The values must stay equal to the names of 'ua.com.fielden.platform.web.interfaces.DeviceProfile' constants:
+ * the server resolves a request's profile by comparing the 'Device-Profile' header against them, so renaming a
+ * value here silently makes every request resolve to DESKTOP.
+ */
+export const DeviceProfile = Object.freeze({
+    MOBILE: 'MOBILE',
+    DESKTOP: 'DESKTOP'
+});
+
+/**
+ * Name of the request header that carries the resolved device profile to the server.
+ * Server-side counterpart is AbstractWebResource.DEVICE_PROFILE_HEADER.
+ */
+export const DEVICE_PROFILE_HEADER = 'Device-Profile';
+
+/**
+ * The largest short screen edge, in CSS pixels, that still indicates a phone.
+ *
+ * Matches Android's 'sw600dp' convention and has a wide margin on either side: the largest phones sit near 430,
+ * and the smallest tablet (iPad mini) at 744, so nothing real occupies the gap.
+ */
+const MOBILE_MAX_SHORT_EDGE = 600;
+
+/**
+ * Device profile of this client application, resolved on first access.
+ */
+let _deviceProfile;
+
+/**
+ * Returns the device profile of this client application -- one of the 'DeviceProfile' values.
+ * It is resolved from hardware capabilities on first access and cached for the lifetime of the page.
+ *
+ * Caching is what makes the value usable as an identity: it is sent to the server with every request and, on
+ * the server, selects the main menu and namespaces Entity Centre configurations. Were it recomputed, moving the
+ * window to a display of a different size could change it mid-session.
+ *
+ * The two conditions below do one job each. A coarse pointer means the device is touch-operated, which excludes
+ * desktops and laptops whatever their resolution or display scaling. The short screen edge then separates a phone
+ * from a tablet, which is touch-operated as well but large enough for the full application.
+ *
+ * 'screen' is used rather than 'window.innerWidth' because the viewport changes with resizing, split-screen and
+ * browser chrome. Taking the smaller of the two screen dimensions makes the result orientation-invariant.
+ */
+export const deviceProfile = function () {
+    if (_deviceProfile === undefined) {
+        const coarsePointer = window.matchMedia('(any-pointer: coarse)').matches;
+        const shortEdge = Math.min(window.screen.width, window.screen.height);
+        _deviceProfile = coarsePointer && shortEdge < MOBILE_MAX_SHORT_EDGE ? DeviceProfile.MOBILE : DeviceProfile.DESKTOP;
+    }
+    return _deviceProfile;
+};
+
+/**
+ * Returns 'true' if client application was loaded on a phone, 'false' otherwise (see AbstractWebResource and DeviceProfile for more details).
+ *
+ * The same profile is sent to the server as the 'Device-Profile' request header, so client and server can never
+ * disagree. There are two device profiles, which makes this a phone-or-not question rather than a device-type one:
+ * tablets are large enough for the full application and are not mobile apps.
+ *
  * It is very important not to confuse this function with MOBILE / TABLET / DESKTOP layouts (tg-tile-layout, tg-flex-layout).
  * These three layout modes can be used in 'desktop' application when resizing application window.
  * Two of these modes can be used for 'mobile' application: MOBILE / TABLET.
  * TABLET is activated commonly when landscape orientation is used for mobile device.
  */
 export const isMobileApp = function () {
-    return window.navigator.userAgent.includes('Mobi'); // consistent with AbstractWebResource.calculateDeviceProfile method
+    return deviceProfile() === DeviceProfile.MOBILE; // consistent with AbstractWebResource.calculateDeviceProfile method
 };
 
 /**
