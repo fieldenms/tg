@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.dbschema;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Streams;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
@@ -10,7 +11,6 @@ import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -19,11 +19,10 @@ import ua.com.fielden.platform.types.RichText;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static java.util.Comparator.comparing;
+import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -84,6 +83,7 @@ public class TableDdl {
     private static final String
             ERR_ID_OVERRIDE_NON_DEFAULT_MAP_TO_COLUMN_NAME = "Property [id] in entity type [%s] is annotated with @MapTo(\"%s\")." + ID_OVERRIDE_MAP_TO_RULE,
             ERR_ID_OVERRIDE_MAP_TO_EMPTY_COLUMN_NAME = "Property [id] in entity type [%s] is annotated with @MapTo without a value (would default to \"ID_\")." + ID_OVERRIDE_MAP_TO_RULE,
+            ERR_UNION_ENTITY_HAS_NO_UNION_MEMBERS = "Union entity type [%s] has no union members.",
             WARN_INDEX_NOT_SUPPORTED = "Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s].";
 
     public final Class<? extends AbstractEntity<?>> entityType;
@@ -176,7 +176,7 @@ public class TableDdl {
     public String createTableSchema(final Dialect dialect) {
         final var sb = new StringBuilder();
         sb.append("CREATE TABLE %s ( ".formatted(this.tableName));
-        sb.append(columnDefinitions().stream().map(col -> col.schemaString(dialect)).collect(Collectors.joining(", ")));
+        sb.append(columnDefinitions().stream().map(col -> col.schemaString(dialect)).collect(joining(", ")));
         sb.append(" );");
         return sb.toString();
     }
@@ -186,8 +186,10 @@ public class TableDdl {
     /// * It is considered an error if the `property` is not contained within this table.
     /// * If the `property` is **component-typed**, the path must be a full path to the component.
     ///   For example, `note.coreText` for the property `note: RichText`.
-    /// * If the `property` is **union-typed**, the path must be a full path to a union member.
-    ///   For example, `location.workshop` for the union-typed property `location: Location`, where union members are `workshop` and `station`.
+    /// * If the `property` is **union-typed**, the path must represent either the union-typed property itself or one of the union members.
+    ///   For example, `location`, or `location.workshop`, or `location.station` for the union-typed property `location: Location`, where union members are `workshop` and `station`.
+    ///   Only on SQL Server the name of the union-typed property itself resolves, representing a computed column.
+    ///   PostgreSQL has no such column, as it indexes the expression directly, so there bare `location` does not resolve.
     /// * Otherwise, the path must be a simple property name.
     ///
     /// @param property the property path
@@ -207,22 +209,17 @@ public class TableDdl {
         return Optional.ofNullable(columns.get(property));
     }
 
-    /// Generates DDL statements for all unique and non-unique indices, including those representing a business key.
+    /// Generates DDL statements for all unique and non-unique indices.
     ///
-    /// For composite-key entities a unique index over all `@CompositeKeyMember` columns is emitted, but only when
-    /// at least one such column is present in this table. This guard matters when the only declared composite key
-    /// member is the overridden `id` property: its `@CompositeKeyMember` is dismissed (see the class javadoc),
-    /// so emitting the index would produce an empty column list — invalid SQL. The PK on `_ID` already enforces
-    /// uniqueness in that scenario, so skipping the redundant composite index is safe.
+    /// For a composite key, a unique index over all key member columns is created.
+    /// Importantly, when the only declared composite key member is the overridden `id`: its `@CompositeKeyMember` is dismissed (see the class javadoc),
+    /// so creating the index would produce an empty column list — invalid SQL.
+    /// The PK on `_ID` already enforces uniqueness in that scenario, so skipping the redundant composite index is safe.
     ///
     public List<String> createIndicesSchema(final Dialect dialect) {
-        final List<String> result = new LinkedList<>();
-        if (isCompositeEntity(entityType) && hasCompositeKeyMembers()) {
-            result.add(createUniqueCompositeIndicesSchema(columnDefinitions().stream(), dialect));
-        }
-        result.addAll(createUniqueIndicesSchema(columnDefinitions().stream().filter(col -> col.unique), dialect));
-        result.addAll(indexes.stream().map(this::indexToSql).toList());
-        return result;
+        return concatList(mkCompositeKeyIndex(columnDefinitions()).map(List::of).orElseGet(Collections::emptyList),
+                          mkUniqueIndexes(columnDefinitions(), dialect),
+                          indexes.stream().map(this::indexToSql).toList());
     }
 
     /// Generates DDL statements for all indexes defined on the specified column.
@@ -267,21 +264,26 @@ public class TableDdl {
         return columnDefinitions().stream().anyMatch(col -> col.compositeKeyMemberOrder.isPresent());
     }
 
-    private String createUniqueCompositeIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
-        final String tableName = tableName(entityType);
-        final String keyMembersStr = cols
-                .filter(col -> col.compositeKeyMemberOrder.isPresent())
-                .sorted(Comparator.comparingInt(col -> col.compositeKeyMemberOrder.get()))
-                .map(col -> col.name)
-                .collect(Collectors.joining(", "));
-        return "CREATE UNIQUE INDEX KUI_%1$s ON %1$s(%2$s);".formatted(this.tableName, keyMembersStr);
+    private Optional<String> mkCompositeKeyIndex(final Iterable<ColumnDefinition> cols) {
+        if (isCompositeEntity(entityType) && hasCompositeKeyMembers()) {
+            final var keyMembersStr = Streams.stream(cols)
+                    .filter(col -> col.compositeKeyMemberOrder.isPresent())
+                    .sorted(comparingInt(col -> col.compositeKeyMemberOrder.get()))
+                    .map(col -> col.name)
+                    .collect(joining(", "));
+            return Optional.of("CREATE UNIQUE INDEX KUI_%1$s ON %1$s(%2$s);".formatted(this.tableName, keyMembersStr));
+        }
+        else {
+            return Optional.empty();
+        }
     }
 
-    private List<String> createUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
-        final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
-        return cols
+    private List<String> mkUniqueIndexes(final Iterable<ColumnDefinition> cols, final Dialect dialect) {
+        final var dbVersion = HibernateHelpers.getDbVersion(dialect);
+        return Streams.stream(cols)
+                .filter(col -> col.unique)
                 // We know how to create unique indexes for nullable columns in case of SQL Server and PostgreSQL.
-                .filter(col -> col.nullable ? MSSQL == dbVersion || POSTGRESQL == dbVersion : true)
+                .filter(col -> !col.nullable || MSSQL == dbVersion || POSTGRESQL == dbVersion)
                 .filter(col -> {
                     if (!col.indexApplicable) {
                         LOGGER.warn(() -> WARN_INDEX_NOT_SUPPORTED.formatted(col.sqlTypeName, dbVersion, col.name, entityType.getSimpleName()));
@@ -306,7 +308,7 @@ public class TableDdl {
                     sb.append(";");
                     return sb.toString();
                 })
-                .collect(toList());
+                .toList();
     }
 
     /// Returns the name of an index for the specified column.
@@ -318,13 +320,7 @@ public class TableDdl {
     }
 
     /// Returns the name of an index for the specified `property`.
-    ///
-    /// * It is considered an error if the `property` is not contained within this table.
-    /// * If the `property` is **component-typed**, the path must be a full path to the component.
-    ///   For example, `note.coreText` for the property `note: RichText`.
-    /// * If the `property` is **union-typed**, the path must be a full path to a union member.
-    ///   For example, `location.workshop` for the union-typed property `location: Location`, where union members are `workshop` and `station`.
-    /// * Otherwise, the path must be a simple property name.
+    /// The `property` is resolved to a column as described by [#getColumnDefinition(String)].
     ///
     /// @param property  a property path.
     ///
@@ -390,7 +386,7 @@ public class TableDdl {
     /// - Property [AbstractAuditEntity#auditDate] is indexed in descending order, reflecting the order in which audit records are usually retrieved.
     /// - Component [RichText#searchText] of a [RichText]-typed property is indexed in ascending order to support searching.
     ///
-    /// Columns that are unique are skipped — a unique index is generated for them by [#createUniqueIndicesSchema(Stream, Dialect)].
+    /// Columns that are unique are skipped — a unique index is generated for them by [#mkUniqueIndexes(Stream, Dialect)].
     /// Columns whose SQL type does not support indexing in the target RDBMS are skipped with a warning.
     ///
     private List<Index> populateIndexes(final Class<? extends AbstractEntity<?>> entityType, final Dialect dialect) {
@@ -441,7 +437,7 @@ public class TableDdl {
     static String mkUnionExprSql(final Class<? extends AbstractUnionEntity> unionType, final String columnName) {
         final var unionProps = unionProperties(unionType).stream().sorted(comparing(Field::getName)).toList();
         if (unionProps.isEmpty()) {
-            throw new EntityDefinitionException(format("%s has no union members.", unionType.getSimpleName()));
+            throw new EntityDefinitionException(ERR_UNION_ENTITY_HAS_NO_UNION_MEMBERS.formatted(unionType.getTypeName()));
         }
         return unionProps.stream()
                 .map(member -> {
