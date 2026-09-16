@@ -131,6 +131,22 @@ public class TableDdlTest {
     }
 
     @Test
+    public void union_typed_property_yields_a_computed_column_with_an_index_on_SQL_Server() {
+        assertThat(Ddl.of(MSSQL, Entity_WithUnion.class).tableDdl().getColumnDefinition("place").maybeExpression)
+                .contains("CASE WHEN PLACE__SIMPLE IS NOT NULL THEN PLACE__SIMPLE WHEN PLACE__REFS IS NOT NULL THEN PLACE__REFS END");
+        assertThat(Ddl.of(MSSQL, Entity_WithUnion.class).table())
+                .isEqualTo("CREATE TABLE ENTITY_WITHUNION_ ( " +
+                           "_ID bigint NOT NULL, " +
+                           "KEY_ varchar(255) NOT NULL, " +
+                           "_VERSION bigint NOT NULL DEFAULT 0, " +
+                           "PLACE_ AS (CASE WHEN PLACE__SIMPLE IS NOT NULL THEN PLACE__SIMPLE WHEN PLACE__REFS IS NOT NULL THEN PLACE__REFS END), " +
+                           "PLACE__SIMPLE bigint, " +
+                           "PLACE__REFS bigint );");
+        assertThat(Ddl.of(MSSQL, Entity_WithUnion.class).indexes())
+                .contains("CREATE INDEX I_ENTITY_WITHUNION__PLACE_ ON ENTITY_WITHUNION_(PLACE_ ASC)");
+    }
+
+    @Test
     public void component_typed_property_yields_a_column_per_component() {
         assertThat(Ddl.of(POSTGRESQL, Entity_WithRichText.class).table())
                 .isEqualTo("CREATE TABLE ENTITY_WITHRICHTEXT_ ( " +
