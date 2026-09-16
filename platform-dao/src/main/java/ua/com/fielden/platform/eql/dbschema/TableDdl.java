@@ -238,7 +238,7 @@ public class TableDdl {
 
     private String indexToSql(final Index index) {
         return switch (index) {
-            case Index.Column it -> "CREATE INDEX %s ON %s(%s %s)".formatted(
+            case Index.Column it -> "CREATE INDEX %s ON %s(%s %s);".formatted(
                     it.name(),
                     this.tableName,
                     it.column(),
@@ -246,7 +246,7 @@ public class TableDdl {
                         case ASC -> "ASC";
                         case DESC -> "DESC";
                     });
-            case Index.Expression it -> "CREATE INDEX %s ON %s((%s) %s)".formatted(
+            case Index.Expression it -> "CREATE INDEX %s ON %s((%s) %s);".formatted(
                     it.name(),
                     this.tableName,
                     it.expression(),
