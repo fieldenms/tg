@@ -248,6 +248,44 @@ public class TableDdlTest {
                           "CREATE INDEX I_ENTITY_WITHUNION__PLACE__REFS ON ENTITY_WITHUNION_(PLACE__REFS ASC)");
     }
 
+    /// A union-typed key member is represented in the business key by one column per union member, in every RDBMS.
+    /// The computed column that SQL Server uses for the union's `id` is derived from those member columns,
+    /// so including it would widen the key index without strengthening it.
+    ///
+    @Test
+    public void union_typed_composite_key_member_contributes_one_key_column_per_union_member() {
+        final var keyIndex = "CREATE UNIQUE INDEX KUI_ENTITY_WITHUNIONKEYMEMBER_ ON ENTITY_WITHUNIONKEYMEMBER_(PLACE__SIMPLE, PLACE__REFS, NAME_);";
+        assertThat(Ddl.of(H2, Entity_WithUnionKeyMember.class).indexes()).contains(keyIndex);
+        assertThat(Ddl.of(POSTGRESQL, Entity_WithUnionKeyMember.class).indexes()).contains(keyIndex);
+        assertThat(Ddl.of(MSSQL, Entity_WithUnionKeyMember.class).indexes()).contains(keyIndex);
+    }
+
+    @Test
+    public void computed_column_for_a_union_typed_key_member_is_indexed_on_its_own_on_SQL_Server() {
+        assertThat(Ddl.of(MSSQL, Entity_WithUnionKeyMember.class).indexes())
+                .containsExactlyInAnyOrder(
+                        "CREATE UNIQUE INDEX KUI_ENTITY_WITHUNIONKEYMEMBER_ ON ENTITY_WITHUNIONKEYMEMBER_(PLACE__SIMPLE, PLACE__REFS, NAME_);",
+                        "CREATE INDEX I_ENTITY_WITHUNIONKEYMEMBER__PLACE_ ON ENTITY_WITHUNIONKEYMEMBER_(PLACE_ ASC)",
+                        "CREATE INDEX I_ENTITY_WITHUNIONKEYMEMBER__PLACE__SIMPLE ON ENTITY_WITHUNIONKEYMEMBER_(PLACE__SIMPLE ASC)",
+                        "CREATE INDEX I_ENTITY_WITHUNIONKEYMEMBER__PLACE__REFS ON ENTITY_WITHUNIONKEYMEMBER_(PLACE__REFS ASC)");
+    }
+
+    /// Uniqueness of a union-typed property is enforced per union member.
+    /// Entity IDs are unique across all tables, so two records can collide on the union's `id` only by colliding on
+    /// the same member column — which makes the per-member unique indices equivalent to a unique index on the union's `id`.
+    ///
+    @Test
+    public void unique_union_typed_property_is_uniquely_indexed_per_union_member() {
+        assertThat(Ddl.of(POSTGRESQL, Entity_WithUniqueUnion.class).indexes())
+                .contains(
+                        "CREATE UNIQUE INDEX UI_ENTITY_WITHUNIQUEUNION__PLACE__SIMPLE ON ENTITY_WITHUNIQUEUNION_(PLACE__SIMPLE) WHERE (PLACE__SIMPLE IS NOT NULL);",
+                        "CREATE UNIQUE INDEX UI_ENTITY_WITHUNIQUEUNION__PLACE__REFS ON ENTITY_WITHUNIQUEUNION_(PLACE__REFS) WHERE (PLACE__REFS IS NOT NULL);");
+        assertThat(Ddl.of(MSSQL, Entity_WithUniqueUnion.class).indexes())
+                .contains(
+                        "CREATE UNIQUE INDEX UI_ENTITY_WITHUNIQUEUNION__PLACE__SIMPLE ON ENTITY_WITHUNIQUEUNION_(PLACE__SIMPLE) WHERE (PLACE__SIMPLE IS NOT NULL);",
+                        "CREATE UNIQUE INDEX UI_ENTITY_WITHUNIQUEUNION__PLACE__REFS ON ENTITY_WITHUNIQUEUNION_(PLACE__REFS) WHERE (PLACE__REFS IS NOT NULL);");
+    }
+
     @Test
     public void only_the_search_text_component_of_a_RichText_property_is_indexed() {
         assertThat(Ddl.of(H2, Entity_WithRichText.class).indexes())
@@ -320,6 +358,21 @@ public class TableDdlTest {
         assertThat(ddl.getColumnDefinition("note.searchText").name).isEqualTo("NOTE_SEARCHTEXT");
         assertThat(ddl.getColumnDefinitionOpt("note.searchText")).isPresent();
         assertThat(ddl.getColumnDefinitionOpt("note")).isEmpty();
+    }
+
+    /// Only SQL Server has a column of its own for the union's `id`, so only there does the name of a union-typed
+    /// property resolve to a column. Union members resolve in every RDBMS.
+    ///
+    @Test
+    public void a_union_typed_property_is_addressable_by_its_own_name_only_on_SQL_Server() {
+        assertThat(Ddl.of(MSSQL, Entity_WithUnion.class).tableDdl().getColumnDefinitionOpt("place")).isPresent();
+        assertThat(Ddl.of(POSTGRESQL, Entity_WithUnion.class).tableDdl().getColumnDefinitionOpt("place")).isEmpty();
+        assertThat(Ddl.of(H2, Entity_WithUnion.class).tableDdl().getColumnDefinitionOpt("place")).isEmpty();
+
+        for (final var dbVersion : List.of(MSSQL, POSTGRESQL, H2)) {
+            assertThat(Ddl.of(dbVersion, Entity_WithUnion.class).tableDdl().getColumnDefinitionOpt("place.simple")).isPresent();
+            assertThat(Ddl.of(dbVersion, Entity_WithUnion.class).tableDdl().getColumnDefinitionOpt("place.withRefs")).isPresent();
+        }
     }
 
     @Test
