@@ -285,6 +285,15 @@ public class TableDdlTest {
         assertThat(ddl.getIndexName(ddl.getColumnDefinition("withCustomColumnName"))).isEqualTo("I_REFS_TABLE_OTHER_");
     }
 
+    @Test
+    public void expression_index_is_created_for_union_typed_properties_on_PostgreSQL_only() {
+        final var unionExprIndex = "CREATE INDEX I_ENTITY_WITHUNION__PLACE_ ON ENTITY_WITHUNION_" +
+                      "((CASE WHEN PLACE__SIMPLE IS NOT NULL THEN PLACE__SIMPLE WHEN PLACE__REFS IS NOT NULL THEN PLACE__REFS END) ASC)";
+        assertThat(Ddl.of(POSTGRESQL, Entity_WithUnion.class).indexes()).contains(unionExprIndex);
+        assertThat(Ddl.of(MSSQL, Entity_WithUnion.class).indexes())
+                .doesNotContain(unionExprIndex);
+    }
+
     // ------------------------------------------------------------------------------------------------------------
     // Column definitions
     // ------------------------------------------------------------------------------------------------------------

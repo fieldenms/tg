@@ -43,7 +43,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 ///
 public class ColumnDefinitionExtractor {
 
-    private static final String
+    static final String
             ERR_UNEXPECTED_HIB_TYPE = "Unexpected Hibernate type [%s] for property [%s.%s].",
             ERR_MISSING_MAP_TO_IN_UNION_ENTITY = "Property [%s] in union entity type [%s] is not annotated MapTo.",
             ERR_MISSING_IS_PROP_IN_UNION_ENTITY = "Property [%s] in union entity type [%s] is not annotated IsProperty.",
@@ -218,7 +218,7 @@ public class ColumnDefinitionExtractor {
         return of(first(columns.values()).orElseThrow());
     }
     
-    private String nameClause(final String propName, final String columnNameSuggestion) {
+    static String nameClause(final String propName, final String columnNameSuggestion) {
         return (isNotBlank(columnNameSuggestion) ? columnNameSuggestion : propName.toUpperCase() + "_");
     }
 
