@@ -13,7 +13,6 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.RichText;
 
@@ -24,11 +23,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.audit.AuditUtils.isAuditEntityType;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
@@ -438,7 +439,7 @@ public class TableDdl {
     }
 
     static String mkUnionExprSql(final Class<? extends AbstractUnionEntity> unionType, final String columnName) {
-        final var unionProps = Finder.unionProperties(unionType);
+        final var unionProps = unionProperties(unionType).stream().sorted(comparing(Field::getName)).toList();
         if (unionProps.isEmpty()) {
             throw new EntityDefinitionException(format("%s has no union members.", unionType.getSimpleName()));
         }
