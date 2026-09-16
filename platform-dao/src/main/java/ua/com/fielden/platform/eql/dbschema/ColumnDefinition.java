@@ -43,6 +43,7 @@ public class ColumnDefinition {
     public final String defaultValue;
     /// An SQL expression, present for computed columns in SQL Server.
     public final Optional<String> maybeExpression;
+    /// Indicates whether the RDBMS supports an index on a column of this type.
     public final boolean indexApplicable;
 
     public ColumnDefinition(
@@ -75,7 +76,7 @@ public class ColumnDefinition {
         this.maybeExpression = maybeExpression;
         this.sqlTypeName = sqlTypeName(dialect);
         this.indexApplicable = switch (dbVersion(dialect)) {
-            // Not all columns can be indexable.
+            // Not all columns are indexable.
             // Refer to https://learn.microsoft.com/en-us/sql/t-sql/statements/create-index-transact-sql for more details.
             case MSSQL -> switch (sqlType) {
                 case Types.VARCHAR, Types.VARBINARY, Types.NVARCHAR -> length != Integer.MAX_VALUE && !sqlTypeName.toLowerCase().contains("max");
