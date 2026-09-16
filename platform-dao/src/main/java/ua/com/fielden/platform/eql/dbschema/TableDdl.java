@@ -328,7 +328,7 @@ public class TableDdl {
         return getIndexName(getColumnDefinition(property.toString()));
     }
 
-    private static String indexName(final CharSequence tableName, final CharSequence columnName) {
+    public static String indexName(final CharSequence tableName, final CharSequence columnName) {
         return "I_%s_%s".formatted(tableName, columnName);
     }
 
@@ -434,7 +434,7 @@ public class TableDdl {
         };
     }
 
-    static String mkUnionExprSql(final Class<? extends AbstractUnionEntity> unionType, final String columnName) {
+    public static String mkUnionExprSql(final Class<? extends AbstractUnionEntity> unionType, final String columnName) {
         final var unionProps = unionProperties(unionType).stream().sorted(comparing(Field::getName)).toList();
         if (unionProps.isEmpty()) {
             throw new EntityDefinitionException(ERR_UNION_ENTITY_HAS_NO_UNION_MEMBERS.formatted(unionType.getTypeName()));

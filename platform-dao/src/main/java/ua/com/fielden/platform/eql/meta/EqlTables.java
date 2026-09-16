@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
@@ -30,6 +31,14 @@ public class EqlTables {
 
     public @Nullable EqlTable getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType) {
         return tables.get(DynamicEntityClassLoader.getOriginalType(entityType));
+    }
+
+    public EqlTable getTableForEntityTypeOrThrow(final Class<? extends AbstractEntity<?>> entityType) {
+        final var table = getTableForEntityType(entityType);
+        if (table == null) {
+            throw new InvalidArgumentException("No table for [%s].".formatted(entityType.getSimpleName()));
+        }
+        return table;
     }
 
     private static EqlTable generateEqlTable(final PropertyMetadataUtils pmUtils, final EntityMetadata.Persistent entityMetadata) {
