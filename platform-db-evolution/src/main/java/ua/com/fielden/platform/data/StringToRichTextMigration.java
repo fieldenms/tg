@@ -313,8 +313,8 @@ public final class StringToRichTextMigration {
                     .flatMap(sql -> Stream.of(sql, batchDelimiter))
                     .forEach(sqlConsumer);
             // Create indices for RichText components.
-            tableDdl.createNonUniqueIndicesSchema(Stream.of(formattedTextColDef, coreTextColDef, searchTextColDef), dialect)
-                    .stream()
+            Stream.of(formattedTextColDef, coreTextColDef, searchTextColDef)
+                    .flatMap(colDef -> tableDdl.createIndicesSchema(colDef).stream())
                     .flatMap(sql -> Stream.of(sql, batchDelimiter))
                     .forEach(sqlConsumer);
 
@@ -405,7 +405,7 @@ public final class StringToRichTextMigration {
                             sqlConsumer.accept(batchDelimiter);
                             sqlConsumer.accept("\n");
 
-                            final var indicesSql = tableDdl.createNonUniqueIndicesSchema(Stream.of(colDef), dialect)
+                            final var indicesSql = tableDdl.createIndicesSchema(colDef)
                                     .stream()
                                     .flatMap(sql -> Stream.of(sql, batchDelimiter))
                                     .toList();
