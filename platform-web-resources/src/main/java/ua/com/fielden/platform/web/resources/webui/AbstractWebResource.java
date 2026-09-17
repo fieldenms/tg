@@ -62,7 +62,7 @@ public abstract class AbstractWebResource extends ServerResource {
     ///
     private static DeviceProfile calculateDeviceProfile(final Request request) {
         final String profile = request.getHeaders().getFirstValue(DEVICE_PROFILE_HEADER, /*ignore case*/ true);
-        return MOBILE.name().equals(profile) ? MOBILE : DESKTOP;
+        return MOBILE.name().equalsIgnoreCase(profile) ? MOBILE : DESKTOP;
     }
 
     /// Returns the [DeviceProfile] that is associated with this source request.
