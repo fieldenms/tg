@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.mcp;
 
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
@@ -20,12 +21,12 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.test.TestWebApplication;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.mcp.TgMcpServer.QUERY_GUIDE_RESOURCE_URI;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertInstanceOf;
 
@@ -64,7 +65,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     }
 
     @Test
-    public void tool_execute_query() {
+    public void tool_execute_query() throws Exception {
         final var result = executeQuery(
                 """
                 {
@@ -81,9 +82,60 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
                 }
                 """);
         assertFalse(result.isError());
+
+        // There were no errors, so "data" is the only member of the response document.
+        final Map<String, Object> structuredContent = assertInstanceOf(Map.class, result.structuredContent());
+        assertThat(structuredContent).containsOnlyKeys("data");
+
+        // The shape of "data" follows the shape of the selection set.
+        final Map<String, Object> data = assertInstanceOf(Map.class, structuredContent.get("data"));
+        assertThat(data).containsOnlyKeys("tgVehicle");
+        final List<Object> vehicles = assertInstanceOf(List.class, data.get("tgVehicle"));
+        // The query specifies no ordering, so the order of vehicles is not asserted.
+        // Values are typed as they arrive from JSON: Money is coerced to a number, and thus arrives as Double.
+        assertThat(vehicles).containsExactlyInAnyOrder(
+                Map.of("price", 500.0,
+                       "active", true,
+                       "model", Map.of("make", Map.of("key", "AUDI"),
+                                       "makeModelsCount", 1)),
+                Map.of("price", 450.0,
+                       "active", true,
+                       "model", Map.of("make", Map.of("key", "MERC"),
+                                       "makeModelsCount", 1)));
+
+        // Unstructured content is derived from structured content, so both must agree.
         assertThat(result.content()).hasSize(1);
-        assertThat(result.content().getFirst()).isInstanceOf(McpSchema.TextContent.class);
-        assertThat(((McpSchema.TextContent) result.content().getFirst()).text()).isNotEmpty();
+        final var textContent = assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst());
+        assertEquals(structuredContent, new JsonMapper().readValue(textContent.text(), Map.class));
+    }
+
+    /// A query that could not be validated is reported in `errors`, and is a successful tool call.
+    ///
+    @Test
+    public void tool_execute_query_with_invalid_query() {
+        final var result = executeQuery("{ thereIsNoSuchEntity { key } }");
+        assertFalse(result.isError());
+
+        final Map<String, Object> structuredContent = assertInstanceOf(Map.class, result.structuredContent());
+        assertThat(assertInstanceOf(List.class, structuredContent.get("errors"))).isNotEmpty();
+        // GraphQL prescribes the absence of "data" if a request fails before execution begins.
+        assertThat(structuredContent).doesNotContainKey("data");
+    }
+
+    @Test
+    public void tool_execute_query_without_query_argument() {
+        final var result = mcpClient.callTool(new McpSchema.CallToolRequest("execute_query", Map.of()));
+        assertTrue(result.isError());
+        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("[query]");
+    }
+
+    @Test
+    public void tool_execute_query_with_malformed_variables_argument() {
+        final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
+                "execute_query",
+                Map.of("query", "{ tgVehicle { key } }", "variables", "not an object")));
+        assertTrue(result.isError());
+        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("[variables]");
     }
 
     @Test
