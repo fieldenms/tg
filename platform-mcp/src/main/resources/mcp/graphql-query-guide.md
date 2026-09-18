@@ -334,6 +334,42 @@ This returns up to 50 work orders where:
 - Cost centre key is "A".
 - Sorted by priority ascending, then by created date descending.
 
+## Response Format
+
+A result is a GraphQL response document with these top-level fields:
+
+- `data` — the requested values, keyed by the response keys of the root selection set (an alias, where used, otherwise a field name).
+  Absent if the query failed before execution began.
+- `errors` — errors raised while handling the query, each with at least a `message`.
+  Present only if there were errors.
+- `extensions` — values outside the scope of the GraphQL specification.
+  Present only if there are any.
+
+For the query in [Complete Example](#complete-example), a result looks like this:
+```json
+{
+  "data": {
+    "workOrder": [
+      {
+        "key": "WO1",
+        "desc": "Replace hydraulic hose",
+        "status": {"key": "IP", "desc": "In Progress"},
+        "costCentre": {"key": "A", "desc": "Maintenance"},
+        "priority": {"key": "1", "desc": "Urgent"},
+        "createdDate": {"value": "2025-03-15 14:30:00", "millis": 1742045400000}
+      }
+    ]
+  }
+}
+```
+
+Fields `data` and `errors` can both be present, because a query can produce partial data.
+Always inspect `errors` before reporting a result, even where `data` is populated.
+
+A query that could not be parsed, validated or executed is reported in `errors`.
+This is a normal response, not a tool error.
+A tool error means only that the request itself was malformed (e.g., no query was supplied) or that the system failed to process it.
+
 ## Limitations
 
 1. Combining conditions with `OR` across different properties is not supported.
