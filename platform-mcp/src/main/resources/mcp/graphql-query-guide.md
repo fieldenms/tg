@@ -3,6 +3,9 @@
 This document describes how to query data from a TG system using GraphQL.
 It is intended to be read by a language model as part of the natural language to GraphQL translation process.
 
+The domain model itself is not described here.
+It is obtained from the system, as described in [Domain Discovery](#domain-discovery).
+
 ## Query Structure
 
 A query has this shape:
@@ -24,8 +27,66 @@ A query has this shape:
 - `entityName` is the uncapitalised entity type name (e.g., `workOrder` for entity type `WorkOrder`).
 - Root arguments filter and paginate the result set.
 - Property names match the names declared in the entity model (e.g., `desc`, `costCentre`, `createdDate`).
-- Entity-typed properties are objects with their own sub-fields; request `key` and `desc` for them where those fields are available (see [Limitations](#limitations)).
+- Entity-typed properties are objects with their own sub-fields; request `key` and `desc` for them where those fields are available, which [Domain Discovery](#domain-discovery) establishes.
 - Scalar properties (strings, numbers, booleans) are leaf nodes.
+
+## Domain Discovery
+
+Do not guess entity types, property names, or the arguments a property accepts.
+Root field `_entityType` describes the domain model: which entity types exist, which of them are queryable, the shape of each key, and every property with its type and arguments.
+It is an ordinary root field, so it may be selected alongside data fields and batched with other root fields in a single query.
+
+```graphql
+{
+  _entityType {
+    name rootField title desc kind keyType keyMembers keySeparator hasDesc
+    properties { name title desc type typeKind collectional arguments required }
+  }
+}
+```
+
+`_entityType` describes only what the current user is authorised to read.
+Do not query a type or a property that it does not describe.
+
+### `_EntityType`
+
+| Field | Description |
+|-------|-------------|
+| `name` | GraphQL type name, equal to the entity type's simple name (e.g., `WorkOrder`). This is the name a property's `type` refers to. |
+| `rootField` | Root field used to query this type (e.g., `workOrder`), or `null` if it is not queryable. A type that is described but has no root field, such as a union, is reachable only as a property type. |
+| `title` | Human-readable title of the entity type. |
+| `desc` | Description of the entity type. |
+| `kind` | Nature of the type: `PERSISTENT`, `SYNTHETIC` or `UNION`. |
+| `keyType` | Shape of the key: `SIMPLE`, `COMPOSITE` or `NO_KEY`. |
+| `keyMembers` | Names of the key members: the members themselves if the key is composite, `["key"]` if it is simple, `null` otherwise. |
+| `keySeparator` | Separator with which composite key members are concatenated, or `null` for other key shapes. |
+| `hasDesc` | Whether this type declares a description, and therefore whether `desc` may be selected on it. |
+| `properties` | Properties of this type. For a union, its members. |
+
+### `_Property`
+
+| Field | Description |
+|-------|-------------|
+| `name` | Property name, as used in a query. |
+| `title` | Human-readable title of the property. |
+| `desc` | Description of the property. |
+| `type` | Name of the property's type: a value type, or an entity type name matching `_EntityType.name`. For a collectional property, the type of its elements. |
+| `typeKind` | Kind of the property's type: `VALUE`, `ENTITY` or `UNION`. |
+| `collectional` | Whether the property holds a collection of values. |
+| `arguments` | Names of the arguments this property accepts, e.g., `["eq", "like", "order"]` or `["from", "to", "order"]`. A collectional property accepts none. |
+| `required` | Whether the property is always assigned. |
+
+Three of these fields answer questions that nothing else in a query can answer.
+
+`typeKind` cannot be derived from `type`.
+The set of value types is closed and described in [Property Arguments](#property-arguments), so a value type is recognisable by name, but an entity type and a union type are not distinguishable that way.
+The distinction decides how the property is used: a union exposes neither `key`, `desc` nor `id`, accepts no arguments, and must be traversed through one of its members, as shown in [Union Entity Properties](#union-entity-properties).
+
+`collectional` identifies a property that can be read but never filtered on.
+A condition placed inside a collectional property is silently discarded, so recognise a collection before attempting to filter through one — see [Limitations](#limitations).
+
+`required` supports reasoning about missing values.
+Every condition implicitly excludes entities where the property is unassigned, which cannot occur for a required property.
 
 ## Root Arguments
 
@@ -399,9 +460,9 @@ A tool error means only that the request itself was malformed (e.g., no query wa
    ```
    A collectional property can only be read, never filtered on.
    To filter by the contents of a collection, query the type of its elements as a root field instead:
-   * Take the type of the collectional property from the schema of its entity type, as provided by resource `tg://entities/{name}`.
+   * Take the type of the collectional property from `_entityType`, where it is reported as the `type` of that property.
      For `activeRoles` above that type is `SynUserAndRoleAssociationActive`.
-   * If that type is present in the entity catalogue, as provided by resource `tg://entities`, query it as a root field and place the condition on its own properties.
+   * If `_entityType` reports a `rootField` for that type, query it as a root field and place the condition on its own properties.
    * Select the property that references the owning entity, and take the owning entities from the result.
    ```graphql
    {
@@ -412,7 +473,7 @@ A tool error means only that the request itself was malformed (e.g., no query wa
    }
    ```
    Such a result has an entry per collection element rather than per owning entity: the same owning entity is repeated for each of its matching elements and must be de-duplicated, and `pageCapacity` limits the number of elements instead of the number of owning entities.
-   If the type of the elements is not present in the entity catalogue, the condition cannot be expressed at all.
+   If the type of the elements is not queryable, the condition cannot be expressed at all.
    Report this rather than presenting unfiltered results as if they matched.
 
 4. Conditions cannot be negated.
@@ -428,10 +489,10 @@ A tool error means only that the request itself was malformed (e.g., no query wa
 
 7. Property `key` is not available for entity types with a composite key.
    Such types expose their key members as separate properties instead, while `id` remains available as a stable identifier.
-   Property `desc` is only available for entity types that declare a description.
-   Select a property only if it is present in the schema of its entity type.
+   Property `desc` is only available for entity types that declare a description, which `_EntityType.hasDesc` reports.
+   Select a property only if `_entityType` describes it.
    Filtering is unaffected: `eq` and `like` for a property that references an entity type with a composite key match against its key members concatenated with the separator declared by that type.
 
-8. A union-typed property exposes only its members.
+8. A union-typed property, identified by `_Property.typeKind` of `UNION`, exposes only its members.
    Properties `key`, `desc` and `id`, as well as properties common to all members, are not available on a union-typed property.
    Read and filter through a specific member, as shown in [Union Entity Properties](#union-entity-properties).
