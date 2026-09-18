@@ -520,7 +520,7 @@ public class FieldSchema {
      * @param propertyType
      * @return
      */
-    private static Optional<T2<GraphQLOutputType, List<GraphQLArgument>>> determineFieldTypeNonCollectional(final Class<?> propertyType) {
+    static Optional<T2<GraphQLOutputType, List<GraphQLArgument>>> determineFieldTypeNonCollectional(final Class<?> propertyType) {
         if (isString(propertyType)) {
             return of(t2(GraphQLString, asList(EQ_ARGUMENT, LIKE_ARGUMENT, ORDER_ARGUMENT)));
         } else if (isBoolean(propertyType)) {

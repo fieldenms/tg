@@ -16,13 +16,12 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
+import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static graphql.ExecutionInput.newExecutionInput;
@@ -37,7 +36,6 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.uncapitalize;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.constructKeysAndProperties;
@@ -45,10 +43,10 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresen
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
-import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.*;
+import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
 import static ua.com.fielden.platform.web_api.GraphQLPropertyDataFetcher.fetching;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
@@ -92,7 +90,8 @@ public class GraphQLService implements IWebApi {
         final ICompanionObjectFinder coFinder,
         final IDates dates,
         final IAuthorisationModel authorisationModel,
-        final ISecurityTokenProvider securityTokenProvider
+        final ISecurityTokenProvider securityTokenProvider,
+        final EntityTypeIntrospection entityTypeIntrospection
     ) {
         try {
             LOGGER.info("GraphQL Web API...");
@@ -105,46 +104,32 @@ public class GraphQLService implements IWebApi {
             final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
 
             LOGGER.info("\tBuilding dictionary...");
-            final Set<Class<? extends AbstractEntity<?>>> domainTypes = domainTypesOf(applicationDomainProvider, EntityUtils::isIntrospectionAllowed).stream() // synthetic / persistent without @DenyIntrospection; this includes persistent with activatable nature, synthetic based on persistent; this does not include union, functional and any other entities
-                .sorted((type1, type2) -> type1.getSimpleName().compareTo(type2.getSimpleName()))
-                .collect(toCollection(LinkedHashSet::new));
-            final Set<Class<? extends AbstractEntity<?>>> allTypes = new LinkedHashSet<>(domainTypes);
-            allTypes.addAll(domainTypesOf(applicationDomainProvider, EntityUtils::isUnionEntityType));
-            // dictionary must have all the types that are referenced by all types that should support querying
-            final Map<Class<? extends AbstractEntity<?>>, GraphQLNamedType> dictionary = createDictionary(allTypes);
+            final var queryableTypes = streamQueryableTypes(applicationDomainProvider).collect(toCollection(LinkedHashSet::new));
+            // The dictionary must list all referenced types.
+            final var dictionary = createDictionary(streamVisibleTypes(applicationDomainProvider).collect(toCollection(LinkedHashSet::new)));
 
             LOGGER.info("\tBuilding query type...");
-            final GraphQLObjectType queryType = createQueryType(domainTypes, coFinder, dates, codeRegistryBuilder, authorisationModel, securityTokenProvider);
+            final GraphQLObjectType queryType = createQueryType(queryableTypes, coFinder, dates, codeRegistryBuilder, authorisationModel, securityTokenProvider);
 
             LOGGER.info("\tBuilding field visibility...");
-            codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisationModel, domainTypes, securityTokenProvider));
+            codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisationModel, queryableTypes, securityTokenProvider));
 
             LOGGER.info("\tBuilding default data fetcher...");
             codeRegistryBuilder.defaultDataFetcher(env -> fetching(env.getFieldDefinition().getName()));
 
             LOGGER.info("\tBuilding schema...");
-            schema = newSchema()
-                .codeRegistry(codeRegistryBuilder.build())
-                .query(queryType)
-                .additionalTypes(new LinkedHashSet<>(dictionary.values()))
-                .build();
+            schema = entityTypeIntrospection.enhanceSchema(
+                    newSchema()
+                    .codeRegistry(codeRegistryBuilder.build())
+                    .query(queryType)
+                    .additionalTypes(new LinkedHashSet<>(dictionary.values()))
+                    .build());
 
             LOGGER.info("GraphQL Web API...done");
         } catch (final Throwable t) {
             LOGGER.error("GraphQL Web API error.", t);
             throw t;
         }
-    }
-
-    /**
-     * Returns all domain types from {@code applicationDomainProvider} that do not have introspection denied and satisfy predicate {@code toInclude}.
-     */
-    private Set<Class<? extends AbstractEntity<?>>> domainTypesOf(final IApplicationDomainProvider applicationDomainProvider, final Predicate<Class<? extends AbstractEntity<?>>> toInclude) {
-        return applicationDomainProvider.entityTypes().stream()
-            .filter(type -> 
-                    !isIntrospectionDenied(type) // ensure that only entity types that don't have @DenyIntrospection annotation are included
-                &&  toInclude.test(type) )
-            .collect(toCollection(LinkedHashSet::new));
     }
 
     /**
@@ -200,24 +185,25 @@ public class GraphQLService implements IWebApi {
             .collect(toLinkedHashMap(Pair::getKey, Pair::getValue));
     }
 
-    /**
-     * Creates type for GraphQL 'query' operation to query entities from {@code dictionary}.
-     * <p>
-     * All query field names are represented as uncapitalised entity type simple names. All sub-field names are represented as entity property names.
-     * 
-     * @param dictionary -- list of supported GraphQL entity types
-     * @param coFinder
-     * @param dates
-     * @param codeRegistryBuilder -- a place to register root data fetchers
-     * @param authorisationModel -- authorises running of Web API queries
-     * @param securityTokenProvider
-     * @return
-     */
-    private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final IDates dates, final GraphQLCodeRegistry.Builder codeRegistryBuilder, final IAuthorisationModel authorisationModel, final ISecurityTokenProvider securityTokenProvider) {
+    /// Creates the "query" type that will contain root fields.
+    ///
+    /// Root fields are named using [GraphQLCommon#rootFieldName].
+    ///
+    /// @param entityTypes          entity types to register as root fields
+    /// @param codeRegistryBuilder  a place to register root data fetchers
+    ///
+    private static GraphQLObjectType createQueryType(
+            final Set<Class<? extends AbstractEntity<?>>> entityTypes,
+            final ICompanionObjectFinder coFinder,
+            final IDates dates,
+            final GraphQLCodeRegistry.Builder codeRegistryBuilder,
+            final IAuthorisationModel authorisationModel,
+            final ISecurityTokenProvider securityTokenProvider)
+    {
         final Builder queryTypeBuilder = newObject().name(QUERY_TYPE_NAME).description("Query following **entities** represented as GraphQL root fields:");
-        dictionary.stream().forEach(entityType -> {
+        entityTypes.forEach(entityType -> {
             final String simpleTypeName = entityType.getSimpleName();
-            final String fieldName = uncapitalize(simpleTypeName);
+            final String fieldName = rootFieldName(entityType);
             queryTypeBuilder.field(newFieldDefinition()
                 .name(fieldName)
                 .description(format("Query %s.", bold(getEntityTitleAndDesc(entityType).getKey())))
@@ -245,7 +231,7 @@ public class GraphQLService implements IWebApi {
         if (isExcluded(entityType, "")) { // generic type exclusion logic for root types (exclude abstract entity types, exclude types without KeyType annotation etc. -- see AbstractDomainTreeRepresentation.isExcluded)
             return empty();
         }
-        final List<GraphQLFieldDefinition> graphQLFieldDefinitions = (isUnionEntityType(entityType) ? unionProperties((Class<? extends AbstractUnionEntity>) entityType) : constructKeysAndProperties(entityType, true)).stream()
+        final List<GraphQLFieldDefinition> graphQLFieldDefinitions = propertiesForGraphQlFields(entityType).stream()
             .filter(field -> !isExcluded(entityType, reflectionProperty(field.getName())))
             .map(field -> createGraphQLFieldDefinition(entityType, field.getName()))
             .flatMap(optField -> optField.map(Stream::of).orElseGet(Stream::empty))
@@ -261,6 +247,13 @@ public class GraphQLService implements IWebApi {
             ));
         }
         return empty();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<Field> propertiesForGraphQlFields(final Class<? extends AbstractEntity<?>> entityType) {
+        return isUnionEntityType(entityType)
+                ? unionProperties((Class<? extends AbstractUnionEntity>) entityType)
+                : constructKeysAndProperties(entityType, true);
     }
 
 }
