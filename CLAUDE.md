@@ -83,6 +83,7 @@ Topic-specific gotchas live in each directory's `quick-reference.md`.
    The enum-on-String idiom relies on this: a public `setKind(Kind)` calling `this.setKind(kind.name())` against a protected `@Observable` String setter is fully observed (e.g. `AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave.setLeaveReason`).
 8. **`isDirty()` before side effects**: In DAO `save()`, check property dirtiness before cascading updates.
 9. **`try-with-resources` with `stream()`**: Entity streams hold database resources that must be closed.
+   Reserve `co.stream(qem)` for large or unbounded results; for small, bounded ones (e.g. a selection by IDs) use `co.getAllEntities(qem)` — nothing to close, no `try` block.
 10. **Fetch model instrumentation precedence**: If a fetch model is instrumented, entities *are* instrumented even if `QueryExecutionModel` is lightweight.
 11. **GraphQL API**: Read-only queries only.
     Fields are uncapitalized entity names.
