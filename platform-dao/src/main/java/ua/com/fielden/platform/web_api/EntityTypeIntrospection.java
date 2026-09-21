@@ -5,6 +5,7 @@ import graphql.schema.*;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -12,17 +13,24 @@ import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import static graphql.schema.FieldCoordinates.coordinates;
+import static graphql.schema.GraphQLArgument.newArgument;
 import static graphql.schema.GraphQLEnumType.newEnum;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLTypeUtil.simplePrint;
+import static java.util.regex.Pattern.quote;
+import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
@@ -31,11 +39,9 @@ import static ua.com.fielden.platform.reflection.Reflector.getKeyMemberSeparator
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
-import static ua.com.fielden.platform.web_api.FieldSchema.bold;
-import static ua.com.fielden.platform.web_api.FieldSchema.determineFieldTypeNonCollectional;
-import static ua.com.fielden.platform.web_api.GraphQLCommon.isQueryableType;
-import static ua.com.fielden.platform.web_api.GraphQLCommon.rootFieldName;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
+import static ua.com.fielden.platform.web_api.FieldSchema.*;
+import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
+import static ua.com.fielden.platform.web_api.RootEntityUtils.*;
 
 /// GraphQL definitions that describe the domain model.
 ///
@@ -71,6 +77,10 @@ public class EntityTypeIntrospection {
             ENTITY_KIND_GRAPHQL_TYPE_NAME = "_EntityKind",
             KEY_TYPE_GRAPHQL_TYPE_NAME = "_KeyType",
             TYPE_KIND_GRAPHQL_TYPE_NAME = "_TypeKind";
+
+    /// The only wildcard recognised by argument `like`, standing for any sequence of characters.
+    ///
+    private static final String WILDCARD = "*";
 
     /// Shape of an entity type's key.
     ///
@@ -170,6 +180,28 @@ public class EntityTypeIntrospection {
                                .name(ENTITY_TYPE_ROOT_FIELD_NAME)
                                .description("Query %s -- meta-information describing the domain model.".formatted(bold(ENTITY_TYPE_GRAPHQL_TYPE_NAME)))
                                .type(new GraphQLList(new GraphQLTypeReference(ENTITY_TYPE_GRAPHQL_TYPE_NAME)))
+                               .argument(newArgument()
+                                         .name(EQ)
+                                         .description(
+                                          """
+                                          Include entity types whose simple name (`name`) is exactly equal to the specified value.
+                                          Matching is case-sensitive.
+                                          Does not support comma separated values.
+                                          Does not permit wildcard `*`.
+                                          Mutually exclusive with `like`.""")
+                                         .type(Scalars.GraphQLString)
+                                         .build())
+                               .argument(newArgument()
+                                         .name(LIKE)
+                                         .description(
+                                          """
+                                          Include entity types whose simple name matches the specified value.
+                                          Supports wildcard `*`, without which the match is exact.
+                                          Supports multiple selection through comma-separated values.
+                                          Matching is case-sensitive, and `*` is the only character with a special meaning.
+                                          Mutually exclusive with `eq`.""")
+                                         .type(Scalars.GraphQLString)
+                                         .build())
                                .build()));
     }
 
@@ -420,11 +452,50 @@ public class EntityTypeIntrospection {
             @Override
             public List<EntityType> get(final DataFetchingEnvironment environment) {
                 // TODO Authorisation -- honour Entity_CanReadModel_Token, consistent with FieldVisibility.
-                return GraphQLCommon.streamVisibleTypes(appDomainProvider)
-                        .map(ty -> mkEntityType(ty))
+                return streamVisibleTypes(appDomainProvider)
+                        .filter(namePredicate(environment.getArgument(EQ), environment.getArgument(LIKE)))
+                        .map(EntityTypeIntrospection.this::mkEntityType)
                         .toList();
             }
         };
+    }
+
+    /// A predicate on an entity type's simple name, as specified by arguments `eq` and `like` of [#ENTITY_TYPE_ROOT_FIELD_NAME].
+    /// An argument that was not specified, or was specified as `null`, imposes no restriction.
+    ///
+    /// These arguments are the counterpart of the equally named arguments of an ordinary root field, which
+    /// [RootEntityUtils] compiles into EQL conditions on an entity's key.
+    /// The two do not share an implementation, as matching happens here against Java objects rather than in the database,
+    /// and they deliberately differ in a few rules: matching here is case-sensitive, values are taken as given without
+    /// trimming, and `*` is the only character with any special meaning.
+    /// Both sets of rules, and why the difference is admissible, are recorded in the architecture document of `platform-mcp`.
+    ///
+    private static Predicate<Class<?>> namePredicate(final @Nullable String eq, final @Nullable String like) {
+        if (eq != null && like != null) {
+            throw new WebApiException(ERR_EQ_AND_LIKE_ARE_MUTUALLY_EXCLUSIVE);
+        }
+        else if (eq != null) {
+            if (eq.contains(WILDCARD)) {
+                throw new WebApiException(ERR_EQ_DOES_NOT_PERMIT_WILDCARDS);
+            }
+            return type -> eq.equals(type.getSimpleName());
+        }
+        else if (like != null) {
+            final var patterns = Arrays.stream(StringUtils.split(like, ','))
+                    .map(EntityTypeIntrospection::likePattern)
+                    .toList();
+            return type -> patterns.stream().anyMatch(pattern -> pattern.matcher(type.getSimpleName()).matches());
+        }
+        else {
+            return _ -> true;
+        }
+    }
+
+    /// Compiles a single `like` value into a pattern where [#WILDCARD] stands for any sequence of characters and everything else is matched literally.
+    /// Quoting is essential: without it, a value containing a regular expression metacharacter would either match too much or fail to compile.
+    ///
+    private static Pattern likePattern(final String value) {
+        return Pattern.compile(Arrays.stream(value.split(quote(WILDCARD), -1)).map(Pattern::quote).collect(joining(".*")));
     }
 
     private DataFetcher<List<Property>> propertiesFetcher() {

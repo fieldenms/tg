@@ -150,8 +150,6 @@ This decision is recorded on `EntityTypeIntrospection` so that it stays next to 
 
 ### Deferred
 
-- Root field arguments (`eq`, `like`) for selecting and searching entity types.
-  Until these exist, `_entityType` returns all types, and selecting `properties` fans out across the whole domain.
 - Authorisation.
   `_entityType` must honour `Entity_CanReadModel_Token` at both type and property level, consistent with `FieldVisibility`.
   Both fetchers currently carry a `TODO`.

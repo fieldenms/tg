@@ -48,6 +48,32 @@ It is an ordinary root field, so it may be selected alongside data fields and ba
 `_entityType` describes only what the current user is authorised to read.
 Do not query a type or a property that it does not describe.
 
+### Selecting Types to Describe
+
+Without arguments, `_entityType` describes every type available to the current user, which is a large result.
+Narrow it to the types a request actually concerns.
+
+| Argument | Type | Description |
+|----------|------|-------------|
+| `eq` | `String` | Include the type whose `name` is exactly the specified value. Does not support comma-separated values. Does not permit wildcard `*`. Mutually exclusive with `like`. |
+| `like` | `String` | Include types whose `name` matches the specified comma-separated values. Supports wildcard `*`, without which a value is matched exactly. Mutually exclusive with `eq`. |
+
+Both match against `name`, the entity type's simple name, and not against `rootField`.
+Matching here differs from matching in a data query, in three ways:
+- It is case-sensitive.
+- `*` is the only character with a special meaning; `%` and `_` are matched literally.
+- Values are not trimmed, so write `"A,B"` rather than `"A, B"`.
+
+Example — describe the types that a work order query will use:
+```graphql
+{
+  _entityType(like: "WorkOrder,WorkOrderStatus,Priority,CostCentre") {
+    name rootField keyType keyMembers keySeparator hasDesc
+    properties { name type typeKind collectional arguments }
+  }
+}
+```
+
 ### `_EntityType`
 
 | Field | Description |
