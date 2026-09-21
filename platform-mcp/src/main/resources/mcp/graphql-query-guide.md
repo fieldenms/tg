@@ -83,9 +83,9 @@ Example — describe the types that a work order query will use:
 | `title` | Human-readable title of the entity type. |
 | `desc` | Description of the entity type. |
 | `kind` | Nature of the type: `PERSISTENT`, `SYNTHETIC` or `UNION`. |
-| `keyType` | Shape of the key: `SIMPLE`, `COMPOSITE` or `NO_KEY`. |
+| `keyType` | Shape of the key: `SIMPLE`, `COMPOSITE` or `NO_KEY`. It decides what `key` yields — see [Keys](#keys). |
 | `keyMembers` | Names of the key members: the members themselves if the key is composite, `["key"]` if it is simple, `null` otherwise. |
-| `keySeparator` | Separator with which composite key members are concatenated, or `null` for other key shapes. |
+| `keySeparator` | Separator with which composite key members are concatenated, both in the value of `key` and in what a condition matches against; `null` for other key shapes. |
 | `hasDesc` | Whether this type declares a description, and therefore whether `desc` may be selected on it. |
 | `properties` | Properties of this type. For a union, its members. |
 
@@ -114,6 +114,39 @@ A condition placed inside a collectional property is silently discarded, so reco
 `required` supports reasoning about missing values.
 Every condition implicitly excludes entities where the property is unassigned, which cannot occur for a required property.
 
+## Keys
+
+The shape of an entity type's key decides how it may be selected, and `_EntityType.keyType` reports that shape.
+
+| `keyType` | Property `key` | `keyMembers` |
+|-----------|----------------|--------------|
+| `SIMPLE` | The key itself, carrying its own type: commonly a string, but it can be a number or an entity reference. | `["key"]` |
+| `COMPOSITE` | A string: the key members concatenated with `keySeparator`. | Names of the members. |
+| `NO_KEY` | Not available. Selecting it is a validation error. | `null` |
+
+A composite key is therefore reachable in two ways, and they are not interchangeable.
+`key` yields the whole key as a single string and accepts `eq`, `like` and `order`, as any string field does.
+Each member is a property in its own right, with its own type and arguments, so a numeric member accepts `from` and `to`, and an entity-typed member is expanded with sub-fields.
+
+Select `key` where one human-readable value is wanted, and a member where that member's own type matters.
+Where a member is of a type the Web API does not support, it is absent from `properties` altogether, and `key` is then the only way to reach the key at all.
+
+Example — `Inventory` has a composite key whose members are `store` and `partNumber`, concatenated with a space:
+```graphql
+{
+  inventory(pageCapacity: 10) {
+    key
+    store { key desc }
+    partNumber
+  }
+}
+```
+This yields `key` values such as `"MAIN 1234-A"`, alongside the members they are composed of.
+
+A condition on `key` matches the whole concatenation; a condition on a member matches that member alone.
+The same concatenation is what a condition on an entity-typed property matches against when the referenced type has a composite key.
+How `eq` and `like` behave on a composite `key` is not quite how they behave on an ordinary string, so see [Matching Semantics](#matching-semantics-for-eq-and-like).
+
 ## Root Arguments
 
 These arguments are placed on the entity field itself and apply to the entity as a whole.
@@ -125,6 +158,8 @@ These arguments are placed on the entity field itself and apply to the entity as
 | `order` | `Order` | Order results by entity key. Value is one of `ASC_1`..`ASC_9` or `DESC_1`..`DESC_9`. |
 | `pageNumber` | `Int` | Zero-based page index. Default: `0`. |
 | `pageCapacity` | `Int` | Maximum number of entities per page. Default: `25`. |
+
+Arguments `eq` and `like` match against the entity's key whatever its shape, so for a composite key they match the concatenation of its members — see [Keys](#keys).
 
 Example — fetch the first 10 work orders whose key starts with "WO":
 ```graphql
@@ -151,6 +186,8 @@ A property can only be filtered on if it is selected: the same field carries bot
 | `eq` | Exact match. No wildcards. Mutually exclusive with `like`. |
 | `like` | Pattern match. Supports wildcard `*`. If no `*` is used, matches anywhere in the string (i.e., contains). Supports comma-separated values. Mutually exclusive with `eq`. |
 | `order` | Ordering. |
+
+Property `key` of a type whose `keyType` is `COMPOSITE` is a string field accepting these same arguments, but `like` does not behave on it as it does on an ordinary string — see [Keys](#keys).
 
 Example — work orders whose description contains "urgent":
 ```graphql
@@ -314,6 +351,11 @@ For entity-typed properties and root arguments, which match against the referenc
 - A value without `*` is matched strictly, and whether such matching ignores case is determined by the database collation.
 - A value with `*` is matched ignoring case, with `%` and `_` behaving as described above.
 
+For property `key` of a type whose key is composite, which is a string holding the concatenation of the key members:
+- `eq` follows the string rules: an exact match that ignores case.
+- `like` follows the entity-typed rules, comma-separated values included.
+  It therefore does not match anywhere: `like: "SMITH"` does not match `JOHN SMITH`, whereas `like: "*SMITH"` does.
+
 ## Ordering
 
 Use the `order` argument to sort results.
@@ -466,6 +508,7 @@ A tool error means only that the request itself was malformed (e.g., no query wa
      E.g., `costCentre(like: "A,B")`.
    * Argument `like` on string properties when its value is a comma-separated list.
      E.g., `key(like: "WO1,WO2")`.
+   * Argument `like` on property `key` of a type whose key is composite, when its value is a comma-separated list.
 
 2. Ad-hoc aggregation cannot be expressed.
    By design, the shape of an output follows the shape of the selected graph.
@@ -513,11 +556,10 @@ A tool error means only that the request itself was malformed (e.g., no query wa
    Arguments `from` and `to` always include the boundary of the specified value; "strictly greater than" and "strictly less than" cannot be expressed.
    Relative periods (e.g. "previous month", "last 7 days") are not supported: compute the absolute period and specify it explicitly.
 
-7. Property `key` is not available for entity types with a composite key.
-   Such types expose their key members as separate properties instead, while `id` remains available as a stable identifier.
-   Property `desc` is only available for entity types that declare a description, which `_EntityType.hasDesc` reports.
+7. Properties `key` and `desc` are not available on every entity type.
+   Property `key` is unavailable where `_EntityType.keyType` is `NO_KEY`, and property `desc` is unavailable where `_EntityType.hasDesc` is `false`.
+   Selecting either where it is absent is a validation error, whereas `id` is always available as a stable identifier.
    Select a property only if `_entityType` describes it.
-   Filtering is unaffected: `eq` and `like` for a property that references an entity type with a composite key match against its key members concatenated with the separator declared by that type.
 
 8. A union-typed property, identified by `_Property.typeKind` of `UNION`, exposes only its members.
    Properties `key`, `desc` and `id`, as well as properties common to all members, are not available on a union-typed property.

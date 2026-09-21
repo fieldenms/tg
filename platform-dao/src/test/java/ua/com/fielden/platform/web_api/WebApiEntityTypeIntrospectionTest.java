@@ -19,6 +19,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.web_api.EntityTypeIntrospection.ENTITY_TYPE_ROOT_FIELD_NAME;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.ERR_EQ_AND_LIKE_ARE_MUTUALLY_EXCLUSIVE;
@@ -100,7 +101,7 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void a_composite_key_is_described_through_its_members_rather_than_key() {
+    public void a_composite_key_is_described_through_its_members_and_through_key() {
         final var composites = queryAllTypes().stream()
                 .filter(ty -> "COMPOSITE".equals(ty.get("keyType")))
                 .toList();
@@ -114,6 +115,13 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
             assertNotNull("Composite key of [%s] must report a separator.".formatted(name), entityType.get("keySeparator"));
             assertNotEquals("Composite key of [%s] must not be reported as a single `key` member.".formatted(name),
                             List.of("key"), keyMembers);
+            // A composite key is also selectable whole, as the concatenation of its members.
+            // That is not merely a convenience: a key member is admitted to the schema on the same terms as any other property,
+            // and one of a type the schema does not support -- a `PropertyDescriptor`, say -- is absent from it,
+            // leaving `key` as the only way to reach the key of such a type.
+            assertThat(namesOfProperties(entityType))
+                    .as("Properties described for [%s].".formatted(name))
+                    .contains(KEY);
         });
     }
 

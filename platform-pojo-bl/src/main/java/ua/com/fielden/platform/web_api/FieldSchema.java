@@ -1,8 +1,30 @@
 package ua.com.fielden.platform.web_api;
 
-import static graphql.Scalars.GraphQLBoolean;
-import static graphql.Scalars.GraphQLInt;
-import static graphql.Scalars.GraphQLString;
+import graphql.schema.*;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.mutator.*;
+import ua.com.fielden.platform.entity.annotation.titles.PathTitle;
+import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.menu.AbstractView;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import static graphql.Scalars.*;
 import static graphql.schema.GraphQLArgument.newArgument;
 import static graphql.schema.GraphQLEnumType.newEnum;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
@@ -18,85 +40,13 @@ import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
-import static ua.com.fielden.platform.utils.EntityUtils.isCollectional;
-import static ua.com.fielden.platform.utils.EntityUtils.isDate;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLBigDecimal;
-import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLColour;
-import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLDate;
-import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLHyperlink;
-import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLLong;
-import static ua.com.fielden.platform.web_api.GraphQLScalars.GraphQLMoney;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import graphql.schema.GraphQLArgument;
-import graphql.schema.GraphQLFieldDefinition;
-import graphql.schema.GraphQLInputType;
-import graphql.schema.GraphQLList;
-import graphql.schema.GraphQLOutputType;
-import graphql.schema.GraphQLTypeReference;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.DateOnly;
-import ua.com.fielden.platform.entity.annotation.Dependent;
-import ua.com.fielden.platform.entity.annotation.DescReadonly;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
-import ua.com.fielden.platform.entity.annotation.KeyReadonly;
-import ua.com.fielden.platform.entity.annotation.PersistentType;
-import ua.com.fielden.platform.entity.annotation.Readonly;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.ResultOnly;
-import ua.com.fielden.platform.entity.annotation.Secrete;
-import ua.com.fielden.platform.entity.annotation.SkipActivatableTracking;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
-import ua.com.fielden.platform.entity.annotation.TimeOnly;
-import ua.com.fielden.platform.entity.annotation.Unique;
-import ua.com.fielden.platform.entity.annotation.UpperCase;
-import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
-import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
-import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
-import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
-import ua.com.fielden.platform.entity.annotation.mutator.DateTimeParam;
-import ua.com.fielden.platform.entity.annotation.mutator.DblParam;
-import ua.com.fielden.platform.entity.annotation.mutator.EnumParam;
-import ua.com.fielden.platform.entity.annotation.mutator.Handler;
-import ua.com.fielden.platform.entity.annotation.mutator.IntParam;
-import ua.com.fielden.platform.entity.annotation.mutator.MoneyParam;
-import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
-import ua.com.fielden.platform.entity.annotation.titles.PathTitle;
-import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.menu.AbstractView;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
-import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.web_api.GraphQLScalars.*;
 
 /**
  * Contains utilities to convert TG entity properties to GraphQL query fields that reside under {@code Query.exampleEntityType} fields.
@@ -521,7 +471,7 @@ public class FieldSchema {
      * @return
      */
     static Optional<T2<GraphQLOutputType, List<GraphQLArgument>>> determineFieldTypeNonCollectional(final Class<?> propertyType) {
-        if (isString(propertyType)) {
+        if (isString(propertyType) || isDynamicEntityKey(propertyType)) {
             return of(t2(GraphQLString, asList(EQ_ARGUMENT, LIKE_ARGUMENT, ORDER_ARGUMENT)));
         } else if (isBoolean(propertyType)) {
             return of(t2(GraphQLBoolean, asList(newArgument() // null-valued or non-existing argument in GraphQL query means entities with both true and false values in the property

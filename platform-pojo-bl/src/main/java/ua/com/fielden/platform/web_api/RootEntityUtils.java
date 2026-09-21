@@ -224,7 +224,7 @@ public class RootEntityUtils {
         // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
         final Map<String, Object> argumentValues = getArgumentValues(codeRegistry, arguments._1, arguments._2, of(variables), context, locale);
 
-        if (isString(type) || isEntityType(type)) {
+        if (isString(type) || isEntityType(type) || isDynamicEntityKey(type)) {
             if (argumentValues.get(EQ) != null && argumentValues.get(LIKE) != null) {
                 throw new WebApiException(ERR_EQ_AND_LIKE_ARE_MUTUALLY_EXCLUSIVE);
             }
@@ -241,7 +241,7 @@ public class RootEntityUtils {
             else if (argumentValues.get(LIKE) != null) {
                 final var searchValue = (String) argumentValues.get(LIKE);
                 // The searchValue must be of type String for string-typed criteria even if it represents comma separated values.
-                // However, for entity-typed criteria, comma separated values need to be... separated, and represented as a list.
+                // However, for entity-typed and composite key criteria, comma separated values need to be... separated, and represented as a list.
                 queryProperty.setValue(queryProperty.isSingle() || isString(type) ? searchValue : asList(searchValue.split(",")));
                 queryProperty.setMatchAnywhere(isString(type)); // match anywhere only applies to string-typed criteria
             }

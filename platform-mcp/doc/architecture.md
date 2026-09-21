@@ -121,11 +121,14 @@ Where the two legitimately diverge, it is because a schema and a catalogue are u
 | `properties` | List of properties, see [`_Property`](#_property) |
 
 `keyType` and `keyMembers` exist because there is no rule to generalise from.
-`WorkOrder` has no `key` and must be selected through `number`; `PurchaseOrder` does have `key`; `Buyer` has neither, its key member being `person`, itself an entity reference.
-Selecting `key` on a type that does not declare it is a validation error, and it is the most frequent one in practice.
+`key` is selectable on every type whose key has a shape at all, but what it yields differs: for a simple key it is the key itself, typed accordingly, whereas for a composite key it is a string -- the members concatenated with `keySeparator`.
+For example, if `WorkOrder` has a composite key whose single member is `number`, then both `key` and `number` may be selected, and only `number` carries the type and arguments of a number.
+If `Buyer` has a key member `person`, itself an entity reference, then only through `keyMembers` is that reachable as an entity.
+A type that declares no key does not declare `key` either, and selecting it is a validation error.
 
 `keySeparator` is required by the matching rules for entity-typed properties.
 A condition on a property that references a composite-key type matches against its key members concatenated with that type's separator, so the separator must be known before such a condition can be constructed.
+The same concatenation is what `key` yields when selected on such a type directly.
 
 Union types are included, with `rootField` set to `null`.
 They are reachable as property types but are not root fields, so a model needs to distinguish "query this as a root field" from "this type exists but cannot be queried directly", which the presence of a root field answers.
@@ -199,7 +202,7 @@ The LLM queries the meta-schema for the types it expects to use.
 }
 ```
 This establishes that:
-- `WorkOrder` has a composite key whose member is `number`, so `key` is not available on it.
+- `WorkOrder` has a composite key whose single member is `number`, so `number` may be selected as a number in its own right, and `key` as its string representation.
 - `status` is of type `WorkOrderStatus` and accepts `eq`, `like` and `order`; `priority` and `costCentre` are analogous.
 - `WorkOrderStatus`, `Priority` and `CostCentre` each have a simple key and declare a description, so `key` and `desc` may be selected on them.
 

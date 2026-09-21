@@ -247,17 +247,17 @@ public class EntityTypeIntrospection {
                         .build(),
                 newFieldDefinition()
                         .name("keyType")
-                        .description("Shape of this type's key. There is no rule to generalise from, so this must be established per type: selecting `key` on a type with a composite key is an error.")
+                        .description("Shape of this type's key. There is no rule to generalise from, so this must be established per type: a type with no key does not declare `key` at all, and selecting it is an error.")
                         .type(new GraphQLTypeReference(KEY_TYPE_GRAPHQL_TYPE_NAME))
                         .build(),
                 newFieldDefinition()
                         .name("keyMembers")
-                        .description("Names of the key members. Where the key is composite, these are selected in place of `key`.")
+                        .description("Names of the key members. Where the key is composite, each member is selectable in its own right, alongside `key`.")
                         .type(new GraphQLList(Scalars.GraphQLString))
                         .build(),
                 newFieldDefinition()
                         .name("keySeparator")
-                        .description("Separator used to concatenate composite key members. A condition on a property that references this type matches against its key members concatenated with this separator.")
+                        .description("Separator used to concatenate composite key members. This is what `key` yields on this type, and what a condition on a property referencing this type matches against.")
                         .type(Scalars.GraphQLString)
                         .build(),
                 newFieldDefinition()
@@ -348,7 +348,7 @@ public class EntityTypeIntrospection {
                 .value("SIMPLE", KeyKind.SIMPLE, "A single `key` property.")
                 .value("COMPOSITE",
                        KeyKind.COMPOSITE,
-                       "Two or more key members. Property `key` is not available, and the members are selected instead.")
+                       "Two or more key members. Each member is selectable in its own right, and `key` is selectable as their concatenation.")
                 .value("NO_KEY", KeyKind.NO_KEY, "The type declares no meaningful key.")
                 .build();
     }

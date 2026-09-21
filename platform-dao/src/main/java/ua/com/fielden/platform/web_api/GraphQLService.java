@@ -11,12 +11,14 @@ import graphql.schema.GraphQLObjectType.Builder;
 import graphql.validation.QueryComplexityLimits;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.utils.ImmutableListUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
@@ -40,9 +42,12 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.constructKeysAndProperties;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.*;
@@ -231,7 +236,7 @@ public class GraphQLService implements IWebApi {
         if (isExcluded(entityType, "")) { // generic type exclusion logic for root types (exclude abstract entity types, exclude types without KeyType annotation etc. -- see AbstractDomainTreeRepresentation.isExcluded)
             return empty();
         }
-        final List<GraphQLFieldDefinition> graphQLFieldDefinitions = propertiesForGraphQlFields(entityType).stream()
+        final var graphQLFieldDefinitions = propertiesForGraphQlFields(entityType).stream()
             .filter(field -> !isExcluded(entityType, reflectionProperty(field.getName())))
             .map(field -> createGraphQLFieldDefinition(entityType, field.getName()))
             .flatMap(optField -> optField.map(Stream::of).orElseGet(Stream::empty))
@@ -249,11 +254,23 @@ public class GraphQLService implements IWebApi {
         return empty();
     }
 
+    /// Returns the fields of `entityType` that are candidates for becoming GraphQL fields.
+    ///
+    /// [AbstractDomainTreeRepresentation#constructKeysAndProperties] yields `key` itself for a simple key, but key members for a composite one.
+    /// A composite key is selectable as a single `String`-typed field, so `key` is added for such types only.
+    /// It goes first to preserve the ordering that [AbstractDomainTreeRepresentation#constructKeysAndProperties] establishes, where a key precedes everything else.
+    ///
     @SuppressWarnings("unchecked")
-    public static List<Field> propertiesForGraphQlFields(final Class<? extends AbstractEntity<?>> entityType) {
-        return isUnionEntityType(entityType)
-                ? unionProperties((Class<? extends AbstractUnionEntity>) entityType)
-                : constructKeysAndProperties(entityType, true);
+    private static List<Field> propertiesForGraphQlFields(final Class<? extends AbstractEntity<?>> entityType) {
+        if (isUnionEntityType(entityType)) {
+            return unionProperties((Class<? extends AbstractUnionEntity>) entityType);
+        }
+        else {
+            final var keysAndProperties = constructKeysAndProperties(entityType, true);
+            return isCompositeEntity(entityType)
+                    ? ImmutableListUtils.prepend(findFieldByName(entityType, KEY), keysAndProperties)
+                    : keysAndProperties;
+        }
     }
 
 }
