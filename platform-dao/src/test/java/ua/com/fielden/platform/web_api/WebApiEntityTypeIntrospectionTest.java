@@ -1,13 +1,25 @@
 package ua.com.fielden.platform.web_api;
 
 import org.junit.Test;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyHolder;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
+import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.tokens.persistent.TgVehicleModel_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.persistent.TgVehicleModel_CanRead_make_Token;
+import ua.com.fielden.platform.security.tokens.persistent._CanReadModel_Token;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
+import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import java.util.List;
 import java.util.Map;
 
+import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.web_api.EntityTypeIntrospection.ENTITY_TYPE_ROOT_FIELD_NAME;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.ERR_EQ_AND_LIKE_ARE_MUTUALLY_EXCLUSIVE;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.ERR_EQ_DOES_NOT_PERMIT_WILDCARDS;
@@ -370,6 +382,150 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Agreement with the schema
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    /// The meta-schema describes the field definitions the schema holds, rather than re-deriving them from the domain,
+    /// so the two cannot disagree about which properties a type has.
+    ///
+    @Test
+    public void the_described_properties_are_exactly_the_fields_of_the_schema_type() {
+        final var schemaFields = querySchemaFieldsByType();
+        final var allTypes = queryAllTypes();
+
+        assertThat(allTypes).isNotEmpty();
+        assertThat(allTypes).allSatisfy(typeObject -> {
+            final var name = (String) typeObject.get("name");
+            assertThat(namesOfProperties(typeObject))
+                    .as("Properties for [%s].", name)
+                    .containsExactlyInAnyOrderElementsOf(schemaFields.get(name));
+        });
+    }
+
+    /// A type the schema does not contain cannot be queried, so describing it would only mislead.
+    /// [DomainPropertyHolder] is a union both of whose members are [DenyIntrospection]: every one of its properties is
+    /// excluded, which leaves it with no field, and a type with no field is not a GraphQL type at all.
+    ///
+    @Test
+    public void a_type_the_schema_does_not_contain_is_not_described() {
+        assertThat(querySchemaFieldsByType()).doesNotContainKey(DomainPropertyHolder.class.getSimpleName());
+        assertThat(queryAllTypeNames()).doesNotContain(DomainPropertyHolder.class.getSimpleName());
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Field visibility -- types
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    /// The control for the tests that follow, each of which withdraws one of the tokens this one relies upon.
+    ///
+    @Test
+    public void a_type_is_described_when_reading_its_model_is_authorised() {
+        assertThat(queryTypeNames("""
+          { _entityType(eq: "TgVehicleModel") { name } }
+          """))
+                .containsExactly("TgVehicleModel");
+    }
+
+    @Test
+    public void a_type_is_not_described_when_reading_its_model_is_prohibited() {
+        removeAccessTo(TgVehicleModel_CanReadModel_Token.class);
+
+        assertThat(queryTypeNames("""
+          { _entityType(eq: "TgVehicleModel") { name } }
+          """))
+                .isEmpty();
+        assertThat(queryAllTypeNames()).doesNotContain("TgVehicleModel");
+    }
+
+    /// The meta-schema and the schema part ways here.
+    /// A catalogue has no reason to list a type that cannot be read, so the meta-schema omits it altogether,
+    /// whereas the schema must keep the type, with `id` as its only field, because the GraphQL specification does not allow a fieldless type.
+    ///
+    @Test
+    public void a_type_withheld_from_the_meta_schema_remains_in_the_schema_with_id_alone() {
+        removeAccessTo(TgVehicleModel_CanReadModel_Token.class);
+
+        assertThat(queryAllTypeNames()).doesNotContain("TgVehicleModel");
+        assertThat(querySchemaFieldNames("TgVehicleModel")).containsExactly(ID);
+    }
+
+    /// A type without a token of its own, such as a union, answers to the default token.
+    ///
+    @Test
+    public void a_type_that_has_no_token_of_its_own_answers_to_the_default_token() {
+        final var unionType = "TgBogieLocation";
+        assertThat(queryAllTypeNames()).contains(unionType);
+        final var schemaFields = querySchemaFieldNames(unionType);
+
+        removeAccessTo(_CanReadModel_Token.class);
+
+        assertThat(queryAllTypeNames()).doesNotContain(unionType);
+        // Union types are exempt from field visibility in the schema, as `FieldVisibility.getFieldDefinitions` only considers queryable types.
+        assertThat(querySchemaFieldNames(unionType)).isEqualTo(schemaFields);
+    }
+
+    /// Authorisation is decided per type.
+    /// `TgWebApiEntity` has a property of type `TgVehicleModel`, so a leak would be visible here.
+    ///
+    @Test
+    public void prohibiting_reading_of_one_type_does_not_affect_another() {
+        final var expected = queryPropertyNames("TgWebApiEntity");
+        assertThat(expected).contains("model");
+
+        removeAccessTo(TgVehicleModel_CanReadModel_Token.class);
+
+        assertThat(queryPropertyNames("TgWebApiEntity")).isEqualTo(expected);
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Field visibility -- properties
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    /// The control for the tests that follow.
+    ///
+    @Test
+    public void all_properties_are_described_when_reading_is_authorised() {
+        assertThat(queryPropertyNames("TgVehicleModel")).contains(ID, "key", "make");
+    }
+
+    /// A property is described only if the current user may read it.
+    /// Property-level authorisation applies to properties annotated with [ua.com.fielden.platform.security.Authorise], of which `make` is one.
+    ///
+    @Test
+    public void a_property_is_not_described_when_reading_it_is_prohibited() {
+        removeAccessTo(TgVehicleModel_CanRead_make_Token.class);
+
+        assertThat(queryPropertyNames("TgVehicleModel"))
+                .doesNotContain("make")
+                .contains(ID, "key");
+    }
+
+    /// The meta-schema and the schema must agree on which properties are visible, which is why both consult [FieldVisibility].
+    ///
+    @Test
+    public void a_property_hidden_from_the_meta_schema_is_hidden_from_the_schema_as_well() {
+        assertThat(queryPropertyNames("TgVehicleModel")).contains("make");
+        assertThat(querySchemaFieldNames("TgVehicleModel")).contains("make");
+
+        removeAccessTo(TgVehicleModel_CanRead_make_Token.class);
+
+        assertThat(queryPropertyNames("TgVehicleModel")).doesNotContain("make");
+        assertThat(querySchemaFieldNames("TgVehicleModel")).doesNotContain("make");
+    }
+
+    /// The properties of a union are its members, and `id` is not among them, so a union whose properties were all withheld would be described with none at all.
+    ///
+    @Test
+    public void properties_of_a_union_type_are_described() {
+        final var unions = queryUnionTypes();
+
+        assertFalse("The test domain is expected to contain union types.", unions.isEmpty());
+        unions.forEach(union -> assertThat(namesOfProperties(union))
+                .as("Properties of union [%s].", union.get("name"))
+                .isNotEmpty());
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Utilities
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -391,6 +547,58 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
 
     private List<Map<String, Object>> queryAllTypes() {
         return queryEntityType(ALL_FIELDS);
+    }
+
+    private List<Map<String, Object>> queryUnionTypes() {
+        return queryAllTypes().stream().filter(ty -> "UNION".equals(ty.get("kind"))).toList();
+    }
+
+    /// Names of the properties that the meta-schema describes for the specified entity type.
+    ///
+    private List<String> queryPropertyNames(final String typeName) {
+        final var types = queryEntityType("{_entityType(eq: \"%s\"){name properties{name}}}".formatted(typeName));
+        return namesOfProperties(getType(types, typeName));
+    }
+
+    /// Field names of every type the schema exposes, by type name, through standard GraphQL introspection.
+    ///
+    @SuppressWarnings("unchecked")
+    private Map<String, List<String>> querySchemaFieldsByType() {
+        final var result = webApi.execute(input("{__schema{types{name fields{name}}}}"));
+        assertNoErrors(result);
+        final var schema = (Map<String, Object>) data(result).get("__schema");
+        return ((List<Map<String, Object>>) schema.get("types")).stream()
+                // A type without fields is a scalar or an enum, neither of which the meta-schema describes.
+                .filter(ty -> ty.get("fields") != null)
+                .collect(toMap(ty -> (String) ty.get("name"),
+                               ty -> ((List<Map<String, Object>>) ty.get("fields")).stream().map(field -> (String) field.get("name")).toList()));
+    }
+
+    /// Names of the fields that the schema itself exposes for the specified entity type, through standard GraphQL introspection.
+    ///
+    @SuppressWarnings("unchecked")
+    private List<String> querySchemaFieldNames(final String typeName) {
+        final var result = webApi.execute(input("{__type(name: \"%s\"){fields{name}}}".formatted(typeName)));
+        assertNoErrors(result);
+        final var type = (Map<String, Object>) data(result).get("__type");
+        assertNotNull("Type [%s] is not present in the schema.".formatted(typeName), type);
+        return ((List<Map<String, Object>>) type.get("fields")).stream().map(field -> (String) field.get("name")).toList();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> namesOfProperties(final Map<String, Object> entityType) {
+        return ((List<Map<String, Object>>) entityType.get("properties")).stream().map(prop -> (String) prop.get("name")).toList();
+    }
+
+    /// Withdraws `token` from the role of the current user.
+    ///
+    private void removeAccessTo(final Class<? extends ISecurityToken> token) {
+        final SecurityRoleAssociationCo co$ = co$(SecurityRoleAssociation.class);
+        co$.removeAssociations(setOf(
+                co$.new_()
+                        .setRole(co(UserRole.class).findByKey(UNIT_TEST_ROLE))
+                        .setSecurityToken(token)
+        ));
     }
 
     private void assertSingleError(final String query, final String expectedError) {

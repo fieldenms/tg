@@ -82,6 +82,29 @@ Executes a GraphQL query against the TG system and returns the result.
 The domain model is described to a language model through the GraphQL schema itself.
 `EntityTypeIntrospection` adds a `_entityType` root field to the GraphQL schema.
 
+### Schema and data
+
+The name "meta-schema" says what `_entityType` conveys, not what it is.
+The GraphQL schema is a schema: `GraphQLService` builds it once, at startup, and every request is validated and executed against that one structure.
+`_entityType` is an ordinary root field returning ordinary data, computed by its fetchers on each request.
+
+The two therefore live at different stages, and that is the governing distinction between them.
+What the schema expresses, it expresses through its shape, fixed before the first request arrives.
+What the meta-schema expresses, it expresses through the values its fetchers return, and so it may differ from one request to the next.
+
+Were structure all that mattered, this would be a distinction without a difference, because the structure of entity types does not change over the life of an application.
+But what a client may see of that structure does change, and it changes per user.
+Authorisation is the case in hand.
+The schema handles it through a facility GraphQL provides for exactly this purpose, `GraphqlFieldVisibility`, which lets a statically built schema present a different subset of itself to each request.
+No such facility is available to the meta-schema, because it is data, so its fetchers apply the rules themselves.
+
+This is what settles where each rule belongs.
+A rule that the schema has already applied is read back off the schema, which the meta-schema can do because the schema is built before any request arrives.
+A rule that no schema can hold, because its answer depends on the request, is stated once in `FieldVisibility` and called by both.
+Neither kind is restated in the fetchers; see [Visibility Rules and Where They Are Encoded](#visibility-rules-and-where-they-are-encoded).
+
+Where the two legitimately diverge, it is because a schema and a catalogue are under different obligations; see [Authorisation](#authorisation), which records each such divergence.
+
 ### `_EntityType`
 
 | Field | Description |
@@ -150,13 +173,10 @@ This decision is recorded on `EntityTypeIntrospection` so that it stays next to 
 
 ### Deferred
 
-- Authorisation.
-  `_entityType` must honour `Entity_CanReadModel_Token` at both type and property level, consistent with `FieldVisibility`.
-  Both fetchers currently carry a `TODO`.
-- Property filtering.
-  `GraphQLService.propertiesForGraphQlFields` does not apply the exclusion rules that `createGraphQLTypeFor` applies.
-  Properties of an unsupported type are already dropped, because a property cannot be described without the schema information that determines its type and arguments.
-  Properties rejected by `isExcluded` are not, so `_Property` can still list a property that has no GraphQL field.
+- Authorisation performance.
+  Every authorisation check is a database query: `authoriseReading` reaches `SecurityTokenController.canAccess`, which counts active security role associations, and nothing on that path is cached.
+  `_entityType` therefore costs one query per visible type, plus one per `@Authorise`d property of every type it describes, so an unfiltered query over the whole domain costs a query per entity type.
+  Memoising the decision for the duration of a request is the obvious remedy.
 - Consider modelling `_Property.type` as a GraphQL type rather than a name.
   Resolving it to `_EntityType` would let a single query retrieve a type's properties together with the key shape of every type they reference, which is otherwise one request per referenced type.
   Points to settle: value types have no `_EntityType`, so a nullable entity-typed field alongside the existing name is likely simpler than a union; the domain graph is cyclic, so this interacts with the maximum query depth instrumentation; and `typeKind` becomes derivable from the resolved type's `kind`, so the two decisions should be taken together.
@@ -230,22 +250,59 @@ The MCP server inherits the TG authorisation model:
 - `Entity_CanReadModel_Token` — controls schema visibility (which entities and properties appear in MCP resources).
 
 `FieldVisibility` enforces `Entity_CanReadModel_Token` for the domain schema.
-The meta-schema must do the same, at both type and property level, so that `_entityType` cannot enumerate a type whose model the current user is not authorised to read.
-This is outstanding; see [Deferred](#deferred).
+The meta-schema does the same, at both type and property level, so that `_entityType` cannot describe what the current user is not authorised to read.
+It does so in its fetchers rather than through field visibility, for the reason given under [Schema and data](#schema-and-data).
 
-### Schema and Resource Generation
+- A type is described only where `FieldVisibility.isModelReadable` holds for it.
+  A type with no token of its own, a union for instance, answers to the default `_CanReadModel_Token`.
+- The properties of a described type are the fields its GraphQL type exposes to this request, which the meta-schema obtains by asking the schema's own field visibility.
+  It is therefore the instance the schema already carries, applied to the field definitions the executor would resolve, that answers for both.
+  Withdrawing `<Type>_CanRead_<property>_Token` drops that property alone.
 
-The GraphQL schema, the `_entityType` meta-schema and the `tg://entities` resource must all describe the same set of types.
-They are separate code paths today and have already drifted, which is why the set of GraphQL-visible types is defined once, as a static method returning a stream of types, and used by every consumer:
+Two differences from the schema follow.
+The first is intended; the second is inherited from the schema and only partly so.
 
-- `GraphQLService.createQueryType`, when building the dictionary of root fields.
-- `EntityTypeIntrospection.EntityTypeFetcher`, when populating `_entityType`.
-- The `tg://entities` resource generator.
-- `FieldVisibility`, when building its set of domain types.
+1. Where reading a type's model is not authorised, the meta-schema omits the type; the schema keeps it, with `id` as its only field.
+   The schema has no choice, as the GraphQL specification does not permit a fieldless type, which is why `FieldVisibility` retains `id`.
+   A catalogue is under no such constraint, and a type stripped of everything but `id` tells a client nothing it can act on.
+   A consequence worth knowing when reading the code: the type-level check runs first, so the `id`-only branch of `visibilityPredicate` is unreachable from the meta-schema.
 
-This method belongs in `platform-pojo-bl`, not in `GraphQLService`.
-`platform-mcp` depends on `platform-pojo-bl` only, so a method on `GraphQLService` in `platform-dao` is out of reach of the resource generator — which is how the drift arose.
-The ingredients are already in `platform-pojo-bl`: `constructKeysAndProperties` and `isExcluded` on `AbstractDomainTreeRepresentation`, and `unionProperties` on `AbstractUnionEntity`.
-`FieldSchema` is the natural home, as it already owns the logic that determines what becomes a GraphQL field.
+2. Union types escape field visibility in the schema: `FieldVisibility.getFieldDefinitions` filters only the containers it recognises as queryable types and returns every field of anything else untouched.
+   A union's members are therefore always shown, whatever tokens the user holds.
+   The meta-schema takes a type's properties from that same method, so a union's members are shown there too, for the same reason.
 
-`FieldSchema` likewise remains the single source for property types and available arguments, so that `_Property.type` and `_Property.arguments` cannot disagree with the field definitions actually present in the schema.
+   The type-level check is separate and knows nothing of this, applying to every type described.
+   Withdrawing the default `_CanReadModel_Token` therefore removes a union from the meta-schema while leaving it untouched in the schema.
+
+   That a union escapes property authorisation at all looks like an oversight in `FieldVisibility` rather than a decision: a union member carrying `@Authorise` is unauthorised in the schema today.
+   Whatever is settled there will hold for the meta-schema without further work, which is the point of taking the properties from the same method.
+
+### Visibility Rules and Where They Are Encoded
+
+The GraphQL schema, the `_entityType` meta-schema and the `tg://entities` resource must all describe the same domain.
+Set out below is every rule that decides what the schema exposes, what the meta-schema does with each one today, and where each is to be stated from now on.
+
+#### The rules
+
+Static rules are settled when `GraphQLService` builds the schema and hold for the life of the application.
+
+| # | Rule | Encoded in |
+|---|------|------------|
+| S1 | A type is a domain type of a visible kind: persistent or synthetic, and not `@DenyIntrospection`. Unions are visible as property types but get no root field. | `GraphQLCommon.streamQueryableTypes` and `streamVisibleTypes` |
+| S2 | A type is not excluded in its own right — abstract, no `@KeyType`, an enum, and the other generic exclusions. | `createGraphQLTypeFor`, through `isExcluded(type, "")` |
+| S3 | The candidate properties of a type are its key members and properties, or its members if it is a union. | `GraphQLService.propertiesForGraphQlFields` |
+| S4 | A property is not excluded — `@Invisible`, `@Ignore`, `key` without `@KeyTitle`, `desc` without `@DescTitle`, a property whose type is itself excluded, and the rest. | `createGraphQLTypeFor`, through `isExcluded(type, property)` |
+| S5 | A property's type is one the Web API supports, which also fixes the field's GraphQL type and its arguments. | `FieldSchema.determineFieldType` |
+| S6 | A type left with no field is not a type at all and is dropped. | `createGraphQLTypeFor` |
+| S7 | A root field is named by uncapitalising the type's simple name. | `GraphQLCommon.rootFieldName` |
+
+Dynamic rules are evaluated per request, because the answer depends on who is asking.
+
+| # | Rule | Encoded in |
+|---|------|------------|
+| D1 | The current user may read a type's model, failing which only `id` remains of it. | `FieldVisibility.visibilityPredicate`, through `authoriseReading` under `READ_MODEL` |
+| D2 | The current user may read a given property. | `FieldVisibility.visibilityPredicate`, through the property's `@Authorise` token |
+
+Both reach the schema through `GraphqlFieldVisibility`, which graphql-java consults for the fields of a type.
+It is not consulted for the fields of `Query`, so a root field survives even where its type has been reduced to `id`.
+
