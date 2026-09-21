@@ -13,12 +13,14 @@ import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -28,19 +30,20 @@ import static graphql.schema.GraphQLArgument.newArgument;
 import static graphql.schema.GraphQLEnumType.newEnum;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLObjectType.newObject;
-import static graphql.schema.GraphQLTypeUtil.simplePrint;
+import static graphql.schema.GraphQLTypeUtil.*;
 import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.Reflector.getKeyMemberSeparator;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.web_api.FieldSchema.*;
-import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
+import static ua.com.fielden.platform.web_api.FieldVisibility.isModelReadable;
+import static ua.com.fielden.platform.web_api.GraphQLCommon.streamVisibleTypes;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.*;
 
 /// GraphQL definitions that describe the domain model.
@@ -145,14 +148,20 @@ public class EntityTypeIntrospection {
 
     private final IApplicationDomainProvider appDomainProvider;
     private final IDomainMetadata domainMetadata;
+    private final IAuthorisationModel authorisationModel;
+    private final ISecurityTokenProvider securityTokenProvider;
 
     @Inject
     protected EntityTypeIntrospection(
             final IApplicationDomainProvider appDomainProvider,
-            final IDomainMetadata domainMetadata)
+            final IDomainMetadata domainMetadata,
+            final IAuthorisationModel authorisationModel,
+            final ISecurityTokenProvider securityTokenProvider)
     {
         this.appDomainProvider = appDomainProvider;
         this.domainMetadata = domainMetadata;
+        this.authorisationModel = authorisationModel;
+        this.securityTokenProvider = securityTokenProvider;
     }
 
     public GraphQLSchema enhanceSchema(final GraphQLSchema schema) {
@@ -364,13 +373,13 @@ public class EntityTypeIntrospection {
     /// A union is reached through its members and exposes neither `key` nor `desc`, so a key shape would be meaningless for it.
     ///
     @SuppressWarnings("unchecked")
-    private EntityType mkEntityType(final Class<? extends AbstractEntity<?>> entityType) {
+    private EntityType mkEntityType(final Class<? extends AbstractEntity<?>> entityType, final @Nullable String rootField) {
         final var titleAndDesc = getEntityTitleAndDesc(entityType);
-        final var queryable = isQueryableType(entityType);
+        final var queryable = rootField != null;
         final var keyKind = queryable ? keyKindOf(entityType) : null;
         return new EntityType(
                 entityType.getSimpleName(),
-                queryable ? rootFieldName(entityType) : null,
+                rootField,
                 titleAndDesc.getKey(),
                 titleAndDesc.getValue(),
                 entityKindOf(entityType),
@@ -409,30 +418,27 @@ public class EntityTypeIntrospection {
         }
     }
 
-    /// Describes `property` of `entityType` as it appears in the GraphQL schema.
+    /// Creates an introspected representation of the specified entity property.
     ///
-    /// Returns an empty [Optional] if the property has no GraphQL field, so that the meta-schema cannot advertise a property that is not there.
+    /// Everything that decides whether a property is visible at all, and under what type and arguments, is read off `field`.
     ///
-    private Optional<Property> mkProperty(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
-        return domainMetadata.forPropertyOpt(entityType, property)
-                .flatMap(pm -> {
-                    final var valueType = determinePropertyType(entityType, property);
-                    final var collectional = isCollectional(determineClass(entityType, property.toString(), true, false));
-                    return determineFieldTypeNonCollectional(valueType)
-                            .map(typeAndArguments -> typeAndArguments.map((graphQLType, arguments) -> {
-                                final var titleAndDesc = getTitleAndDesc(property, entityType);
-                                return new Property(
-                                        property.toString(),
-                                        titleAndDesc.getKey(),
-                                        titleAndDesc.getValue(),
-                                        simplePrint(graphQLType),
-                                        typeKindOf(valueType),
-                                        collectional,
-                                        // A collectional property accepts no arguments; see `determineFieldType`.
-                                        collectional ? List.of() : arguments.stream().map(GraphQLArgument::getName).toList(),
-                                        isBoolean(valueType) || pm.is(REQUIRED));
-                            }));
-                });
+    private Property mkProperty(final Class<? extends AbstractEntity<?>> entityType, final GraphQLFieldDefinition field) {
+        final var titleAndDesc = getTitleAndDesc(field.getName(), entityType);
+        final var propertyType = determinePropertyType(entityType, field.getName());
+        return new Property(
+                field.getName(),
+                titleAndDesc.getKey(),
+                titleAndDesc.getValue(),
+                // For a collectional property this is the type of its elements, which is the type to query as a root field.
+                simplePrint(unwrapAll(field.getType())),
+                typeKindOf(propertyType),
+                isList(field.getType()),
+                field.getArguments().stream().map(GraphQLArgument::getName).toList(),
+                // A boolean property is always assigned, being either `true` or `false`.
+                // A field can exist where the domain has no metadata to go with it.
+                // E.g., `version` on a synthetic type that does not yield it.
+                // Such a property can be considered not required.
+                isBoolean(propertyType) || domainMetadata.forPropertyOpt(entityType, field.getName()).map(pm -> pm.is(REQUIRED)).orElse(false));
     }
 
     private TypeKind typeKindOf(final Class<?> valueType) {
@@ -447,17 +453,40 @@ public class EntityTypeIntrospection {
         }
     }
 
+    /// Describes the domain types that the schema contains and whose model the current user is authorised to read.
+    ///
+    /// Whether a type reaches the schema at all is settled once, when the schema is built, so it is answered by looking the type up
+    /// rather than by re-running the rules that put it there.
+    /// Whether the current user may read it is settled per request, so it is answered by [FieldVisibility#isModelReadable], the one statement of that rule.
+    ///
+    /// A type that fails this check is omitted, whereas the schema keeps it with `id` as its only field, as a GraphQL type cannot be fieldless.
+    /// Because this check precedes [#propertiesFetcher], the `id`-only branch of [FieldVisibility#visibilityPredicate] is unreachable from here.
+    ///
     private DataFetcher<List<EntityType>> entityTypeFetcher() {
         return new DataFetcher<>() {
             @Override
             public List<EntityType> get(final DataFetchingEnvironment environment) {
-                // TODO Authorisation -- honour Entity_CanReadModel_Token, consistent with FieldVisibility.
+                final var schema = environment.getGraphQLSchema();
+                final var rootFields = rootFieldsByTypeName(schema);
                 return streamVisibleTypes(appDomainProvider)
                         .filter(namePredicate(environment.getArgument(EQ), environment.getArgument(LIKE)))
-                        .map(EntityTypeIntrospection.this::mkEntityType)
+                        .filter(ty -> schema.getType(ty.getSimpleName()) instanceof GraphQLObjectType)
+                        .filter(ty -> isModelReadable(ty, authorisationModel, securityTokenProvider))
+                        .map(ty -> mkEntityType(ty, rootFields.get(ty.getSimpleName())))
                         .toList();
             }
         };
+    }
+
+    /// Maps the name of each type that has a root field to the name of that field.
+    /// A type absent from this map is reachable only as a property type, which is the case for unions.
+    ///
+    private static Map<String, String> rootFieldsByTypeName(final GraphQLSchema schema) {
+        return schema.getQueryType().getFieldDefinitions().stream()
+                .collect(toMap(field -> simplePrint(unwrapAll(field.getType())),
+                               GraphQLFieldDefinition::getName,
+                               // Two root fields cannot share a domain type, and the meta-schema's own root field is not one.
+                               (a, _) -> a));
     }
 
     /// A predicate on an entity type's simple name, as specified by arguments `eq` and `like` of [#ENTITY_TYPE_ROOT_FIELD_NAME].
@@ -498,23 +527,26 @@ public class EntityTypeIntrospection {
         return Pattern.compile(Arrays.stream(value.split(quote(WILDCARD), -1)).map(Pattern::quote).collect(joining(".*")));
     }
 
+    /// Describes the properties of an entity type as the fields its GraphQL type exposes to this request.
+    ///
+    /// The schema's own field visibility is asked for those fields, so the meta-schema describes the very field definitions
+    /// the executor would resolve, and neither the rules that admitted a property to the schema nor those that authorise
+    /// reading it are restated here.
+    ///
     private DataFetcher<List<Property>> propertiesFetcher() {
         return new DataFetcher<>() {
             @Override
             public List<Property> get(final DataFetchingEnvironment environment) {
                 if (environment.getSource() instanceof EntityType entityType) {
-                    // TODO Reuse rules from FieldVisibility to filter properties.
-                    // TODO Apply the exclusion rules used by GraphQLService.createGraphQLTypeFor, which also drops excluded properties.
-                    final var type = entityType.type();
-                    return GraphQLService.propertiesForGraphQlFields(type)
-                            .stream()
-                            .map(field -> mkProperty(type, field.getName()))
-                            .flatMap(Optional::stream)
-                            .toList();
+                    final var schema = environment.getGraphQLSchema();
+                    if (schema.getType(entityType.name()) instanceof GraphQLObjectType objectType) {
+                        return schema.getCodeRegistry().getFieldVisibility().getFieldDefinitions(objectType)
+                                .stream()
+                                .map(field -> mkProperty(entityType.type(), field))
+                                .toList();
+                    }
                 }
-                else {
-                    return List.of();
-                }
+                return List.of();
             }
         };
     }
