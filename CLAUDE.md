@@ -190,3 +190,22 @@ Every change should be followed by corresponding changes to the documentation.
 This includes comments and documentation within the code, and external documentation, such as design documents, wiki pages, `platform-doc/claude/`, etc.
 This rule should be followed when reviewing changes.
 Perform documentation lookup efficiently: external documentation is more likely to cover high-level architectural decisions and conventions rather than low-level implementation details.
+
+### Document What Exists
+
+Documentation states what the code does and why it is as it is.
+It does not record why something else is absent.
+Do not write that a field, type, parameter or method "is not needed", "would be redundant", or "was considered and rejected".
+What does not exist is unbounded, so such a statement could be made about anything, which is why it conveys nothing.
+It is also unfalsifiable, so nothing ever prompts its removal and it accumulates.
+
+State the fact positively, on the thing that does exist.
+Not "a separate `elementType` is not needed, because `type` already reports the element type", but "for a collectional property, `type` reports the type of its elements".
+The same applies to a `TODO` describing a feature nobody has asked for, and to a comment explaining why a simpler implementation was not chosen.
+
+Two things this does not prohibit, because in both the absent thing has a claim on the reader.
+
+1. Choosing between real alternatives.
+   Where a reader would otherwise reach for a named, existing mechanism — a platform facility, a library, a standard — say why the implemented design was preferred to it.
+2. The boundary of a contract.
+   What an API deliberately does not expose is part of what it does expose, and belongs in its documentation, particularly where a developer would otherwise reintroduce it.
