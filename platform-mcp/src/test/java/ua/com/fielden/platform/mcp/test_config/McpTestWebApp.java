@@ -10,8 +10,6 @@ import ua.com.fielden.platform.mcp.web.McpResourceFactory;
 ///
 public class McpTestWebApp extends Application {
 
-    public static final String PATH_MCP = "/mcp";
-
     private final McpResourceFactory mcpResourceFactory;
 
     @Inject
@@ -23,7 +21,7 @@ public class McpTestWebApp extends Application {
     public synchronized Restlet getInboundRoot() {
         final Router router = new Router(getContext());
 
-        router.attach(PATH_MCP, mcpResourceFactory);
+        router.attach(TgMcpServerTestCaseConfiguration.PATH_MCP, mcpResourceFactory);
 
         return router;
     }

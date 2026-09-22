@@ -9,15 +9,13 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 @RunWith(TgMcpServerTestRunner.class)
 public abstract class AbstractTgMcpServerTestCase extends AbstractDaoTestCase {
 
-    public static final String USER_MCP_TEST = "MCP_TEST";
-
     @Override
     protected void populateDomain() {
         super.populateDomain();
 
         // Create a user for MCP test clients.
         final var userMcpBase = save(new_(User.class).setKey("MCP_BASE").setBase(true).setActive(true).setEmail("mcp_base@tg.dev"));
-        save(new_(User.class).setKey(USER_MCP_TEST).setActive(true).setEmail("mcp_test@tg.dev").setBasedOnUser(userMcpBase));
+        save(new_(User.class).setKey(TgMcpServerTestCaseConfiguration.USER_MCP_TEST).setActive(true).setEmail("mcp_test@tg.dev").setBasedOnUser(userMcpBase));
     }
 
 }
