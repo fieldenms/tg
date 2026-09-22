@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ua.com.fielden.platform.mcp.test_config.AbstractTgMcpServerTestCase;
 import ua.com.fielden.platform.mcp.test_config.McpTestWebApp;
+import ua.com.fielden.platform.mcp.test_config.TgMcpServerTestCaseConfiguration;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
@@ -38,7 +39,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     private final McpTestWebApp webApp = getInstance(McpTestWebApp.class);
     private final McpSyncClient mcpClient = McpClient.sync(
             HttpClientStreamableHttpTransport.builder(URI)
-                    .endpoint(PREFIX + McpTestWebApp.PATH_MCP)
+                    .endpoint(PREFIX + TgMcpServerTestCaseConfiguration.PATH_MCP)
                     .build())
             .requestTimeout(Duration.ofHours(999))
             .build();
@@ -46,7 +47,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     @Before
     public void startUp() {
         TestWebApplication.attachWebApplication(PREFIX, webApp);
-        setUser(USER_MCP_TEST);
+        setUser(TgMcpServerTestCaseConfiguration.USER_MCP_TEST);
     }
 
     @After

@@ -9,6 +9,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
+import ua.com.fielden.platform.mcp.McpConfig;
 import ua.com.fielden.platform.mcp.ioc.McpIocModule;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -23,6 +24,9 @@ import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 
 public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
 
+    public static final String USER_MCP_TEST = "MCP_TEST";
+    public static final String PATH_MCP = "/mcp";
+
     private final Injector injector;
 
     public TgMcpServerTestCaseConfiguration(final Properties properties) {
@@ -30,7 +34,7 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
         final var appDomain = new PlatformTestDomainTypes();
         injector = new ApplicationInjectorFactory()
                 .add(IocModule.create(appDomain, appDomain.entityTypes(), appProperties))
-                .add(new McpIocModule())
+                .add(new McpIocModule(appProperties))
                 .add(new NewUserEmailNotifierTestIocModule())
                 .getInjector();
     }
@@ -62,6 +66,10 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
         props.setProperty("web.port", "443");
         props.setProperty("port", "8091");
         props.setProperty("web.path", "/");
+        // MCP
+        props.setProperty(McpConfig.MCP_RESOURCE_PATH, PATH_MCP);
+        props.setProperty(McpConfig.WEB_API_KEY_MCP, "secret");
+        props.setProperty(McpConfig.MCP_USER, USER_MCP_TEST);
         return props;
     }
 
