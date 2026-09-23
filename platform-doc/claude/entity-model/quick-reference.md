@@ -65,6 +65,12 @@ co$(Vehicle.class).findByKeyAndFetch(VehicleCo.FETCH_MODEL, key);
 ```
 Narrower fetches are fine for read-only access but never for the write path.
 
+**After `save`, use the returned instance — never the one you passed in.**
+The refetch refreshes the entire fetched subtree so every relationship carries its current `version`; the passed-in entity is left holding the old one.
+Reusing it, or anything reachable from it, risks `EntityWasUpdatedOrDeletedConcurrently` against a change your own save caused.
+`save(entity, Optional.empty())` and `quickSave` skip the refetch and return only an ID — after either, re-read before mutating anything from that graph.
+See `entity-model/reference.md` § *Why the refetch after save exists*.
+
 ## Calculated Properties
 
 ```java
@@ -74,6 +80,10 @@ protected static final ExpressionModel totalCost_ = expr().prop(X_.hours()).mult
 ```
 
 Used in aggregations, EQL expands the expression inline (e.g., `SUM(hours * rate)`).
+
+**Calculated properties of an entity must not depend on each other cyclically**, whatever their types.
+A cycle is a domain-definition error, and `DependentCalcPropsVerifier` rejects it at application startup with a message naming the entity and the offending cycle, e.g. `[i1 -> i2 -> i1]`.
+A dependency is any reference an expression makes to another calculated property of the same entity, whether to its value or by navigating into it (`otherCalc.someProp`).
 
 For `BigDecimal` calculated properties, any literal default (`then().val(...)`) — and any consumer literal such as a test assertion — must match the declared `@IsProperty(scale = N)`.
 `BigDecimal.equals` is scale-sensitive, so `BigDecimal.ZERO` (scale 0) does not equal `0.00` (scale 2) returned from the DB.

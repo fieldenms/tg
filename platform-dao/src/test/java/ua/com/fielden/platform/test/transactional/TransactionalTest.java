@@ -1,16 +1,11 @@
 package ua.com.fielden.platform.test.transactional;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED;
-
 import org.junit.Before;
 import org.junit.Test;
+import ua.com.fielden.platform.ioc.session.exceptions.TransactionCommitException;
 
+import java.sql.Connection;
+import java.util.stream.Stream;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
@@ -19,12 +14,12 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
-/**
- * A test case for transaction support that reuses {@link EntityWithMoney} test entity class and {@link LogicThatNeedsTransaction} with transactional methods.
- * 
- * @author TG Team
- * 
- */
+import static java.lang.String.format;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED;
+
+/// A test case for transaction support that reuses [EntityWithMoney] test entity class and [LogicThatNeedsTransaction] with transactional methods.
+///
 public class TransactionalTest extends AbstractDaoTestCase {
     private LogicThatNeedsTransaction logic;
     private EntityWithMoneyDao dao;
@@ -36,7 +31,7 @@ public class TransactionalTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void single_transacation_is_committed_resulting_in_data_saving() {
+    public void single_transaction_is_committed_resulting_in_data_saving() {
         logic.singleTransactionInvocaion("20.00", "30.00");
         assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
 
@@ -50,7 +45,7 @@ public class TransactionalTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void netsted_transactions_are_supported_and_all_data_is_saved_upon_commit() {
+    public void nested_transactions_are_supported_and_all_data_is_saved_upon_commit() {
         logic.nestedTransactionInvocaion("20.00", "30.00");
         assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
 
@@ -133,6 +128,42 @@ public class TransactionalTest extends AbstractDaoTestCase {
         assertFalse("Transaction should have been inactive at this stage (committed).", logic.getSession().isOpen());
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
+    }
+
+    /// Every save in a TG application goes through a companion, which flushes explicitly — but a flush is not durability, only the commit is.
+    /// When the commit fails, `SessionInterceptor.commitTransactionAndCloseSession` catches it,
+    /// logs `Could not commit transaction.` and returns normally.
+    /// As the result, a perfectly ordinary save is reported as successful while the database has rolled it back.
+    /// This should not be happening with the correct error handling by the [SessionInterceptor].
+    ///
+    @Test
+    public void commit_failure_after_a_successful_companion_save_is_reported_to_the_caller() {
+        final String key = "lost";
+
+        assertThrows("A save whose commit failed must not be reported to the caller as success.",
+                     Exception.class,
+                     () -> logic.saveThenLoseConnectionBeforeCommit(key));
+
+        assertNull("The flushed INSERT was rolled back with the transaction.", dao.findByKey(key));
+    }
+
+    /// The same commit runs from a `Stream.onClose` handler when a `SessionRequired` method returns a stream,
+    /// so the failure has to survive `Stream#close` to reach the caller.
+    ///
+    @Test
+    public void commit_failure_on_stream_close_is_reported_to_the_caller() {
+        final String key = "streamed";
+        assertThrows("A commit that failed on stream close must not be silent.",
+                     TransactionCommitException.class,
+                     () -> {
+                         try (final Stream<EntityWithMoney> stream = logic.saveAndStream(key)) {
+                             stream.forEach(entity -> {
+                             });                 // consume while the connection is still alive
+                             logic.getSession().doWork(Connection::close);  // then release it, as a pool eviction would
+                         }
+                     });
+
+        assertNull("The flushed INSERT was rolled back with the transaction.", dao.findByKey(key));
     }
 
     @Test

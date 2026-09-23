@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.operands;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
@@ -19,6 +20,12 @@ public class Expression3 extends AbstractSingleOperand3 {
         super(type);
         this.firstOperand = first;
         this.otherOperands = items;
+    }
+
+    public static TransformationResultFromStage2To3<? extends ISingleOperand3> simplify(final TransformationResultFromStage2To3<Expression3> exprTr) {
+        return exprTr.item.isSingleOperandExpression()
+                ? new TransformationResultFromStage2To3<>(exprTr.item.firstOperand, exprTr.updatedContext)
+                : exprTr;
     }
 
     public boolean isSingleOperandExpression() {

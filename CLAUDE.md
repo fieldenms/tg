@@ -83,6 +83,7 @@ Topic-specific gotchas live in each directory's `quick-reference.md`.
    The enum-on-String idiom relies on this: a public `setKind(Kind)` calling `this.setKind(kind.name())` against a protected `@Observable` String setter is fully observed (e.g. `AbstractFunctionalEntityForCompoundMenuItemWithCustomCanLeave.setLeaveReason`).
 8. **`isDirty()` before side effects**: In DAO `save()`, check property dirtiness before cascading updates.
 9. **`try-with-resources` with `stream()`**: Entity streams hold database resources that must be closed.
+   Reserve `co.stream(qem)` for large or unbounded results; for small, bounded ones (e.g. a selection by IDs) use `co.getAllEntities(qem)` — nothing to close, no `try` block.
 10. **Fetch model instrumentation precedence**: If a fetch model is instrumented, entities *are* instrumented even if `QueryExecutionModel` is lightweight.
 11. **GraphQL API**: Read-only queries only.
     Fields are uncapitalized entity names.
@@ -142,6 +143,13 @@ Settings holders (e.g. `WebApiSettings`), stateless services, and IoC-bound util
 Without `@Singleton`, Guice creates a fresh instance per injection point — wasteful, and conceptually wrong for "global app config" or shared infrastructure.
 Do **not** apply `@Singleton` to classes that hold per-request / per-thread state, or that are explicitly intended to be re-instantiated.
 
+**Persistent data structures — [vavr](https://vavr.io) is available platform-wide.**
+`io.vavr:vavr` is declared in `platform-pojo-bl`, so it reaches TG-based applications transitively and may be used in application code without adding a dependency.
+The version is managed centrally in the root `pom.xml`.
+Reach for it when a structure is *updated repeatedly along a computation* and each intermediate version must remain intact: vavr path-copies one branch per update, whereas rebuilding a Guava `ImmutableMap` per step is O(n) each time and O(n²) overall.
+`PropPathResolver` is the reference example — folding resolution state through `LinkedHashMap`/`HashMap` cut both allocation and time by roughly a third against immutable-collection rebuilding.
+It is **not** a general replacement for Guava immutable collections or `java.util`: for a collection built once and then only read, those remain the right choice.
+
 **Grouped constants:** when several `static final` fields of the same type form a logical *set of alternatives* — alternative error messages produced by the same validator, alternative warnings from the same definer, parallel format-string templates — declare them under a single `public static final <Type>` line, separated by commas:
 ```java
 public static final String
@@ -173,3 +181,31 @@ Cross-links from a quick-reference should prefer another quick-reference; from a
 | `testing/` | Fetch patterns, indirect testing, test data caching | `reference.md` — DynamicQueryBuilder testing, test clock, web resource testing |
 | `security/` | Token templates, `@Authorise` usage | `reference.md` — `@Authorise` + AOP infrastructure, authorization scopes (DAO/Producer/Property/Action), runtime-generated audit tokens |
 | `auditing/` | @Audited basics, generated types, test config | `reference.md` — full type hierarchy, versioning, runtime plumbing, GenAudit, Web UI |
+
+## Development Guidelines
+
+### Keep Documentation up-to-date
+
+Every change should be followed by corresponding changes to the documentation.
+This includes comments and documentation within the code, and external documentation, such as design documents, wiki pages, `platform-doc/claude/`, etc.
+This rule should be followed when reviewing changes.
+Perform documentation lookup efficiently: external documentation is more likely to cover high-level architectural decisions and conventions rather than low-level implementation details.
+
+### Document What Exists
+
+Documentation states what the code does and why it is as it is.
+It does not record why something else is absent.
+Do not write that a field, type, parameter or method "is not needed", "would be redundant", or "was considered and rejected".
+What does not exist is unbounded, so such a statement could be made about anything, which is why it conveys nothing.
+It is also unfalsifiable, so nothing ever prompts its removal and it accumulates.
+
+State the fact positively, on the thing that does exist.
+Not "a separate `elementType` is not needed, because `type` already reports the element type", but "for a collectional property, `type` reports the type of its elements".
+The same applies to a `TODO` describing a feature nobody has asked for, and to a comment explaining why a simpler implementation was not chosen.
+
+Two things this does not prohibit, because in both the absent thing has a claim on the reader.
+
+1. Choosing between real alternatives.
+   Where a reader would otherwise reach for a named, existing mechanism — a platform facility, a library, a standard — say why the implemented design was preferred to it.
+2. The boundary of a contract.
+   What an API deliberately does not expose is part of what it does expose, and belongs in its documentation, particularly where a developer would otherwise reintroduce it.

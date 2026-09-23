@@ -21,14 +21,16 @@ Transformation flows: `Stage1.transform(context) → Stage2`, `Stage2.transform(
 ```
 QueryModelToStage1Transformer  →  ResultQuery1
     ResultQuery1.transform(ctx1)  →  ResultQuery2
-        PathsToTreeTransformer.transformFinally(query2.collectProps())  →  property tree
+        IPropPathResolver.resolve(query2.collectProps(), gen)  →  resolutions + implicit joins
         ResultQuery2.transform(ctx2)  →  ResultQuery3
             ResultQuery3.sql(metadata, dbVersion)  →  SQL string
 ```
 
 Note that `collectProps()` is called on the **entire** `ResultQuery2` before the stage 2→3 transformation.
-The collected properties are fed through `PathsToTreeTransformer.transformFinally()` to build the property resolution tree used during transformation.
+The collected properties are fed through `IPropPathResolver.resolve()`, which resolves each one to either a persistent column or a calculated property's expression, and produces the implicit joins those paths require.
+Its result is carried through the stage 2→3 transformation in `TransformationContextFromStage2To3`.
 This is why overriding `collectProps()` in custom stage 2 classes is critical — properties not in this set are invisible to the resolver.
+A calculated property resolves to an `Expression2` that is expanded only once, so consumers must expand it using the resolver's own `Resolution.Expr#expr` rather than compiling the expression afresh — the resolver has already analysed that instance, including the source IDs of any sub-queries it contains.
 
 ## Adding a New EQL Function — Checklist
 
@@ -125,8 +127,8 @@ This allows reuse of ordering definitions across queries.
 **Stage 2** (e.g., `ConcatOf2`):
 - Extends corresponding `*Function2` base class.
 - **Critical:** Override `collectProps()` and `collectEntityTypes()` to include ALL operands.
-  This is how the property resolution engine discovers which properties need to be resolved.
-  Missing properties here causes `leafProp is null` errors at Stage 3.
+  This is how `IPropPathResolver` discovers which properties need to be resolved.
+  Missing properties here cause `EqlStage2ProcessingException: Could not resolve property [...]` at Stage 3.
 - `transform()` threads `TransformationContextFromStage2To3` through each operand sequentially.
 
 **Stage 3** (e.g., `ConcatOf3`):
@@ -176,7 +178,7 @@ orderItems.stream().map(...).collect(toImmutableList());  // transformation
 
 The stage 2→3 transformation resolves properties using the set collected by `collectProps()`.
 **Every operand that references a property must contribute to this set.**
-If an operand is only in an auxiliary position (e.g., ORDER BY inside an aggregate), failing to include it causes `leafProp is null` at runtime.
+If an operand is only in an auxiliary position (e.g., ORDER BY inside an aggregate), failing to include it causes `EqlStage2ProcessingException: Could not resolve property [...] against source [...]` at runtime.
 
 The pattern:
 ```java
@@ -256,6 +258,11 @@ The stage 1→2 transformation is not always 1:1.
 `Yields1.transform()` applies `ExpandUnionTypedYield1`, which can expand a single yield into multiple yields.
 For example, `yield().val(null).as("location")` where `location` is a union type expands into one null yield per union member (`location.workshop`, `location.wagonSlot`, etc.).
 This expansion uses `domainMetadata` to resolve the union type and its members.
+
+`Yields1.transform()` also applies `ExpandSingleComponentTypedYield1`, which rewrites a yield whose alias targets a property of a component type with a single component into a yield with the alias of that component.
+For example, `yield().val(null).as("price")` where `price : Money` under the platform default mapping (`SimpleMoneyType`, `amount` only) becomes `yield().val(null).as("price.amount")`, so that null type resolution (below) infers `BigDecimal` rather than `Money`, for which no SQL-level cast exists under PostgreSQL.
+Properties whose component representation has several components (e.g. `Money` mapped with tax and currency) are left untouched.
+This is a temporary measure pending [#2675](https://github.com/fieldenms/tg/issues/2675), which is to replace it.
 
 ### Null Type Resolution in Yields
 

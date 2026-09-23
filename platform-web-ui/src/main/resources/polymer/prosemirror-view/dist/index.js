@@ -207,6 +207,9 @@ function clientRect(node) {
         top: rect.top, bottom: rect.top + node.clientHeight * scaleY };
 }
 function scrollRectIntoView(view, rect, startDOM) {
+    // Skip empty rects with all sides at 0, for example, when the element has no CSS box (display: none)
+    if (!nonZero(rect) && rect.left == 0)
+        return;
     let scrollThreshold = view.someProp("scrollThreshold") || 0, scrollMargin = view.someProp("scrollMargin") || 5;
     let doc = view.dom.ownerDocument;
     for (let parent = startDOM || view.dom;;) {
@@ -761,7 +764,7 @@ class ViewDesc {
     // When parsing in-editor content (in domchange.js), we allow
     // descriptions to determine the parse rules that should be used to
     // parse them.
-    parseRule() { return null; }
+    parseRule(addedNodes) { return null; }
     // Used by the editor's event handler to ignore events that come
     // from certain descs.
     stopEvent(event) { return false; }
@@ -1166,7 +1169,8 @@ class WidgetViewDesc extends ViewDesc {
                 wrap.appendChild(dom);
                 dom = wrap;
             }
-            dom.contentEditable = "false";
+            if (!dom.hasAttribute("contenteditable"))
+                dom.contentEditable = "false";
             dom.classList.add("ProseMirror-widget");
         }
         super(parent, [], dom, null);
@@ -1273,7 +1277,7 @@ class MarkViewDesc extends ViewDesc {
 // correspond to an actual node in the document. Unlike mark descs,
 // they populate their child array themselves.
 class NodeViewDesc extends ViewDesc {
-    constructor(parent, node, outerDeco, innerDeco, dom, contentDOM, nodeDOM, view, pos) {
+    constructor(parent, node, outerDeco, innerDeco, dom, contentDOM, nodeDOM) {
         super(parent, [], dom, contentDOM);
         this.node = node;
         this.outerDeco = outerDeco;
@@ -1319,13 +1323,13 @@ class NodeViewDesc extends ViewDesc {
         let nodeDOM = dom;
         dom = applyOuterDeco(dom, outerDeco, node);
         if (spec)
-            return descObj = new CustomNodeViewDesc(parent, node, outerDeco, innerDeco, dom, contentDOM || null, nodeDOM, spec, view, pos + 1);
+            return descObj = new CustomNodeViewDesc(parent, node, outerDeco, innerDeco, dom, contentDOM || null, nodeDOM, spec);
         else if (node.isText)
-            return new TextViewDesc(parent, node, outerDeco, innerDeco, dom, nodeDOM, view);
+            return new TextViewDesc(parent, node, outerDeco, innerDeco, dom, nodeDOM);
         else
-            return new NodeViewDesc(parent, node, outerDeco, innerDeco, dom, contentDOM || null, nodeDOM, view, pos + 1);
+            return new NodeViewDesc(parent, node, outerDeco, innerDeco, dom, contentDOM || null, nodeDOM);
     }
-    parseRule() {
+    parseRule(addedNodes) {
         // Experimental kludge to allow opt-in re-parsing of nodes
         if (this.node.type.spec.reparseInView)
             return null;
@@ -1353,8 +1357,14 @@ class NodeViewDesc extends ViewDesc {
                     break;
                 }
             }
-            if (!rule.contentElement)
-                rule.getContent = () => Fragment.empty;
+            if (!rule.contentElement) {
+                let found = addedNodes &&
+                    addedNodes.find(n => n.nodeType == 1 && addedNodes.indexOf(n.parentNode) < 0 && this.dom.contains(n));
+                if (found)
+                    rule.contentElement = found;
+                else
+                    rule.getContent = () => Fragment.empty;
+            }
         }
         return rule;
     }
@@ -1507,14 +1517,14 @@ class NodeViewDesc extends ViewDesc {
 // and used by the view class.
 function docViewDesc(doc, outerDeco, innerDeco, dom, view) {
     applyOuterDeco(dom, outerDeco, doc);
-    let docView = new NodeViewDesc(undefined, doc, outerDeco, innerDeco, dom, dom, dom, view, 0);
+    let docView = new NodeViewDesc(undefined, doc, outerDeco, innerDeco, dom, dom, dom);
     if (docView.contentDOM)
         docView.updateChildren(view, 0);
     return docView;
 }
 class TextViewDesc extends NodeViewDesc {
-    constructor(parent, node, outerDeco, innerDeco, dom, nodeDOM, view) {
-        super(parent, node, outerDeco, innerDeco, dom, null, nodeDOM, view, 0);
+    constructor(parent, node, outerDeco, innerDeco, dom, nodeDOM) {
+        super(parent, node, outerDeco, innerDeco, dom, null, nodeDOM);
     }
     parseRule() {
         let skip = this.nodeDOM.parentNode;
@@ -1554,9 +1564,9 @@ class TextViewDesc extends NodeViewDesc {
     ignoreMutation(mutation) {
         return mutation.type != "characterData" && mutation.type != "selection";
     }
-    slice(from, to, view) {
+    slice(from, to, _view) {
         let node = this.node.cut(from, to), dom = document.createTextNode(node.text);
-        return new TextViewDesc(this.parent, node, this.outerDeco, this.innerDeco, dom, dom, view);
+        return new TextViewDesc(this.parent, node, this.outerDeco, this.innerDeco, dom, dom);
     }
     markDirty(from, to) {
         super.markDirty(from, to);
@@ -1578,8 +1588,8 @@ class TrailingHackViewDesc extends ViewDesc {
 // extra checks only have to be made for nodes that are actually
 // customized.
 class CustomNodeViewDesc extends NodeViewDesc {
-    constructor(parent, node, outerDeco, innerDeco, dom, contentDOM, nodeDOM, spec, view, pos) {
-        super(parent, node, outerDeco, innerDeco, dom, contentDOM, nodeDOM, view, pos);
+    constructor(parent, node, outerDeco, innerDeco, dom, contentDOM, nodeDOM, spec) {
+        super(parent, node, outerDeco, innerDeco, dom, contentDOM, nodeDOM);
         this.spec = spec;
     }
     // A custom `update` method gets to decide whether the update goes
@@ -1814,6 +1824,19 @@ class ViewTreeUpdater {
                 if (next.matchesMark(marks[depth]) && !this.isLocked(next.dom)) {
                     found = i;
                     break;
+                }
+            }
+            // When nothing matches, try to update the mark view at this position
+            // in place, so a custom mark view can adapt to a changed mark without
+            // re-creating its DOM.
+            if (found < 0 && this.index < this.top.children.length) {
+                let cur = this.top.children[this.index];
+                if (cur instanceof MarkViewDesc && cur.dirty != NODE_DIRTY &&
+                    cur.mark.type == marks[depth].type && cur.spec.update &&
+                    !this.isLocked(cur.dom) && cur.spec.update(marks[depth])) {
+                    cur.mark = marks[depth];
+                    found = this.index;
+                    this.changed = true;
                 }
             }
             if (found > -1) {
@@ -2984,9 +3007,8 @@ const wrapMap = {
     td: ["table", "tbody", "tr"],
     th: ["table", "tbody", "tr"]
 };
-let _detachedDoc = null;
 function detachedDoc() {
-    return _detachedDoc || (_detachedDoc = document.implementation.createHTMLDocument("title"));
+    return document.implementation.createHTMLDocument("title");
 }
 let _policy = null;
 function maybeWrapTrusted(html) {
@@ -2996,15 +3018,21 @@ function maybeWrapTrusted(html) {
     // With the require-trusted-types-for CSP, Chrome will block
     // innerHTML, even on a detached document. This wraps the string in
     // a way that makes the browser allow us to use its parser again.
-    if (!_policy)
-        _policy = trustedTypes.defaultPolicy || trustedTypes.createPolicy("ProseMirrorClipboard", { createHTML: (s) => s });
+    if (!_policy) {
+        if (_policy = trustedTypes.defaultPolicy)
+            try {
+                return _policy.createHTML(html);
+            }
+            catch (_a) { }
+        _policy = trustedTypes.createPolicy("ProseMirrorClipboard", { createHTML: (s) => s });
+    }
     return _policy.createHTML(html);
 }
 function readHTML(html) {
     let metas = /^(\s*<meta [^>]*>)*/.exec(html);
     if (metas)
         html = html.slice(metas[0].length);
-    let elt = detachedDoc().createElement("div");
+    let doc = detachedDoc(), elt = doc.body;
     let firstTag = /<([a-z][^>\s]+)/i.exec(html), wrap;
     if (wrap = firstTag && wrapMap[firstTag[1].toLowerCase()])
         html = wrap.map(n => "<" + n + ">").join("") + html + wrap.map(n => "</" + n + ">").reverse().join("");
@@ -3012,6 +3040,18 @@ function readHTML(html) {
     if (wrap)
         for (let i = 0; i < wrap.length; i++)
             elt = elt.querySelector(wrap[i]) || elt;
+    // Inline styles defined in the pasted content, so that parse rules pick them up
+    for (let i = 0; i < doc.styleSheets.length; i++) {
+        let style = doc.styleSheets[i];
+        for (let j = 0; j < style.rules.length; j++) {
+            let rule = style.rules[j];
+            if (rule instanceof CSSStyleRule) {
+                let matches = elt.querySelectorAll(rule.selectorText);
+                for (let k = 0; k < matches.length; k++)
+                    matches[k].style.cssText += rule.style.cssText;
+            }
+        }
+    }
     return elt;
 }
 // Webkit browsers do some hard-to-predict replacement of regular
@@ -3042,6 +3082,12 @@ function addContext(slice, context) {
         let type = schema.nodes[array[i]];
         if (!type || type.hasRequiredAttrs())
             break;
+        try {
+            type.checkAttrs(array[i + 1]);
+        }
+        catch (e) {
+            break;
+        }
         content = Fragment.from(type.create(array[i + 1], content));
         openStart++;
         openEnd++;
@@ -3884,8 +3930,8 @@ handlers.beforeinput = (view, _event) => {
     // We should probably do more with beforeinput events, but support
     // is so spotty that I'm still waiting to see where they are going.
     // Very specific hack to deal with backspace sometimes failing on
-    // Chrome Android when after an uneditable node.
-    if (chrome && android && event.inputType == "deleteContentBackward") {
+    // Chrome and Firefox Android when after an uneditable node.
+    if (android && event.inputType == "deleteContentBackward") {
         view.domObserver.flushSoon();
         let { domChangeCount } = view.input;
         setTimeout(() => {
@@ -4989,7 +5035,7 @@ function fixUpBadSafariComposition(view, addedNodes) {
 // that the DOM represents. If any changes came in in the meantime,
 // the modification is mapped over those before it is applied, in
 // readDOMChange.
-function parseBetween(view, from_, to_) {
+function parseBetween(view, from_, to_, addedNodes) {
     let { node: parent, fromOffset, toOffset, from, to } = view.docView.parseRange(from_, to_);
     let domSel = view.domSelectionRange();
     let find;
@@ -5023,7 +5069,7 @@ function parseBetween(view, from_, to_) {
         to: toOffset,
         preserveWhitespace: $from.parent.type.whitespace == "pre" ? "full" : true,
         findPositions: find,
-        ruleFromNode,
+        ruleFromNode: ruleFromNode(addedNodes),
         context: $from
     });
     if (find && find[0].pos != null) {
@@ -5034,10 +5080,10 @@ function parseBetween(view, from_, to_) {
     }
     return { doc, sel, from, to };
 }
-function ruleFromNode(dom) {
+const ruleFromNode = (added) => (dom) => {
     let desc = dom.pmViewDesc;
     if (desc) {
-        return desc.parseRule();
+        return desc.parseRule(added);
     }
     else if (dom.nodeName == "BR" && dom.parentNode) {
         // Safari replaces the list item or table cell with a BR
@@ -5056,7 +5102,7 @@ function ruleFromNode(dom) {
         return { ignore: true };
     }
     return null;
-}
+};
 const isInline = /^(a|abbr|acronym|b|bd[io]|big|br|button|cite|code|data(list)?|del|dfn|em|i|img|ins|kbd|label|map|mark|meter|output|q|ruby|s|samp|small|span|strong|su[bp]|time|u|tt|var)$/i;
 function readDOMChange(view, from, to, typeOver, addedNodes) {
     let compositionID = view.input.compositionPendingChanges || (view.composing ? view.input.compositionID : 0);
@@ -5085,7 +5131,7 @@ function readDOMChange(view, from, to, typeOver, addedNodes) {
     from = $before.before(shared + 1);
     to = view.state.doc.resolve(to).after(shared + 1);
     let sel = view.state.selection;
-    let parse = parseBetween(view, from, to);
+    let parse = parseBetween(view, from, to, addedNodes);
     let doc = view.state.doc, compare = doc.slice(parse.from, parse.to);
     let preferredPos, preferredSide;
     // Prefer anchoring to end when Backspace is pressed

@@ -11,15 +11,13 @@ public abstract class AbstractSource2 implements ToString.IFormattable {
     /** Alias or {@code null}. */
     public final String alias;
     public final QuerySourceInfo<?> querySourceInfo;
-    public final boolean isExplicit; 
-    public final boolean isPartOfCalcProp;
-    
-    protected AbstractSource2(final Integer id, final String alias, final QuerySourceInfo<?> querySourceInfo, final boolean isExplicit, boolean isPartOfCalcProp) {
+    public final boolean isExplicit;
+
+    protected AbstractSource2(final Integer id, final String alias, final QuerySourceInfo<?> querySourceInfo, final boolean isExplicit) {
         this.id = Objects.requireNonNull(id);
         this.alias = alias;
         this.querySourceInfo = Objects.requireNonNull(querySourceInfo);
         this.isExplicit = isExplicit;
-        this.isPartOfCalcProp = isPartOfCalcProp;
     }
     
     public String alias() {
@@ -41,10 +39,6 @@ public abstract class AbstractSource2 implements ToString.IFormattable {
     public boolean isExplicit() {
         return isExplicit;
     }
-    
-    public boolean isPartOfCalcProp() {
-        return isPartOfCalcProp;
-    }
 
     @Override
     public int hashCode() {
@@ -54,7 +48,6 @@ public abstract class AbstractSource2 implements ToString.IFormattable {
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
         result = prime * result + querySourceInfo.hashCode();
         result = prime * result + (isExplicit ? 1231 : 1237);
-        result = prime * result + (isPartOfCalcProp ? 1231 : 1237);
         return result;
     }
 
@@ -65,8 +58,7 @@ public abstract class AbstractSource2 implements ToString.IFormattable {
                   && Objects.equals(id, that.id)
                   && Objects.equals(alias, that.alias)
                   && Objects.equals(querySourceInfo, that.querySourceInfo)
-                  && isExplicit == that.isExplicit
-                  && isPartOfCalcProp == that.isPartOfCalcProp;
+                  && isExplicit == that.isExplicit;
    }
 
    @Override
@@ -80,7 +72,6 @@ public abstract class AbstractSource2 implements ToString.IFormattable {
                .add("id", id)
                .addIfNotNull("alias", alias)
                .add("isExplicit", isExplicit)
-               .add("isPartOfCalcProp", isPartOfCalcProp)
                .add("querySourceInfo", querySourceInfo)
                .pipe(this::addToString)
                .$();
