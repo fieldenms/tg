@@ -61,9 +61,12 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
         return desc;
     }
 
-    /// Creates an attributes that will be used for widget component generation (generic attributes).
+    /// Creates the generic attributes of the widget element, which bind it to the entity and the property as an editor.
     ///
-    private Map<String, Object> createAttributes() {
+    /// Descendants that are not editors can override this method to replace the generic attributes.
+    /// Widget-specific attributes are added through [#createCustomAttributes()].
+    ///
+    protected Map<String, Object> createAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
         if (isDebug()) {
             attrs.put("debug", "true");
@@ -90,9 +93,16 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
         return new LinkedHashMap<>();
     };
 
+    /// The name of the element that represents this widget.
+    /// By default, it is the last segment of the import path.
+    ///
+    protected String elementName() {
+        return widgetName;
+    }
+
     @Override
     public final DomElement render() {
-        return new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
+        return new DomElement(elementName()).attrs(createAttributes()).attrs(createCustomAttributes());
     }
 
     public void withAction(final EntityActionConfig action) {
