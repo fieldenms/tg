@@ -164,7 +164,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
                     );
             return new DatePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
         }
-        throw new EntityMasterConfigurationException(format(ERR_INVALID_DATEPICKER_CHOICE, propertyName, smBuilder.getEntityType().getSimpleName(), DateOnly.class.getSimpleName()));
+        throw new EntityMasterConfigurationException(format(ERR_INVALID_DATEPICKER_CHOICE, smBuilder.getEntityType().getSimpleName(), propertyName, DateOnly.class.getSimpleName()));
     }
 
     @Override
@@ -180,7 +180,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
                     );
             return new TimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
         }
-        throw new EntityMasterConfigurationException(format(ERR_INVALID_DATEPICKER_CHOICE, propertyName, smBuilder.getEntityType().getSimpleName(), TimeOnly.class.getSimpleName()));
+        throw new EntityMasterConfigurationException(format(ERR_INVALID_DATEPICKER_CHOICE, smBuilder.getEntityType().getSimpleName(), propertyName, TimeOnly.class.getSimpleName()));
     }
 
     @Override
