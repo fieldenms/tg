@@ -34,7 +34,6 @@ import java.util.stream.Stream;
 import static graphql.execution.CoercedVariables.of;
 import static graphql.execution.ValuesResolver.getArgumentValues;
 import static java.lang.Byte.valueOf;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -120,6 +119,17 @@ public class RootEntityUtils {
                 locale
             ))
             .collect(toList());
+
+        // Conditions on collectional properties coming from the Web API will be discarded.
+        // Only @Calculated ones are supported, and they come via the entity centre route.
+        // Therefore, reject them explicitly.
+        queryProperties.stream()
+                .filter(QueryProperty::isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL)
+                .findFirst()
+                .ifPresent(qp -> {
+                    throw new WebApiException("Invalid selection: [%s]. Conditions on collectional properties are not supported.".formatted(qp.getPropertyName()));
+                });
+
         final List<T3<String, Ordering, Byte>> propOrderingWithPriorities = propertiesAndArguments.entrySet().stream()
             .filter(propertyAndArguments -> propertyAndArguments.getValue()._1.contains(ORDER_ARGUMENT)) // if GraphQL argument definitions contain ORDER_ARGUMENT ...
             .map(propertyAndArguments -> createOrderingProperty( // ... create ordering properties based on them
