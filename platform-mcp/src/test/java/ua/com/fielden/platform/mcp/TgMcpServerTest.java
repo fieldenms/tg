@@ -28,6 +28,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.mcp.McpConfig.WEB_API_KEY_MCP_HTTP_HEADER;
 import static ua.com.fielden.platform.mcp.TgMcpServer.QUERY_GUIDE_RESOURCE_URI;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertInstanceOf;
 
@@ -40,6 +41,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     private final McpSyncClient mcpClient = McpClient.sync(
             HttpClientStreamableHttpTransport.builder(URI)
                     .endpoint(PREFIX + TgMcpServerTestCaseConfiguration.PATH_MCP)
+                    .customizeRequest(request -> request.header(WEB_API_KEY_MCP_HTTP_HEADER, TgMcpServerTestCaseConfiguration.TEST_WEB_API_KEY_MCP))
                     .build())
             .requestTimeout(Duration.ofHours(999))
             .build();

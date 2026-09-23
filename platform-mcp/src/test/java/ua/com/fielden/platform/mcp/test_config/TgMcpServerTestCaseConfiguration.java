@@ -26,6 +26,7 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
 
     public static final String USER_MCP_TEST = "MCP_TEST";
     public static final String PATH_MCP = "/mcp";
+    public static final String TEST_WEB_API_KEY_MCP = "secret";
 
     private final Injector injector;
 
@@ -68,7 +69,7 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
         props.setProperty("web.path", "/");
         // MCP
         props.setProperty(McpConfig.MCP_RESOURCE_PATH, PATH_MCP);
-        props.setProperty(McpConfig.WEB_API_KEY_MCP, "secret");
+        props.setProperty(McpConfig.WEB_API_KEY_MCP, TEST_WEB_API_KEY_MCP);
         props.setProperty(McpConfig.MCP_USER, USER_MCP_TEST);
         return props;
     }
