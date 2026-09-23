@@ -2,7 +2,6 @@ import { TgAppConfig } from '/app/tg-app-config.js';
 
 import { TgEntityMasterTemplateBehavior} from '/resources/master/tg-entity-master-template-behavior.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
-import {_momentTz, _millisDateRepresentation} from '/resources/reflection/tg-date-utils.js';
 
 const generateActionTooltip = function (action) {
     const shortDesc = "<b>" + action.shortDesc + "</b>";
@@ -75,13 +74,12 @@ const TgChartDeckerTemplateBehaviorImpl = {
         tearDownEvent(event);
     },
     
-    _datePropAccessor: function (propertyName, dateType) {
-        return function (entity, value) {
+    _datePropAccessor: function (propertyName) {
+        return (entity, value) => {
             if (!value) {
-                const splitedType = dateType.split(':');
-                return _millisDateRepresentation(entity.get(propertyName), splitedType[1] || null, splitedType[2] || null);
+                return this._reflector().tg_toString(entity.get(propertyName), entity.type(), propertyName, { display: true });
             }
-        }
+        };
     },
 
     _moneyPropAccessor: function (propertyName) {

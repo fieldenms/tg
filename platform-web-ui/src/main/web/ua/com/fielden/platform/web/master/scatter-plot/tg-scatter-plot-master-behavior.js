@@ -1,5 +1,5 @@
 import { TgEntityMasterTemplateBehavior} from '/resources/master/tg-entity-master-template-behavior.js'
-import {_momentTz} from '/resources/reflection/tg-date-utils.js';
+import { _momentTz } from '/resources/reflection/tg-date-utils.js';
 
 const getTooltipValueForEntity = function (entity) {
     const keyValue = entity.toString();
@@ -63,11 +63,10 @@ const TgScatterPlotMasterBehaviorImpl = {
         this._getValueRange = this._getValueRange.bind(this);
     },
 
-    _datePropAccessor: function (propertyName, dateType) {
+    _datePropAccessor: function (propertyName) {
         return function (entity, value) {
             if (!value) {
-                const splitedType = dateType.split(':');
-                return _momentTz(entity.get(propertyName), splitedType[1] || null, splitedType[2] || null).toDate();
+                return _momentTz(entity.get(propertyName), entity.type().prop(propertyName)).toDate();
             }
         }
     },
