@@ -36,8 +36,8 @@ public class ComponentWidget extends AbstractWidget {
     ///
     /// The component is blocked while the entity is unsaved if `entityType`, the entity type of the master, is persistent.
     ///
-    public ComponentWidget(final Pair<String, String> titleDesc, final Class<? extends AbstractEntity<?>> entityType, final String propertyName, final String importPath) {
-        super(importPath, titleDesc, propertyName);
+    public ComponentWidget(final String widgetPath, final Pair<String, String> titleDesc, final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
+        super(widgetPath, titleDesc, propertyName);
         this.blockWhenUnsaved = isPersistentEntityType(entityType);
     }
 
