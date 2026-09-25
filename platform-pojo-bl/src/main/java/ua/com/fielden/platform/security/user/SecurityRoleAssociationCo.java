@@ -49,13 +49,15 @@ public interface SecurityRoleAssociationCo extends IEntityDao<SecurityRoleAssoci
     ///
     EntityResultQueryModel<SecurityRoleAssociation> selectActiveAssociations(final User user, final Class<? extends ISecurityToken>... tokens);
     
-    /// Deletes a collection of [SecurityRoleAssociation]s.
+    /// Removes the specified associations.
     ///
-    void removeAssociations(final Collection<SecurityRoleAssociation> associations);
+    /// @param associations  instrumented instances, which may be modified and saved by this method
+    ///
+    void removeAssociations(Collection<SecurityRoleAssociation> associations);
 
     /// Creates or activates all associations in the collection.
     ///
-    /// @param associations a collection of instrumented instances, each of which has all required key values and does not have ID
+    /// @param associations instrumented instances, each of which has all required key values and does not have ID
     ///
     void addAssociations(Collection<SecurityRoleAssociation> associations);
 
