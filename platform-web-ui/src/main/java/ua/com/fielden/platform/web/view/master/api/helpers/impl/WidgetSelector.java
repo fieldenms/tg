@@ -237,7 +237,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IComponentConfig<T> asComponent(final CharSequence importPath) {
-        widget = new ComponentWidget(importPath.toString(), TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), smBuilder.getEntityType(), propertyName);
+        widget = new ComponentWidget(importPath.toString(), TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new ComponentConfig<>((ComponentWidget) widget, smBuilder);
     }
 
