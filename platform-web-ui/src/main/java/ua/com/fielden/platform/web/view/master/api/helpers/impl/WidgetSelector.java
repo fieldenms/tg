@@ -15,6 +15,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.checkbox.impl.Checkbo
 import ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl.CollectionalEditorWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl.CollectionalRepresentorWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.colour.impl.ColourWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.ComponentWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl.DecimalWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.hyperlink.impl.HyperlinkWidget;
@@ -232,6 +233,12 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
     public IHyperlinkConfig<T> asHyperlink() {
         widget = new HyperlinkWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new HyperlinkConfig<>((HyperlinkWidget) widget, smBuilder);
+    }
+
+    @Override
+    public IComponentConfig<T> asComponent(final CharSequence importPath) {
+        widget = new ComponentWidget(importPath.toString(), TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), smBuilder.getEntityType(), propertyName);
+        return new ComponentConfig<>((ComponentWidget) widget, smBuilder);
     }
 
     public AbstractWidget widget() {

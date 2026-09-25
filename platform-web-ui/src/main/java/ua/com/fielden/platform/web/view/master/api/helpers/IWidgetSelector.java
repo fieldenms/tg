@@ -51,4 +51,9 @@ public interface IWidgetSelector<T extends AbstractEntity<?>> {
     /// An editor for properties of type Hyperlink.
     IHyperlinkConfig<T> asHyperlink();
 
+    /// An application-provided web component in place of an editor, for properties of any type.
+    /// The component is read-only and is bound to the fully-fledged entity of the master.
+    /// `importPath` is resolved as `/resources/<importPath>.js`, such as `components/tg-fuel-usage-chart`.
+    IComponentConfig<T> asComponent(final CharSequence importPath);
+
 }
