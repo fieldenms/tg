@@ -15,6 +15,9 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.utils.CharSequenceEnum;
 import ua.com.fielden.platform.utils.ImmutableListUtils;
 
@@ -29,6 +32,8 @@ import static graphql.schema.GraphQLObjectType.newObject;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
+import static ua.com.fielden.platform.security.tokens.Template.READ;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
@@ -41,6 +46,9 @@ import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
 /// Due to the fact that [Fields#groupBy] and aggregating fields are typed with GraphQL entity types, the existing visibility
 /// rules from [FieldVisibility] apply to them, sharing one control mechanism for both data and aggregation queries.
 ///
+/// As in [RootEntityFetcher], fetching for aggregation queries includes authorisation checks.
+/// If an entity type cannot be read by a user, aggregation queries for that entity type will also be rejected.
+///
 @Singleton
 public class EntityAggregation {
 
@@ -50,14 +58,20 @@ public class EntityAggregation {
 
     private final IApplicationDomainProvider appDomainProvider;
     private final ICompanionObjectFinder coFinder;
+    private final IAuthorisationModel authorisationModel;
+    private final ISecurityTokenProvider securityTokenProvider;
 
     @Inject
     protected EntityAggregation(
             final IApplicationDomainProvider appDomainProvider,
-            final ICompanionObjectFinder coFinder)
+            final ICompanionObjectFinder coFinder,
+            final IAuthorisationModel authorisationModel,
+            final ISecurityTokenProvider securityTokenProvider)
     {
         this.appDomainProvider = appDomainProvider;
         this.coFinder = coFinder;
+        this.authorisationModel = authorisationModel;
+        this.securityTokenProvider = securityTokenProvider;
     }
 
     public GraphQLSchema enhanceSchema(final GraphQLSchema schema) {
@@ -138,17 +152,20 @@ public class EntityAggregation {
     }
 
     private DataFetcher<?> aggEntityFetcher(final Class<? extends AbstractEntity<?>> type) {
-        return new AggEntityFetcher(type, coFinder);
+        return new AggEntityFetcher(type, coFinder, authorisationModel, securityTokenProvider);
     }
 
     private record AggEntityFetcher(
             Class<? extends AbstractEntity<?>> entityType,
-            ICompanionObjectFinder coFinder)
+            ICompanionObjectFinder coFinder,
+            IAuthorisationModel authorisationModel,
+            ISecurityTokenProvider securityTokenProvider)
             implements DataFetcher<List<EntityAggregates>>
     {
 
         @Override
         public List<EntityAggregates> get(final DataFetchingEnvironment environment) {
+            authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
             final var query = buildQuery(entityType, environment);
             return coFinder.find(EntityAggregates.class, true).getAllEntities(from(query).model());
         }
