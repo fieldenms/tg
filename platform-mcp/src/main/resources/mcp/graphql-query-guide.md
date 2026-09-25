@@ -415,6 +415,93 @@ Example — work orders whose key starts with "WO" AND status is "IP" AND cost c
 }
 ```
 
+## Aggregation
+
+The GraphQL schema in TG-based applications contains special types that enable aggregation queries to be expressed.
+E.g., answering questions, such as "How many work orders are in progress" or "Average total cost across work orders".
+
+For each queryable entity type `E` with root field `e`, there exists a corresponding aggregation type `E_Agg` with root field `e_agg`.
+
+```
+type E_Agg {
+  groupBy: E
+  count: Int!
+  avg: E
+  sum: E
+  max: E
+  min: E
+}
+```
+
+* `groupBy` -- specifies the shape of a grouping key.
+  If `groupBy` is absent, it implicitly places all records into one group (i.e., aggregation runs over the whole set).
+ 
+* `count` -- selects the number of records within a group.
+  This value is never null.
+  If a value overflows, the result is 0.
+ 
+* `avg` -- specifies the properties of `E` for which an average is computed within each group.
+  Computation of an average ignores null values.
+  It is an error to specify a non-numeric property.
+  The type of each resulting value matches the selected property's type.
+  This matters for integers -- if a resulting value is not exact, it will be rounded.
+ 
+* `sum` -- specifies the properties of `E` for which a sum is computed within each group.
+  Computation of a sum ignores null values.
+  It is an error to specify a non-numeric property.
+  The type of each resulting value matches the selected property's type.
+  This matters for integers -- if a resulting value is not exact, it will be rounded.
+ 
+* `max` -- specifies the properties of `E` for which a maximum is computed within each group.
+  Computation of a maximum ignores null values.
+ 
+* `min` -- specifies the properties of `E` for which a minimum is computed within each group.
+  Computation of a minimum ignores null values.
+ 
+### Example
+
+This example illustrates the use of an aggregation query for entity `WorkOrder`.
+
+```graphql
+{
+  workOrder_agg {
+    groupBy { costCentre { key } }
+    count
+    avg {
+      actualDuration 
+      lastMeterReading { reading }
+    }
+  }
+}
+```
+
+The query above returns the following result.
+
+```json
+{
+  "data": {
+    "workOrder_agg": [
+      {
+        "groupBy": {"costCentre": {"key": "A"}},
+        "count": 25,
+        "avg": { 
+          "actualDuration": 133.33,
+          "lastMeterReading": {"reading": 55.50}
+        }
+      },
+      {
+        "groupBy": {"costCentre": {"key": "B"}},
+        "count": 9,
+        "avg": { 
+          "actualDuration": 256.25,
+          "lastMeterReading": {"reading": 77.3}
+        }
+      }
+    ]
+  }
+}
+```
+
 ## Batching Queries
 
 Multiple root fields can be requested in a single query.

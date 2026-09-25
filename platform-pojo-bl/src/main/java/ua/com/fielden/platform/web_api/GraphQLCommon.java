@@ -1,9 +1,14 @@
 package ua.com.fielden.platform.web_api;
 
+import graphql.language.Field;
+import graphql.language.SelectionSet;
+import graphql.schema.GraphQLSchema;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -12,6 +17,7 @@ import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
 import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionAllowed;
 import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
+import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 public class GraphQLCommon {
 
@@ -19,6 +25,24 @@ public class GraphQLCommon {
     ///
     public static String rootFieldName(final Class<?> entityType) {
         return uncapitalize(entityType.getSimpleName());
+    }
+
+    /// Name of the GraphQL root field for an aggregation entity type.
+    ///
+    public static String rootFieldNameForAggEntity(final Class<? extends AbstractEntity<?>> entityType) {
+        return "%s_agg".formatted(rootFieldName(entityType));
+    }
+
+    /// Name of the GraphQL type for the specified entity type.
+    ///
+    public static String graphQlTypeNameForEntity(final Class<? extends AbstractEntity<?>> entityType) {
+        return entityType.getSimpleName();
+    }
+
+    /// Name of the GraphQL type for an aggregation entity type.
+    ///
+    public static String graphQlTypeNameForAggEntity(final Class<? extends AbstractEntity<?>> entityType) {
+        return "%s_Agg".formatted(graphQlTypeNameForEntity(entityType));
     }
 
     /// Domain types exposed as GraphQL root fields.
@@ -54,6 +78,20 @@ public class GraphQLCommon {
                 .stream()
                 .filter(type -> !isIntrospectionDenied(type) && pred.test(type))
                 .sorted(comparing(Class::getSimpleName));
+    }
+
+    public static Optional<Field> findField(final @Nullable SelectionSet selectionSet, final CharSequence name) {
+        if (selectionSet == null) {
+            return Optional.empty();
+        }
+        return selectionSet.getSelections().stream()
+                .mapMulti(typeFilter(Field.class))
+                .filter(f -> f.getName().contentEquals(name))
+                .findFirst();
+    }
+
+    public static boolean containsRootFieldForType(final GraphQLSchema schema, final Class<?> type) {
+        return schema.getQueryType().getFieldDefinition(rootFieldName(type)) != null;
     }
 
 }

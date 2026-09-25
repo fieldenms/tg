@@ -194,11 +194,14 @@ public class GraphQLScalars {
 
         @Override
         public Either<String, BigDecimal> convertDataFetcherResult(final Object dataFetcherResult) {
-            if (dataFetcherResult instanceof Money) {
-                return right(((Money) dataFetcherResult).getAmount());
-            } else {
-                return error(title(), dataFetcherResult);
-            }
+            return switch (dataFetcherResult) {
+                case Money money -> right(money.getAmount());
+                // Support for BigDecimal enables aggregation queries to specify Money-typed properties.
+                // An aggregation query returns EntityAggregates instances, which never contain Money-typed values,
+                // but the BigDecimal amount directly.
+                case BigDecimal bigDecimal -> right(bigDecimal);
+                case null, default -> error(title(), dataFetcherResult);
+            };
         }
 
         //////////////////////////////////////////////// PARSE ARGUMENT VARIABLES ////////////////////////////////////////////////
