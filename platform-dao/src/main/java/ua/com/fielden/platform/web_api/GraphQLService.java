@@ -96,7 +96,8 @@ public class GraphQLService implements IWebApi {
         final IDates dates,
         final IAuthorisationModel authorisationModel,
         final ISecurityTokenProvider securityTokenProvider,
-        final EntityTypeIntrospection entityTypeIntrospection
+        final EntityTypeIntrospection entityTypeIntrospection,
+        final EntityAggregation entityAggregation
     ) {
         try {
             LOGGER.info("GraphQL Web API...");
@@ -123,12 +124,12 @@ public class GraphQLService implements IWebApi {
             codeRegistryBuilder.defaultDataFetcher(env -> fetching(env.getFieldDefinition().getName()));
 
             LOGGER.info("\tBuilding schema...");
-            schema = entityTypeIntrospection.enhanceSchema(
+            schema = entityAggregation.enhanceSchema(entityTypeIntrospection.enhanceSchema(
                     newSchema()
                     .codeRegistry(codeRegistryBuilder.build())
                     .query(queryType)
                     .additionalTypes(new LinkedHashSet<>(dictionary.values()))
-                    .build());
+                    .build()));
 
             LOGGER.info("GraphQL Web API...done");
         } catch (final Throwable t) {
