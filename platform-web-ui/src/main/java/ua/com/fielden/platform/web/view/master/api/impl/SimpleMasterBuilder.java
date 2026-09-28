@@ -29,6 +29,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityAct
 import ua.com.fielden.platform.web.view.master.api.helpers.*;
 import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.IEntityComponentConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
@@ -198,6 +199,11 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     @Override
     public IHtmlTextConfig<T> addHtmlLabel(final String htmlText) {
         throw new UnsupportedOperationException("HTML label is not yet supported.");
+    }
+
+    @Override
+    public IEntityComponentConfig<T> addComponent(final CharSequence importPath) {
+        throw new UnsupportedOperationException("Components bound to the entity are not yet supported.");
     }
 
     @Override
