@@ -5,30 +5,20 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
-
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
 
 /// A widget that represents a property with an application-provided web component in place of a platform editor.
 ///
 /// The component is read-only.
 /// It is bound to the fully-fledged entity of the master and to the name of the property, and receives the title and description of the property, and the index of the property action to show.
 /// Any other data it needs is declared as attributes, with either static values or pass-through binding expressions, such as `[[centreUuid]]`.
-///
-/// By default, the component is blocked while the entity is unsaved, that is, an instance of a persistent type that is new or has changes that are not yet saved.
-/// For that, the element receives the `block-when-unsaved` flag and the modification state of the master:
-/// `entity-modified` for committed changes, and `entity-edited` for edits in progress.
-/// The client-side component contract combines these with the persistence of the bound entity to block interaction.
+/// By default, the component is blocked while the entity is unsaved, as rendered by [ComponentOptions].
 ///
 /// The element id is `component_4_<property>`, which keeps the component apart from editors, addressed by the entity binder through `editor_4_<property>`.
 /// The element name defaults to the last segment of the import path.
 ///
 public class ComponentWidget extends AbstractWidget {
 
-    private Optional<String> elementName = empty();
-    private final Map<String, String> attrs = new LinkedHashMap<>();
-    private boolean blockWhenUnsaved = true;
+    private final ComponentOptions options = new ComponentOptions();
 
     /// Creates a widget for the component at `widgetPath`, which is resolved as `/resources/<widgetPath>.js`.
     ///
@@ -39,25 +29,25 @@ public class ComponentWidget extends AbstractWidget {
     /// Overrides the element name that is otherwise derived from the import path.
     ///
     public void withElementName(final String elementName) {
-        this.elementName = of(elementName);
+        options.withElementName(elementName);
     }
 
     /// Declares an attribute of the component element.
     /// Attributes are rendered in the order of declaration.
     ///
     public void withAttr(final String name, final String value) {
-        attrs.put(name, value);
+        options.withAttr(name, value);
     }
 
     /// Keeps the component interactive while the entity is unsaved.
     ///
     public void skipBlockingWhenUnsaved() {
-        this.blockWhenUnsaved = false;
+        options.skipBlockingWhenUnsaved();
     }
 
     @Override
     protected String elementName() {
-        return elementName.orElseGet(super::elementName);
+        return options.elementName(super.elementName());
     }
 
     @Override
@@ -72,18 +62,14 @@ public class ComponentWidget extends AbstractWidget {
         attrs.put("prop-title", title());
         attrs.put("prop-desc", desc());
         attrs.put("property-action-index", "[[_propertyActionIndices." + propertyName() + "]]");
-        if (blockWhenUnsaved) {
-            attrs.put("block-when-unsaved", true);
-            attrs.put("entity-modified", "[[_bindingEntityModified]]");
-            attrs.put("entity-edited", "[[_editedPropsExist]]");
-        }
+        options.addBlockingAttributes(attrs);
         return attrs;
     }
 
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> customAttrs = super.createCustomAttributes();
-        customAttrs.putAll(attrs);
+        customAttrs.putAll(options.attributes());
         return customAttrs;
     }
 
