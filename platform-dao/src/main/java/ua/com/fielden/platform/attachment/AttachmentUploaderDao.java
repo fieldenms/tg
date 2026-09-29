@@ -55,22 +55,24 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.attachment.FileTypes.TAR;
 import static ua.com.fielden.platform.error.Result.*;
 
-/**
- * DAO implementation for companion object {@link AttachmentUploaderCo}.
- * <p>
- * It has two responsibilities:
- * <ul>
- * <li> Save the input stream as a file into the attachment location, but only if another file with the same content does not yet exist.
- * <li> Create and persist an attachment {@link Attachment} associated with the uploaded file resource.
- * </ul>
- *
- * @author TG Team
- *
- */
+/// DAO implementation for companion object [AttachmentUploaderCo].
+///
+/// It has two responsibilities:
+///
+/// - Save the input stream as a file into the attachment location, but only if another file with the same content does not yet exist.
+///   This happens outside a DB transaction.
+/// - Create and persist an attachment [Attachment] associated with the uploaded file resource.
+///   This happens in a DB transaction.
+///
+/// @author TG Team
+///
 @EntityType(AttachmentUploader.class)
 public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> implements AttachmentUploaderCo {
 
     private static final Logger LOGGER = getLogger(AttachmentUploaderDao.class);
+    /// A single parser shared by all uploads.
+    /// Its construction is expensive, as it discovers and instantiates all available parsers and detectors, while the constructed instance is thread-safe.
+    private static final AutoDetectParser PARSER = new AutoDetectParser();
     private static final Random RND = new Random(100);
     private static final int DEBUG_DELAY_PROCESSING_TIME_MILLIS = 0;
 
@@ -102,8 +104,13 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         this.malwareScanner = malwareScanner;
     }
 
+    /// Uploads the file, provided as `uploader`'s input stream, and associates it with an [Attachment].
+    ///
+    /// The file processing — saving the input stream to a temporary file, inspecting its content, malware scanning, and copying it to the attachments location — runs outside a DB transaction.
+    /// Only the creation or retrieval of the associated [Attachment] runs in a transaction, which is scoped to [#saveAttachment(AttachmentUploader, String)].
+    /// If this method is invoked within an existing transaction, [#saveAttachment(AttachmentUploader, String)] joins it.
+    ///
     @Override
-    @SessionRequired
     public AttachmentUploader save(final AttachmentUploader uploader) {
         uploader.getEventSourceSubject().ifPresent(ess -> ess.publish(5));
         if (uploader.getInputStream() == null) {
@@ -161,7 +168,14 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 85));
         }
 
-        // Now we can create/retrieve a corresponding Attachment instance
+        return saveAttachment(uploader, sha1);
+    }
+
+    /// Creates and persists an [Attachment] for the file with checksum `sha1`, or retrieves an existing one if the same file was uploaded before, and assigns it as `uploader`'s key.
+    /// The file itself should already be present in the attachments location.
+    ///
+    @SessionRequired
+    protected AttachmentUploader saveAttachment(final AttachmentUploader uploader, final String sha1) {
         LOGGER.debug(()-> "[%s] Creating an attachment for uploaded [%s].".formatted(getUser(), uploader.getOrigFileName()));
         final Attachment attachment = co$(Attachment.class).new_()
                 .setSha1(sha1)
@@ -196,8 +210,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         try (final InputStream is = Files.newInputStream(tmpPath);
              final BufferedInputStream bis = new BufferedInputStream(is))
         {
-            final AutoDetectParser parser = new AutoDetectParser();
-            final Detector detector = parser.getDetector();
+            final Detector detector = PARSER.getDetector();
             final Metadata meta = new Metadata();
             meta.set(TikaCoreProperties.RESOURCE_NAME_KEY, uploader.getOrigFileName());
             final MediaType mediaType = detector.detect(bis, meta);
@@ -252,8 +265,6 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         try (final InputStream input = Files.newInputStream(tmpPath);
              final ZipInputStream archiveStream = new ZipInputStream(input))
         {
-
-            final AutoDetectParser parser = new AutoDetectParser();
             final ParseContext context = new ParseContext();
 
             ZipEntry entry;
@@ -263,7 +274,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                 metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, entryName);
 
                 final BodyContentHandler handler = new BodyContentHandler();
-                parser.parse(archiveStream, handler, metadata, context);
+                PARSER.parse(archiveStream, handler, metadata, context);
 
                 final String mime = extractMimeType(metadata.get(Metadata.CONTENT_TYPE));
 
@@ -288,10 +299,9 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         try (final InputStream input = Files.newInputStream(tmpPath);
              final TarArchiveInputStream archiveStream = new TarArchiveInputStream(input))
         {
-            final AutoDetectParser parser = new AutoDetectParser();
             final ParseContext context = new ParseContext();
 
-            final var check = inspectTarEntries(uploader, user, archiveStream, parser, context);
+            final var check = inspectTarEntries(uploader, user, archiveStream, context);
             if (!check.isSuccessful()) {
                 return check;
             }
@@ -305,14 +315,13 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         try (final InputStream input = Files.newInputStream(tmpPath);
              final GZIPInputStream archiveStream = new GZIPInputStream(input))
         {
-            final AutoDetectParser parser = new AutoDetectParser();
             final ParseContext context = new ParseContext();
 
             final Metadata metadata = new Metadata();
             metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, uploader.getOrigFileName());
 
             final BodyContentHandler handler = new BodyContentHandler();
-            parser.parse(archiveStream, handler, metadata, context);
+            PARSER.parse(archiveStream, handler, metadata, context);
 
             final String mime = extractMimeType(metadata.get(Metadata.CONTENT_TYPE));
 
@@ -338,10 +347,9 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
              final GZIPInputStream gzipStream = new GZIPInputStream(input);
              final TarArchiveInputStream archiveStream = new TarArchiveInputStream(gzipStream))
         {
-            final AutoDetectParser parser = new AutoDetectParser();
             final ParseContext context = new ParseContext();
 
-            final var check = inspectTarEntries(uploader, user, archiveStream, parser, context);
+            final var check = inspectTarEntries(uploader, user, archiveStream, context);
             if (!check.isSuccessful()) {
                 return check;
             }
@@ -355,7 +363,6 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             final AttachmentUploader uploader,
             final User user,
             final TarArchiveInputStream archiveStream,
-            final AutoDetectParser parser,
             final ParseContext context)
             throws IOException, SAXException, TikaException
     {
@@ -366,7 +373,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, entryName);
 
             final BodyContentHandler handler = new BodyContentHandler();
-            parser.parse(archiveStream, handler, metadata, context);
+            PARSER.parse(archiveStream, handler, metadata, context);
 
             final String mime = extractMimeType(metadata.get(Metadata.CONTENT_TYPE));
 
