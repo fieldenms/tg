@@ -32,6 +32,8 @@ import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IEntityComponentConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.EntityComponentWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.EntityComponentConfig;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
 import java.util.*;
@@ -175,7 +177,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IWidgetSelector<T> addProp(final CharSequence propName) {
-        widgets.stream().filter(widget -> widget.propertyName.contentEquals(propName)).findFirst().ifPresent(widget -> {
+        widgets.stream().filter(widget -> widget.propertyName != null && widget.propertyName.contentEquals(propName)).findFirst().ifPresent(widget -> {
             throw new EntityMasterConfigurationException(format(ERR_WIDGET_IS_ALREADY_PRESENT, propName, this.entityType.getSimpleName()));
         });
         final WidgetSelector<T> widget = new WidgetSelector<>(this, propName.toString(), new WithMatcherCallback());
@@ -203,7 +205,11 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IEntityComponentConfig<T> addComponent(final CharSequence importPath) {
-        throw new UnsupportedOperationException("Components bound to the entity are not yet supported.");
+        // a dash cannot occur in a property name, so the action index key of a component never clashes with that of a property
+        final long ordinal = widgets.stream().filter(widget -> widget.widget() instanceof EntityComponentWidget).count();
+        final EntityComponentWidget component = new EntityComponentWidget(importPath.toString(), "component-" + ordinal);
+        widgets.add(new WidgetSelector<>(this, component));
+        return new EntityComponentConfig<>(component, this);
     }
 
     @Override
@@ -442,7 +448,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         @Override
         public Map<String, Class<? extends IEntityMultiActionSelector>> propertyActionSelectors() {
             return widgets.stream().filter(widget -> widget.widget().action().isPresent()).map(widget -> {
-                return t2(widget.widget().propertyName(), widget.widget().action().get().actionSelectorClass());
+                // a component bound to the entity has its action index under its own key, as it has no property
+                final String key = widget.widget() instanceof EntityComponentWidget component ? component.actionIndexKey() : widget.widget().propertyName();
+                return t2(key, widget.widget().action().get().actionSelectorClass());
             }).collect(toMap(tt -> tt._1, tt -> tt._2));
         }
     }

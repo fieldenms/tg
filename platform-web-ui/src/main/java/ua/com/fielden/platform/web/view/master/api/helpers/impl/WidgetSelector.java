@@ -43,6 +43,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
     private static final String ERR_INVALID_DATEPICKER_CHOICE = "Invalid editor choice for property [%s.%s] due to annotation @%s.";
 
     public final SimpleMasterBuilder<T> smBuilder;
+    /// The property of the widget, or `null` for a widget that is not bound to a property, such as a component bound to the entity.
     public final String propertyName;
 
     private AbstractWidget widget;
@@ -62,6 +63,15 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
             final SimpleMasterBuilder<T> simpleMaster,
             final String propertyName) {
         this(simpleMaster, propertyName, null);
+    }
+
+    /// Creates a selector for `widget`, which is not bound to a property, such as a component bound to the entity.
+    ///
+    public WidgetSelector(
+            final SimpleMasterBuilder<T> simpleMaster,
+            final AbstractWidget widget) {
+        this(simpleMaster, (String) null, null);
+        this.widget = widget;
     }
 
     @Override

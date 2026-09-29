@@ -251,6 +251,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     }
 
     /// Returns the map between property names and action selector for properties those have associated action.
+    /// Components bound to the entity with an associated action are included under their action index keys, such as `component-0`.
     ///
     public Map<String, ? extends IEntityMultiActionSelector> getPropertyActionSelectors() {
         return masterConfig.propertyActionSelectors().entrySet().stream()

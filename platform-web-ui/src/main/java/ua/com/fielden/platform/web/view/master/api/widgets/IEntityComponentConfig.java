@@ -10,9 +10,9 @@ import ua.com.fielden.platform.web.view.master.api.widgets.component.IEntityComp
 ///
 public interface IEntityComponentConfig<T extends AbstractEntity<?>> extends IEntityComponentConfig0<T> {
 
-    /// Specifies the name of the component element.
-    /// By default, it is the last segment of the import path.
+    /// Specifies the title of the component, which the component may display as its caption.
+    /// Without a title, the component receives none.
     ///
-    IEntityComponentConfig0<T> withElementName(final String elementName);
+    IEntityComponentConfig0<T> withTitle(final String title);
 
 }

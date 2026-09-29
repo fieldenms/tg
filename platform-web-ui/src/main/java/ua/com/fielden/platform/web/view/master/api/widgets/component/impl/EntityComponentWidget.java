@@ -1,84 +1,68 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.component.impl;
 
-import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.interfaces.IImportable;
-import ua.com.fielden.platform.web.interfaces.IRenderable;
-
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import static java.util.Collections.unmodifiableList;
-import static ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget.extractNameFrom;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 /// A widget that represents an application-provided web component bound to the entity of a master rather than to any of its properties.
 /// The component is placed in the master layout next to the editors.
 ///
 /// The component is read-only.
-/// It is bound to the fully-fledged entity of the master.
+/// It is bound to the fully-fledged entity of the master, and receives the title and description declared for it, if any, and the index of the action to show.
 /// Any other data it needs is declared as attributes, with either static values or pass-through binding expressions, such as `[[centreUuid]]`.
-/// By default, the component is blocked while the entity is unsaved, as rendered by [ComponentOptions].
+/// By default, the component is blocked while the entity is unsaved, as rendered by [AbstractComponentWidget].
 ///
-/// The element name defaults to the last segment of the import path.
-/// Actions of the component are declared here, and are rendered by the master as children of the component element, for the component to invoke.
+/// The widget has no property name, so its actions have no chosen property.
+/// Its action is declared as for property widgets: a single action, or a multi-action whose selector chooses the action to show for the entity.
+/// The index of the chosen action is calculated under [#actionIndexKey()], which distinguishes the components of a master from one another and from its properties.
 ///
-public class EntityComponentWidget implements IRenderable, IImportable {
+public class EntityComponentWidget extends AbstractComponentWidget {
 
-    private final String importPath;
-    private final ComponentOptions options = new ComponentOptions();
-    private final List<EntityActionConfig> actions = new ArrayList<>();
+    private final String actionIndexKey;
+    private Optional<String> title = empty();
+    private Optional<String> desc = empty();
 
     /// Creates a widget for the component at `importPath`, which is resolved as `/resources/<importPath>.js`.
     ///
-    public EntityComponentWidget(final String importPath) {
-        this.importPath = importPath;
+    public EntityComponentWidget(final String importPath, final String actionIndexKey) {
+        super(importPath, pair(null, null), null);
+        this.actionIndexKey = actionIndexKey;
     }
 
-    /// Overrides the element name that is otherwise derived from the import path.
+    /// Declares the title of the component, rendered as `prop-title`.
     ///
-    public void withElementName(final String elementName) {
-        options.withElementName(elementName);
+    public void withTitle(final String title) {
+        this.title = of(title);
     }
 
-    /// Declares an attribute of the component element.
-    /// Attributes are rendered in the order of declaration.
+    /// Declares the description of the component, rendered as `prop-desc`.
     ///
-    public void withAttr(final String name, final String value) {
-        options.withAttr(name, value);
+    public void withDesc(final String desc) {
+        this.desc = of(desc);
     }
 
-    /// Keeps the component interactive while the entity is unsaved.
+    /// The key under which the index of the action to show is calculated for the entity, among the property action indices of the master.
     ///
-    public void skipBlockingWhenUnsaved() {
-        options.skipBlockingWhenUnsaved();
-    }
-
-    /// Declares an action that the component invokes itself.
-    ///
-    public void withAction(final EntityActionConfig action) {
-        actions.add(action);
-    }
-
-    /// The actions of the component, in the order of declaration.
-    ///
-    public List<EntityActionConfig> actions() {
-        return unmodifiableList(actions);
+    public String actionIndexKey() {
+        return actionIndexKey;
     }
 
     @Override
-    public String importPath() {
-        return importPath;
-    }
-
-    @Override
-    public DomElement render() {
-        final Map<String, Object> attrs = new LinkedHashMap<>();
+    protected Map<String, Object> createAttributes() {
+        final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
+        if (isDebug()) {
+            attrs.put("debug", "true");
+        }
         attrs.put("entity", "[[_currEntity]]");
-        options.addBlockingAttributes(attrs);
-        attrs.putAll(options.attributes());
-        return new DomElement(options.elementName(extractNameFrom(importPath))).attrs(attrs);
+        title.ifPresent(value -> attrs.put("prop-title", value));
+        desc.ifPresent(value -> attrs.put("prop-desc", value));
+        attrs.put("property-action-index", "[[_propertyActionIndices." + actionIndexKey + "]]");
+        addUnsavedStateAttributes(attrs);
+        return attrs;
     }
 
 }
