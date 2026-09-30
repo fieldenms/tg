@@ -2,12 +2,19 @@ package ua.com.fielden.platform.web_api;
 
 import graphql.language.Field;
 import graphql.language.SelectionSet;
+import graphql.schema.GraphQLNamedType;
 import graphql.schema.GraphQLSchema;
+import graphql.schema.GraphQLType;
 import jakarta.annotation.Nullable;
+import org.apache.commons.lang3.Strings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.ImmutableListUtils;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -15,8 +22,11 @@ import java.util.stream.Stream;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
-import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionAllowed;
-import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.constructKeysAndProperties;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 public class GraphQLCommon {
@@ -43,6 +53,51 @@ public class GraphQLCommon {
     ///
     public static String graphQlTypeNameForAggEntity(final Class<? extends AbstractEntity<?>> entityType) {
         return "%s_Agg".formatted(graphQlTypeNameForEntity(entityType));
+    }
+
+    /// Name of the GraphQL type for a condition entity type.
+    ///
+    public static String graphQlTypeNameForCondEntity(final Class<? extends AbstractEntity<?>> entityType) {
+        return "%s_Cond".formatted(graphQlTypeNameForEntity(entityType));
+    }
+
+    /// True if the specified GraphQL type name represents the type of a condition entity type.
+    ///
+    public static boolean isCondEntityType(final CharSequence graphQlTypeName) {
+        return Strings.CS.endsWith(graphQlTypeName, "_Cond");
+    }
+
+    /// Infers the simple name of an entity type associated with the specified GraphQL type name representing a condition entity type.
+    ///
+    public static Optional<String> entityTypeNameFromGraphQlCondEntityType(final CharSequence graphQlTypeName) {
+        final var i = Strings.CS.lastIndexOf(graphQlTypeName, "_Cond");
+        return i == -1 ? Optional.empty() : Optional.of(graphQlTypeName.subSequence(0, i).toString());
+    }
+
+    /// Name of the GraphQL type for a condition entity type's `cond` field.
+    ///
+    public static String graphQlTypeNameForCondEntityCond(final Class<? extends AbstractEntity<?>> entityType) {
+        return "%s_Cond_cond".formatted(graphQlTypeNameForEntity(entityType));
+    }
+
+    /// True if the specified GraphQL type name represents the type of a condition entity type's `cond` field.
+    ///
+    public static boolean isCondEntityCondType(final CharSequence graphQlTypeName) {
+        return Strings.CS.endsWith(graphQlTypeName, "_Cond_cond");
+    }
+
+    /// True if the specified GraphQL type represents the type of a condition entity type's `cond` field.
+    ///
+    public static boolean isCondEntityCondType(final GraphQLType graphQlType) {
+        return graphQlType instanceof GraphQLNamedType it && isCondEntityCondType(it.getName());
+    }
+
+    /// Infers the simple name of an entity type associated with the specified GraphQL type name representing the type
+    /// of a condition entity type's `cond` field.
+    ///
+    public static Optional<String> entityTypeNameFromGraphQlCondEntityCondType(final CharSequence graphQlTypeName) {
+        final var i = Strings.CS.lastIndexOf(graphQlTypeName, "_Cond_cond");
+        return i == -1 ? Optional.empty() : Optional.of(graphQlTypeName.subSequence(0, i).toString());
     }
 
     /// Domain types exposed as GraphQL root fields.
@@ -92,6 +147,25 @@ public class GraphQLCommon {
 
     public static boolean containsRootFieldForType(final GraphQLSchema schema, final Class<?> type) {
         return schema.getQueryType().getFieldDefinition(rootFieldName(type)) != null;
+    }
+
+    /// Returns the fields of `entityType` that are candidates for becoming GraphQL fields.
+    ///
+    /// [AbstractDomainTreeRepresentation#constructKeysAndProperties] yields `key` itself for a simple key, but key members for a composite one.
+    /// A composite key is selectable as a single `String`-typed field, so `key` is added for such types only.
+    /// It goes first to preserve the ordering that [AbstractDomainTreeRepresentation#constructKeysAndProperties] establishes, where a key precedes everything else.
+    ///
+    @SuppressWarnings("unchecked")
+    public static List<java.lang.reflect.Field> propertiesForGraphQlFields(final Class<? extends AbstractEntity<?>> entityType) {
+        if (isUnionEntityType(entityType)) {
+            return unionProperties((Class<? extends AbstractUnionEntity>) entityType);
+        }
+        else {
+            final var keysAndProperties = constructKeysAndProperties(entityType, true);
+            return isCompositeEntity(entityType)
+                    ? ImmutableListUtils.prepend(findFieldByName(entityType, KEY), keysAndProperties)
+                    : keysAndProperties;
+        }
     }
 
 }

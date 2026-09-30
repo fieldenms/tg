@@ -4,17 +4,19 @@ import graphql.GraphQLContext;
 import graphql.execution.CoercedVariables;
 import graphql.execution.ValuesResolver;
 import graphql.language.*;
-import graphql.schema.GraphQLArgument;
-import graphql.schema.GraphQLCodeRegistry;
-import graphql.schema.GraphQLFieldDefinition;
-import graphql.schema.GraphQLSchema;
+import graphql.schema.*;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.StandaloneOrderBy.IOrderingItem;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.StandaloneOrderBy.IOrderingItemCloseable;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicPropertyAnalyser;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
@@ -66,6 +68,7 @@ import static ua.com.fielden.platform.web_api.FieldSchema.*;
  *
  */
 public class RootEntityUtils {
+
     /**
      * The name for built-in data introspection field returning the name of actual data object type in runtime.<br>
      * This is a part of GraphQL spec.
@@ -82,25 +85,18 @@ public class RootEntityUtils {
     /**
      * Returns function for generation of EQL query execution model for retrieving {@code rootField} and its selection set in GraphQL query or mutation [and optional warning about ordering].
      * The argument of function is {@link IDates} instance from which 'now' moment can properly be retrieved and used for date property filtering.
-     * 
-     * @param rootField -- root field for GraphQL query or mutation
-     * @param variables -- existing coerced variable values by names in the query; they can be used in {@code rootField.selectionSet}
-     * @param fragmentDefinitions -- fragment definitions by names in the query; {@code rootField.selectionSet} can contain fragment spreads based on that definitions
-     * @param entityType
-     * @param schema -- GraphQL schema to assist with resolving of argument values
-     * @param context -- context in current data fetching request
-     * @param locale -- locale in current data fetching request
-     * @return
      */
     public static <T extends AbstractEntity<?>> Function<IDates, T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>>> generateQueryModelFrom(
-        final Field rootField,
-        final Map<String, Object> variables,
-        final Map<String, FragmentDefinition> fragmentDefinitions,
-        final Class<T> entityType,
-        final GraphQLSchema schema,
-        final GraphQLContext context,
-        final Locale locale
-    ) {
+            final DataFetchingEnvironment environment,
+            final Class<T> entityType)
+    {
+        final var rootField           = environment.getField();
+        final var variables           = environment.getVariables();
+        final var fragmentDefinitions = environment.getFragmentsByName();
+        final var schema              = environment.getGraphQLSchema();
+        final var context             = environment.getGraphQlContext();
+        final var locale              = environment.getLocale();
+
         final SelectionSet selectionSet = rootField.getSelectionSet();
         // convert selectionSet to concrete properties (their dot-notated names) with their arguments
         final Map<String, T2<List<GraphQLArgument>, List<Argument>>> propertiesAndArguments = concat(
@@ -145,11 +141,13 @@ public class RootEntityUtils {
         final Optional<String> optionalWarning = propOrderingWithPriorities.stream().map(t3 -> t3._3).distinct().count() < propOrderingWithPriorities.size() ? of(WARN_ORDER_PRIORITIES_ARE_NOT_DISTINCT) : empty(); // in case where order priorities are not distinct, return non-intrusive warning (with data still present)
         final List<Pair<String, Ordering>> specifiedOrderingProperties = propOrderingWithPriorities.stream()
             .sorted((p1, p2) -> p1._3.compareTo(p2._3)) // sort by ordering priority
-            .map(prop -> pair(prop._1, prop._2)) // get (name; Ordering) only -- without priority 
+            .map(prop -> pair(prop._1, prop._2)) // get (name; Ordering) only -- without priority
             .collect(toList()); // make list -- order is important
         final List<Pair<String, Ordering>> orderingProperties = specifiedOrderingProperties.isEmpty() ? asList(pair("", ASCENDING)) : specifiedOrderingProperties; // ordering by default: ascending by keys
         final Iterator<Pair<String, Ordering>> orderingPropertiesIterator = orderingProperties.iterator();
-        return dates -> t2(optionalWarning, from(createQuery(entityType, queryProperties, dates).model().setFilterable(true)) // must be filterable to support IFilter part of the model
+        return dates -> t2(optionalWarning, from(addCond(createQuery(entityType, queryProperties, dates), EntityCondToEqlCompiler.compile(environment))
+                                                         .model()
+                                                         .setFilterable(true)) // must be filterable to support IFilter part of the model
             .with(fetchNotInstrumentedWithKeyAndDesc(entityType) // KEY_AND_DESC strategy for root entities is required for loading collectional associations linked through key of root entity; explicit fetching of all keys in GraphQL query does not always work
                 .with(propertiesAndArguments.keySet().stream()
                     .filter(name -> !name.endsWith(__TYPENAME)) // do not include built-in data introspection __typename field (possibly dot-notated) as it does not exist in TG entities; resolving of this field is governed by graphql-java internal logic
@@ -172,7 +170,18 @@ public class RootEntityUtils {
             .lightweight() // must be lightweight to avoid fetching instrumented entities
             .model());
     }
-    
+
+    /// Enhances an EQL query with a condition.
+    /// Specialised for the result of [DynamicQueryBuilder#createQuery], whose return type cannot be used directly to add conditions.
+    ///
+    private static <T extends AbstractEntity<?>> ICompleted<T> addCond(final ICompleted<T> query, final ConditionModel cond) {
+        return switch (query) {
+            case IJoin<T> it -> it.where().condition(cond);
+            case ICompoundCondition0<T> it -> it.and().condition(cond);
+            default -> throw new InvalidStateException(query.getClass().getTypeName());
+        };
+    }
+
     /**
      * Iterates through {@code iterator} of [property; ordering] pairs and enhances {@code accumulator} (accumulated ordering model) with corresponding ordering.
      * 

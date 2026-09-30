@@ -48,7 +48,7 @@ public class FieldVisibility implements GraphqlFieldVisibility {
         final String simpleName = fieldsContainer.getName();
         // Only consider containers that represent TG domain types (more specifically only those domain types that are used for Query root fields).
         if (domainTypes.containsKey(simpleName)) {
-            final var isVisible = visibilityPredicate(domainTypes.get(simpleName));
+            final var isVisible = visibilityPredicate(domainTypes.get(simpleName), authorisationModel, securityTokenProvider);
             return fieldsContainer.getFieldDefinitions().stream()
                     .filter(def -> isVisible.test(def.getName()))
                     .toList();
@@ -68,7 +68,11 @@ public class FieldVisibility implements GraphqlFieldVisibility {
 
     /// Creates a predicate that, given a property of `entityType`, returns `true` if the current user is authorised to read it.
     ///
-    public Predicate<CharSequence> visibilityPredicate(final Class<? extends AbstractEntity<?>> entityType) {
+    public static Predicate<CharSequence> visibilityPredicate(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final IAuthorisationModel authorisationModel,
+            final ISecurityTokenProvider securityTokenProvider)
+    {
         return !isModelReadable(entityType, authorisationModel, securityTokenProvider)
                 // At least one field must be accessible (the ID field is used for this purpose).
                 // Without it, the type would not conform to the GraphQL specification, causing validation issues in the GraphiQL editor.

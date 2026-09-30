@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import graphql.ExecutionInput;
 import graphql.GraphQL;
 import graphql.analysis.MaxQueryDepthInstrumentation;
 import graphql.schema.*;
@@ -11,22 +12,17 @@ import graphql.schema.GraphQLObjectType.Builder;
 import graphql.validation.QueryComplexityLimits;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.utils.ImmutableListUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static graphql.ExecutionInput.newExecutionInput;
 import static graphql.GraphQL.newGraphQL;
 import static graphql.schema.FieldCoordinates.coordinates;
 import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
@@ -40,15 +36,9 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.constructKeysAndProperties;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
-import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.*;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
@@ -97,7 +87,8 @@ public class GraphQLService implements IWebApi {
         final IAuthorisationModel authorisationModel,
         final ISecurityTokenProvider securityTokenProvider,
         final EntityTypeIntrospection entityTypeIntrospection,
-        final EntityAggregation entityAggregation
+        final EntityAggregation entityAggregation,
+        final FluentConditions fluentConditions
     ) {
         try {
             LOGGER.info("GraphQL Web API...");
@@ -124,12 +115,12 @@ public class GraphQLService implements IWebApi {
             codeRegistryBuilder.defaultDataFetcher(env -> fetching(env.getFieldDefinition().getName()));
 
             LOGGER.info("\tBuilding schema...");
-            schema = entityAggregation.enhanceSchema(entityTypeIntrospection.enhanceSchema(
+            schema = fluentConditions.enhanceSchema(entityAggregation.enhanceSchema(entityTypeIntrospection.enhanceSchema(
                     newSchema()
                     .codeRegistry(codeRegistryBuilder.build())
                     .query(queryType)
                     .additionalTypes(new LinkedHashSet<>(dictionary.values()))
-                    .build()));
+                    .build())));
 
             LOGGER.info("GraphQL Web API...done");
         } catch (final Throwable t) {
@@ -146,24 +137,33 @@ public class GraphQLService implements IWebApi {
     @Override
     public Map<String, Object> execute(final Map<String, Object> input) {
         try {
-            final var result = newGraphQL(schema)
+            final var graphQL = newGraphQL(schema)
                     .queryExecutionStrategy(new GraphQLAsyncExecutionStrategy(new GraphQLSimpleDataFetcherExceptionHandler()))
-                    .instrumentation(new MaxQueryDepthInstrumentation(maxQueryDepth)).build()
-                    .execute(
-                            newExecutionInput()
-                                    .query(query(input))
-                                    .operationName(operationName(input).orElse(null))
-                                    .variables(variables(input))
-                                    // Align graphql-java's default query-complexity limits (introduced in 26.0) with the configured maximum query depth,
-                                    // so that raising `web.api.maxQueryDepth` above graphql-java's default of 100 is not silently capped at 100.
-                                    // The field-count guard is retained at its default, as a safeguard against pathologically large queries.
-                                    .graphQLContext(ctx -> ctx.put(
-                                            QueryComplexityLimits.KEY,
-                                            QueryComplexityLimits.newLimits()
-                                                    .maxDepth(maxQueryDepth)
-                                                    .maxFieldsCount(QueryComplexityLimits.DEFAULT_MAX_FIELDS_COUNT)
-                                                    .build())))
-                    .toSpecification();
+                    .instrumentation(new MaxQueryDepthInstrumentation(maxQueryDepth))
+                    .build();
+            // Some errors are thrown rather than captured in a result object, hence the try/catch.
+            // E.g., OneOfTooManyKeysException.
+            Map<String, Object> result;
+            try {
+                result = graphQL.execute(
+                                ExecutionInput.newExecutionInput()
+                                        .query(WebApiUtils.query(input))
+                                        .operationName(WebApiUtils.operationName(input).orElse(null))
+                                        .variables(WebApiUtils.variables(input))
+                                        // Align graphql-java's default query-complexity limits (introduced in 26.0) with the configured maximum query depth,
+                                        // so that raising `web.api.maxQueryDepth` above graphql-java's default of 100 is not silently capped at 100.
+                                        // The field-count guard is retained at its default, as a safeguard against pathologically large queries.
+                                        .graphQLContext(ctx -> ctx.put(
+                                                QueryComplexityLimits.KEY,
+                                                QueryComplexityLimits.newLimits()
+                                                        .maxDepth(maxQueryDepth)
+                                                        .maxFieldsCount(QueryComplexityLimits.DEFAULT_MAX_FIELDS_COUNT)
+                                                        .build())))
+                        .toSpecification();
+            } catch (final Throwable e) {
+                final var msg = e.getMessage() != null ? e.getMessage() : e.toString();
+                result = mkResultWithErrors(List.of(mkError(msg)));
+            }
             final var errors = errors(result);
             if (!errors.isEmpty()) {
                 LOGGER.error(() -> ERR_EXECUTING_QUERY.formatted(input, errors));
@@ -253,25 +253,6 @@ public class GraphQLService implements IWebApi {
             ));
         }
         return empty();
-    }
-
-    /// Returns the fields of `entityType` that are candidates for becoming GraphQL fields.
-    ///
-    /// [AbstractDomainTreeRepresentation#constructKeysAndProperties] yields `key` itself for a simple key, but key members for a composite one.
-    /// A composite key is selectable as a single `String`-typed field, so `key` is added for such types only.
-    /// It goes first to preserve the ordering that [AbstractDomainTreeRepresentation#constructKeysAndProperties] establishes, where a key precedes everything else.
-    ///
-    @SuppressWarnings("unchecked")
-    private static List<Field> propertiesForGraphQlFields(final Class<? extends AbstractEntity<?>> entityType) {
-        if (isUnionEntityType(entityType)) {
-            return unionProperties((Class<? extends AbstractUnionEntity>) entityType);
-        }
-        else {
-            final var keysAndProperties = constructKeysAndProperties(entityType, true);
-            return isCompositeEntity(entityType)
-                    ? ImmutableListUtils.prepend(findFieldByName(entityType, KEY), keysAndProperties)
-                    : keysAndProperties;
-        }
     }
 
 }

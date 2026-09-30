@@ -174,7 +174,10 @@ public class EntityAggregation {
                 final Class<? extends AbstractEntity<?>> entityType,
                 final DataFetchingEnvironment environment)
         {
-            return addYields(addGroupBy(select(entityType), environment), environment).modelAsAggregate();
+            return addYields(addGroupBy(select(entityType).where().condition(EntityCondToEqlCompiler.compile(environment)),
+                                        environment),
+                             environment)
+                    .modelAsAggregate();
         }
 
         /// Enhances `query` with yields for the fields that were selected.
