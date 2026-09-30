@@ -28,7 +28,7 @@ public class ComponentWidget extends AbstractComponentWidget {
 
     @Override
     protected Set<String> additionalReservedAttrNames() {
-        return setOf("id", "property-name");
+        return setOf("property-name");
     }
 
     @Override

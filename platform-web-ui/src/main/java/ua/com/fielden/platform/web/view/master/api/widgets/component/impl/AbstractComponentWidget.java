@@ -49,7 +49,7 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
 
     /// The names of attributes rendered by both component widgets, which cannot be declared.
     private static final Set<String> RESERVED_ATTR_NAMES = setOf(
-            "debug", "entity", "prop-title", "prop-desc", "property-action-index",
+            "debug", "id", "entity", "prop-title", "prop-desc", "property-action-index",
             "block-when-unsaved", "entity-modified", "entity-edited",
             "slot"); // the flex layout of a master assigns slots to its elements
 

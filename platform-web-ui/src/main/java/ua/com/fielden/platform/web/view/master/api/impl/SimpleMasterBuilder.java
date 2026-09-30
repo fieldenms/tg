@@ -205,7 +205,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IEntityComponentConfig<T> addComponent(final CharSequence importPath) {
-        // a dash cannot occur in a property name, so the action index key of a component never clashes with that of a property
+        // a dash cannot occur in a property name, so the key of a component never clashes with a property name or with the id of an editor or a property component
         final long ordinal = widgets.stream().filter(widget -> widget.widget() instanceof EntityComponentWidget).count();
         final EntityComponentWidget component = new EntityComponentWidget(Objects.toString(importPath, null), entityType, "component-" + ordinal);
         widgets.add(new WidgetSelector<>(this, component));
@@ -449,7 +449,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         public Map<String, Class<? extends IEntityMultiActionSelector>> propertyActionSelectors() {
             return widgets.stream().filter(widget -> widget.widget().action().isPresent()).map(widget -> {
                 // a component bound to the entity has its action index under its own key, as it has no property
-                final String key = widget.widget() instanceof EntityComponentWidget component ? component.actionIndexKey() : widget.widget().propertyName();
+                final String key = widget.widget() instanceof EntityComponentWidget component ? component.componentKey() : widget.widget().propertyName();
                 return t2(key, widget.widget().action().get().actionSelectorClass());
             }).collect(toMap(tt -> tt._1, tt -> tt._2));
         }

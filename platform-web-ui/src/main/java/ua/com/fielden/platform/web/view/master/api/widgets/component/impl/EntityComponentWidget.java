@@ -18,21 +18,22 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 /// Any other data it needs is declared as attributes, with either static values or pass-through binding expressions, such as `[[centreUuid]]`.
 /// By default, the component is blocked while the entity is unsaved, as rendered by [AbstractComponentWidget].
 ///
+/// The component is identified in the master by [#componentKey()], which is both the element id and the key of its action index.
+///
 /// The widget has no property name, so its actions have no chosen property.
 /// Its action is declared as for property widgets: a single action, or a multi-action whose selector chooses the action to show for the entity.
-/// The index of the chosen action is calculated under [#actionIndexKey()], which distinguishes the components of a master from one another and from its properties.
 ///
 public class EntityComponentWidget extends AbstractComponentWidget {
 
-    private final String actionIndexKey;
+    private final String componentKey;
     private Optional<String> title = empty();
     private Optional<String> desc = empty();
 
     /// Creates a widget for the component at `importPath`, which is resolved as `/resources/<importPath>.js`, in a master for `entityType`.
     ///
-    public EntityComponentWidget(final String importPath, final Class<? extends AbstractEntity<?>> entityType, final String actionIndexKey) {
+    public EntityComponentWidget(final String importPath, final Class<? extends AbstractEntity<?>> entityType, final String componentKey) {
         super(importPath, pair(null, null), entityType, null);
-        this.actionIndexKey = actionIndexKey;
+        this.componentKey = componentKey;
     }
 
     /// Declares the title of the component, rendered as `prop-title`.
@@ -49,10 +50,11 @@ public class EntityComponentWidget extends AbstractComponentWidget {
         this.desc = of(desc);
     }
 
-    /// The key under which the index of the action to show is calculated for the entity, among the property action indices of the master.
+    /// The key that identifies the component in the master, which distinguishes the components of a master from one another, from its editors and from its properties.
+    /// It is the id of the component element, and the key under which the index of the action to show is calculated for the entity, among the property action indices of the master.
     ///
-    public String actionIndexKey() {
-        return actionIndexKey;
+    public String componentKey() {
+        return componentKey;
     }
 
     @Override
@@ -61,10 +63,11 @@ public class EntityComponentWidget extends AbstractComponentWidget {
         if (isDebug()) {
             attrs.put("debug", "true");
         }
+        attrs.put("id", componentKey);
         attrs.put("entity", "[[_currEntity]]");
         title.ifPresent(value -> attrs.put("prop-title", value));
         desc.ifPresent(value -> attrs.put("prop-desc", value));
-        attrs.put("property-action-index", "[[_propertyActionIndices." + actionIndexKey + "]]");
+        attrs.put("property-action-index", "[[_propertyActionIndices." + componentKey + "]]");
         addUnsavedStateAttributes(attrs);
         return attrs;
     }
