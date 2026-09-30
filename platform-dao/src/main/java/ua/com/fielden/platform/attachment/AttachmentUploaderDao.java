@@ -64,8 +64,6 @@ import static ua.com.fielden.platform.error.Result.*;
 /// - Create and persist an attachment [Attachment] associated with the uploaded file resource.
 ///   This happens in a DB transaction.
 ///
-/// @author TG Team
-///
 @EntityType(AttachmentUploader.class)
 public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> implements AttachmentUploaderCo {
 
@@ -109,6 +107,8 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     /// The file processing — saving the input stream to a temporary file, inspecting its content, malware scanning, and copying it to the attachments location — runs outside a DB transaction.
     /// Only the creation or retrieval of the associated [Attachment] runs in a transaction, which is scoped to [#saveAttachment(AttachmentUploader, String)].
     /// If this method is invoked within an existing transaction, [#saveAttachment(AttachmentUploader, String)] joins it.
+    /// Consequently, a failure to create or retrieve the [Attachment] rolls back the existing transaction.
+    /// A failure during the file processing, such as a restricted file type or detected malware, leaves the existing transaction that wraps the call intact.
     ///
     @Override
     public AttachmentUploader save(final AttachmentUploader uploader) {
@@ -147,7 +147,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             // Validate the file nature
             canAcceptFile(uploader, tmpPath, getUser()).ifFailure(Result::throwRuntime);
 
-            // If the target file already exists, overwrite its contents
+            // Copy the file to the attachments location, unless a file with the same content is already there
             final File targetFile = new File(targetFileName(sha1));
             if (!targetFile.exists()) {
                 final Path targetPath = Paths.get(targetFile.toURI());
