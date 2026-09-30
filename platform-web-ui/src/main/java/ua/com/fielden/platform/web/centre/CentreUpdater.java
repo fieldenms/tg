@@ -35,6 +35,7 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.*;
 import static java.util.function.Function.identity;
 import static java.util.regex.Pattern.quote;
@@ -613,7 +614,7 @@ public class CentreUpdater {
     /// A configuration made preferred on a phone therefore does not change what opens on a desktop, and vice versa.
     ///
     private static String preferredPropFor(final DeviceProfile device) {
-        return switch (device) {
+        return switch (requireNonNull(device, "The device profile of the request being served is unknown.")) {
             case DESKTOP -> "preferred";
             case MOBILE -> "preferredOnMobile";
         };
@@ -673,35 +674,73 @@ public class CentreUpdater {
         return eccCompanion.getAllEntities(from(queryForCurrentUser).with(fetch).model());
     }
     
-    /**
-     * Determines the preferred configuration <code>saveAsName</code> for the current user (defined by <code>gdtm.getUserProvider().getUser()</code>), the specified <code>device</code> and concrete 
-     * <code>miType</code>'ed menu item.
-     * 
-     * @param user
-     * @param miType
-     * @param device
-     * @return
-     */
-    public static Optional<String> retrievePreferredConfigName(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder, final IWebUiConfig webUiConfig) {
+    /// Determines the preferred configuration `saveAsName` of `user` for concrete `miType`'ed menu item.
+    ///
+    /// Preferredness is kept per device profile.
+    /// The device profile of the request being served is used, see [IWebUiConfig#currentDeviceProfile()].
+    ///
+    public static Optional<String> retrievePreferredConfigName(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final ICompanionObjectFinder companionFinder,
+        final IWebUiConfig webUiConfig
+    ) {
         if (webUiConfig.isEmbeddedCentreAndNotAllowCustomised(miType)) {
             return empty();
         }
-        final List<EntityCentreConfig> prefConfigs = getAllPreferredConfigs(user, miType, device, companionFinder);
+        final var prefConfigs = getAllPreferredConfigs(user, miType, webUiConfig.currentDeviceProfile(), companionFinder);
         return prefConfigs.stream().findAny().map(ecc -> obtainTitleFrom(ecc.getTitle(), FRESH_CENTRE_NAME));
     }
     
-    /**
-     * Makes {@code saveAsName}d configuration preferred for {@code user}, {@code device} and concrete {@code miType}'ed menu item.
-     * <p>
-     * Does nothing for embedded centres. This means that default configurations will always be preferred for them.
-     * 
-     * @param user
-     * @param miType
-     * @param saveAsName
-     * @param device
-     * @return
-     */
-    public static void makePreferred(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder, final IWebUiConfig webUiConfig) {
+    /// Makes `saveAsName`d configuration preferred for `user` and concrete `miType`'ed menu item.
+    ///
+    /// Preferredness is kept per device profile.
+    /// Only the one of the request being served is affected, see [IWebUiConfig#currentDeviceProfile()].
+    /// Does nothing for embedded centres, so default configurations are always preferred for them.
+    ///
+    public static void makePreferred(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final ICompanionObjectFinder companionFinder,
+        final IWebUiConfig webUiConfig
+    ) {
+        makePreferredOn(user, miType, saveAsName, webUiConfig.currentDeviceProfile(), companionFinder, webUiConfig);
+    }
+
+    /// Makes `saveAsName`d configuration preferred again on each of `deviceProfiles`, unless it already is.
+    ///
+    /// Actions that delete and recreate the FRESH centre of a configuration lose its preferred flags.
+    /// They record the flags with [#preferredDeviceProfiles(User, Class, Optional, ICompanionObjectFinder)] beforehand.
+    /// This method restores them afterwards.
+    ///
+    public static void restorePreferred(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final Set<DeviceProfile> deviceProfiles,
+        final ICompanionObjectFinder companionFinder,
+        final IWebUiConfig webUiConfig
+    ) {
+        final var alreadyPreferredOn = preferredDeviceProfiles(user, miType, saveAsName, companionFinder);
+        deviceProfiles.stream()
+            .filter(device -> !alreadyPreferredOn.contains(device))
+            .forEach(device -> makePreferredOn(user, miType, saveAsName, device, companionFinder, webUiConfig));
+    }
+
+    /// Makes `saveAsName`d configuration preferred for `user` and concrete `miType`'ed menu item on `device`.
+    ///
+    /// The preferredness of the other device profile is left intact.
+    /// Does nothing for embedded centres, so default configurations are always preferred for them.
+    ///
+    private static void makePreferredOn(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final DeviceProfile device,
+        final ICompanionObjectFinder companionFinder,
+        final IWebUiConfig webUiConfig
+    ) {
         if (!webUiConfig.isEmbeddedCentreAndNotAllowCustomised(miType)) { // standalone centres only, not embedded
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final List<EntityCentreConfig> prefConfigs = getAllPreferredConfigs(user, miType, device, companionFinder);

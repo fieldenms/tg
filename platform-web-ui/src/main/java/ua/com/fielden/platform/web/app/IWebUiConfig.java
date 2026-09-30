@@ -9,6 +9,7 @@ import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
@@ -123,6 +124,14 @@ public interface IWebUiConfig extends IMenuRetriever {
     default boolean isEmbeddedCentreAndNotAllowCustomised(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         return isEmbeddedCentre(miType) && getEmbeddedCentres().get(miType)._1.isRunAutomaticallyAndNotAllowCustomised();
     }
+
+    /// Returns the device profile of the request being served.
+    ///
+    /// Entity Centre configurations are shared by all device profiles.
+    /// However, each profile keeps its own preferred configuration.
+    /// This is the one place where Entity Centre logic learns the device profile, so that it need not be passed around.
+    ///
+    DeviceProfile currentDeviceProfile();
 
     /// Clears all centre, master, and menu configurations that were previously initialised.
     ///

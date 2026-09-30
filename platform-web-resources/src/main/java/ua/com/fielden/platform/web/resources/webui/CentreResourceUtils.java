@@ -45,7 +45,6 @@ import ua.com.fielden.platform.web.centre.*;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 import java.lang.reflect.Field;
@@ -507,14 +506,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICriteriaGenerator critGenerator,
             final Long previousVersion,
             final User user,
-            final DeviceProfile device,
             final IWebUiConfig webUiConfig,
             final ICentreConfigSharingModel sharingModel) {
         // generates validation prototype
         final M validationPrototype = (M) critGenerator.<T>generateCentreQueryCriteria(cdtmae);
 
         validationPrototype.setMiType(miType);
-        validationPrototype.setDevice(device);
 
         // Functions for companion implementations:
 
@@ -555,7 +552,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 updateCentre(user, miType, FRESH_CENTRE_NAME, validationPrototypeSaveAsName, webUiConfig, companionFinder),
                 companionFinder, critGenerator, -1L,
                 user,
-                device,
                 webUiConfig, sharingModel
             )
         );
@@ -689,7 +685,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             updateCentre(user, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), webUiConfig, companionFinder);
 
             // It must be left preferred after deletion, on every device profile it was preferred on.
-            preferredProfiles.forEach(profile -> makePreferred(user, miType, of(saveAsNameToLoad), profile, companionFinder, webUiConfig));
+            restorePreferred(user, miType, of(saveAsNameToLoad), preferredProfiles, companionFinder, webUiConfig);
         });
         // updates inherited centre with title 'saveAsNameToLoad' from upstream shared configuration -- just before LOAD action
         validationPrototype.setInheritedFromSharedCentreUpdater(saveAsNameToLoad -> configUuid -> {
@@ -709,7 +705,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // applies new criteria from client application against FRESH centre and returns respective criteria entity
         validationPrototype.setFreshCentreApplier(modifHolder -> {
-            return createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, device, webUiConfig, sharingModel);
+            return createCriteriaEntityWithoutConflicts(
+                modifHolder,
+                companionFinder,
+                critGenerator,
+                miType,
+                saveAsName,
+                user,
+                webUiConfig,
+                sharingModel
+            );
         });
         // returns title / desc for named (inherited or owned) configuration and empty optional for unnamed (default) configuration
         validationPrototype.setCentreTitleAndDescGetter(saveAsNameForTitleAndDesc -> {
@@ -740,7 +745,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             editCentreTitleAndDesc(user, miType, saveAsName, newName, newDesc, dashboardable, dashboardRefreshFrequency, companionFinder);
             // currently loaded configuration should remain preferred -- no action is required
             return validationPrototype.centreCustomObject(
-                createCriteriaEntityWithoutConflicts(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), user, device, webUiConfig, sharingModel),
+                createCriteriaEntityWithoutConflicts(
+                    validationPrototype.centreContextHolder().getModifHolder(),
+                    companionFinder,
+                    critGenerator,
+                    miType,
+                    of(newName),
+                    user,
+                    webUiConfig,
+                    sharingModel
+                ),
                 of(newName),
                 empty(), // no need to update already existing client-side configUuid
                 empty(), // no need to update already loaded preferredView
@@ -752,7 +766,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             configureCentre(user, miType, saveAsName, runAutomatically, companionFinder);
             // currently loaded configuration should remain preferred -- no action is required
             return validationPrototype.centreCustomObject(
-                createCriteriaEntityWithoutConflicts(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, saveAsName, user, device, webUiConfig, sharingModel),
+                createCriteriaEntityWithoutConflicts(
+                    validationPrototype.centreContextHolder().getModifHolder(),
+                    companionFinder,
+                    critGenerator,
+                    miType,
+                    saveAsName,
+                    user,
+                    webUiConfig,
+                    sharingModel
+                ),
                 saveAsName,
                 empty(), // no need to update already existing client-side configUuid
                 empty(), // no need to update already loaded preferredView
@@ -797,9 +820,20 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             createAndOverrideUuid.apply(null).accept(SAVED_CENTRE_NAME);
 
             // when switching to new configuration we need to make it preferred
-            makePreferred(user, miType, newSaveAsName, device, companionFinder, webUiConfig); // it is of 'own save-as' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
+            // it is of 'own save-as' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
+            makePreferred(user, miType, newSaveAsName, companionFinder, webUiConfig);
 
-            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaEntityWithoutConflicts(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newSaveAsName, user, device, webUiConfig, sharingModel);
+            final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity =
+                createCriteriaEntityWithoutConflicts(
+                    validationPrototype.centreContextHolder().getModifHolder(),
+                    companionFinder,
+                    critGenerator,
+                    miType,
+                    newSaveAsName,
+                    user,
+                    webUiConfig,
+                    sharingModel
+                );
 
             return validationPrototype.centreCustomObject(
                 appliedCriteriaEntity,
@@ -820,7 +854,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             if (!equalsEx(saveAsNameToBecomePreferred, saveAsName)) {
                 // please note currently loaded configuration can be preferred (default, own save-as, base) or not (link, shared);
                 // for embedded centres only default configuration can be preferred, but still named configurations may exist
-                makePreferred(user, miType, saveAsNameToBecomePreferred, device, companionFinder, webUiConfig);
+                makePreferred(user, miType, saveAsNameToBecomePreferred, companionFinder, webUiConfig);
             }
         });
         /*
@@ -986,7 +1020,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final M criteriaEntity,
             final Optional<CentreContextConfig> contextConfig,
             final String chosenProperty,
-            final DeviceProfile device,
             final ICentreConfigSharingModel sharingModel) {
         if (contextConfig.isPresent()) {
             final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
@@ -998,7 +1031,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 context.setSelectedEntities(!centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? (List<T>) centreContextHolder.getSelectedEntities() : new ArrayList<>());
             }
             if (config.withMasterEntity) {
-                context.setMasterEntity(restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, user, critGenerator, entityFactory, centreContextHolder, 0, device, sharingModel));
+                context.setMasterEntity(
+                    restoreMasterFunctionalEntity(
+                        disregardOriginallyProducedEntities,
+                        webUiConfig,
+                        companionFinder,
+                        user,
+                        critGenerator,
+                        entityFactory,
+                        centreContextHolder,
+                        0,
+                        sharingModel
+                    )
+                );
             }
             if (config.withChosenEntity) {
                 context.setChosenEntity(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains(CHOSENENTITY_PROPERTY_NAME) ? centreContextHolder.getChosenEntity() : null);
@@ -1062,7 +1107,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final ICriteriaGenerator critGenerator,
         final IWebUiConfig webUiConfig,
         final EntityFactory entityFactory,
-        final DeviceProfile device,
         final ICentreConfigSharingModel sharingModel) {
 
         if (centreContextHolder.getCustomObject().get("@@miType") == null || isEmpty(!centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<String, Object>())) {
@@ -1073,8 +1117,28 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final String saveAsNameString = (String) centreContextHolder.getCustomObject().get("@@saveAsName");
         final Optional<String> saveAsName = "".equals(saveAsNameString) ? empty() : of(saveAsNameString);
 
-        final M criteriaEntity = (M) createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, saveAsName, user, device, webUiConfig, sharingModel).setCentreContextHolder(centreContextHolder);
-        criteriaEntity.setExportQueryRunner(customObject -> stream(webUiConfig, user, entityFactory, companionFinder, critGenerator, centreContextHolder, criteriaEntity, customObject, device, sharingModel));
+        final M criteriaEntity = (M) createCriteriaEntityForPaginating(
+            companionFinder,
+            critGenerator,
+            miType,
+            saveAsName,
+            user,
+            webUiConfig,
+            sharingModel
+        ).setCentreContextHolder(centreContextHolder);
+        criteriaEntity.setExportQueryRunner(
+            customObject -> stream(
+                webUiConfig,
+                user,
+                entityFactory,
+                companionFinder,
+                critGenerator,
+                centreContextHolder,
+                criteriaEntity,
+                customObject,
+                sharingModel
+            )
+        );
         return criteriaEntity;
     }
 
@@ -1091,7 +1155,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final CentreContextHolder centreContextHolder,
         final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
         final Map<String, Object> adhocParams,
-        final DeviceProfile device,
         final ICentreConfigSharingModel sharingModel) {
 
         final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(criteriaEntity.miType());
@@ -1109,7 +1172,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 entityFactory,
                 centreContextHolder,
                 appliedCriteriaEntity,
-                device,
                 sharingModel);
 
         final Stream<AbstractEntity<?>> stream = createCriteriaMetaValuesCustomObjectWithStream(
@@ -1173,7 +1235,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             centreContextHolder,
             centre.getQueryEnhancerConfig(),
             criteriaEntity,
-            criteriaEntity.device(),
             sharingModel
         ).ifPresent(qeac -> criteriaEntity.setAdditionalQueryEnhancerAndContext(qeac.getKey(), qeac.getValue())); // query enhancer and its optional context should be set if present in Centre DSL
 
@@ -1209,7 +1270,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Optional<String> saveAsName,
             final User user,
-            final DeviceProfile device,
             final IWebUiConfig webUiConfig,
             final ICentreConfigSharingModel sharingModel) {
         final var updatedPreviouslyRunCentre = updateCentre(
@@ -1220,7 +1280,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             webUiConfig,
             companionFinder
         );
-        return createCriteriaValidationPrototype(miType, saveAsName, updatedPreviouslyRunCentre, companionFinder, critGenerator, 0L, user, device, webUiConfig, sharingModel);
+        return createCriteriaValidationPrototype(
+            miType,
+            saveAsName,
+            updatedPreviouslyRunCentre,
+            companionFinder,
+            critGenerator,
+            0L,
+            user,
+            webUiConfig,
+            sharingModel
+        );
     }
 
     /// Creates selection criteria entity from `modifPropsHolder`.
@@ -1234,7 +1304,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Class<? extends MiWithConfigurationSupport<?>> miType,
         final Optional<String> saveAsName,
         final User user,
-        final DeviceProfile device,
         final IWebUiConfig webUiConfig,
         final ICentreConfigSharingModel sharingModel
     ) {
@@ -1252,7 +1321,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             companionFinder
         );
         applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
-        final M validationPrototype = createCriteriaValidationPrototype(miType, saveAsName, originalCdtmae, companionFinder, critGenerator, maybeVersion(modifiedPropertiesHolder).getAsLong(), user, device, webUiConfig, sharingModel);
+        final M validationPrototype = createCriteriaValidationPrototype(
+            miType,
+            saveAsName,
+            originalCdtmae,
+            companionFinder,
+            critGenerator,
+            maybeVersion(modifiedPropertiesHolder).getAsLong(),
+            user,
+            webUiConfig,
+            sharingModel
+        );
         final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
                 modifiedPropertiesHolder,
                 validationPrototype,

@@ -36,6 +36,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
@@ -419,6 +420,13 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
         this.embeddedCentreMap = null;
         logger.error("Clearing configurations...done");
+    }
+
+    /// Takes the device profile from [IDeviceProvider], which every web resource sets for the request it serves.
+    ///
+    @Override
+    public DeviceProfile currentDeviceProfile() {
+        return injector().getInstance(IDeviceProvider.class).getDeviceProfile();
     }
 
     @Override

@@ -110,11 +110,9 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
                     // Do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly.
                     updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
                     // Must leave current configuration preferred after deletion (only for named configs -- always true for inherited ones).
-                    makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig);
+                    makePreferred(user, miType, saveAsName, companionFinder, webUiConfig);
                     // It must also stay preferred on any other device profile it was preferred on.
-                    preferredProfiles.stream()
-                        .filter(profile -> profile != device())
-                        .forEach(profile -> makePreferred(user, miType, saveAsName, profile, companionFinder, webUiConfig));
+                    restorePreferred(user, miType, saveAsName, preferredProfiles, companionFinder, webUiConfig);
                     actualSaveAsName = saveAsName;
                 } else { // inherited from shared
                     final var upstreamConfig = updateInheritedFromShared(
@@ -156,7 +154,6 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
                 companionFinder,
                 critGenerator,
                 criteriaIndication,
-                device(),
                 isInherited ? of(ofNullable(updateCentreDesc(user, miType, actualSaveAsName, companionFinder))) : empty(),
                 webUiConfig,
                 sharingModel
