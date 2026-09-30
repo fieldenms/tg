@@ -380,13 +380,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final User user,
         final Class<? extends MiWithConfigurationSupport<?>> miType,
         final Optional<String> saveAsName,
-        final DeviceProfile device,
         final IWebUiConfig webUiConfig,
         final ICompanionObjectFinder companionFinder
     ) {
-        final var centre = updateCentre(user, miType, surrogateName, saveAsName, device, webUiConfig, companionFinder);
+        final var centre = updateCentre(user, miType, surrogateName, saveAsName, webUiConfig, companionFinder);
         centreConsumer.accept(centre);
-        commitCentreWithoutConflicts(user, miType, surrogateName, saveAsName, device, centre, null /* newDesc */, webUiConfig, companionFinder);
+        commitCentreWithoutConflicts(user, miType, surrogateName, saveAsName, centre, null /* newDesc */, webUiConfig, companionFinder);
         return centre;
     }
 
@@ -520,9 +519,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // Functions for companion implementations:
 
         // returns an updated version of centre
-        validationPrototype.setFreshCentreSupplier(() -> updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder));
-        validationPrototype.setSavedCentreSupplier(() -> updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder));
-        validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder));
+        validationPrototype.setFreshCentreSupplier(() -> updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, webUiConfig, companionFinder));
+        validationPrototype.setSavedCentreSupplier(() -> updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, webUiConfig, companionFinder));
+        validationPrototype.setPreviouslyRunCentreSupplier(
+            () -> updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, webUiConfig, companionFinder)
+        );
 
         // returns whether centre (defined by 'specificSaveAsName, freshCentreSupplier' arguments) is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
         validationPrototype.setCentreDirtyCalculatorWithSavedSupplier(savedCentreSupplier -> specificSaveAsName -> freshCentreSupplier ->
@@ -535,19 +536,23 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         );
         validationPrototype.setCentreDirtyCalculator(specificSaveAsName -> freshCentreSupplier ->
             validationPrototype.centreDirtyCalculatorWithSavedSupplier()
-                .apply(() -> updateCentre(user, miType, SAVED_CENTRE_NAME, specificSaveAsName, device, webUiConfig, companionFinder))
+                .apply(() -> updateCentre(user, miType, SAVED_CENTRE_NAME, specificSaveAsName, webUiConfig, companionFinder))
                 .apply(specificSaveAsName)
                 .apply(freshCentreSupplier)
         );
 
         // returns whether centre is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
-        validationPrototype.setCentreDirtyGetter(() -> validationPrototype.centreDirtyCalculator().apply(saveAsName).apply(() -> updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder)));
+        validationPrototype.setCentreDirtyGetter(
+            () -> validationPrototype.centreDirtyCalculator().apply(saveAsName).apply(
+                () -> updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, webUiConfig, companionFinder)
+            )
+        );
         // creates criteria validation prototype for concrete saveAsName
         validationPrototype.setCriteriaValidationPrototypeCreator(validationPrototypeSaveAsName ->
             createCriteriaValidationPrototype(
                 miType,
                 validationPrototypeSaveAsName,
-                updateCentre(user, miType, FRESH_CENTRE_NAME, validationPrototypeSaveAsName, device, webUiConfig, companionFinder),
+                updateCentre(user, miType, FRESH_CENTRE_NAME, validationPrototypeSaveAsName, webUiConfig, companionFinder),
                 companionFinder, critGenerator, -1L,
                 user,
                 device,
@@ -575,25 +580,39 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // performs mutation function centreConsumer against FRESH and PREVIOUSLY_RUN centres and saves them into persistent storage; returns applied FRESH centre
         validationPrototype.setCentreAdjuster(centreConsumer -> {
-            final var centre = loadMutateAndCommitCentre(FRESH_CENTRE_NAME, centreConsumer, user, miType, saveAsName, device, webUiConfig, companionFinder);
-            loadMutateAndCommitCentre(PREVIOUSLY_RUN_CENTRE_NAME, centreConsumer, user, miType, saveAsName, device, webUiConfig, companionFinder);
+            final var centre = loadMutateAndCommitCentre(FRESH_CENTRE_NAME, centreConsumer, user, miType, saveAsName, webUiConfig, companionFinder);
+            loadMutateAndCommitCentre(PREVIOUSLY_RUN_CENTRE_NAME, centreConsumer, user, miType, saveAsName, webUiConfig, companionFinder);
             return centre;
         });
         // performs mutation function centreConsumer (column widths adjustments) against PREVIOUSLY_RUN centre and copies column widths / grow factors directly to FRESH centre; saves them both into persistent storage
         validationPrototype.setCentreColumnWidthsAdjuster(centreConsumer -> {
             // we have diffs that need to be applied against 'previouslyRun' centre
-            loadMutateAndCommitCentre(PREVIOUSLY_RUN_CENTRE_NAME, centreConsumer, user, miType, saveAsName, device, webUiConfig, companionFinder);
+            loadMutateAndCommitCentre(PREVIOUSLY_RUN_CENTRE_NAME, centreConsumer, user, miType, saveAsName, webUiConfig, companionFinder);
 
             // however those diffs are not applicable to 'fresh' centre due to ability of 'fresh' centre to differ from 'previouslyRun' centre
             // the only way to get such mismatch is to press Discard on selection criteria
             // that's why we need to carefully override only widths and grow factors of 'fresh' centre from 'previouslyRun' centre
             // all other unrelated to CentreColumnWidthConfigUpdater information should remain 'as is'
-            final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
+            final var previouslyRunCentre = updateCentre(
+                user,
+                miType,
+                PREVIOUSLY_RUN_CENTRE_NAME,
+                saveAsName,
+                webUiConfig,
+                companionFinder
+            );
+            final var freshCentre = updateCentre(
+                user,
+                miType,
+                FRESH_CENTRE_NAME,
+                saveAsName,
+                webUiConfig,
+                companionFinder
+            );
             freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre. getSecondTick().getWidthsAndGrowFactors());
             freshCentre.getSecondTick().setDynamicWidthsAndGrowFactors(previouslyRunCentre.getSecondTick().getDynamicWidthsAndGrowFactors());
             freshCentre.getSecondTick().setDynamicLastSeenMap(previouslyRunCentre.getSecondTick().getDynamicLastSeenMap());
-            commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, device, freshCentre, null /* newDesc */, webUiConfig, companionFinder);
+            commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, freshCentre, null /* newDesc */, webUiConfig, companionFinder);
         });
         // SAVED-half of the silent adjuster — the FRESH and PREVIOUSLY_RUN halves are covered by `centreAdjuster`.
         // `EnhancedCentreEntityQueryCriteria.adjustCentreSilently` composes the two so all three surrogates are kept in sync.
@@ -601,17 +620,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // Intended for housekeeping mutations such as the dynamic-column eviction sweep / lastSeen bumping.
         // See `CriteriaResource.refreshAndEvictDynamicEntries` for the canonical caller.
         validationPrototype.setCentreSilentAdjuster(centreConsumer ->
-            loadMutateAndCommitCentre(SAVED_CENTRE_NAME, centreConsumer, user, miType, saveAsName, device, webUiConfig, companionFinder)
+            loadMutateAndCommitCentre(SAVED_CENTRE_NAME, centreConsumer, user, miType, saveAsName, webUiConfig, companionFinder)
         );
         // performs deletion of current owned configuration
         validationPrototype.setCentreDeleter(() ->
             // removes the associated surrogate centres
-            removeCentres(user, miType, device, saveAsName, companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME)
+            removeCentres(user, miType, saveAsName, companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME)
         );
         // overrides SAVED centre configuration by FRESH one -- 'saves' centre
         validationPrototype.setFreshCentreSaver(() -> {
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
-            commitCentreWithoutConflicts(user, miType, SAVED_CENTRE_NAME, saveAsName, device, freshCentre, null, webUiConfig, companionFinder);
+            final var freshCentre = updateCentre(
+                user,
+                miType,
+                FRESH_CENTRE_NAME,
+                saveAsName,
+                webUiConfig,
+                companionFinder
+            );
+            commitCentreWithoutConflicts(user, miType, SAVED_CENTRE_NAME, saveAsName, freshCentre, null, webUiConfig, companionFinder);
             return (customObject, criteriaIndicationName) -> {
                 if (CHANGED.name().equals(criteriaIndicationName)) {
                     customObject.put(CRITERIA_INDICATION, NONE);
@@ -621,9 +647,22 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // overrides FRESH default centre configuration by FRESH current centre configuration; makes default config as preferred -- 'duplicates' centre
         validationPrototype.setConfigDuplicateAction(() -> {
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
-            commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null, webUiConfig, companionFinder);
-            findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(empty()).apply(device), companionFinder, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically")).ifPresent(config -> {
+            final var freshCentre = updateCentre(
+                user,
+                miType,
+                FRESH_CENTRE_NAME,
+                saveAsName,
+                webUiConfig,
+                companionFinder
+            );
+            commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, empty(), freshCentre, null, webUiConfig, companionFinder);
+            findConfigOpt(
+                miType,
+                user,
+                NAME_OF.apply(FRESH_CENTRE_NAME).apply(empty()),
+                companionFinder,
+                FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically")
+            ).ifPresent(config -> {
                 final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
                 co$EntityCentreConfig.saveWithRetry(config.setRunAutomatically(validationPrototype.centreRunAutomatically(saveAsName))); // copy runAutomatically from current configuration (saveAsName) into default configuration (empty())
             });
@@ -635,17 +674,18 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             // determine current preferred configuration
             final Optional<String> preferredConfigName = retrievePreferredConfigName(user, miType, device, companionFinder, webUiConfig);
             // determine whether inherited configuration is changed
-            final boolean centreChanged = isFreshCentreChanged(
-                updateCentre(user, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, webUiConfig, companionFinder),
-                updateCentre(user, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, webUiConfig, companionFinder)
+            final var centreChanged = isFreshCentreChanged(
+                updateCentre(user, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), webUiConfig, companionFinder),
+                updateCentre(user, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), webUiConfig, companionFinder)
             );
             if (centreChanged) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
-                removeCentres(user, miType, device, of(saveAsNameToLoad), companionFinder, SAVED_CENTRE_NAME);
+                removeCentres(user, miType, of(saveAsNameToLoad), companionFinder, SAVED_CENTRE_NAME);
             } else { // otherwise base user changes will be loaded immediately after centre loading
-                removeCentres(user, miType, device, of(saveAsNameToLoad), companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+                removeCentres(user, miType, of(saveAsNameToLoad), companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
             }
-            updateCentre(user, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, webUiConfig, companionFinder);
-            updateCentre(user, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, webUiConfig, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
+            updateCentre(user, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), webUiConfig, companionFinder);
+            // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
+            updateCentre(user, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), webUiConfig, companionFinder);
 
             if (equalsEx(preferredConfigName, of(saveAsNameToLoad))) { // if inherited configuration being updated was preferred
                 makePreferred(user, miType, of(saveAsNameToLoad), device, companionFinder, webUiConfig); // then must leave it preferred after deletion
@@ -653,18 +693,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // updates inherited centre with title 'saveAsNameToLoad' from upstream shared configuration -- just before LOAD action
         validationPrototype.setInheritedFromSharedCentreUpdater(saveAsNameToLoad -> configUuid -> {
-            return updateInheritedFromShared(configUuid, miType, device, of(saveAsNameToLoad), user, companionFinder, of(() -> isFreshCentreChanged(
-                updateCentre(user, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, webUiConfig, companionFinder),
-                updateCentre(user, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, webUiConfig, companionFinder)
+            return updateInheritedFromShared(configUuid, miType, of(saveAsNameToLoad), user, companionFinder, of(() -> isFreshCentreChanged(
+                updateCentre(user, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), webUiConfig, companionFinder),
+                updateCentre(user, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), webUiConfig, companionFinder)
             )))
-            .map(upstreamConfig -> of(obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device)))
+            .map(upstreamConfig -> of(obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME)))
             .orElseGet(() -> of(saveAsNameToLoad));
         });
         // clears default centre and fully prepares it for usage
         validationPrototype.setDefaultCentreClearer(() -> {
-            removeCentres(user, miType, device, empty(), companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
-            updateCentre(user, miType, FRESH_CENTRE_NAME, empty(), device, webUiConfig, companionFinder);
-            updateCentre(user, miType, SAVED_CENTRE_NAME, empty(), device, webUiConfig, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
+            removeCentres(user, miType, empty(), companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+            updateCentre(user, miType, FRESH_CENTRE_NAME, empty(), webUiConfig, companionFinder);
+            // Do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly.
+            updateCentre(user, miType, SAVED_CENTRE_NAME, empty(), webUiConfig, companionFinder);
         });
         // applies new criteria from client application against FRESH centre and returns respective criteria entity
         validationPrototype.setFreshCentreApplier(modifHolder -> {
@@ -672,29 +713,31 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // returns title / desc for named (inherited or owned) configuration and empty optional for unnamed (default) configuration
         validationPrototype.setCentreTitleAndDescGetter(saveAsNameForTitleAndDesc -> {
-            return saveAsNameForTitleAndDesc.map(name -> t2(name, updateCentreDesc(user, miType, of(name), device, companionFinder)));
+            return saveAsNameForTitleAndDesc.map(name -> t2(name, updateCentreDesc(user, miType, of(name), companionFinder)));
         });
         // returns runAutomatically from Centre DSL config
         validationPrototype.setDefaultRunAutomaticallySupplier(() -> defaultRunAutomatically(miType, webUiConfig));
         // returns runAutomatically for named (inherited or owned, also link) configuration and unnamed (default) configuration
         validationPrototype.setCentreRunAutomaticallyGetter(saveAsNameForRunAutomatically -> {
-            return updateCentreRunAutomatically(user, miType, saveAsNameForRunAutomatically, device, companionFinder, webUiConfig, validationPrototype);
+            return updateCentreRunAutomatically(user, miType, saveAsNameForRunAutomatically, companionFinder, webUiConfig, validationPrototype);
         });
         // returns dashboardable indicator for named (inherited or owned) configuration and false for unnamed (default) configuration
         validationPrototype.setCentreDashboardableGetter(saveAsNameForDashboardable -> {
-            return saveAsNameForDashboardable.map(name -> updateCentreDashboardable(user, miType, of(name), device, companionFinder)).orElse(false);
+            return saveAsNameForDashboardable.map(name -> updateCentreDashboardable(user, miType, of(name), companionFinder)).orElse(false);
         });
         // returns dashboard refresh frequency for named (inherited or owned) configuration and null for unnamed (default) configuration
         validationPrototype.setCentreDashboardRefreshFrequencyGetter(saveAsNameForDashboardable -> {
-            return saveAsNameForDashboardable.map(name -> updateCentreDashboardRefreshFrequency(user, miType, of(name), device, companionFinder)).orElse(null);
+            return saveAsNameForDashboardable.map(
+                name -> updateCentreDashboardRefreshFrequency(user, miType, of(name), companionFinder)
+            ).orElse(null);
         });
         // returns configUuid for named (inherited, owned or link) configuration and empty optional for unnamed (default) configuration
         validationPrototype.setCentreConfigUuidGetter(saveAsNameForConfigUuid -> {
-            return updateCentreConfigUuid(user, miType, saveAsNameForConfigUuid, device, companionFinder);
+            return updateCentreConfigUuid(user, miType, saveAsNameForConfigUuid, companionFinder);
         });
         // changes title / desc for current saveAsName'd configuration; returns custom object containing centre information
         validationPrototype.setCentreEditor(newName -> newDesc -> dashboardable -> dashboardRefreshFrequency -> {
-            editCentreTitleAndDesc(user, miType, saveAsName, device, newName, newDesc, dashboardable, dashboardRefreshFrequency, companionFinder);
+            editCentreTitleAndDesc(user, miType, saveAsName, newName, newDesc, dashboardable, dashboardRefreshFrequency, companionFinder);
             // currently loaded configuration should remain preferred -- no action is required
             return validationPrototype.centreCustomObject(
                 createCriteriaEntityWithoutConflicts(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), user, device, webUiConfig, sharingModel),
@@ -706,7 +749,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // changes runAutomatically for current saveAsName'd configuration; returns custom object containing centre information
         validationPrototype.setCentreConfigurator(runAutomatically -> {
-            configureCentre(user, miType, saveAsName, device, runAutomatically, companionFinder);
+            configureCentre(user, miType, saveAsName, runAutomatically, companionFinder);
             // currently loaded configuration should remain preferred -- no action is required
             return validationPrototype.centreCustomObject(
                 createCriteriaEntityWithoutConflicts(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, saveAsName, user, device, webUiConfig, sharingModel),
@@ -719,12 +762,27 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // performs copying of current configuration with the specified title / desc; makes it preferred; returns custom object containing centre information
         validationPrototype.setCentreSaver(newName -> newDesc -> dashboardable -> dashboardRefreshFrequency -> {
             final Optional<String> newSaveAsName = of(newName);
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
+            final var freshCentre = updateCentre(
+                user,
+                miType,
+                FRESH_CENTRE_NAME,
+                saveAsName,
+                webUiConfig,
+                companionFinder
+            );
             // save 'freshCentre' with a new name into FRESH / SAVED -- button SAVE will be disabled
             final String newConfigUuid = randomUUID().toString();
             final Function<String, Consumer<String>> createAndOverrideUuid = newDescription -> surrogateName -> {
-                commitCentreWithoutConflicts(user, miType, surrogateName, newSaveAsName, device, freshCentre, newDescription, webUiConfig, companionFinder);
-                findConfigOpt(miType, user, NAME_OF.apply(surrogateName).apply(newSaveAsName).apply(device), companionFinder, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid").with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency").with("runAutomatically"))
+                commitCentreWithoutConflicts(user, miType, surrogateName, newSaveAsName, freshCentre, newDescription, webUiConfig, companionFinder);
+                findConfigOpt(
+                    miType,
+                    user,
+                    NAME_OF.apply(surrogateName).apply(newSaveAsName),
+                    companionFinder,
+                    FETCH_CONFIG_AND_INSTRUMENT.with("configUuid").with("dashboardable").with("dashboardableDate").with(
+                        "dashboardRefreshFrequency"
+                    ).with("runAutomatically")
+                )
                     .ifPresent(config -> {
                         if (FRESH_CENTRE_NAME.equals(surrogateName)) {
                             config.setDashboardable(dashboardable);
@@ -752,7 +810,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             );
         });
         // returns ordered alphabetically list of 'loadable' configurations for current user
-        validationPrototype.setLoadableCentresSupplier(saveAsNameOpt -> () -> loadableConfigurations(user, miType, device, companionFinder, sharingModel).apply(saveAsNameOpt));
+        validationPrototype.setLoadableCentresSupplier(
+            saveAsNameOpt -> () -> loadableConfigurations(user, miType, companionFinder, sharingModel).apply(saveAsNameOpt)
+        );
         // returns currently loaded configuration's saveAsName
         validationPrototype.setSaveAsNameSupplier(() -> saveAsName);
         // makes 'saveAsNameToBecomePreferred' configuration preferred in case where it differs from currently loaded configuration; does nothing otherwise
@@ -783,7 +843,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 return failure(CONFIG_DOES_NOT_EXIST); // all non-default configurations should have uuid; handle gracefully just in case
             }
             final String configUuid = configUuidOpt.get();
-            final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(configUuid, user, miType, device, FRESH_CENTRE_NAME, companionFinder);
+            final var freshConfigOpt = findConfigOptByUuid(configUuid, user, miType, FRESH_CENTRE_NAME, companionFinder);
             if (freshConfigOpt.isEmpty()) {
                 return failure(CONFIG_DOES_NOT_EXIST); // configuration does not exist and can not be shared
             }
@@ -793,7 +853,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 }
                 return failure(SAVE_OWN_COPY_MSG); // [inherited from shared; inherited from base] configuration can not be shared
             }
-            final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, companionFinder);
+            final var savedConfigOpt = findConfigOptByUuid(configUuid, miType, SAVED_CENTRE_NAME, companionFinder);
             if (savedConfigOpt.isEmpty() // in case where there is no configuration creator then it was inherited from base / shared and original configuration was deleted; this type of configuration (inherited, no upstream) still can exist and act like own-save as, however it should not be used for sharing
              || !areEqual(savedConfigOpt.get().getOwner(), user)) { // the creator of configuration is not current user; it means that configuration was made not shared to this user by original creator, and it should not be used for sharing
                 return failure(DUPLICATE_SAVE_MSG);
@@ -1152,7 +1212,14 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final DeviceProfile device,
             final IWebUiConfig webUiConfig,
             final ICentreConfigSharingModel sharingModel) {
-        final ICentreDomainTreeManagerAndEnhancer updatedPreviouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
+        final var updatedPreviouslyRunCentre = updateCentre(
+            user,
+            miType,
+            PREVIOUSLY_RUN_CENTRE_NAME,
+            saveAsName,
+            webUiConfig,
+            companionFinder
+        );
         return createCriteriaValidationPrototype(miType, saveAsName, updatedPreviouslyRunCentre, companionFinder, critGenerator, 0L, user, device, webUiConfig, sharingModel);
     }
 
@@ -1176,7 +1243,14 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
 
         // load / update fresh centre if it is not loaded yet / stale
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder);
+        final var originalCdtmae = updateCentre(
+            user,
+            miType,
+            FRESH_CENTRE_NAME,
+            saveAsName,
+            webUiConfig,
+            companionFinder
+        );
         applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
         final M validationPrototype = createCriteriaValidationPrototype(miType, saveAsName, originalCdtmae, companionFinder, critGenerator, maybeVersion(modifiedPropertiesHolder).getAsLong(), user, device, webUiConfig, sharingModel);
         final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
@@ -1187,7 +1261,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         ).getKey();
 
         // need to commit changed fresh centre after modifiedPropertiesHolder has been applied!
-        commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, device, originalCdtmae, null /* newDesc */, webUiConfig, companionFinder);
+        commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, originalCdtmae, null /* newDesc */, webUiConfig, companionFinder);
         return appliedCriteriaEntity;
     }
 
@@ -1235,14 +1309,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     public static Optional<EntityCentreConfig> updateInheritedFromShared(
         final String configUuid,
         final Class<? extends MiWithConfigurationSupport<?>> miType,
-        final DeviceProfile device,
         final Optional<String> saveAsName,
         final User user,
         final ICompanionObjectFinder companionFinder,
         final Optional<Supplier<Boolean>> checkChanges
     ) {
-        return findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, companionFinder)
-               .map(upstreamConfig -> updateInheritedFromShared(upstreamConfig, miType, device, saveAsName, user, companionFinder, checkChanges));
+        return findConfigOptByUuid(configUuid, miType, SAVED_CENTRE_NAME, companionFinder)
+               .map(upstreamConfig -> updateInheritedFromShared(upstreamConfig, miType, saveAsName, user, companionFinder, checkChanges));
     }
 
     /// Updates FRESH / SAVED / PREVIOUSLY_RUN versions of configuration for `user` from upstream configuration.
@@ -1262,28 +1335,41 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     public static EntityCentreConfig updateInheritedFromShared(
         final EntityCentreConfig upstreamConfig,
         final Class<? extends MiWithConfigurationSupport<?>> miType,
-        final DeviceProfile device,
         final Optional<String> saveAsName,
         final User user,
         final ICompanionObjectFinder companionFinder,
         final Optional<Supplier<Boolean>> checkChanges
     ) {
-        final String upstreamTitle = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device);
+        final var upstreamTitle = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME);
         final Optional<String> changedTitle = !equalsEx(upstreamTitle, saveAsName.get()) ? of(upstreamTitle) : empty();
         final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
         final Function<String, Function<Supplier<Optional<Boolean>>, Consumer<Supplier<String>>>> overrideConfigBodyFor = name -> calcRunAutomaticallyOpt -> calcDesc ->
-            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), companionFinder, FETCH_CONFIG_AND_INSTRUMENT.with("configBody").with("runAutomatically")) // contains 'title' / 'desc' inside fetch model
+            findConfigOpt(
+                miType,
+                user,
+                NAME_OF.apply(name).apply(saveAsName),
+                companionFinder,
+                // Contains 'title' / 'desc' inside fetch model.
+                FETCH_CONFIG_AND_INSTRUMENT.with("configBody").with("runAutomatically")
+            )
             .ifPresent(config -> {
                 final String desc = calcDesc.get();
                 if (desc != null) {
                     config.setDesc(desc);
                 }
                 calcRunAutomaticallyOpt.get().ifPresent(runAutomatically -> config.setRunAutomatically(runAutomatically));
-                changedTitle.ifPresent(ct -> config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device))); // update title of configuration from upstream if it has changed
+                // Update title of configuration from upstream if it has changed.
+                changedTitle.ifPresent(ct -> config.setTitle(NAME_OF.apply(name).apply(of(ct))));
                 co$EntityCentreConfig.saveWithRetry(config.setConfigBody(upstreamConfig.getConfigBody()));
             });
-        final Function<String, Consumer<String>> overrideConfigTitleFor = name -> ct -> findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), companionFinder, FETCH_CONFIG_AND_INSTRUMENT /*contains 'title' inside fetch model*/).ifPresent(config ->
-            co$EntityCentreConfig.saveWithRetry(config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device)))
+        final Function<String, Consumer<String>> overrideConfigTitleFor = name -> ct -> findConfigOpt(
+            miType,
+            user,
+            NAME_OF.apply(name).apply(saveAsName),
+            companionFinder,
+            FETCH_CONFIG_AND_INSTRUMENT /*contains 'title' inside fetch model*/
+        ).ifPresent(config ->
+            co$EntityCentreConfig.saveWithRetry(config.setTitle(NAME_OF.apply(name).apply(of(ct))))
         );
         final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
         // update SAVED surrogate configuration; always
@@ -1295,8 +1381,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             overrideConfigBodyFor.apply(FRESH_CENTRE_NAME)
                 // upstreamConfig exists; its FRESH counterpart too -- no need to provide webUiConfig (first 'null') for getting default runAutomatically values;
                 // also no need to provide selectionCrit (second 'null') for checking whether upstreamConfig is inherited - it can never be inherited transitively
-                .apply(() -> of(updateCentreRunAutomatically(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, companionFinder, null, null)))
-                .accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, companionFinder));
+                .apply(() -> of(updateCentreRunAutomatically(upstreamConfig.getOwner(), miType, of(upstreamTitle), companionFinder, null, null)))
+                .accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(upstreamTitle), companionFinder));
         } else {
             // update FRESH surrogate configuration; only if upstream title has been changed
             changedTitle.ifPresent(ct -> overrideConfigTitleFor.apply(FRESH_CENTRE_NAME).accept(ct));

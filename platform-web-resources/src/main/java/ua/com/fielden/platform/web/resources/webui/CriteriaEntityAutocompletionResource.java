@@ -128,7 +128,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 criteriaEntity = null;
                 enhancedCentreEntityQueryCriteria = createCriteriaValidationPrototype(
                     miType, saveAsName,
-                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder),
+                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, webUiConfig, companionFinder),
                     companionFinder, critGenerator, 0L,
                     user,
                     device(),

@@ -203,19 +203,41 @@ public class CriteriaResource extends AbstractWebResource {
                 actualSaveAsName = saveAsNameAndConfigUuid._1;
                 resolvedConfigUuid = saveAsNameAndConfigUuid._2;
                 // empty link config is taken from SAVED surrogate centre (which is always empty);
-                final ICentreDomainTreeManagerAndEnhancer emptyCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, companionFinder);
+                final var emptyCentre = updateCentre(
+                    user,
+                    miType,
+                    SAVED_CENTRE_NAME,
+                    actualSaveAsName,
+                    webUiConfig,
+                    companionFinder
+                );
                 // clear current 'link' surrogate FRESH centre -- this is to make it empty before applying new selection criteria parameters (client-side action after this request's response will be delivered);
-                commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), emptyCentre, null /* newDesc */, webUiConfig, companionFinder);
+                commitCentreWithoutConflicts(
+                    user,
+                    miType,
+                    FRESH_CENTRE_NAME,
+                    actualSaveAsName,
+                    emptyCentre,
+                    null /* newDesc */,
+                    webUiConfig,
+                    companionFinder
+                );
             } else if (configUuid.isPresent()) {
                 // start loading of configuration defined by concrete uuid;
                 // we look only through [link, own save-as, inherited from base, inherited from shared] set of configurations;
                 // default configurations are excluded in the lookup;
                 // only FRESH kind are looked for;
-                final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(configUuid.get(), user, miType, device(), FRESH_CENTRE_NAME, companionFinder);
+                final var freshConfigOpt = findConfigOptByUuid(
+                    configUuid.get(),
+                    user,
+                    miType,
+                    FRESH_CENTRE_NAME,
+                    companionFinder
+                );
                 final T2<Optional<String>, Boolean> actualSaveAsNameAndSharedIndicator;
                 if (freshConfigOpt.isPresent()) {
                     // for current user we already have FRESH configuration with uuid loaded;
-                    final Optional<String> preliminarySaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device()));
+                    final var preliminarySaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME));
                     // updating is required from upstream configuration;
                     if (!LINK_CONFIG_TITLE.equals(preliminarySaveAsName.get())) { // (but not for link configuration);
                         actualSaveAsNameAndSharedIndicator = updateFromUpstream(configUuid.get(), preliminarySaveAsName);
@@ -237,7 +259,7 @@ public class CriteriaResource extends AbstractWebResource {
             } else {
                 if (!wasLoadedPreviously) { // client-driven first time loading of centre's selection criteria
                     final Optional<String> preliminarySaveAsName = retrievePreferredConfigName(user, miType, device(), companionFinder, webUiConfig); // preferred configuration should be loaded
-                    resolvedConfigUuid = updateCentreConfigUuid(user, miType, preliminarySaveAsName, device(), companionFinder);
+                    resolvedConfigUuid = updateCentreConfigUuid(user, miType, preliminarySaveAsName, companionFinder);
                     if (resolvedConfigUuid.isPresent()) { // preferred config can be inherited from base / shared (link configs can not be preferred, no need to check it here)
                         actualSaveAsName = updateFromUpstream(resolvedConfigUuid.get(), preliminarySaveAsName)._1; // it needs updating from upstream -- only for the configs that has configUuid aka non-default
                     } else {
@@ -249,8 +271,15 @@ public class CriteriaResource extends AbstractWebResource {
                     resolvedConfigUuid = empty();
                 }
             }
-            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, companionFinder);
-            final String customDesc = updateCentreDesc(user, miType, actualSaveAsName, device(), companionFinder);
+            final var updatedFreshCentre = updateCentre(
+                user,
+                miType,
+                FRESH_CENTRE_NAME,
+                actualSaveAsName,
+                webUiConfig,
+                companionFinder
+            );
+            final var customDesc = updateCentreDesc(user, miType, actualSaveAsName, companionFinder);
             return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, device(), customDesc, resolvedConfigUuid, webUiConfig, sharingModel);
         }, restUtil);
     }
@@ -259,7 +288,7 @@ public class CriteriaResource extends AbstractWebResource {
     ///
     private Either<Result, EntityCentreConfig> validateUuidAndGetUpstreamConfig(final String configUuid) {
         // we look only for owners; "owning" is indicated by presence of SAVED configuration with the specified uuid
-        final var savedConfigOptForOtherUser = findConfigOptByUuid(configUuid, miType, device(), SAVED_CENTRE_NAME, companionFinder);
+        final var savedConfigOptForOtherUser = findConfigOptByUuid(configUuid, miType, SAVED_CENTRE_NAME, companionFinder);
         if (savedConfigOptForOtherUser.isEmpty()) {
             // configuration does not exist (no SAVED surrogate centre) -- legitimate error; this can happen if configuration has been already deleted or didn't exist due to URI mistyping
             return left(failure(CONFIG_DOES_NOT_EXIST));
@@ -270,7 +299,7 @@ public class CriteriaResource extends AbstractWebResource {
             // so from two categories [base, shared] we can only consider [shared];
             // so, at this stage, we prohibit loading of [inherited from shared] configurations for base users -- not really practical scenario and possibly will never be required
             return left(failure(format(CONFIG_COULD_NOT_BE_SHARED_WITH_BASE_USER, user)));
-        } else if (LINK_CONFIG_TITLE.equals(obtainTitleFrom(savedConfigOptForOtherUser.get().getTitle(), SAVED_CENTRE_NAME, device()))) {
+        } else if (LINK_CONFIG_TITLE.equals(obtainTitleFrom(savedConfigOptForOtherUser.get().getTitle(), SAVED_CENTRE_NAME))) {
             // link-configs can not be shared anywhere neither from base user nor from base/non-base user that gave its uuid as part of sharing process
             return left(failure(LINK_CONFIG_COULD_NOT_BE_SHARED));
         }
@@ -282,7 +311,7 @@ public class CriteriaResource extends AbstractWebResource {
     private T2<Optional<String>, Boolean> firstTimeLoadingFrom(final EntityCentreConfig upstreamConfig) {
         final String configUuid = upstreamConfig.getConfigUuid();
         final User upstreamConfigCreator = upstreamConfig.getOwner();
-        final String preliminarySaveAsName = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device());
+        final var preliminarySaveAsName = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME);
         final Optional<String> actualSaveAsName;
         if (upstreamConfigCreator.isBase() && areEqual(upstreamConfigCreator, user.getBasedOnUser() /*id-only-proxy*/)) {
             // we have base => basedOn relationship between current user and the creator of savedConfig;
@@ -290,7 +319,7 @@ public class CriteriaResource extends AbstractWebResource {
             // CentreUpdater.updateCentre and .updateDifferences method should take care of that process;
             // at least FRESH config should be prepared -- making it preferred requires existence
             actualSaveAsName = of(preliminarySaveAsName);
-            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, companionFinder);
+            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, webUiConfig, companionFinder);
             return t2(actualSaveAsName, false);
         } else {
             // if current user does not have access to shared configuration then sharing process should be prevented
@@ -302,12 +331,20 @@ public class CriteriaResource extends AbstractWebResource {
                 upstreamConfig.getConfigBody(),
                 miType,
                 user,
-                NAME_OF.apply(surrogateName).apply(actualSaveAsName).apply(device()),
+                NAME_OF.apply(surrogateName).apply(actualSaveAsName),
                 newDescription,
                 companionFinder,
                 ecc -> uuid.map(ecc::setConfigUuid).orElse(ecc).setRunAutomatically(runAutomatically)
             );
-            final EntityCentreConfig freshConfigForCreator = findConfigOptByUuid(configUuid, upstreamConfigCreator, miType, device(), FRESH_CENTRE_NAME, companionFinder).get(); // need to retrieve FRESH config to get 'desc' -- that's because SAVED centres haven't stored descriptions, only FRESH do; this config must be present, otherwise savedConfigForOtherUser would not exist
+            // Need to retrieve FRESH config to get 'desc', because only FRESH centres store descriptions.
+            // This config must be present, otherwise savedConfigForOtherUser would not exist.
+            final var freshConfigForCreator = findConfigOptByUuid(
+                configUuid,
+                upstreamConfigCreator,
+                miType,
+                FRESH_CENTRE_NAME,
+                companionFinder
+            ).get();
             createInheritedFromShared.apply(FRESH_CENTRE_NAME).apply(freshConfigForCreator.isRunAutomatically()).apply(freshConfigForCreator.getDesc()).accept(of(configUuid)); // update (FRESH only) with upstream description and configUuid during creation
             createInheritedFromShared.apply(SAVED_CENTRE_NAME).apply(false).apply(null).accept(empty());
             return t2(actualSaveAsName, true);
@@ -328,7 +365,7 @@ public class CriteriaResource extends AbstractWebResource {
         } else {
             name = preliminaryName + (index == -1 ? "" : format(CONFLICTING_TITLE_SUFFIX, index == 0 ? "" : " " + index));
         }
-        return findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(of(name)).apply(device()), companionFinder, FETCH_CONFIG)
+        return findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(of(name)), companionFinder, FETCH_CONFIG)
             .map(conflictingConfig -> determineNonConflictingName(preliminaryName, index + 1))
             .orElse(name);
     }
@@ -338,7 +375,7 @@ public class CriteriaResource extends AbstractWebResource {
     ///
     private T2<Optional<String>, Boolean> updateFromUpstream(final String configUuid, final Optional<String> saveAsName) {
         // look for config creator
-        final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device(), SAVED_CENTRE_NAME, companionFinder);
+        final var savedConfigOpt = findConfigOptByUuid(configUuid, miType, SAVED_CENTRE_NAME, companionFinder);
         if (savedConfigOpt.isPresent()) {
             // the creator is current user or other
             final EntityCentreConfig savedConfig = savedConfigOpt.get();
@@ -348,19 +385,20 @@ public class CriteriaResource extends AbstractWebResource {
                 if (savedConfigCreator.isBase() && areEqual(savedConfigCreator, user.getBasedOnUser() /*id-only-proxy*/)) {
                     // inherited from base
                     if (isCentreChanged(saveAsName)) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
-                        removeCentres(user, miType, device(), saveAsName, companionFinder, SAVED_CENTRE_NAME);
+                        removeCentres(user, miType, saveAsName, companionFinder, SAVED_CENTRE_NAME);
                     } else { // otherwise base user changes will be loaded immediately after centre loading
-                        removeCentres(user, miType, device(), saveAsName, companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+                        removeCentres(user, miType, saveAsName, companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                     }
-                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder);
-                    updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
+                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
+                    // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
+                    updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
 
                     makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig); // inherited from base always gets preferred on loading; must leave it preferred after deletion
                 } else {
                     if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) {
                         // inherited from shared
-                        updateInheritedFromShared(savedConfig, miType, device(), saveAsName, user, companionFinder, of(() -> isCentreChanged(saveAsName)));
-                        return t2(of(obtainTitleFrom(savedConfig.getTitle(), SAVED_CENTRE_NAME, device())), true);
+                        updateInheritedFromShared(savedConfig, miType, saveAsName, user, companionFinder, of(() -> isCentreChanged(saveAsName)));
+                        return t2(of(obtainTitleFrom(savedConfig.getTitle(), SAVED_CENTRE_NAME)), true);
                     } // already loaded inherited from shared config was made unshared; the inherited from shared configuration now acts like own save-as configuration
                 }
             } // if the current user is creator then no 'updating from upstream' is needed -- it is own save-as
@@ -379,20 +417,32 @@ public class CriteriaResource extends AbstractWebResource {
         // in that case it still should act as applying those params against empty configuration on 'link' configuration infrastructure
         final Optional<String> actualSaveAsName = of(LINK_CONFIG_TITLE); // 'link' configuration should saveAsName
         // ensure that FRESH link centre is present (creates automatically without configUuid if not)
-        updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, companionFinder);
+        updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, webUiConfig, companionFinder);
         // create configUuids there if not yet present
-        final Optional<EntityCentreConfig> freshConfigOpt = findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName).apply(device()), companionFinder, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"));
+        final var freshConfigOpt = findConfigOpt(
+            miType,
+            user,
+            NAME_OF.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName),
+            companionFinder,
+            FETCH_CONFIG_AND_INSTRUMENT.with("configUuid")
+        );
         if (freshConfigOpt.isEmpty()) {
             throw failure(LINK_CONFIG_COULD_NOT_BE_LOADED); // this should never happen, but just in case return a little bit more meaningful message
         } else if (freshConfigOpt.get().getConfigUuid() == null) {
             // if FRESH config does not have uuid yet then it was created just recently;
             // so create SAVED config first;
-            updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, companionFinder);
+            updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, webUiConfig, companionFinder);
             // and update both with newly generated config uuid
             final String newConfigUuid = randomUUID().toString();
             final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
             co$EntityCentreConfig.saveWithRetry(freshConfigOpt.get().setConfigUuid(newConfigUuid));
-            findConfigOpt(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), companionFinder, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
+            findConfigOpt(
+                miType,
+                user,
+                NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName),
+                companionFinder,
+                FETCH_CONFIG_AND_INSTRUMENT.with("configUuid")
+            )
                 .ifPresent(savedConfig -> co$EntityCentreConfig.saveWithRetry(savedConfig.setConfigUuid(newConfigUuid)));
             return t2(actualSaveAsName, of(newConfigUuid));
         } else {
@@ -404,8 +454,8 @@ public class CriteriaResource extends AbstractWebResource {
     ///
     private boolean isCentreChanged(final Optional<String> actualSaveAsName) {
         return isFreshCentreChanged(
-            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, companionFinder),
-            updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, companionFinder)
+            updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, webUiConfig, companionFinder),
+            updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, webUiConfig, companionFinder)
         );
     }
 
@@ -422,10 +472,18 @@ public class CriteriaResource extends AbstractWebResource {
             final DeviceProfile device = device();
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaEntityWithoutConflicts(modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, device, webUiConfig, sharingModel);
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
-            final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(
+            final var customObject = createCriteriaMetaValuesCustomObject(
                 createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                 appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(() -> updatedFreshCentre),
-                createCriteriaIndication((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device, webUiConfig)
+                createCriteriaIndication(
+                    (String) modifiedPropertiesHolder.get("@@wasRun"),
+                    updatedFreshCentre,
+                    miType,
+                    saveAsName,
+                    user,
+                    companionFinder,
+                    webUiConfig
+                )
             );
             customObject.put(VALIDATION_COUNTER, modifiedPropertiesHolder.get(VALIDATION_COUNTER));
             return restUtil.rawListJsonRepresentation(appliedCriteriaEntity, customObject);
@@ -483,7 +541,12 @@ public class CriteriaResource extends AbstractWebResource {
                 appliedCriteriaEntity,
                 createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
-                        isDefaultOrLink(saveAsName) || isInherited(saveAsName, () -> loadableConfigurations(user, miType, device, companionFinder, sharingModel).apply(of(saveAsName)).stream()), // if not [default, link, inherited] then it is own save-as; after discarding it is always not changed -- checking of isFreshCentreChanged is not needed
+                        // If not [default, link, inherited], then it is own save-as.
+                        // After discarding it is never changed, so checking of isFreshCentreChanged is not needed.
+                        isDefaultOrLink(saveAsName) || isInherited(
+                            saveAsName,
+                            () -> loadableConfigurations(user, miType, companionFinder, sharingModel).apply(of(saveAsName)).stream()
+                        ),
                         of(saveAsName),
                         empty(),
                         of(false), // even though configuration can be runAutomatically, do not perform auto-running on Discard action
@@ -503,16 +566,25 @@ public class CriteriaResource extends AbstractWebResource {
             final Optional<String> saveAsName,
             final User user,
             final ICompanionObjectFinder companionFinder,
-            final DeviceProfile device,
             final IWebUiConfig webUiConfig) {
         if (wasRun != null) {
             // When changing centre we can change selection criteria and mnemonics, but also columns sorting, order, visibility and width / grow factors.
             // From end-user perspective it is only relevant to 'know' whether selection criteria change was not applied against currently visible result-set.
             // Thus need to only compare 'firstTick's (criteria data only) of centre managers.
             // Please be careful when adding some new contracts to 'firstTick' not to violate this premise (see selectionCriteriaEquals method).
-            final boolean isCriteriaStale = !updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder).getFirstTick()
+            final var isCriteriaStale = !updateCentre(
+                user,
+                miType,
+                PREVIOUSLY_RUN_CENTRE_NAME,
+                saveAsName,
+                webUiConfig,
+                companionFinder
+            ).getFirstTick()
                 .selectionCriteriaEquals(freshCentre.getFirstTick());
-            return isCriteriaStale ? STALE : createChangedCriteriaIndication(freshCentre, updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, webUiConfig, companionFinder));
+            return isCriteriaStale ? STALE : createChangedCriteriaIndication(
+                freshCentre,
+                updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, webUiConfig, companionFinder)
+            );
         }
         return NONE;
     }
@@ -560,7 +632,14 @@ public class CriteriaResource extends AbstractWebResource {
                 if (isRunning) {
                     if (isAutoRunning(customObject) && isDefault(saveAsName) && ofNullable(webUiConfig.getCentres().get(miType)).map(EntityCentre::isRunAutomaticallyAndNotAllowCustomised).orElse(false)) { // do not clear criteria in case where user explicitly changed runAutomatically from false (Centre DSL value) to true in Configure dialog or if ALLOW_CUSTOMISED option was used
                         // clear current 'default' surrogate centres -- this is to make them empty before auto-running; saved configurations will not be touched
-                        final ICentreDomainTreeManagerAndEnhancer previousFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder);
+                        final var previousFreshCentre = updateCentre(
+                            user,
+                            miType,
+                            FRESH_CENTRE_NAME,
+                            saveAsName,
+                            webUiConfig,
+                            companionFinder
+                        );
                         final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
 
                         // create empty differences object ...
@@ -569,11 +648,22 @@ public class CriteriaResource extends AbstractWebResource {
                         extendDiffsWithNonIntrusiveDifferences(diff, previousFreshCentre.getSecondTick(), defaultCentre.getSecondTick(), centre.getEntityType());
 
                         // clear all surrogate centres except 'fresh', which requires special treatment
-                        removeCentres(user, miType, device(), saveAsName, companionFinder, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+                        removeCentres(user, miType, saveAsName, companionFinder, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
                         // it is necessary to make change to the 'fresh' centre as atomic as possible (i.e. not captureDiffs + remove + createNew + applyDiffs + commit, but instead captureDiffsObject + commit)
                         // this is necessary because self-concurrent running for the same user is possible
                         // commit newly constructed diff object into 'fresh' configuration and apply it against 'defaultCentre'
-                        updatedFreshCentre = commitCentreDiffWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), defaultCentre, diff, null /* newDesc */, companionFinder, ecc -> ecc.setRunAutomatically(true)); // auto-running of default configuration is in progress -- restore runAutomatically as true
+                        // auto-running of default configuration is in progress -- restore runAutomatically as true
+                        updatedFreshCentre = commitCentreDiffWithoutConflicts(
+                            user,
+                            miType,
+                            FRESH_CENTRE_NAME,
+                            saveAsName,
+                            defaultCentre,
+                            diff,
+                            null /* newDesc */,
+                            companionFinder,
+                            ecc -> ecc.setRunAutomatically(true)
+                        );
 
                         freshCentreAppliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device(), webUiConfig, sharingModel);
                     } else {
@@ -585,14 +675,30 @@ public class CriteriaResource extends AbstractWebResource {
                     final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();
                     if (!validationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (validation failed).");
-                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig);
+                        final var criteriaIndication = createCriteriaIndication(
+                            (String) centreContextHolder.getModifHolder().get("@@wasRun"),
+                            updatedFreshCentre,
+                            miType,
+                            saveAsName,
+                            user,
+                            companionFinder,
+                            webUiConfig
+                        );
                         return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication)));
                     }
 
                     final Result authorisationResult = authoriseCriteriaEntity(freshCentreAppliedCriteriaEntity);
                     if (!authorisationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run failed (authorisation validation failed).");
-                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig);
+                        final var criteriaIndication = createCriteriaIndication(
+                            (String) centreContextHolder.getModifHolder().get("@@wasRun"),
+                            updatedFreshCentre,
+                            miType,
+                            saveAsName,
+                            user,
+                            companionFinder,
+                            webUiConfig
+                        );
                         return restUtil.resultJSONRepresentation(
                             authorisationResult.copyWith(List.of(
                                 freshCentreAppliedCriteriaEntity,
@@ -628,17 +734,41 @@ public class CriteriaResource extends AbstractWebResource {
                     // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
                     if (!generationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (generation failed).");
-                        final var criteriaIndication = createCriteriaIndication((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, companionFinder, device(), webUiConfig);
+                        final var criteriaIndication = createCriteriaIndication(
+                            (String) centreContextHolder.getModifHolder().get("@@wasRun"),
+                            updatedFreshCentre,
+                            miType,
+                            saveAsName,
+                            user,
+                            companionFinder,
+                            webUiConfig
+                        );
                         final Result result = generationResult.copyWith(List.of(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication))));
                         return restUtil.resultJSONRepresentation(result);
                     }
                 }
 
                 if (isRunning) {
-                    commitCentreWithoutConflicts(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), updatedFreshCentre, null, webUiConfig, companionFinder);
+                    commitCentreWithoutConflicts(
+                        user,
+                        miType,
+                        PREVIOUSLY_RUN_CENTRE_NAME,
+                        saveAsName,
+                        updatedFreshCentre,
+                        null,
+                        webUiConfig,
+                        companionFinder
+                    );
                 }
 
-                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder);
+                final var previouslyRunCentre = updateCentre(
+                    user,
+                    miType,
+                    PREVIOUSLY_RUN_CENTRE_NAME,
+                    saveAsName,
+                    webUiConfig,
+                    companionFinder
+                );
                 final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, user, device(), webUiConfig, sharingModel);
                 // Performs criteria validation on centre refresh / navigate.
                 // It is needed if the user changed token role association between run and refresh actions.
@@ -668,7 +798,7 @@ public class CriteriaResource extends AbstractWebResource {
                     )
                 );
                 if (isRunning) {
-                    final var updatedSavedCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder);
+                    final var updatedSavedCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
                     final var changedCriteriaIndication = createChangedCriteriaIndication(updatedFreshCentre, updatedSavedCentre);
                     updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculatorWithSavedSupplier().apply(() -> updatedSavedCentre), miType, saveAsName, previouslyRunCentre, pair.getKey(), of(changedCriteriaIndication));
                 }
