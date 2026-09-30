@@ -27,9 +27,11 @@ import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.S
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
 
 public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelector<T> {
@@ -41,6 +43,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
             Property [%s.%s] with type [%s] cannot be used for autocompletion. \
             Please use asAutocompleter(entityType), or asAutocompleter() for an entity-typed property.""";
     private static final String ERR_INVALID_DATEPICKER_CHOICE = "Invalid editor choice for property [%s.%s] due to annotation @%s.";
+    public static final String ERR_COMPONENT_FOR_MISSING_PROPERTY = "Component [%s] cannot represent property [%s.%s], which does not exist.";
 
     public final SimpleMasterBuilder<T> smBuilder;
     /// The property of the widget, or `null` for a widget that is not bound to a property, such as a component bound to the entity.
@@ -247,7 +250,10 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IComponentConfig<T> asComponent(final CharSequence importPath) {
-        widget = new ComponentWidget(importPath.toString(), TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
+        if (!isPropertyPresent(smBuilder.getEntityType(), propertyName)) {
+            throw new EntityMasterConfigurationException(ERR_COMPONENT_FOR_MISSING_PROPERTY.formatted(importPath, smBuilder.getEntityType().getSimpleName(), propertyName));
+        }
+        widget = new ComponentWidget(Objects.toString(importPath, null), TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), smBuilder.getEntityType(), propertyName);
         return new ComponentConfig<>((ComponentWidget) widget, smBuilder);
     }
 

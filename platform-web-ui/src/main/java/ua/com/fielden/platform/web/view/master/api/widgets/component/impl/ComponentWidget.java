@@ -1,9 +1,13 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.component.impl;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 /// A widget that represents a property with an application-provided web component in place of a platform editor.
 ///
@@ -16,10 +20,15 @@ import java.util.Map;
 ///
 public class ComponentWidget extends AbstractComponentWidget {
 
-    /// Creates a widget for the component at `widgetPath`, which is resolved as `/resources/<widgetPath>.js`.
+    /// Creates a widget for the component at `widgetPath`, which is resolved as `/resources/<widgetPath>.js`, for `propertyName` of `entityType`.
     ///
-    public ComponentWidget(final String widgetPath, final Pair<String, String> titleDesc, final String propertyName) {
-        super(widgetPath, titleDesc, propertyName);
+    public ComponentWidget(final String widgetPath, final Pair<String, String> titleDesc, final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
+        super(widgetPath, titleDesc, entityType, propertyName);
+    }
+
+    @Override
+    protected Set<String> additionalReservedAttrNames() {
+        return setOf("id", "property-name");
     }
 
     @Override

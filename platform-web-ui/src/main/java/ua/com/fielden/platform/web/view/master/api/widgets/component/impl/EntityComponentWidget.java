@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.component.impl;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -26,22 +28,24 @@ public class EntityComponentWidget extends AbstractComponentWidget {
     private Optional<String> title = empty();
     private Optional<String> desc = empty();
 
-    /// Creates a widget for the component at `importPath`, which is resolved as `/resources/<importPath>.js`.
+    /// Creates a widget for the component at `importPath`, which is resolved as `/resources/<importPath>.js`, in a master for `entityType`.
     ///
-    public EntityComponentWidget(final String importPath, final String actionIndexKey) {
-        super(importPath, pair(null, null), null);
+    public EntityComponentWidget(final String importPath, final Class<? extends AbstractEntity<?>> entityType, final String actionIndexKey) {
+        super(importPath, pair(null, null), entityType, null);
         this.actionIndexKey = actionIndexKey;
     }
 
     /// Declares the title of the component, rendered as `prop-title`.
     ///
     public void withTitle(final String title) {
+        validateText("title", title);
         this.title = of(title);
     }
 
     /// Declares the description of the component, rendered as `prop-desc`.
     ///
     public void withDesc(final String desc) {
+        validateText("description", desc);
         this.desc = of(desc);
     }
 

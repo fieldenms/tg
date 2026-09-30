@@ -10,7 +10,8 @@ public interface IEntityComponentConfig2<T extends AbstractEntity<?>> extends IE
     ///
     /// The name is in dash-case, as it appears in HTML, such as `centre-uuid`.
     /// The value is either static, such as `compact`, or a pass-through binding expression over the master, such as `[[centreUuid]]`.
-    /// Attributes are rendered in the order of declaration.
+    /// Attributes are rendered in the order of their first declaration.
+    /// Declaring an attribute again replaces its value, which lets a declaration override an attribute set elsewhere, such as in a shared configuration.
     ///
     IEntityComponentConfig2<T> withAttr(final String name, final CharSequence value);
 

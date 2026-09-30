@@ -207,7 +207,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     public IEntityComponentConfig<T> addComponent(final CharSequence importPath) {
         // a dash cannot occur in a property name, so the action index key of a component never clashes with that of a property
         final long ordinal = widgets.stream().filter(widget -> widget.widget() instanceof EntityComponentWidget).count();
-        final EntityComponentWidget component = new EntityComponentWidget(importPath.toString(), "component-" + ordinal);
+        final EntityComponentWidget component = new EntityComponentWidget(Objects.toString(importPath, null), entityType, "component-" + ordinal);
         widgets.add(new WidgetSelector<>(this, component));
         return new EntityComponentConfig<>(component, this);
     }
