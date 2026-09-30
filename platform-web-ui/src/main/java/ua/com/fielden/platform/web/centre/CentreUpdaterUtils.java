@@ -183,14 +183,14 @@ public class CentreUpdaterUtils extends CentreUpdater {
     ) {
         final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
         return co$EntityCentreConfig.getEntity(
-            from(modelFor(user, miType.getName(), saveAsSpecificDiffName)).with(
-                fetchWithKeyAndDesc(
-                    EntityCentreConfig.class,
-                    true
-                ).with("preferred").with("configUuid").with("dashboardable").with("dashboardableDate").with(
-                    "dashboardRefreshFrequency"
-                ).with("runAutomatically").fetchModel()
-            ).model()
+            from(modelFor(user, miType.getName(), saveAsSpecificDiffName))
+                .with(fetchWithKeyAndDesc(EntityCentreConfig.class, true)
+                    .with("preferred").with("configUuid")
+                    .with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency")
+                    .with("runAutomatically")
+                    .fetchModel()
+                )
+                .model()
         );
     }
     

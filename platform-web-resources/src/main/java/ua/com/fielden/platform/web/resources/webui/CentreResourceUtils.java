@@ -671,8 +671,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // updates inherited centre with title 'saveAsNameToLoad' from upstream base user's configuration -- just before LOAD action
         validationPrototype.setInheritedFromBaseCentreUpdater(saveAsNameToLoad -> {
-            // determine current preferred configuration
-            final Optional<String> preferredConfigName = retrievePreferredConfigName(user, miType, device, companionFinder, webUiConfig);
+            // Determine the device profiles on which the inherited configuration is preferred.
+            // Deleting its FRESH centre below also deletes its preferred flags, so they are recorded first.
+            final var preferredProfiles = preferredDeviceProfiles(user, miType, of(saveAsNameToLoad), companionFinder);
             // determine whether inherited configuration is changed
             final var centreChanged = isFreshCentreChanged(
                 updateCentre(user, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), webUiConfig, companionFinder),
@@ -687,9 +688,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
             updateCentre(user, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), webUiConfig, companionFinder);
 
-            if (equalsEx(preferredConfigName, of(saveAsNameToLoad))) { // if inherited configuration being updated was preferred
-                makePreferred(user, miType, of(saveAsNameToLoad), device, companionFinder, webUiConfig); // then must leave it preferred after deletion
-            }
+            // It must be left preferred after deletion, on every device profile it was preferred on.
+            preferredProfiles.forEach(profile -> makePreferred(user, miType, of(saveAsNameToLoad), profile, companionFinder, webUiConfig));
         });
         // updates inherited centre with title 'saveAsNameToLoad' from upstream shared configuration -- just before LOAD action
         validationPrototype.setInheritedFromSharedCentreUpdater(saveAsNameToLoad -> configUuid -> {

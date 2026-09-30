@@ -627,6 +627,33 @@ public class CentreUpdater {
         return ecc;
     }
 
+    /// Returns the device profiles on which the `saveAsName`d configuration of `user` is preferred.
+    ///
+    /// The preferred flags of all device profiles are kept on the FRESH centre of a configuration.
+    /// Actions that delete and recreate that centre use this to restore the flags afterwards.
+    /// A default configuration is never preferred explicitly, so no profile is returned for it.
+    ///
+    public static Set<DeviceProfile> preferredDeviceProfiles(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final ICompanionObjectFinder companionFinder
+    ) {
+        return saveAsName
+            .flatMap(name -> findConfigOpt(
+                miType,
+                user,
+                NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName),
+                companionFinder,
+                fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").with("preferredOnMobile").fetchModel()
+            ))
+            .map(config -> stream(DeviceProfile.values())
+                .filter(device -> config.<Boolean>get(preferredPropFor(device)))
+                .collect(toSet())
+            )
+            .orElseGet(Set::of);
+    }
+
     /**
      * Returns {@link List} of preferred {@link EntityCentreConfig} configurations for specified {@code user}, {@code device} and concrete
      * {@code miType}'ed menu item.

@@ -384,6 +384,8 @@ public class CriteriaResource extends AbstractWebResource {
                 // current user didn't create this config -> it is inherited and needs updating
                 if (savedConfigCreator.isBase() && areEqual(savedConfigCreator, user.getBasedOnUser() /*id-only-proxy*/)) {
                     // inherited from base
+                    // Deleting the FRESH centre below also deletes its preferred flags, so they are recorded first.
+                    final var preferredProfiles = preferredDeviceProfiles(user, miType, saveAsName, companionFinder);
                     if (isCentreChanged(saveAsName)) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
                         removeCentres(user, miType, saveAsName, companionFinder, SAVED_CENTRE_NAME);
                     } else { // otherwise base user changes will be loaded immediately after centre loading
@@ -393,7 +395,12 @@ public class CriteriaResource extends AbstractWebResource {
                     // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
                     updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
 
-                    makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig); // inherited from base always gets preferred on loading; must leave it preferred after deletion
+                    // Inherited from base always gets preferred on loading, and must be left preferred after deletion.
+                    makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig);
+                    // It must also stay preferred on any other device profile it was preferred on.
+                    preferredProfiles.stream()
+                        .filter(profile -> profile != device())
+                        .forEach(profile -> makePreferred(user, miType, saveAsName, profile, companionFinder, webUiConfig));
                 } else {
                     if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) {
                         // inherited from shared
