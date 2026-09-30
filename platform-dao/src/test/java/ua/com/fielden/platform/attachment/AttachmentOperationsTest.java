@@ -20,11 +20,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
-/**
- * A test case validating basic operations of attachments such as uploading and deletion.
- * 
- * @author TG Team
- */
+/// A test case validating basic operations of attachments such as uploading and deletion.
+///
 public class AttachmentOperationsTest extends AbstractDaoTestCase {
 
     @Inject @Named("attachments.location")
@@ -415,6 +412,27 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
             }
         }
         assertFalse("Attachment should have been rolled back.", co(Attachment.class).entityExists(attachment1));
+    }
+
+    @Test
+    @SessionRequired
+    public void rejected_upload_in_an_existing_transaction_does_not_roll_back_that_transaction() throws IOException {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Path fileToUpload = attachmentPath(plainTextFileName);
+        final Attachment attachment = upload(coAttachmentUploader, fileToUpload, plainTextFileName);
+        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
+        try {
+            final Path rejectedFileToUpload = attachmentPath(phpTextFileName);
+            assertThatThrownBy(() -> upload(coAttachmentUploader, rejectedFileToUpload, phpTextFileName))
+                    .isInstanceOf(Result.class)
+                    .hasMessage("Files of type [text/x-php] are not supported.");
+
+            assertTrue("Attachment saved earlier in the same transaction should not have been rolled back.", co(Attachment.class).entityExists(attachment));
+        } finally {
+            // clean up by deleting the just uploaded file
+            assertTrue(Files.deleteIfExists(uploadedFile));
+        }
     }
 
     @Test
