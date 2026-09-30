@@ -190,7 +190,7 @@ public class CentreUpdater {
     /// That separation has been removed, so that a single configuration serves both applications.
     ///
     /// The `device` parameter is retained to keep this change contained to name generation and querying.
-    /// It is vestigial, and is to be removed together with the rest of the device plumbing.
+    /// It is vestigial here, as device profiles now matter only for preferredness, see [#preferredPropFor(DeviceProfile)].
     ///
     /// @param surrogateName  surrogate name of the centre, for example fresh or previouslyRun
     /// @param device  ignored
@@ -666,6 +666,26 @@ public class CentreUpdater {
         };
     }
     
+    /// Returns the [EntityCentreConfig] property that marks a configuration as preferred on the specified `device`.
+    ///
+    /// Configurations of all devices share one namespace, but preferredness is kept per device profile.
+    /// A configuration made preferred on a phone therefore does not change what opens on a desktop, and vice versa.
+    ///
+    private static String preferredPropFor(final DeviceProfile device) {
+        return switch (device) {
+            case DESKTOP -> "preferred";
+            case MOBILE -> "preferredOnMobile";
+        };
+    }
+
+    /// Marks `ecc` as preferred or not preferred on the specified `device`.
+    /// Its preferredness on the other device profile is left intact.
+    ///
+    private static EntityCentreConfig setPreferred(final EntityCentreConfig ecc, final DeviceProfile device, final boolean value) {
+        ecc.set(preferredPropFor(device), value);
+        return ecc;
+    }
+
     /**
      * Returns {@link List} of preferred {@link EntityCentreConfig} configurations for specified {@code user}, {@code device} and concrete
      * {@code miType}'ed menu item.
@@ -679,9 +699,9 @@ public class CentreUpdater {
      */
     private static List<EntityCentreConfig> getAllPreferredConfigs(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
         final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
-        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME)
-            .and().prop("preferred").eq().val(true).model();
-        final fetch<EntityCentreConfig> fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").fetchModel();
+        final var queryForCurrentUser = centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME)
+            .and().prop(preferredPropFor(device)).eq().val(true).model();
+        final var fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with(preferredPropFor(device)).fetchModel();
         return eccCompanion.getAllEntities(from(queryForCurrentUser).with(fetch).model());
     }
     
@@ -718,17 +738,21 @@ public class CentreUpdater {
         if (!webUiConfig.isEmbeddedCentreAndNotAllowCustomised(miType)) { // standalone centres only, not embedded
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final List<EntityCentreConfig> prefConfigs = getAllPreferredConfigs(user, miType, device, companionFinder);
-            prefConfigs.stream().forEach(ecc -> eccCompanion.saveWithRetry(ecc.setPreferred(false)));
+            prefConfigs.stream().forEach(ecc -> eccCompanion.saveWithRetry(setPreferred(ecc, device, false)));
             if (saveAsName.isPresent()) {
                 findConfigOpt(
                     miType,
                     user,
                     deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX,
                     companionFinder,
-                    fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency").with("runAutomatically").fetchModel()
+                    fetchWithKeyAndDesc(EntityCentreConfig.class, true)
+                        .with(preferredPropFor(device)).with("configUuid")
+                        .with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency")
+                        .with("runAutomatically")
+                        .fetchModel()
                 ).ifPresent(ecc ->
                     eccCompanion.saveWithRetry( // not used inside other transaction scopes (e.g. CentreConfigLoadActionDao->makePreferredConfig->makePreferred does not have @SessionRequired) -- saveWithRetry can be used
-                        ecc.setPreferred(true)
+                        setPreferred(ecc, device, true)
                     )
                 );
             }

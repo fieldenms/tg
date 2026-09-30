@@ -3,6 +3,7 @@
 --
 -- Migrates MOBILE Entity Centre configurations into the joint namespace formerly owned by DESKTOP.
 -- Apply it together with the `CentreUpdater` change that turns `deviceSpecific` into the identity function.
+-- That change also introduces `EntityCentreConfig.preferredOnMobile`, whose column step 1 adds on every database.
 -- Apply it while the application is stopped, because it does not bump `_VERSION`.
 --
 -- A persisted title has the shape `MOBILE<surrogate>[<save-as name>]__________DIFFERENCES`.
@@ -15,10 +16,16 @@
 -- Therefore this script migrates a configuration group as a whole, or leaves all of its rows alone.
 --
 -- Steps:
---     1. Delete MOBILE link configurations.
---     2. Make every remaining MOBILE configuration un-preferred.
---     3. Rename each MOBILE configuration group into a named configuration carrying a ` (mobile)` suffix.
---     4. Give every migrated default configuration a `configUuid`, as step 3 turns it into a named one.
+--     1. Add the `PREFERREDONMOBILE_` column.
+--     2. Delete MOBILE link configurations.
+--     3. Move the preferredness of MOBILE configurations from `PREFERRED_` to `PREFERREDONMOBILE_`.
+--     4. Rename each MOBILE configuration group into a named configuration carrying a ` (mobile)` suffix.
+--     5. Give every migrated default configuration a `configUuid`, as step 4 turns it into a named one.
+--     6. Make a migrated `Default (mobile)` preferred on mobile, where no other configuration is.
+--
+-- Preferredness stays per device profile.
+-- `PREFERRED_` applies to devices other than mobile, and `PREFERREDONMOBILE_` applies to mobile.
+-- After steps 3 and 6, a mobile user opens the same configuration as before, unless its group was skipped.
 --
 -- A group whose new title is already taken is skipped and keeps its `MOBILE` prefix.
 -- Such a group becomes a harmless orphan, unreachable once `deviceSpecific` stops producing that prefix.
@@ -32,8 +39,8 @@
 -- The script is idempotent.
 -- Re-running it migrates nothing further and skips exactly the same orphans.
 --
--- Run it in autocommit mode, so that a failed group is rolled back on its own.
--- Do not wrap it in an explicit transaction.
+-- Each group is migrated in its own transaction, so that a failed group is rolled back on its own.
+-- Do not wrap the script in an explicit transaction, as a per-group rollback would then undo everything before it.
 
 SET NOCOUNT OFF;
 GO
@@ -42,7 +49,17 @@ GO
 SET XACT_ABORT OFF;
 GO
 
--- Step 1 of 3.
+-- Step 1.
+-- Add the column of `EntityCentreConfig.preferredOnMobile`.
+-- It is required by the application on every database, including one without any MOBILE configurations.
+IF COL_LENGTH('ENTITY_CENTRE_CONFIG', 'PREFERREDONMOBILE_') IS NULL
+    ALTER TABLE ENTITY_CENTRE_CONFIG ADD PREFERREDONMOBILE_ CHAR(1) NOT NULL DEFAULT 'N';
+GO
+
+PRINT 'Step 1: ensured column PREFERREDONMOBILE_.';
+GO
+
+-- Step 2.
 -- Delete MOBILE link configurations.
 --
 -- A link configuration uses the reserved save-as name `_______________________link`.
@@ -53,25 +70,27 @@ DELETE FROM ENTITY_CENTRE_CONFIG
    AND RIGHT(TITLE, 50) = '[_______________________link]__________DIFFERENCES';
 GO
 
-PRINT 'Step 1: deleted MOBILE link configurations.';
+PRINT 'Step 2: deleted MOBILE link configurations.';
 GO
 
--- Step 2 of 3.
--- Make every remaining MOBILE configuration un-preferred.
+-- Step 3.
+-- Move the preferredness of MOBILE configurations from `PREFERRED_` to `PREFERREDONMOBILE_`.
 --
 -- In practice `preferred` is only ever set on FRESH named rows, because `getAllPreferredConfigs` looks only at those.
--- The predicate below still covers every MOBILE row, so that no stale flag survives the migration.
+-- The predicate below still covers every MOBILE row, so that no stale desktop flag survives the migration.
+-- Both assignments read the values from before the update, so the flag moves rather than being lost.
 UPDATE ENTITY_CENTRE_CONFIG
-   SET PREFERRED_ = 'N'
+   SET PREFERREDONMOBILE_ = CASE WHEN PREFERRED_ = 'Y' THEN 'Y' ELSE PREFERREDONMOBILE_ END,
+       PREFERRED_ = 'N'
  WHERE LEFT(TITLE, 6) = 'MOBILE'
    AND (PREFERRED_ IS NULL OR PREFERRED_ <> 'N');
 GO
 
-PRINT 'Step 2: made MOBILE configurations un-preferred.';
+PRINT 'Step 3: moved the preferredness of MOBILE configurations to PREFERREDONMOBILE_.';
 GO
 
--- Step 3 of 3.
--- Rename MOBILE configurations into the joint namespace.
+-- Steps 4 and 5.
+-- Rename MOBILE configurations into the joint namespace, and give migrated defaults a `configUuid`.
 
 IF OBJECT_ID('tempdb..#MobileConfig') IS NOT NULL DROP TABLE #MobileConfig;
 GO
@@ -160,6 +179,9 @@ BEGIN
         END
         ELSE
         BEGIN
+            -- The rename and the uuid of one group commit or roll back together.
+            BEGIN TRANSACTION;
+
             UPDATE e
                SET e.TITLE = m.NEW_TITLE
               FROM ENTITY_CENTRE_CONFIG e
@@ -167,9 +189,8 @@ BEGIN
              WHERE m.OWNER_ID = @ownerId
                AND m.MENU_ID = @menuId
                AND m.SAVE_AS_PART = @saveAsPart;
-            SET @migrated = @migrated + 1;
 
-            -- Step 4, applied only to a group that has just been migrated, and only to a default one.
+            -- Step 5, applied only to a default group.
             -- A named group keeps the uuid it already carries.
             IF @saveAsPart = ''
             BEGIN
@@ -182,12 +203,17 @@ BEGIN
                    AND m.MENU_ID = @menuId
                    AND m.SAVE_AS_PART = @saveAsPart
                    AND m.SURROGATE IN ('__________FRESH', '__________SAVED');
-                SET @uuidsAssigned = @uuidsAssigned + 1;
             END
+
+            COMMIT TRANSACTION;
+
+            SET @migrated = @migrated + 1;
+            IF @saveAsPart = '' SET @uuidsAssigned = @uuidsAssigned + 1;
         END
     END TRY
     BEGIN CATCH
         -- An unforeseen failure skips this configuration only, and leaves it behind as a MOBILE orphan.
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
         SET @skippedError = @skippedError + 1;
         PRINT 'Skipped owner [' + CAST(@ownerId AS VARCHAR(20))
             + '], menu item [' + CAST(@menuId AS VARCHAR(20))
@@ -201,10 +227,34 @@ END
 CLOSE configGroup;
 DEALLOCATE configGroup;
 
-PRINT 'Step 3: migrated ' + CAST(@migrated AS VARCHAR(20)) + ' configuration(s), skipped '
+PRINT 'Step 4: migrated ' + CAST(@migrated AS VARCHAR(20)) + ' configuration(s), skipped '
     + CAST(@skippedConflict AS VARCHAR(20)) + ' on conflict and '
     + CAST(@skippedError AS VARCHAR(20)) + ' on error.';
-PRINT 'Step 4: assigned a configUuid to ' + CAST(@uuidsAssigned AS VARCHAR(20)) + ' migrated default configuration(s).';
+PRINT 'Step 5: assigned a configUuid to ' + CAST(@uuidsAssigned AS VARCHAR(20)) + ' migrated default configuration(s).';
+GO
+
+-- Step 6.
+-- Make a migrated `Default (mobile)` preferred on mobile, where no other configuration is.
+--
+-- A mobile user without a preferred named configuration used to open the MOBILE default.
+-- That default is now `Default (mobile)`, so marking it preferred on mobile keeps what such a user opens.
+-- It also covers a user whose preferred named configuration was skipped, and is therefore no longer visible.
+-- `e.TITLE = m.NEW_TITLE` selects only a default whose group was actually migrated, never a skipped one.
+UPDATE e
+   SET e.PREFERREDONMOBILE_ = 'Y'
+  FROM ENTITY_CENTRE_CONFIG e
+ INNER JOIN #MobileConfig m ON m.ID = e._ID
+ WHERE m.SAVE_AS_PART = ''
+   AND m.SURROGATE = '__________FRESH'
+   AND e.TITLE = m.NEW_TITLE
+   AND NOT EXISTS (SELECT 1
+                     FROM ENTITY_CENTRE_CONFIG p
+                    WHERE p.ID_CRAFT = e.ID_CRAFT
+                      AND p.ID_MAIN_MENU = e.ID_MAIN_MENU
+                      AND p.PREFERREDONMOBILE_ = 'Y'
+                      AND LEFT(p.TITLE, 6) <> 'MOBILE');
+
+PRINT 'Step 6: made ' + CAST(@@ROWCOUNT AS VARCHAR(20)) + ' migrated default configuration(s) preferred on mobile.';
 GO
 
 DROP TABLE #MobileConfig;
