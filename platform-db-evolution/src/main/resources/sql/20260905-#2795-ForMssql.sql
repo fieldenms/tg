@@ -21,11 +21,12 @@
 --     3. Move the preferredness of MOBILE configurations from `PREFERRED_` to `PREFERREDONMOBILE_`.
 --     4. Rename each MOBILE configuration group into a named configuration carrying a ` (mobile)` suffix.
 --     5. Give every migrated default configuration a `configUuid`, as step 4 turns it into a named one.
---     6. Make a migrated `Default (mobile)` preferred on mobile, where no other configuration is.
+--     6. Make the SAVED row of every migrated default configuration a copy of its FRESH row, adding it where missing.
+--     7. Make a migrated `Default (mobile)` preferred on mobile, where no other configuration is.
 --
 -- Preferredness stays per device profile.
 -- `PREFERRED_` applies to devices other than mobile, and `PREFERREDONMOBILE_` applies to mobile.
--- After steps 3 and 6, a mobile user opens the same configuration as before, unless its group was skipped.
+-- After steps 3 and 7, a mobile user opens the same configuration as before, unless its group was skipped.
 --
 -- A group whose new title is already taken is skipped and keeps its `MOBILE` prefix.
 -- Such a group becomes a harmless orphan, unreachable once `deviceSpecific` stops producing that prefix.
@@ -142,6 +143,7 @@ GO
 -- Turning it into a named one breaks the invariant that a loadable configuration always has a uuid, which the `Load`
 -- dialog relies on to tell own save-as configurations apart from those orphaned by a deleted upstream.
 -- FRESH and SAVED of a migrated default therefore receive one fresh uuid, exactly as a save-as would.
+-- Where SAVED is missing, step 6 creates it with that uuid.
 -- PREVIOUSLY_RUN is left without one, matching `setCentreSaver`.
 DECLARE @ownerId BIGINT, @menuId BIGINT, @saveAsPart VARCHAR(8000), @newUuid VARCHAR(36);
 DECLARE @migrated INT = 0, @skippedConflict INT = 0, @skippedError INT = 0, @uuidsAssigned INT = 0;
@@ -234,6 +236,70 @@ PRINT 'Step 5: assigned a configUuid to ' + CAST(@uuidsAssigned AS VARCHAR(20)) 
 GO
 
 -- Step 6.
+-- Make the SAVED row of every migrated default configuration a copy of its FRESH row.
+--
+-- A default can never be saved in place, as SAVE on a default opens the `Save As` dialog.
+-- Its SAVED row therefore only ever holds the empty diff, and did not matter while the configuration stayed a default.
+-- As the named `Default (mobile)`, a configuration counts as changed whenever FRESH differs from SAVED.
+-- Copying FRESH makes every migrated default start out unchanged, exactly as if the user had saved it with `Save As`.
+-- Nothing user-authored is lost, and `Discard` no longer resets the mobile layout to the one the shared default shows.
+--
+-- The update below aligns an existing SAVED row.
+-- NULL bodies, which the application never writes, are left alone.
+-- `s.TITLE = m.NEW_TITLE` and `f.TITLE = mf.NEW_TITLE` select only rows whose group was actually migrated.
+UPDATE s
+   SET s.BODY = f.BODY
+  FROM ENTITY_CENTRE_CONFIG s
+ INNER JOIN #MobileConfig m ON m.ID = s._ID
+ INNER JOIN ENTITY_CENTRE_CONFIG f
+    ON f.ID_CRAFT = s.ID_CRAFT
+   AND f.ID_MAIN_MENU = s.ID_MAIN_MENU
+ INNER JOIN #MobileConfig mf ON mf.ID = f._ID
+ WHERE m.SAVE_AS_PART = ''
+   AND m.SURROGATE = '__________SAVED'
+   AND s.TITLE = m.NEW_TITLE
+   AND mf.SAVE_AS_PART = ''
+   AND mf.SURROGATE = '__________FRESH'
+   AND f.TITLE = mf.NEW_TITLE
+   AND s.BODY <> f.BODY;
+
+PRINT 'Step 6: aligned the SAVED row of ' + CAST(@@ROWCOUNT AS VARCHAR(20)) + ' migrated default configuration(s) with FRESH.';
+GO
+
+-- A MOBILE default often has no SAVED row at all.
+-- As the named `Default (mobile)`, the application would recreate that row lazily without a uuid.
+-- For a non-base user it would also copy the row from the base user's configuration of the same name.
+-- The `Load` dialog would then find no SAVED row with the FRESH uuid, and report the configuration as orphaned.
+-- The insert below therefore adds the missing row, carrying the FRESH uuid and body.
+-- It has no description, flags or dashboard settings, as the application keeps those on FRESH only.
+-- `e.TITLE = m.NEW_TITLE` selects only a default whose group was actually migrated, never a skipped one.
+INSERT INTO ENTITY_CENTRE_CONFIG (
+    _ID, _VERSION, ID_CRAFT, ID_MAIN_MENU, TITLE, BODY, CONFIGUUID_,
+    IS_PRINCIPAL, PREFERRED_, PREFERREDONMOBILE_, DASHBOARDABLE_, RUNAUTOMATICALLY_
+)
+SELECT NEXT VALUE FOR TG_ENTITY_ID_SEQ,
+       0,
+       e.ID_CRAFT,
+       e.ID_MAIN_MENU,
+       '__________SAVED[Default (mobile)]__________DIFFERENCES',
+       e.BODY,
+       e.CONFIGUUID_,
+       'N', 'N', 'N', 'N', 'N'
+  FROM ENTITY_CENTRE_CONFIG e
+ INNER JOIN #MobileConfig m ON m.ID = e._ID
+ WHERE m.SAVE_AS_PART = ''
+   AND m.SURROGATE = '__________FRESH'
+   AND e.TITLE = m.NEW_TITLE
+   AND NOT EXISTS (SELECT 1
+                     FROM ENTITY_CENTRE_CONFIG s
+                    WHERE s.ID_CRAFT = e.ID_CRAFT
+                      AND s.ID_MAIN_MENU = e.ID_MAIN_MENU
+                      AND s.TITLE = '__________SAVED[Default (mobile)]__________DIFFERENCES');
+
+PRINT 'Step 6: added a SAVED row to ' + CAST(@@ROWCOUNT AS VARCHAR(20)) + ' migrated default configuration(s).';
+GO
+
+-- Step 7.
 -- Make a migrated `Default (mobile)` preferred on mobile, where no other configuration is.
 --
 -- A mobile user without a preferred named configuration used to open the MOBILE default.
@@ -254,7 +320,7 @@ UPDATE e
                       AND p.PREFERREDONMOBILE_ = 'Y'
                       AND LEFT(p.TITLE, 6) <> 'MOBILE');
 
-PRINT 'Step 6: made ' + CAST(@@ROWCOUNT AS VARCHAR(20)) + ' migrated default configuration(s) preferred on mobile.';
+PRINT 'Step 7: made ' + CAST(@@ROWCOUNT AS VARCHAR(20)) + ' migrated default configuration(s) preferred on mobile.';
 GO
 
 DROP TABLE #MobileConfig;
