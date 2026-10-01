@@ -20,7 +20,7 @@ Resources provide the domain context that a language model needs to translate na
 ### `tg://query-guide`
 
 A reference document describing the GraphQL query syntax supported by TG.
-Covers query structure, filtering arguments, ordering, pagination, date handling, and efficiency tips.
+Covers query structure, conditions, ordering, pagination, date handling, and efficiency tips.
 
 This is a static resource.
 Its content is defined in [graphql-query-guide.md](../src/main/resources/mcp/graphql-query-guide.md).
@@ -144,7 +144,7 @@ For a union, `properties` are its members.
 | `type` | Name of the property's type: a value type, or an entity type name matching `_EntityType.name`. For a collectional property, the type of its elements |
 | `typeKind` | `VALUE`, `ENTITY` or `UNION` |
 | `collectional` | Whether the property is collectional |
-| `arguments` | GraphQL arguments accepted by this property, e.g., `["eq", "like", "order"]`, `["from", "to", "order"]` |
+| `arguments` | GraphQL arguments accepted by this property field, e.g., `["order"]` |
 | `required` | Whether the property is always assigned |
 
 `typeKind` records one fact that cannot be derived from `type` alone.
@@ -203,7 +203,7 @@ The LLM queries the meta-schema for the types it expects to use.
 ```
 This establishes that:
 - `WorkOrder` has a composite key whose single member is `number`, so `number` may be selected as a number in its own right, and `key` as its string representation.
-- `status` is of type `WorkOrderStatus` and accepts `eq`, `like` and `order`; `priority` and `costCentre` are analogous.
+- `status` is of type `WorkOrderStatus` and accepts `order`; `priority` and `costCentre` are analogous.
 - `WorkOrderStatus`, `Priority` and `CostCentre` each have a simple key and declare a description, so `key` and `desc` may be selected on them.
 
 **Step 3 — Value resolution.**
@@ -220,11 +220,13 @@ The result includes `{ "key": "IP", "desc": "In Progress" }` among other statuse
 The LLM constructs and executes:
 ```graphql
 {
-  workOrder(pageCapacity: 50) {
+  workOrder(pageCapacity: 50, where: { cond: {
+      status: { cond: { key: { eq: "IP" } } },
+      costCentre: { cond: { key: { eq: "A" } } } } }) {
     number
     desc
-    status(eq: "IP") { key desc }
-    costCentre(eq: "A") { key desc }
+    status { key desc }
+    costCentre { key desc }
     priority(order: ASC_1) { key desc }
     createdDate
   }

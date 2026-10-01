@@ -50,7 +50,7 @@ public class WebApiBooleanFieldTest extends AbstractDaoTestCase {
     public void boolean_prop_returns_with_null_argument_literal() {
         createBoolEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key active(value:null)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {active: {eq: null}}}){key active}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -65,7 +65,7 @@ public class WebApiBooleanFieldTest extends AbstractDaoTestCase {
     public void boolean_prop_returns_with_non_empty_argument_literal() {
         createBoolEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key active(value:true)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {active: {eq: true}}}){key active}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -79,7 +79,7 @@ public class WebApiBooleanFieldTest extends AbstractDaoTestCase {
     public void boolean_prop_returns_with_argument_variable() {
         createBoolEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Boolean){tgWebApiEntity{key active(value:$val)}}"));
+        final Map<String, Object> result = webApi.execute(input("query($val:Boolean){tgWebApiEntity(where: {cond: {active: {eq: $val}}}){key active}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -94,7 +94,7 @@ public class WebApiBooleanFieldTest extends AbstractDaoTestCase {
     public void boolean_prop_returns_with_null_argument_variable() {
         createBoolEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Boolean){tgWebApiEntity{key active(value:$val)}}", linkedMapOf(t2("val", null))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Boolean){tgWebApiEntity(where: {cond: {active: {eq: $val}}}){key active}}", linkedMapOf(t2("val", null))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -109,7 +109,7 @@ public class WebApiBooleanFieldTest extends AbstractDaoTestCase {
     public void boolean_prop_returns_with_non_empty_argument_variable() {
         createBoolEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Boolean){tgWebApiEntity{key active(value:$val)}}", linkedMapOf(t2("val", true))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Boolean){tgWebApiEntity(where: {cond: {active: {eq: $val}}}){key active}}", linkedMapOf(t2("val", true))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(

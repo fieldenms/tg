@@ -16,7 +16,6 @@ import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
-import ua.com.fielden.platform.utils.IDates;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,19 +33,17 @@ import static ua.com.fielden.platform.web_api.RootEntityUtils.*;
 public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetcher<DataFetcherResult<List<T>>> {
     private final Class<T> entityType;
     private final ICompanionObjectFinder coFinder;
-    private final IDates dates;
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
     
     public RootEntityFetcher(
             final Class<T> entityType,
             final ICompanionObjectFinder coFinder,
-            final IDates dates,
             final IAuthorisationModel authorisationModel,
-            final ISecurityTokenProvider securityTokenProvider) {
+            final ISecurityTokenProvider securityTokenProvider)
+    {
         this.entityType = entityType;
         this.coFinder = coFinder;
-        this.dates = dates;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
     }
@@ -61,7 +58,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
         authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);// reading of entities should be authorised when running GraphQL query
         final T3<String, List<GraphQLArgument>, List<Argument>> rootArguments = rootPropAndArguments(environment.getGraphQLSchema(), environment.getField());
         final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel
-                = generateQueryModelFrom(environment, entityType).apply(dates);
+                = generateQueryModelFrom(environment, entityType);
         final Builder<List<T>> result = DataFetcherResult.<List<T>>newResult().data(coFinder.findAsReader(entityType, true).getPage( // reader must be uninstrumented
             warningAndModel._2,
             extractValue(

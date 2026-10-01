@@ -5,17 +5,8 @@ Scope: the TG GraphQL Web API (`platform-pojo-bl`/`platform-dao`, package `ua.co
 
 ## 1. Purpose
 
-Conditions in the Web API are currently expressed with field arguments (`eq`, `like`, `value`, `from`, `to`) placed on selected fields, and on root fields (`eq`, `like`).
-That mechanism has structural limits:
-
-- a property can be filtered on only if it is selected;
-- all conditions are combined with AND; there is no OR across properties, no negation and no grouping;
-- there is no test for a missing value, and every condition implicitly excludes missing values;
-- ranges are inclusive only;
-- comma-separated values in `like` act as OR, so a value containing a comma cannot be matched;
-- aggregation root fields (`*_agg`) have no way to express a condition at all.
-
-This specification replaces that mechanism with **entity condition types**: GraphQL input object types, one per entity type, accepted through a single argument `where` on every root field, for both data and aggregation queries.
+This specification defines **entity condition types**: GraphQL input object types, one per entity type, accepted through a single argument `where` on every root field, for both data and aggregation queries.
+Conditions are composed with AND, OR and NOT to any depth, can test for missing values, and are independent of the selection.
 
 ## 2. Terminology
 
@@ -36,14 +27,12 @@ Every property condition type is named `${T}_Cond_cond`, where `T` is an entity 
 Rationale.
 GraphQL type names are unique within a schema, and an entity type already cannot share a name with a scalar (both would be GraphQL types).
 Deriving every condition type name from its constrained type name by a fixed suffix is therefore collision-free, provided no entity type name itself contains `_Cond`.
-This mirrors the existing `${E}_Agg` convention.
+This follows the `${E}_Agg` convention.
 Schema construction must fail fast if a generated name collides with an existing type name.
 
-## 4. Schema Additions
+## 4. Root Fields
 
-### 4.1. Root fields
-
-Every data root field and every aggregation root field gains an optional argument `where`:
+Every data root field and every aggregation root field has an optional argument `where`:
 
 ```graphql
 type Query {
@@ -58,21 +47,15 @@ Because `${E}_Cond` is a `@oneOf` type (§6.1), `where: {}` is a validation erro
 
 `where` is an ordinary argument, so it may be supplied as a variable (`query($w: WorkOrder_Cond) { workOrder(where: $w) { key } }`).
 
-### 4.2. Arguments that are retired
-
-After migration (see §13), the following arguments are removed:
-
-- `eq`, `like` on root fields;
-- `eq`, `like`, `value`, `from`, `to` on property fields.
-
-Arguments `order`, `pageNumber` and `pageCapacity` are outside this specification and remain unchanged.
+`where` is independent of the selection: a property can be constrained without being selected, and selecting a property does not constrain it.
+Arguments `order`, `pageNumber` and `pageCapacity` are outside this specification.
 
 ## 5. Value Condition Types
 
 A value condition type is generated for each value type that occurs as the type of a filterable property.
 All operators given in one object are combined with AND, so `{ ge: 7, lt: 8 }` expresses a half-open range.
 
-Input values use the existing scalars and their existing input coercion (`GraphQLLong`, `GraphQLBigDecimal`, `GraphQLMoney`, `GraphQLDate`); this specification introduces no new scalars.
+Input values use the scalars of the Web API and their input coercion (`GraphQLLong`, `GraphQLBigDecimal`, `GraphQLMoney`, `GraphQLDate`).
 
 | Type | Operators |
 |------|-----------|
@@ -94,8 +77,8 @@ Notes on the table:
   It has no `ne`, which would duplicate `eq` with the opposite value.
 - `Date_Cond` has no `in`/`notIn`: equality on date-time instants is rarely meaningful, and ranges cover the practical cases.
 - `Hyperlink` and `Colour` scalars have no input coercion (`TgCoercingNoArguments`), so only `isNull` is offered.
-  See §15.
-- `Money_Cond` compares amounts; the currency is not part of the comparison, as with the existing `from`/`to`.
+  See §13.
+- `Money_Cond` compares amounts; the currency is not part of the comparison.
 - The elements of `in` and `notIn` are non-null because, under the semantics of §7.2, a `null` element cannot mean what its author intends.
   `x IN (a, NULL)` is `x = a OR x = NULL`, and `x = NULL` is never true, so the element does not include entities with `x` unassigned.
   `x NOT IN (a, NULL)` is `x <> a AND x <> NULL`, which is never true, so the condition matches no entities at all.
@@ -161,7 +144,7 @@ The type of the field for `p` is:
 
 For a collectional property, the type is that of its elements.
 
-The following kinds of property have limited support, which is to be extended (see §15):
+The following kinds of property have limited support, which is to be extended (see §13):
 
 - Collectional properties cannot be filtered on.
 
@@ -257,12 +240,12 @@ Following EQL keeps the meaning of a condition the same as that of the EQL it co
 Wildcards.
 `*` is the wildcard of `like`, `notLike`, `iLike` and `notILike`, matching any sequence of characters, including none.
 A pattern without `*` matches the whole value.
-There is no implicit match-anywhere: "contains `pump`" is written `iLike: "*pump*"`.
+"Contains `pump`" is written `iLike: "*pump*"`.
 
 Literal characters.
 `_` is matched literally (EQL escapes it).
 `%` acts as a wildcard, because EQL leaves it unescaped and `*` is translated into it.
-See §15.2 for making `%` literal.
+See §13.2 for making `%` literal.
 `eq`, `ne`, `in`, `notIn` use no wildcards at all; `*` is an ordinary character there.
 
 Case.
@@ -271,8 +254,7 @@ Case.
 This keeps the index-friendly operators index-friendly; `iLike` is the portable way to ignore case.
 
 No other transformation of input.
-Values are neither trimmed nor split on commas.
-A value containing a comma is matched as it is.
+Values are matched as given: they are not trimmed, and a comma is an ordinary character.
 
 ### 7.4. Numbers and money
 
@@ -281,15 +263,15 @@ Comparison operators have their usual meaning; `lt`/`gt` are strict and `le`/`ge
 
 ### 7.5. Dates
 
-Date input keeps the existing formats of `GraphQLDate`: ISO strings from `"2025"` to `"2025-03-15 14:30:00.000"`, or epoch milliseconds, interpreted in the time zone of the current request.
+Date input has the formats of `GraphQLDate`: ISO strings from `"2025"` to `"2025-03-15 14:30:00.000"`, or epoch milliseconds, interpreted in the time zone of the current request.
 A less precise value denotes an instant, not a period: `"2025-03"` is `2025-03-01 00:00:00.000`.
-With strict operators available, a calendar period is expressed without boundary arithmetic:
+Strict operators express a calendar period without boundary arithmetic:
 
 ```graphql
 createdDate: { ge: "2025-03", lt: "2025-04" }
 ```
 
-Relative periods ("last 7 days") remain out of scope.
+Relative periods ("last 7 days") are outside the scope of this specification.
 
 ### 7.6. Entity-typed properties
 
@@ -302,7 +284,7 @@ workOrder(where: { cond: {
 } })
 ```
 
-The existing idiom "match the referenced entity by key" becomes `p: { cond: { key: { … } } }`; matching by `id` becomes `p: { cond: { id: { eq: 42 } } }`.
+A referenced entity is matched by key with `p: { cond: { key: { … } } }`, and by `id` with `p: { cond: { id: { eq: 42 } } }`.
 
 ## 8. Validation and Limits
 
@@ -316,7 +298,7 @@ The following are reported as errors in `errors`, with no data for the affected 
 - exceeding the maximum total number of values across all `in`/`notIn` lists in one `where` (proposed: 1000), which keeps a query below SQL Server's limit of 2100 parameters per statement.
 
 Type errors (unknown fields, wrong scalar types, `null` elements in lists) and violations of `@oneOf` (no field or more than one field in an entity condition) are rejected by standard GraphQL validation before execution.
-These limits are separate from the existing selection-depth limit, which does not count input objects.
+These limits are separate from the maximum query depth, which does not count input objects.
 
 ## 9. Authorisation
 
@@ -327,12 +309,12 @@ Otherwise, a user could infer the value of a property they are not authorised to
   `FieldVisibility` implements `getFieldDefinitions(GraphQLInputFieldsContainer)` and `getFieldDefinition(GraphQLInputFieldsContainer, String)` with the same `visibilityPredicate(E)` it applies to `E`.
   The fields of `${E}_Cond` (`and`, `or`, `not`, `isNull`, `cond`) are always visible.
 - Graphql-java validates the query against the visible schema, so a condition on an invisible property fails validation as an unknown field.
-- The existing `READ` check on the root entity type applies to both root fields unchanged.
+- The `READ` check on the root entity type applies to both root fields.
 
 ## 10. Compilation to EQL
 
 A `where` value is compiled directly into an EQL `ConditionModel`, which becomes the `where` of the EQL query for the root entity type, for both data and aggregation queries (§11).
-The Web API no longer constructs `QueryProperty` instances for conditions, overcoming limitations of `DynamicQueryBuilder` which cannot express nested AND/OR/NOT.
+Compilation does not go through `QueryProperty` and `DynamicQueryBuilder`, which compile entity centre criteria, because they cannot express nested AND/OR/NOT.
 
 ### 10.1. Paths
 
@@ -384,7 +366,7 @@ Value conditions: each operator given in `V` contributes one atomic condition, a
 - Ignored conditions (§7.1) are removed before compilation and produce no EQL.
 - No tests for missing values are added to the compiled conditions (§7.2).
 - Paths through entity-typed properties rely on EQL's implicit joins.
-- Date values are converted with `IDates` in the request's time zone, as today.
+- Date values are converted with `IDates` in the request's time zone.
 
 ### 10.4. Example
 
@@ -414,64 +396,14 @@ Conditions on aggregated values (SQL `HAVING`) are not supported by EQL at prese
 
 ## 12. Introspection (`_entityType`)
 
-- `_Property.arguments` stops listing `eq`, `like`, `value`, `from`, `to` once they are retired; it continues to list `order`.
+- `_Property.arguments` lists `order`, the only argument of a property field.
 - `_Property` gains `conditionType: String`: the name of the condition type through which the property can be filtered, or `null` if the property has none.
   This tells a client, in the same response it already uses for discovery, what may appear under `where` and with which operators, without a separate `__type` introspection query.
 - `_EntityType` gains `conditionType: String`: the name of the entity type's condition type (`null` for none).
 
-## 13. Reconciliation with the Existing Mechanism
+## 13. Open Questions and Deferred Work
 
-### 13.1. Equivalents
-
-The new forms are shown as the value of `where`; `…` marks where a property's own condition goes.
-
-| Existing | New |
-|----------|-----|
-| root `eq: "X"` | `{ cond: { key: { eq: "X" } } }` |
-| root `like: "A*"` | `{ cond: { key: { like: "A*" } } }` |
-| root `like: "A*,B*"` | `{ or: [{ cond: { key: { like: "A*" } } }, { cond: { key: { like: "B*" } } }] }` |
-| string `eq: "x"` (case-insensitive exact) | `{ iLike: "x" }` (portable) or `{ eq: "x" }` (collation) |
-| string `like: "x"` (contains, case-insensitive) | `{ iLike: "*x*" }` |
-| string `like: "x*"` | `{ iLike: "x*" }` |
-| string `like: "a,b"` | `or` of two `iLike` conditions, or `in` for exact values |
-| entity `eq: "K"` | `p: { cond: { key: { eq: "K" } } }` |
-| entity `like: "A,B"` | `p: { cond: { key: { in: ["A", "B"] } } }` |
-| entity `like: "A*"` | `p: { cond: { key: { iLike: "A*" } } }` |
-| boolean `value: true` | `p: { eq: true }` |
-| numeric/date `from: a, to: b` | `p: { ge: a, le: b }` |
-| union member `asset { equipment(eq: "E1") { key } }` | `{ cond: { asset: { cond: { equipment: { cond: { key: { eq: "E1" } } } } } } }` |
-
-### 13.2. Behavioural changes
-
-- Filtering no longer requires selection; selection no longer carries filtering.
-- No implicit match-anywhere for strings, and no splitting on commas.
-- Strict comparisons, negation, OR, grouping and missing-value tests become expressible.
-- Missing values are treated as in EQL (§7.2), rather than excluded by an implicit test.
-  An atomic condition still does not match an unassigned property, but its negation with `not` does not match it either.
-- Conditions on collectional properties remain rejected, and conditions on `@CritOnly` properties remain restricted to what the existing mechanism supports (§6.2).
-
-### 13.3. Migration
-
-1. **Additive phase.**
-   `where` is added; the existing arguments stay, marked `@deprecated` (graphql-java supports deprecating arguments).
-   If both are used in one root field, the conditions are combined with AND.
-2. **Removal phase.**
-   The deprecated arguments are removed, together with the `QueryProperty` construction in `RootEntityUtils`.
-   `FieldSchema` keeps only `ORDER_ARGUMENT` on property fields.
-
-Known consumers to migrate: the MCP query guide, GraphiQL saved queries in applications, and any external integrations using the Web API.
-
-## 14. Documentation to Update
-
-- `platform-mcp/src/main/resources/mcp/graphql-query-guide.md`: sections *Root Arguments*, *Property Arguments*, *Matching Semantics*, *Combining Filters*, the aggregation *Conditions* example, and *Limitations* 1, 3, 4, 5, 6 are rewritten or removed.
-  The claim that `_` acts as a wildcard is incorrect today and must not survive (EQL escapes `_`; `%` is the effective wildcard).
-- `platform-mcp/doc/limitations.md` §2.1–§2.4.
-- `platform-mcp/doc/architecture.md`, where it describes condition handling.
-- Javadoc of `FieldSchema`, `RootEntityUtils`, `EntityAggregation`, `FieldVisibility`, `EntityTypeIntrospection`.
-
-## 15. Open Questions and Deferred Work
-
-### 15.1. Open questions
+### 13.1. Open questions
 
 1. **`@CritOnly` properties.**
    A crit-only property is a parameter of the query rather than a predicate on data, so it fits neither `or`/`not` nor nested conditions.
@@ -479,7 +411,7 @@ Known consumers to migrate: the MCP query guide, GraphiQL saved queries in appli
 2. **Limits.**
    The values in §8 are proposals.
 
-### 15.2. Deferred
+### 13.2. Deferred
 
 1. **Literal `%`.**
    Making `%` literal in patterns requires support from EQL.
@@ -493,7 +425,7 @@ Known consumers to migrate: the MCP query guide, GraphiQL saved queries in appli
    EQL supports paths through the common properties of a union (`asset.key`); the output types do not expose them, so the condition types do not either.
    Exposing both would be one change.
 
-## 16. Example: `Person_Cond` (excerpt)
+## 14. Example: `Person_Cond` (excerpt)
 
 ```graphql
 input Person_Cond @oneOf {

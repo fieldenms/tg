@@ -34,7 +34,6 @@ public class WebApiMaxQueryDepthTest extends AbstractDaoTestCase {
             maxQueryDepth,
             getInstance(IApplicationDomainProvider.class),
             getInstance(ICompanionObjectFinder.class),
-            getInstance(IDates.class),
             getInstance(IAuthorisationModel.class),
             getInstance(ISecurityTokenProvider.class),
             getInstance(EntityTypeIntrospection.class),

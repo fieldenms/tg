@@ -21,9 +21,8 @@ import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.web_api.EntityTypeIntrospection.ENTITY_TYPE_ROOT_FIELD_NAME;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.ERR_EQ_AND_LIKE_ARE_MUTUALLY_EXCLUSIVE;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.ERR_EQ_DOES_NOT_PERMIT_WILDCARDS;
+import static ua.com.fielden.platform.web_api.EntityTypeIntrospection.*;
+import static ua.com.fielden.platform.web_api.FieldSchema.ORDER;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 
 /// Test for the domain meta-schema, which [EntityTypeIntrospection] exposes through the `_entityType` root field.
@@ -58,7 +57,7 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
         assertEquals("TgVehicleModel", model.get("type"));
         assertEquals("ENTITY", model.get("typeKind"));
         assertEquals(false, model.get("collectional"));
-        assertEquals(List.of("eq", "like", "order"), model.get("arguments"));
+        assertEquals(List.of(ORDER), model.get("arguments"));
     }
 
     @Test
@@ -68,13 +67,13 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
         final var key = getProperty(properties, "key");
         assertEquals("String", key.get("type"));
         assertEquals("VALUE", key.get("typeKind"));
-        assertEquals(List.of("eq", "like", "order"), key.get("arguments"));
+        assertEquals(List.of(ORDER), key.get("arguments"));
         // Property `key` is required by definition.
         assertEquals(true, key.get("required"));
 
         final var id = getProperty(properties, "id");
         assertEquals("VALUE", id.get("typeKind"));
-        assertEquals(List.of("from", "to", "order"), id.get("arguments"));
+        assertEquals(List.of(ORDER), id.get("arguments"));
     }
 
     @Test
