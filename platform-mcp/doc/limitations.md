@@ -35,56 +35,34 @@ These are limitations of the current implementation, not inherent to GraphQL.
 
 ### 2.1. Condition Logic
 
-**No OR conditions.**
-All GraphQL property filters are combined with AND.
-A query cannot express "status is IP OR priority is HIGH".
-
-EQL supports full boolean logic: `and`, `or`, `begin`/`end` for grouping, `notBegin`/`end` for negation.
-
-**No negation.**
-There is no way to negate a condition.
-A query cannot express "status is NOT IP".
-
-EQL supports: `ne` (not equal), `notLike`, `notILike`, `notIn`, `notExists`, `negatedCondition`, and `notBegin...end`.
-
-**No nested condition grouping.**
-Conditions cannot be parenthesised to control precedence.
-
-EQL supports: `begin`/`end` for grouping (up to 3 nesting levels in the fluent API).
+Conditions are specified with argument `where` on a root field, typed by the entity condition type of the root entity type.
+Property conditions within one `cond` are combined with AND, and `and`, `or` and `not` compose conditions to any depth.
+This covers EQL's `and`, `or`, `begin`/`end`, `notBegin`/`end` and `negatedCondition`.
 
 ### 2.2. Comparison Operators
 
-The GraphQL integration supports:
-- `eq` — exact match
-- `like` — pattern match
-- `from`/`to` — range (inclusive, i.e., `>=` and `<=`)
-- `value` — boolean filter
+The GraphQL integration supports `eq`, `ne`, `lt`, `le`, `gt`, `ge` and `isNull`, with the semantics of EQL, including its treatment of `NULL`.
 
 EQL additionally supports:
-- `gt` — strictly greater than
-- `lt` — strictly less than
-- `ne` — not equal
-- `isNull` / `isNotNull` — null testing
-- `all(subquery)` / `any(subquery)` — quantified comparison
+- comparisons between properties, and between properties and expressions -- in the GraphQL integration, the right operand is always a value;
+- `all(subquery)` / `any(subquery)` -- quantified comparison.
 
 ### 2.3. LIKE Variants
 
-The GraphQL integration supports only basic `like` (with wildcard `*`).
-
-EQL additionally supports:
-- `iLike` / `notILike` — case-insensitive matching
-- `notLike` — negated pattern matching
+The GraphQL integration supports `like`, `notLike`, `iLike` and `notILike`, with wildcard `*`.
+A literal `%` cannot be matched, as `%` also acts as a wildcard.
 
 ### 2.4. Membership and Existence Predicates
 
-The GraphQL integration has limited membership support: `like` with comma-separated values approximates `IN` for entity-typed properties.
+The GraphQL integration supports `in` and `notIn` with lists of values.
 
 EQL additionally supports:
-- `in().values(...)` / `in().model(subquery)` — set membership
-- `notIn().values(...)` — negated set membership
-- `exists(subquery)` / `notExists(subquery)` — existence checks
-- `existsAnyOf` / `notExistsAnyOf` / `existsAllOf` / `notExistsAllOf` — quantified existence
-- `anyOfProps` / `allOfProps` — multi-property predicates (e.g., "any of these properties is not null")
+- `in().model(subquery)` / `notIn().model(subquery)` -- membership in a subquery result;
+- `exists(subquery)` / `notExists(subquery)` -- existence checks;
+- `existsAnyOf` / `notExistsAnyOf` / `existsAllOf` / `notExistsAllOf` -- quantified existence;
+- `anyOfProps` / `allOfProps` -- multi-property predicates (e.g., "any of these properties is not null").
+
+Conditions on collectional properties and on `@CritOnly` properties are not supported.
 
 ### 2.5. Functions
 

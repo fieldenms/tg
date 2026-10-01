@@ -17,7 +17,6 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import graphql.AssertException;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
@@ -31,9 +30,12 @@ public class WebApiInputSpecificationTest extends AbstractDaoTestCase {
     
     //////////////////////// GraphiQL unnatural cases, for completeness ////////////////////////
     
-    @Test(expected = AssertException.class)
-    public void null_query_results_in_exception() {
-        webApi.execute(input(null));
+    @Test
+    public void null_query_results_in_errors_and_no_data() {
+        // Since graphql-java 26.0 a null query is reported as an error in the result rather than a thrown `AssertException`.
+        final Map<String, Object> result = webApi.execute(input(null));
+        assertFalse(errors(result).isEmpty());
+        assertFalse(result.containsKey(DATA));
     }
     
     @Test
@@ -50,7 +52,7 @@ public class WebApiInputSpecificationTest extends AbstractDaoTestCase {
     public void multiple_valid_queries_with_different_names_results_in_errors_and_no_data() {
         // A document with multiple named operations and no operation name specified is ambiguous.
         // Since graphql-java 23.0 this is reported as an error in the result rather than a thrown `UnknownOperationException`.
-        final Map<String, Object> result = webApi.execute(input("query test1($val:String){tgWebApiEntity{key(like:$val)}}query test2($val:String){tgWebApiEntity{key(like:$val)}}", linkedMapOf(t2("val", "CA"))));
+        final Map<String, Object> result = webApi.execute(input("query test1($val:String){tgWebApiEntity(where: {cond: {key: {like: $val}}}){key}}query test2($val:String){tgWebApiEntity(where: {cond: {key: {like: $val}}}){key}}", linkedMapOf(t2("val", "CA"))));
         assertFalse(errors(result).isEmpty());
         assertFalse(result.containsKey(DATA));
     }
@@ -129,7 +131,7 @@ public class WebApiInputSpecificationTest extends AbstractDaoTestCase {
     
     @Test
     public void valid_query_with_non_empty_variable_and_its_definition_executes_successfully() {
-        final Map<String, Object> result = webApi.execute(input("query($val:String){tgWebApiEntity{key(like:$val)}}", linkedMapOf(t2("val", "CA"))));
+        final Map<String, Object> result = webApi.execute(input("query($val:String){tgWebApiEntity(where: {cond: {key: {like: $val}}}){key}}", linkedMapOf(t2("val", "CA"))));
         assertTrue(errors(result).isEmpty());
         assertTrue(result.containsKey(DATA));
         assertEquals(result(linkedMapOf(
@@ -139,7 +141,7 @@ public class WebApiInputSpecificationTest extends AbstractDaoTestCase {
     
     @Test
     public void valid_query_with_name_and_non_empty_variable_and_its_definition_executes_successfully() {
-        final Map<String, Object> result = webApi.execute(input("query test($val:String){tgWebApiEntity{key(like:$val)}}", linkedMapOf(t2("val", "CA"))));
+        final Map<String, Object> result = webApi.execute(input("query test($val:String){tgWebApiEntity(where: {cond: {key: {like: $val}}}){key}}", linkedMapOf(t2("val", "CA"))));
         assertTrue(errors(result).isEmpty());
         assertTrue(result.containsKey(DATA));
         assertEquals(result(linkedMapOf(

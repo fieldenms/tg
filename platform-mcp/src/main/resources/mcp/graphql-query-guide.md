@@ -102,7 +102,7 @@ Example — describe the types that a work order query will use:
 | `type` | Name of the property's type: a value type, or an entity type name matching `_EntityType.name`. For a collectional property, the type of its elements. |
 | `typeKind` | Kind of the property's type: `VALUE`, `ENTITY` or `UNION`. |
 | `collectional` | Whether the property holds a collection of values. |
-| `arguments` | Names of the arguments this property field accepts. Only `order` is relevant; the others are deprecated (see [Deprecated Filtering Arguments](#deprecated-filtering-arguments)). |
+| `arguments` | Names of the arguments this property field accepts: `order` (see [Ordering](#ordering)), or none for a union-typed or collectional property. |
 | `required` | Whether the property is always assigned. |
 
 Four of these fields decide how a property is used in a query.
@@ -603,13 +603,6 @@ Always inspect `errors` before reporting a result, even where `data` is populate
 A query that could not be parsed, validated or executed is reported in `errors`.
 This is a normal response, not a tool error.
 A tool error means only that the request itself was malformed (e.g., no query was supplied) or that the system failed to process it.
-
-## Deprecated Filtering Arguments
-
-Root fields and property fields also accept older filtering arguments: `eq` and `like` on root fields, and `eq`, `like`, `value`, `from` and `to` on property fields.
-They are deprecated and will be removed; `_Property.arguments` still lists them.
-Do not use them: use `where` instead.
-Their semantics differ from those of `where`: for example, `like` without `*` on a string property matches anywhere in the value, whereas in `where` a pattern without `*` matches the whole value.
 
 ## Limitations
 

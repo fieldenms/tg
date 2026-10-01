@@ -16,7 +16,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
@@ -74,7 +73,6 @@ public class GraphQLService implements IWebApi {
      * @param maxQueryDepth -- the maximum depth of GraphQL query that are permitted to be executed.
      * @param applicationDomainProvider
      * @param coFinder
-     * @param dates
      * @param authorisationModel -- Guice {@link Provider} for {@link IAuthorisationModel}; would create auth model to authorise running of Web API queries and their {@link FieldVisibility}
      * @param securityTokenProvider
      */
@@ -83,7 +81,6 @@ public class GraphQLService implements IWebApi {
         final @Named("web.api.maxQueryDepth") Integer maxQueryDepth,
         final IApplicationDomainProvider applicationDomainProvider,
         final ICompanionObjectFinder coFinder,
-        final IDates dates,
         final IAuthorisationModel authorisationModel,
         final ISecurityTokenProvider securityTokenProvider,
         final EntityTypeIntrospection entityTypeIntrospection,
@@ -106,7 +103,7 @@ public class GraphQLService implements IWebApi {
             final var dictionary = createDictionary(streamVisibleTypes(applicationDomainProvider).collect(toCollection(LinkedHashSet::new)));
 
             LOGGER.info("\tBuilding query type...");
-            final GraphQLObjectType queryType = createQueryType(queryableTypes, coFinder, dates, codeRegistryBuilder, authorisationModel, securityTokenProvider);
+            final GraphQLObjectType queryType = createQueryType(queryableTypes, coFinder, codeRegistryBuilder, authorisationModel, securityTokenProvider);
 
             LOGGER.info("\tBuilding field visibility...");
             codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisationModel, queryableTypes, securityTokenProvider));
@@ -201,7 +198,6 @@ public class GraphQLService implements IWebApi {
     private static GraphQLObjectType createQueryType(
             final Set<Class<? extends AbstractEntity<?>>> entityTypes,
             final ICompanionObjectFinder coFinder,
-            final IDates dates,
             final GraphQLCodeRegistry.Builder codeRegistryBuilder,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider)
@@ -213,14 +209,12 @@ public class GraphQLService implements IWebApi {
             queryTypeBuilder.field(newFieldDefinition()
                 .name(fieldName)
                 .description(format("Query %s.", bold(getEntityTitleAndDesc(entityType).getKey())))
-                .argument(EQ_ARGUMENT)
-                .argument(LIKE_ARGUMENT)
                 .argument(ORDER_ARGUMENT)
                 .argument(PAGE_NUMBER_ARGUMENT)
                 .argument(PAGE_CAPACITY_ARGUMENT)
                 .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName)))
             );
-            codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName), new RootEntityFetcher<>(entityType, coFinder, dates, authorisationModel, securityTokenProvider));
+            codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName), new RootEntityFetcher<>(entityType, coFinder, authorisationModel, securityTokenProvider));
         });
         return queryTypeBuilder.build();
     }

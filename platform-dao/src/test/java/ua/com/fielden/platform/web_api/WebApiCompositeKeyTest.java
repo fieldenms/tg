@@ -14,8 +14,9 @@ import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 
 /// Test for selection of a composite key through the GraphQL Web API.
 ///
-/// A composite key reaches the schema as a single `String`-typed field, so it admits the same `eq`, `like` and `order` arguments
+/// A composite key reaches the schema as a single `String`-typed field, so it admits the same conditions and `order` argument
 /// as any other string, and those are exercised here both on a root type and on an entity-typed property.
+/// Each key member is also a property of its own, constrained by the condition type of its type.
 ///
 public class WebApiCompositeKeyTest extends AbstractDaoTestCase {
 
@@ -44,58 +45,65 @@ public class WebApiCompositeKeyTest extends AbstractDaoTestCase {
         assertThat(((Map<String, Object>) rows.getFirst().get("author")).get("key")).isEqualTo(JOHN);
     }
 
-    // : Argument eq
+    // : Conditions
 
     @Test
     public void eq_matches_a_composite_key_in_full() {
-        assertThat(keysOf("{tgAuthor{key(eq:\"%s\")}}".formatted(JOHN), "tgAuthor")).containsExactly(JOHN);
+        assertThat(keysOf("{tgAuthor(where: {cond: {key: {eq: \"%s\"}}}){key}}".formatted(JOHN), "tgAuthor")).containsExactly(JOHN);
     }
 
     @Test
-    public void eq_on_a_composite_key_is_case_insensitive() {
-        // A composite key is exposed as a string, so it is matched as one -- which for `eq` means case-insensitively, without wildcards.
-        assertThat(keysOf("{tgAuthor{key(eq:\"john smith\")}}", "tgAuthor")).containsExactly(JOHN);
+    public void iLike_on_a_composite_key_ignores_case() {
+        assertThat(keysOf("{tgAuthor(where: {cond: {key: {iLike: \"john smith\"}}}){key}}", "tgAuthor")).containsExactly(JOHN);
     }
 
     @Test
     public void eq_matches_a_composite_key_of_an_entity_typed_property() {
-        assertThat(keysOf("{tgAuthorship{key author(eq:\"%s\"){key}}}".formatted(JOHN), "tgAuthorship")).containsExactly(AUTHORSHIP);
-        assertThat(keysOf("{tgAuthorship{key author{key(eq:\"%s\")}}}".formatted(JOHN), "tgAuthorship")).containsExactly(AUTHORSHIP);
+        assertThat(keysOf("{tgAuthorship(where: {cond: {author: {cond: {key: {eq: \"%s\"}}}}}){key}}".formatted(JOHN), "tgAuthorship"))
+                .containsExactly(AUTHORSHIP);
     }
 
     @Test
     public void eq_that_matches_no_composite_key_yields_nothing() {
-        assertThat(keysOf("{tgAuthor{key(eq:\"JOHN\")}}", "tgAuthor")).isEmpty();
+        assertThat(keysOf("{tgAuthor(where: {cond: {key: {eq: \"JOHN\"}}}){key}}", "tgAuthor")).isEmpty();
     }
-
-    // : Argument like
 
     @Test
     public void like_matches_a_composite_key_by_wildcard() {
-        assertThat(keysOf("{tgAuthor{key(like:\"*SMITH*\")}}", "tgAuthor")).containsExactly(JOHN);
+        assertThat(keysOf("{tgAuthor(where: {cond: {key: {like: \"*SMITH*\"}}}){key}}", "tgAuthor")).containsExactly(JOHN);
     }
 
     @Test
     public void like_matches_a_composite_key_in_full() {
-        assertThat(keysOf("{tgAuthor{key(like:\"%s\")}}".formatted(JOHN), "tgAuthor")).containsExactly(JOHN);
+        assertThat(keysOf("{tgAuthor(where: {cond: {key: {like: \"%s\"}}}){key}}".formatted(JOHN), "tgAuthor")).containsExactly(JOHN);
     }
 
     @Test
-    public void like_matches_a_composite_key_against_comma_separated_values() {
-        assertThat(keysOf("{tgAuthor{key(like:\"%s,%s\")}}".formatted(JOHN, JANE), "tgAuthor")).containsExactlyInAnyOrder(JOHN, JANE);
+    public void in_matches_any_of_the_listed_composite_keys() {
+        assertThat(keysOf("{tgAuthor(where: {cond: {key: {in: [\"%s\", \"%s\"]}}}){key}}".formatted(JOHN, JANE), "tgAuthor"))
+                .containsExactlyInAnyOrder(JOHN, JANE);
     }
 
     @Test
     public void like_matches_a_composite_key_of_an_entity_typed_property() {
-        assertThat(keysOf("{tgAuthorship{key author{key(like:\"%s\")}}}".formatted(JOHN), "tgAuthorship")).containsExactly(AUTHORSHIP);
-        assertThat(keysOf("{tgAuthorship{key author{key(like:\"*SMITH*\")}}}", "tgAuthorship")).containsExactly(AUTHORSHIP);
+        assertThat(keysOf("{tgAuthorship(where: {cond: {author: {cond: {key: {like: \"%s\"}}}}}){key}}".formatted(JOHN), "tgAuthorship"))
+                .containsExactly(AUTHORSHIP);
+        assertThat(keysOf("{tgAuthorship(where: {cond: {author: {cond: {key: {like: \"*SMITH*\"}}}}}){key}}", "tgAuthorship"))
+                .containsExactly(AUTHORSHIP);
     }
 
     @Test
     public void like_on_a_composite_key_of_an_entity_typed_property_matches_that_property_and_not_the_root_type() {
         // The key of the only `TgAuthorship` contains `First Book`, the key of its author does not.
         // Were the condition applied to the root type, this would match.
-        assertThat(keysOf("{tgAuthorship{key author{key(like:\"*First Book*\")}}}", "tgAuthorship")).isEmpty();
+        assertThat(keysOf("{tgAuthorship(where: {cond: {author: {cond: {key: {like: \"*First Book*\"}}}}}){key}}", "tgAuthorship")).isEmpty();
+    }
+
+    @Test
+    public void key_members_are_constrained_individually() {
+        assertThat(keysOf("{tgAuthor(where: {cond: {name: {cond: {key: {eq: \"JOHN\"}}}, surname: {eq: \"SMITH\"}}}){key}}", "tgAuthor"))
+                .containsExactly(JOHN);
+        assertThat(keysOf("{tgAuthor(where: {cond: {patronymic: {isNull: true}}}){key}}", "tgAuthor")).containsExactly(JOHN);
     }
 
     // : Argument order

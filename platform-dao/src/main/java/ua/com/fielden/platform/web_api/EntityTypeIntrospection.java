@@ -41,10 +41,10 @@ import static ua.com.fielden.platform.reflection.Reflector.getKeyMemberSeparator
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
-import static ua.com.fielden.platform.web_api.FieldSchema.*;
+import static ua.com.fielden.platform.web_api.FieldSchema.bold;
 import static ua.com.fielden.platform.web_api.FieldVisibility.isModelReadable;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.streamVisibleTypes;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.*;
+import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
 
 /// GraphQL definitions that describe the domain model.
 ///
@@ -84,6 +84,12 @@ public class EntityTypeIntrospection {
     /// The only wildcard recognised by argument `like`, standing for any sequence of characters.
     ///
     private static final String WILDCARD = "*";
+
+    private static final String EQ = "eq", LIKE = "like";
+
+    public static final String
+            ERR_EQ_AND_LIKE_ARE_MUTUALLY_EXCLUSIVE = "Conditions `eq` and `like` are mutually exclusive. Please remove one or both conditions.",
+            ERR_EQ_DOES_NOT_PERMIT_WILDCARDS = "Value for `eq` should not contain wildcard symbols (`*`).";
 
     /// Shape of an entity type's key.
     ///
@@ -490,12 +496,8 @@ public class EntityTypeIntrospection {
     /// A predicate on an entity type's simple name, as specified by arguments `eq` and `like` of [#ENTITY_TYPE_ROOT_FIELD_NAME].
     /// An argument that was not specified, or was specified as `null`, imposes no restriction.
     ///
-    /// These arguments are the counterpart of the equally named arguments of an ordinary root field, which
-    /// [RootEntityUtils] compiles into EQL conditions on an entity's key.
-    /// The two do not share an implementation, as matching happens here against Java objects rather than in the database,
-    /// and they deliberately differ in a few rules: matching here is case-sensitive, values are taken as given without
-    /// trimming, and `*` is the only character with any special meaning.
-    /// Both sets of rules, and why the difference is admissible, are recorded in the architecture document of `platform-mcp`.
+    /// Matching happens against Java objects rather than in the database.
+    /// It is case-sensitive, values are taken as given without trimming, and `*` is the only character with any special meaning.
     ///
     private static Predicate<Class<?>> namePredicate(final @Nullable String eq, final @Nullable String like) {
         if (eq != null && like != null) {

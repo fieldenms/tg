@@ -52,7 +52,7 @@ public class WebApiIntegerFieldTest extends AbstractDaoTestCase {
     public void integer_prop_returns_with_left_null_argument_literal() {
         createIntEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key intProp(from:null)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {intProp: {ge: null}}}){key intProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -68,7 +68,7 @@ public class WebApiIntegerFieldTest extends AbstractDaoTestCase {
     public void integer_prop_returns_with_right_null_argument_literal() {
         createIntEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key intProp(to:null)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {intProp: {le: null}}}){key intProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -84,7 +84,7 @@ public class WebApiIntegerFieldTest extends AbstractDaoTestCase {
     public void integer_prop_returns_with_left_non_empty_argument_literal() {
         createIntEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key intProp(from:2)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {intProp: {ge: 2}}}){key intProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -99,7 +99,7 @@ public class WebApiIntegerFieldTest extends AbstractDaoTestCase {
     public void integer_prop_returns_with_right_non_empty_argument_literal() {
         createIntEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key intProp(to:8)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {intProp: {le: 8}}}){key intProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -114,7 +114,7 @@ public class WebApiIntegerFieldTest extends AbstractDaoTestCase {
     public void integer_prop_returns_with_left_argument_variable() {
         createIntEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Int){tgWebApiEntity{key intProp(from:$val)}}"));
+        final Map<String, Object> result = webApi.execute(input("query($val:Int){tgWebApiEntity(where: {cond: {intProp: {ge: $val}}}){key intProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -130,7 +130,7 @@ public class WebApiIntegerFieldTest extends AbstractDaoTestCase {
     public void integer_prop_returns_with_right_argument_variable() {
         createIntEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Int){tgWebApiEntity{key intProp(to:$val)}}"));
+        final Map<String, Object> result = webApi.execute(input("query($val:Int){tgWebApiEntity(where: {cond: {intProp: {le: $val}}}){key intProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -146,7 +146,7 @@ public class WebApiIntegerFieldTest extends AbstractDaoTestCase {
     public void integer_prop_returns_with_left_null_argument_variable() {
         createIntEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Int){tgWebApiEntity{key intProp(from:$val)}}", linkedMapOf(t2("val", null))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Int){tgWebApiEntity(where: {cond: {intProp: {ge: $val}}}){key intProp}}", linkedMapOf(t2("val", null))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -162,7 +162,7 @@ public class WebApiIntegerFieldTest extends AbstractDaoTestCase {
     public void integer_prop_returns_with_right_null_argument_variable() {
         createIntEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Int){tgWebApiEntity{key intProp(to:$val)}}", linkedMapOf(t2("val", null))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Int){tgWebApiEntity(where: {cond: {intProp: {le: $val}}}){key intProp}}", linkedMapOf(t2("val", null))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -178,7 +178,7 @@ public class WebApiIntegerFieldTest extends AbstractDaoTestCase {
     public void integer_prop_returns_with_left_non_empty_argument_variable() {
         createIntEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Int){tgWebApiEntity{key intProp(from:$val)}}", linkedMapOf(t2("val", 2))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Int){tgWebApiEntity(where: {cond: {intProp: {ge: $val}}}){key intProp}}", linkedMapOf(t2("val", 2))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -193,7 +193,7 @@ public class WebApiIntegerFieldTest extends AbstractDaoTestCase {
     public void integer_prop_returns_with_right_non_empty_argument_variable() {
         createIntEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Int){tgWebApiEntity{key intProp(to:$val)}}", linkedMapOf(t2("val", 8))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Int){tgWebApiEntity(where: {cond: {intProp: {le: $val}}}){key intProp}}", linkedMapOf(t2("val", 8))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(

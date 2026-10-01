@@ -48,12 +48,8 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.web_api.GraphQLScalars.*;
 
-/**
- * Contains utilities to convert TG entity properties to GraphQL query fields that reside under {@code Query.exampleEntityType} fields.
- * 
- * @author TG Team
- *
- */
+/// Defines rules to convert entity properties into GraphQL query fields.
+///
 public class FieldSchema {
     private FieldSchema() {}
     
@@ -62,33 +58,9 @@ public class FieldSchema {
     private static final String SPACE_SEPARATOR = "," + SPACE;
     private static final String NEWLINE_SEPARATOR = "," + NEWLINE;
     private static final String INDENT_STEP = "&nbsp;&nbsp;&nbsp;&nbsp;";
-    static final String EQ = "eq";
-    static final String LIKE = "like";
-    static final String VALUE = "value";
-    static final String FROM = "from";
-    static final String TO = "to";
     static final String ORDER = "order";
     static final String PAGE_NUMBER = "pageNumber";
     static final String PAGE_CAPACITY = "pageCapacity";
-    static final GraphQLArgument EQ_ARGUMENT = newArgument()
-            .name(EQ)
-            .description(
-            """
-            Include entities matching the specified string value exactly.
-            Does not support comma separated values.
-            Does not permit wildcard `*`.
-            Mutually exclusive with `like`.""")
-            .type(GraphQLString)
-            .build();
-    static final GraphQLArgument LIKE_ARGUMENT = newArgument()
-        .name(LIKE)
-        .description(
-        """
-        Include entities matching the specified comma separated string values. Supports wildcard `*`.
-        If no `*` is used, assumes match anywhere for string-typed properties, but exact match for entity-typed properties.
-        Mutually exclusive with `eq`.""")
-        .type(GraphQLString)
-        .build();
     static final GraphQLArgument ORDER_ARGUMENT = newArgument()
         .name(ORDER)
         .description("Order entities by this property with specified **ASC_n** / **DESC_m** value. Use **n** / **m** numbers (0..9) to define priority among other properties.")
@@ -134,17 +106,7 @@ public class FieldSchema {
         .description(format("Positive number to limit the maximum number of entities returned. Numbers <= 0 is ignored. %s by default.", DEFAULT_PAGE_CAPACITY))
         .type(GraphQLInt)
         .build();
-    
-    /**
-     * Returns whether argument definition is related to query criteria.
-     * 
-     * @param argumentDefinition
-     * @return
-     */
-    public static boolean isQueryArgument(final GraphQLArgument argumentDefinition) {
-        return asList(EQ, LIKE, VALUE, FROM, TO).contains(argumentDefinition.getName());
-    }
-    
+
     /**
      * Creates GraphQL field definition for {@code entityType} and {@code property}.
      * Set of supported property types:
@@ -472,67 +434,37 @@ public class FieldSchema {
      */
     static Optional<T2<GraphQLOutputType, List<GraphQLArgument>>> determineFieldTypeNonCollectional(final Class<?> propertyType) {
         if (isString(propertyType) || isDynamicEntityKey(propertyType)) {
-            return of(t2(GraphQLString, asList(EQ_ARGUMENT, LIKE_ARGUMENT, ORDER_ARGUMENT)));
+            return of(t2(GraphQLString, List.of(ORDER_ARGUMENT)));
         } else if (isBoolean(propertyType)) {
-            return of(t2(GraphQLBoolean, asList(newArgument() // null-valued or non-existing argument in GraphQL query means entities with both true and false values in the property
-                .name(VALUE)
-                .description("Include entities with specified boolean value.")
-                .type(GraphQLBoolean)
-                .build(),
-                ORDER_ARGUMENT
-            )));
+            return of(t2(GraphQLBoolean, List.of(ORDER_ARGUMENT)));
         } else if (Integer.class.isAssignableFrom(propertyType)) {
-            return of(t2(GraphQLInt, createRangeArgumentsFor(GraphQLInt)));
+            return of(t2(GraphQLInt, List.of(ORDER_ARGUMENT)));
         } else if (Long.class.isAssignableFrom(propertyType)) {
             // Even though we add here the support for Long values [-9,223,372,036,854,775,808; 9,223,372,036,854,775,807] = [-2^63; 2^63 - 1],
             // the actual support would be limited to              [    -9,007,199,254,740,992;     9,007,199,254,740,991] = [-2^53; 2^53 - 1];
             // This is because Javascript numbers, that are used in GraphiQL client, truncates higher numbers with zeros and performs weird rounding.
-            return of(t2(GraphQLLong, createRangeArgumentsFor(GraphQLLong)));
+            return of(t2(GraphQLLong, List.of(ORDER_ARGUMENT)));
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
-            return of(t2(GraphQLBigDecimal, createRangeArgumentsFor(GraphQLBigDecimal)));
+            return of(t2(GraphQLBigDecimal, List.of(ORDER_ARGUMENT)));
         } else if (Money.class.isAssignableFrom(propertyType)) {
-            return of(t2(GraphQLMoney, createRangeArgumentsFor(GraphQLMoney)));
+            return of(t2(GraphQLMoney, List.of(ORDER_ARGUMENT)));
         } else if (isDate(propertyType)) {
-            return of(t2(GraphQLDate, createRangeArgumentsFor(GraphQLDate)));
+            return of(t2(GraphQLDate, List.of(ORDER_ARGUMENT)));
         } else if (Hyperlink.class.isAssignableFrom(propertyType)) {
-            return of(t2(GraphQLHyperlink, asList(ORDER_ARGUMENT)));
+            return of(t2(GraphQLHyperlink, List.of(ORDER_ARGUMENT)));
         } else if (Colour.class.isAssignableFrom(propertyType)) {
-            return of(t2(GraphQLColour, asList(ORDER_ARGUMENT)));
+            return of(t2(GraphQLColour, List.of(ORDER_ARGUMENT)));
         } else if (AbstractView.class == propertyType
             || PropertyDescriptor.class == propertyType
             || isAbstract(propertyType.getModifiers())) { // be careful with boolean.class because it has abstract modifier
             return empty();
         } else if (isUnionEntityType(propertyType)) {
-            return of(t2(new GraphQLTypeReference(propertyType.getSimpleName()), asList()));
+            return of(t2(new GraphQLTypeReference(propertyType.getSimpleName()), List.of()));
         } else if (isEntityType(propertyType)) {
-            return of(t2(new GraphQLTypeReference(propertyType.getSimpleName()), asList(EQ_ARGUMENT, LIKE_ARGUMENT, ORDER_ARGUMENT)));
+            return of(t2(new GraphQLTypeReference(propertyType.getSimpleName()), List.of(ORDER_ARGUMENT)));
         } else {
             return empty();
         }
     }
-    
-    /**
-     * Creates GraphQL [from; to] argument definitions for range input type.
-     * 
-     * @param inputType
-     * @return
-     */
-    private static List<GraphQLArgument> createRangeArgumentsFor(final GraphQLInputType inputType) {
-        return asList(
-            newArgument()
-            .name(FROM)
-            .description("Include entities with property greater than (or equal to) specified value. Date values should be specified as strings in the ISO format (e.g. `\"2025-01-29\"`).")
-            .type(inputType)
-            .build(),
-            
-            newArgument()
-            .name(TO)
-            .description("Include entities with property less than (or equal to) specified value. Date values should be specified as strings in the ISO format (e.g. `\"2025-02-15\"`).")
-            .type(inputType)
-            .build(),
-            
-            ORDER_ARGUMENT
-        );
-    }
-    
+
 }
