@@ -31,6 +31,8 @@ A query has this shape:
 - Property names match the names declared in the entity model (e.g., `desc`, `costCentre`, `createdDate`).
 - Entity-typed properties are objects with their own sub-fields; request `key` and `desc` for them where those fields are available, which [Domain Discovery](#domain-discovery) establishes.
 - Value-typed properties (strings, numbers, booleans, dates) are leaf nodes, and cannot be expanded with sub-fields.
+- Below root fields, in data and aggregation queries alike, a field may be selected at most once per selection set, even under different aliases (e.g. `a: key b: key` is an error).
+  Aliases are for root fields, as described in [Batching Queries](#batching-queries).
 
 ## Domain Discovery
 

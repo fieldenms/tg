@@ -38,6 +38,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
+import static ua.com.fielden.platform.web_api.RootEntityUtils.validateDuplicateFields;
 
 /// GraphQL definitions that add aggregation over entity types.
 ///
@@ -166,6 +167,7 @@ public class EntityAggregation {
         @Override
         public List<EntityAggregates> get(final DataFetchingEnvironment environment) {
             authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
+            validateDuplicateFields(environment.getField().getSelectionSet(), environment.getFragmentsByName());
             final var query = buildQuery(entityType, environment);
             return coFinder.find(EntityAggregates.class, true).getAllEntities(from(query).model());
         }

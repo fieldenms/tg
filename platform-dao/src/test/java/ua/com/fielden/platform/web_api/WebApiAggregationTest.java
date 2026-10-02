@@ -300,12 +300,11 @@ public class WebApiAggregationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void the_same_aggregate_can_be_selected_twice_under_different_aliases() {
-        final var rows = queryAgg("{ tgWebApiEntity_agg { a: sum { intProp } b: sum { longProp } } }");
+    public void the_same_aggregate_cannot_be_selected_twice_under_different_aliases() {
+        final var result = webApi.execute(input("{ tgWebApiEntity_agg { a: sum { intProp } b: sum { longProp } } }"));
 
-        assertThat(rows).hasSize(1);
-        assertThat(((Number) at(rows.getFirst(), "a.intProp")).intValue()).isEqualTo(8);
-        assertThat(((Number) at(rows.getFirst(), "b.longProp")).longValue()).isEqualTo(80L);
+        assertThat(errors(result)).hasSize(1);
+        assertThat(errors(result).getFirst().toString()).contains("Duplicate field [sum]");
     }
 
     @Test
