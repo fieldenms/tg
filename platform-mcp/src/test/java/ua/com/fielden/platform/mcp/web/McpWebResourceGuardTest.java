@@ -3,9 +3,7 @@ package ua.com.fielden.platform.mcp.web;
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
 import io.modelcontextprotocol.spec.McpSchema;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.restlet.Client;
 import org.restlet.Context;
 import org.restlet.Request;
@@ -28,21 +26,34 @@ import static ua.com.fielden.platform.mcp.test_config.TgMcpServerTestCaseConfigu
 ///
 public class McpWebResourceGuardTest extends AbstractTgMcpServerTestCase {
 
-    private static final String BASE_URI = "http://localhost:%s".formatted(TestWebApplication.PORT);
+    private static final int PORT = 9043;
+    private static final String BASE_URI = "http://localhost:%s".formatted(PORT);
     private static final String PREFIX = "/test";
     private static final String FULL_URI = BASE_URI + PREFIX + PATH_MCP;
+
+    private static final TestWebApplication webApplication = new TestWebApplication();
+
+    @BeforeClass
+    public static void beforeClass() {
+        webApplication.start(PORT);
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        webApplication.stop();
+    }
 
     private final McpTestWebApp webApp = getInstance(McpTestWebApp.class);
     private final Client client = new Client(new Context(), Protocol.HTTP);
 
     @Before
     public void startUp() {
-        TestWebApplication.attachWebApplication(PREFIX, webApp);
+        webApplication.attachWebApplication(PREFIX, webApp);
     }
 
     @After
     public void tearDown() {
-        TestWebApplication.detachWebApplication(webApp);
+        webApplication.detachWebApplication(webApp);
     }
 
     @Test

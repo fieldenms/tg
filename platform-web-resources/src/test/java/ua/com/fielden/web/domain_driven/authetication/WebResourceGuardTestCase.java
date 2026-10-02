@@ -1,9 +1,6 @@
 package ua.com.fielden.web.domain_driven.authetication;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.restlet.Client;
 import org.restlet.Context;
 import org.restlet.Request;
@@ -34,10 +31,24 @@ import static org.junit.Assert.*;
 ///
 public class WebResourceGuardTestCase extends AbstractWebResourceWithDaoTestCase {
 
+    private static final int PORT = 9044;
+
+    private static final TestWebApplication webApplication = new TestWebApplication();
+
+    @BeforeClass
+    public static void beforeClass() {
+        webApplication.start(PORT);
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        webApplication.stop();
+    }
+
     private final UserSessionDao coSession = co$(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
     private final WebResourceGuardTestWebApplication webApp = getInstance(WebResourceGuardTestWebApplication.class);
-    private final String baseUri = "http://localhost:%s/v1".formatted(TestWebApplication.PORT);
+    private final String baseUri = "http://localhost:%s/v1".formatted(PORT);
     private final Client client = new Client(new Context(), Protocol.HTTP);
     {
         // Redirects should not be followed, which became the default and needs to be turned off for testing.
@@ -49,12 +60,12 @@ public class WebResourceGuardTestCase extends AbstractWebResourceWithDaoTestCase
     public void startUp() {
         coSession.getCache().invalidateAll();
         webApp.setCurrUser(coUser.findByKey(User.system_users.UNIT_TEST_USER.name()));
-        TestWebApplication.attachWebApplication("/v1", webApp);
+        webApplication.attachWebApplication("/v1", webApp);
     }
 
     @After
     public void tearDown() {
-        TestWebApplication.detachWebApplication(webApp);
+        webApplication.detachWebApplication(webApp);
     }
 
     @Test

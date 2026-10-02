@@ -6,9 +6,7 @@ import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import ua.com.fielden.platform.mcp.test_config.AbstractTgMcpServerTestCase;
 import ua.com.fielden.platform.mcp.test_config.McpTestWebApp;
 import ua.com.fielden.platform.mcp.test_config.TgMcpServerTestCaseConfiguration;
@@ -34,8 +32,21 @@ import static ua.com.fielden.platform.test_utils.TestUtils.assertInstanceOf;
 
 public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
 
-    private static final String URI = "http://localhost:%s".formatted(TestWebApplication.PORT);
+    private static final int PORT = 9045;
+    private static final String URI = "http://localhost:%s".formatted(PORT);
     private static final String PREFIX = "/test";
+
+    private static final TestWebApplication webApplication = new TestWebApplication();
+
+    @BeforeClass
+    public static void beforeClass() {
+        webApplication.start(PORT);
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        webApplication.stop();
+    }
 
     private final McpTestWebApp webApp = getInstance(McpTestWebApp.class);
     private final McpSyncClient mcpClient = McpClient.sync(
@@ -48,13 +59,13 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
 
     @Before
     public void startUp() {
-        TestWebApplication.attachWebApplication(PREFIX, webApp);
+        webApplication.attachWebApplication(PREFIX, webApp);
         setUser(TgMcpServerTestCaseConfiguration.USER_MCP_TEST);
     }
 
     @After
     public void tearDown() {
-        TestWebApplication.detachWebApplication(webApp);
+        webApplication.detachWebApplication(webApp);
     }
 
     @Test
