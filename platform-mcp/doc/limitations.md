@@ -2,33 +2,7 @@
 
 This document discusses the limitations of GraphQL as a query interface for TG systems, both inherent to GraphQL and specific to the current TG GraphQL integration.
 
-## 1. Inherent GraphQL Limitation: Aggregation
-
-GraphQL's type system ties the response shape to the schema.
-Every query returns data conforming to pre-defined types.
-This makes aggregation queries (GROUP BY, SUM, COUNT, etc.) unnatural.
-
-In EQL, an aggregation query produces a result with a different shape from the source entity:
-
-```java
-select(WorkOrder.class)
-    .where().prop(WorkOrder_.status()).ne().val(CANCELLED)
-    .groupBy().prop(WorkOrder_.priority())
-    .yield().prop(WorkOrder_.priority()).as("priority")
-    .yield().countAll().as("count")
-    .yield().sumOf().prop(WorkOrder_.estimatedCost()).as("totalCost")
-    .modelAsAggregate()
-```
-
-This returns `{priority, count, totalCost}` — a shape that does not match the `WorkOrder` type.
-
-To support this in GraphQL, one would need to pre-define auxiliary types (e.g., `WorkOrderAgg`) for each aggregation pattern.
-This does not scale for ad-hoc analytical questions because users' aggregation needs are open-ended.
-
-TG partially addresses this through synthetic/report entities, which are pre-built aggregation views queryable via GraphQL.
-But these only cover anticipated requests.
-
-## 2. Current TG GraphQL Limitations vs EQL
+## 1. TG GraphQL Limitations vs EQL
 
 The following EQL features are not exposed through the current GraphQL integration.
 These are limitations of the current implementation, not inherent to GraphQL.

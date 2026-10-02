@@ -191,7 +191,7 @@ input U_Cond_cond {
 - `and: []` and `or: []` are ignored, as EQL ignores condition groups whose conditions are all empty.
   Ignoring propagates: a condition that consists only of ignored conditions is itself ignored.
   So `not: { or: [] }`, `cond: { status: { and: [] } }` and `where: { and: [] }` impose no condition; in particular, the second does not mean "`status` is not null".
-- `in: []` and `notIn: []` are validation errors, as in EQL.
+- `in: []` and `notIn: []` are execution errors, as in EQL.
 
 A *root-level condition* is the value of `where` or any condition reached from it through `and`, `or` and `not` alone.
 It constrains the root entity itself rather than a property, so `isNull` in it is a validation error.
@@ -263,7 +263,7 @@ Comparison operators have their usual meaning; `lt`/`gt` are strict and `le`/`ge
 
 ### 7.5. Dates
 
-Date input has the formats of `GraphQLDate`: ISO strings from `"2025"` to `"2025-03-15 14:30:00.000"`, or epoch milliseconds, interpreted in the time zone of the current request.
+Date input has the formats of `GraphQLDate`: ISO strings from `"2025"` to `"2025-03-15 14:30:00.000"`, interpreted in the time zone of the current request.
 A less precise value denotes an instant, not a period: `"2025-03"` is `2025-03-01 00:00:00.000`.
 Strict operators express a calendar period without boundary arithmetic:
 
@@ -397,9 +397,6 @@ Conditions on aggregated values (SQL `HAVING`) are not supported by EQL at prese
 ## 12. Introspection (`_entityType`)
 
 - `_Property.arguments` lists `order`, the only argument of a property field.
-- `_Property` gains `conditionType: String`: the name of the condition type through which the property can be filtered, or `null` if the property has none.
-  This tells a client, in the same response it already uses for discovery, what may appear under `where` and with which operators, without a separate `__type` introspection query.
-- `_EntityType` gains `conditionType: String`: the name of the entity type's condition type (`null` for none).
 
 ## 13. Open Questions and Deferred Work
 
