@@ -5,6 +5,7 @@ import graphql.execution.CoercedVariables;
 import graphql.execution.ValuesResolver;
 import graphql.language.*;
 import graphql.schema.*;
+import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicPropertyAnalyser;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -25,11 +27,12 @@ import static graphql.execution.CoercedVariables.of;
 import static graphql.execution.ValuesResolver.getArgumentValues;
 import static java.lang.Byte.valueOf;
 import static java.util.Arrays.asList;
+import static java.util.Comparator.comparing;
+import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
 import static java.util.stream.Stream.concat;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
@@ -79,12 +82,14 @@ public class RootEntityUtils {
         final var context             = environment.getGraphQlContext();
         final var locale              = environment.getLocale();
 
-        final SelectionSet selectionSet = rootField.getSelectionSet();
+        validateDuplicateFields(rootField.getSelectionSet(), fragmentDefinitions);
+
         // convert selectionSet to concrete properties (their dot-notated names) with their arguments
         final Map<String, T2<List<GraphQLArgument>, List<Argument>>> propertiesAndArguments = concat(
-            Stream.of(rootPropAndArguments(schema, rootField)), // "entity-itself" property (this can have some arguments, e.g. 'order')
-            properties(entityType, null, toFields(selectionSet, fragmentDefinitions), fragmentDefinitions, schema)
-        ).collect(toLinkedHashMap(t3 -> t3._1, t3 -> t2(t3._2, t3._3)));
+            Stream.of(rootPropAndArguments(schema, rootField)), // Root entity field can have arguments, e.g. `order`.
+            properties(entityType, null, toFields(rootField.getSelectionSet(), fragmentDefinitions), fragmentDefinitions, schema))
+            // Discard duplicate fields under different aliases -- first one wins.
+            .collect(toLinkedHashMap(t3 -> t3._1, t3 -> t2(t3._2, t3._3)));
 
         final List<T3<String, Ordering, Byte>> propOrderingWithPriorities = propertiesAndArguments.entrySet().stream()
             .filter(propertyAndArguments -> propertyAndArguments.getValue()._1.contains(ORDER_ARGUMENT)) // if GraphQL argument definitions contain ORDER_ARGUMENT ...
@@ -121,6 +126,28 @@ public class RootEntityUtils {
             ).model())
             .lightweight() // must be lightweight to avoid fetching instrumented entities
             .model());
+    }
+
+    /// Validates selected fields to ensure that there are no identical fields selected under different aliases.
+    /// Processing of the selection set expands any fragments into their contents.
+    ///
+    /// @throws WebApiException  if validation is unsuccessful
+    ///
+    public static void validateDuplicateFields(final @Nullable SelectionSet selectionSet, final Map<String, FragmentDefinition> fragmentDefinitions) {
+        final var fields = toFields(selectionSet, fragmentDefinitions);
+        fields.stream()
+                .sorted(comparing(Field::getName))
+                .collect(groupingBy(Field::getName, LinkedHashMap::new, toList()))
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().size() > 1)
+                .findFirst()
+                .ifPresent(entry -> {
+                    throw new WebApiException("Selected non-root fields must be unique. Duplicate field [%s] under aliases: %s.".formatted(
+                            entry.getKey(),
+                            entry.getValue().stream().map(field -> requireNonNullElse(field.getAlias(), "<none>")).collect(joining(", "))));
+                });
+        fields.forEach(f -> validateDuplicateFields(f.getSelectionSet(), fragmentDefinitions));
     }
 
     /**

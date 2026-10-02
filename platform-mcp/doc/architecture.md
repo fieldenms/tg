@@ -311,3 +311,19 @@ Dynamic rules are evaluated per request, because the answer depends on who is as
 Both reach the schema through `GraphqlFieldVisibility`, which graphql-java consults for the fields of a type.
 It is not consulted for the fields of `Query`, so a root field survives even where its type has been reduced to `id`.
 
+
+### Duplicate Fields in Sub-Selections
+
+Aliases are meaningful on root fields, where each aliased root field is a query of its own, with its own `where`, ordering and pagination.
+Below root fields, in both data and aggregation queries, a field may be selected at most once per selection set, with or without an alias.
+Fields selected through fragments belong to the selection set that contains the fragment.
+A duplicate field is rejected with an error for the root field that contains it, which fails that root field only.
+
+In data queries, this rule prevents confusion.
+A field for an entity property always returns the same value, and its only argument, `order`, does not affect that value but orders the result set.
+A second selection of the same property can therefore differ from the first only in `order`, as in `{ workOrder { a: key(order: ASC_1) b: key(order: DESC_1) } }`.
+The result set has a single order, so such a query cannot be honoured as written, and silently applying one of the orderings could return something other than what was asked for.
+Rejecting the query makes the conflict explicit.
+
+In aggregation queries, the rule is applied for consistency, so that one rule governs every sub-selection.
+A duplicate there is equally without use: each property is grouped by or aggregated once, so `a: sum { intProp } b: sum { longProp }` is the same as `sum { intProp longProp }`.
