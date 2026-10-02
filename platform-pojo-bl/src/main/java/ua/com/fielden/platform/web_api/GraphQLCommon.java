@@ -1,20 +1,24 @@
 package ua.com.fielden.platform.web_api;
 
-import graphql.language.Field;
-import graphql.language.SelectionSet;
+import graphql.language.*;
 import graphql.schema.GraphQLNamedType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
 import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.Strings;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ImmutableListUtils;
+import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -30,6 +34,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 public class GraphQLCommon {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /// Name of the GraphQL root field for the specified entity type.
     ///
@@ -166,6 +172,31 @@ public class GraphQLCommon {
                     ? ImmutableListUtils.prepend(findFieldByName(entityType, KEY), keysAndProperties)
                     : keysAndProperties;
         }
+    }
+
+    /// Returns a stream of first-level fields for a selection set, replacing any fragments by their contents.
+    ///
+    public static Stream<Field> streamFields(final @Nullable SelectionSet selectionSet, final Map<String, FragmentDefinition> fragments) {
+        if (selectionSet == null) {
+            return Stream.of();
+        }
+        return selectionSet.getSelections()
+                .stream()
+                .flatMap(sel -> switch (sel) {
+                    case Field field -> Stream.of(field);
+                    case FragmentSpread frag -> {
+                        final var def = fragments.get(frag.getName());
+                        if (def == null) {
+                            throw new WebApiException("Unknown fragment [%s].".formatted(frag.getName()));
+                        }
+                        yield streamFields(def.getSelectionSet(), fragments);
+                    }
+                    case InlineFragment frag -> streamFields(frag.getSelectionSet(), fragments);
+                    default -> {
+                        LOGGER.warn(() -> "Ignoring unknown selection [%s].".formatted(Objects.toString(sel)));
+                        yield Stream.of();
+                    }
+                });
     }
 
 }

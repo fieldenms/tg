@@ -3,7 +3,10 @@ package ua.com.fielden.platform.web_api;
 import graphql.GraphQLContext;
 import graphql.execution.CoercedVariables;
 import graphql.execution.ValuesResolver;
-import graphql.language.*;
+import graphql.language.Argument;
+import graphql.language.Field;
+import graphql.language.FragmentDefinition;
+import graphql.language.SelectionSet;
 import graphql.schema.*;
 import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
@@ -49,6 +52,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWith
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.ORDER;
 import static ua.com.fielden.platform.web_api.FieldSchema.ORDER_ARGUMENT;
+import static ua.com.fielden.platform.web_api.GraphQLCommon.streamFields;
 
 /**
  * Contains querying utility methods for root fields in GraphQL query / mutation schemas.
@@ -87,7 +91,7 @@ public class RootEntityUtils {
         // convert selectionSet to concrete properties (their dot-notated names) with their arguments
         final Map<String, T2<List<GraphQLArgument>, List<Argument>>> propertiesAndArguments = concat(
             Stream.of(rootPropAndArguments(schema, rootField)), // Root entity field can have arguments, e.g. `order`.
-            properties(entityType, null, toFields(rootField.getSelectionSet(), fragmentDefinitions), fragmentDefinitions, schema))
+            properties(entityType, null, streamFields(rootField.getSelectionSet(), fragmentDefinitions).toList(), fragmentDefinitions, schema))
             // Discard duplicate fields under different aliases -- first one wins.
             .collect(toLinkedHashMap(t3 -> t3._1, t3 -> t2(t3._2, t3._3)));
 
@@ -134,7 +138,7 @@ public class RootEntityUtils {
     /// @throws WebApiException  if validation is unsuccessful
     ///
     public static void validateDuplicateFields(final @Nullable SelectionSet selectionSet, final Map<String, FragmentDefinition> fragmentDefinitions) {
-        final var fields = toFields(selectionSet, fragmentDefinitions);
+        final var fields = streamFields(selectionSet, fragmentDefinitions).toList();
         fields.stream()
                 .sorted(comparing(Field::getName))
                 .collect(groupingBy(Field::getName, LinkedHashMap::new, toList()))
@@ -272,11 +276,11 @@ public class RootEntityUtils {
             return concat( // concatenate two streams: ...
                 Stream.of(propAndArgumentsFrom(schema, graphQLField, property, entityTypeName)), // ... first is single-element stream containing 'graphQLField' property itself and ...
                 properties( // ... second contains all selected sub-fields of 'graphQLField'
-                    __TYPENAME.equals(graphQLField.getName()) ? String.class : determinePropertyType(entityType, graphQLField.getName()),
-                    property,
-                    toFields(graphQLField.getSelectionSet(), fragmentDefinitions),
-                    fragmentDefinitions,
-                    schema
+                        __TYPENAME.equals(graphQLField.getName()) ? String.class : determinePropertyType(entityType, graphQLField.getName()),
+                        property,
+                        streamFields(graphQLField.getSelectionSet(), fragmentDefinitions).toList(),
+                        fragmentDefinitions,
+                        schema
                 )
             );
         });
@@ -311,35 +315,5 @@ public class RootEntityUtils {
             graphQLField.getArguments() // arguments with actual values
         );
     }
-    
-    /**
-     * Converts {@link SelectionSet} instance to a list of first-level fields.
-     * <p>
-     * This method also handles "fragment spreads" and "inline fragments" converting them to list of concrete fields.
-     * This requires access to external {@code fragmentDefinitions}.
-     * 
-     * @param selectionSet
-     * @param fragmentDefinitions
-     * @return
-     */
-    private static List<Field> toFields(final SelectionSet selectionSet, final Map<String, FragmentDefinition> fragmentDefinitions) {
-        final List<Field> selectionFields = new ArrayList<>();
-        if (selectionSet != null) {
-            for (final Selection<?> selection: selectionSet.getSelections()) {
-                if (selection instanceof Field) {
-                    selectionFields.add((Field) selection);
-                } else if (selection instanceof final FragmentSpread fragmentSpread) {
-                    final FragmentDefinition fragmentDefinition = fragmentDefinitions.get(fragmentSpread.getName());
-                    selectionFields.addAll(toFields(fragmentDefinition.getSelectionSet(), fragmentDefinitions));
-                } else if (selection instanceof final InlineFragment inlineFragment) {
-                    selectionFields.addAll(toFields(inlineFragment.getSelectionSet(), fragmentDefinitions));
-                } else {
-                    // this is the only three types of possible selections; log warning if something else appeared
-                    LOGGER.warn("Unknown Selection [{}] has appeared.", Objects.toString(selection)); // 'null' selection is possible
-                }
-            }
-        }
-        return selectionFields;
-    }
-    
+
 }
