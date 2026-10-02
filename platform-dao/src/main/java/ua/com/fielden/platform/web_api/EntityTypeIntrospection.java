@@ -48,8 +48,6 @@ import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
 
 /// GraphQL definitions that describe the domain model.
 ///
-/// The domain is described through the schema itself rather than through standard GraphQL introspection, for two reasons.
-///
 /// A meta-schema is used in preference to standard GraphQL introspection for two reasons.
 ///
 /// 1. Introspection cannot express what a model needs.
@@ -323,7 +321,7 @@ public class EntityTypeIntrospection {
                         .build(),
                 newFieldDefinition()
                         .name("required")
-                        .description("Whether this property is always assigned. Every condition implicitly excludes entities where the property is unassigned, which cannot occur for a required property.")
+                        .description("Whether this property is always assigned.")
                         .type(Scalars.GraphQLBoolean)
                         .build());
         return newObject()

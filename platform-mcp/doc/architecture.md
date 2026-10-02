@@ -8,45 +8,21 @@ It enables a language model to query TG data by translating natural language req
 The expected interaction flow:
 
 1. User asks an LLM a question in natural language (e.g., "Show me all work orders in progress ordered by priority for cost centre A").
-2. The LLM reads MCP resources to understand the query syntax and to identify which entity types a request refers to.
-3. The LLM queries the meta-schema for the shape of those types, and may execute preliminary GraphQL queries to resolve reference values (e.g., mapping "in progress" to a status key).
+2. The LLM reads the MCP resource `tg://query-guide` to understand the query syntax.
+3. The LLM queries the [domain meta-schema](#domain-meta-schema) to identify which entity types a request refers to and what their shape is, and may execute preliminary GraphQL queries to resolve reference values (e.g., mapping "in progress" to a status key).
 4. The LLM constructs the final GraphQL query and executes it via the MCP tool.
 5. The LLM presents the results to the user.
 
-## MCP Resources
-
-Resources provide the domain context that a language model needs to translate natural language into GraphQL.
+## MCP Resource
 
 ### `tg://query-guide`
 
 A reference document describing the GraphQL query syntax supported by TG.
 Covers query structure, conditions, ordering, pagination, date handling, and efficiency tips.
+The domain itself is described by the [domain meta-schema](#domain-meta-schema) rather than by a resource, so that what a model sees of the domain is subject to the authorisation of the current user.
 
 This is a static resource.
 Its content is defined in [graphql-query-guide.md](../src/main/resources/mcp/graphql-query-guide.md).
-
-### `tg://entities`
-
-A catalogue of all queryable entity types.
-Each entry includes:
-
-| Field | Description |
-|-------|-------------|
-| `name` | Entity type simple name (e.g., `WorkOrder`) |
-| `rootField` | GraphQL root field name used in queries (uncapitalised type name, e.g., `workOrder`) |
-| `title` | Human-readable entity title |
-| `desc` | Entity description |
-
-The catalogue enables a language model to identify which entity type corresponds to a user's natural language reference.
-For example, "work orders" maps to the `workOrder` root field.
-
-Both names are present because they serve different purposes.
-`rootField` is what a query selects.
-`name` is what a property's `type` refers to, so it is the value to match when resolving the type of property back to a catalogue entry.
-
-The contents of this resource are unchanging within the scope of a running application.
-It is the shallow projection of the `_entityType` root field described in [Domain Meta-Schema](#domain-meta-schema), and must be generated from the same code path so that the two cannot drift.
-Field names are identical in both.
 
 ## MCP Tool
 
@@ -61,7 +37,10 @@ Executes a GraphQL query against the TG system and returns the result.
 | `query` | `string` | yes | The GraphQL query string |
 | `variables` | `object` | no | GraphQL variables |
 
-**Returns:** The GraphQL response as JSON, containing `data` and optionally `errors`.
+**Returns:** A GraphQL response document as structured content, conforming to the output schema in [execute-query-output-schema.json](../src/main/resources/mcp/execute-query-output-schema.json).
+Values are returned in `data` and failures in `errors`; both can be present at once.
+A query that cannot be parsed, validated or executed is reported in `errors` and is a successful tool call.
+A tool error (`isError`) means only that the tool input was malformed or that processing failed with an exception.
 
 **Usage notes:**
 
@@ -75,7 +54,7 @@ Executes a GraphQL query against the TG system and returns the result.
   }
   ```
 - The tool delegates to `IWebApi.execute()`, which is implemented by `GraphQLService`.
-  Authorisation is enforced per entity type via `Entity_CanRead_Token`.
+  Authorisation is enforced per entity type via `Entity_CanRead_Token`; see [Authorisation](#authorisation).
 
 ## Domain Meta-Schema
 
@@ -122,13 +101,12 @@ Where the two legitimately diverge, it is because a schema and a catalogue are u
 
 `keyType` and `keyMembers` exist because there is no rule to generalise from.
 `key` is selectable on every type whose key has a shape at all, but what it yields differs: for a simple key it is the key itself, typed accordingly, whereas for a composite key it is a string -- the members concatenated with `keySeparator`.
-For example, if `WorkOrder` has a composite key whose single member is `number`, then both `key` and `number` may be selected, and only `number` carries the type and arguments of a number.
+For example, if `WorkOrder` has a composite key whose single member is `number`, then both `key` and `number` may be selected, and only `number` is typed, and constrained in `where`, as a number.
 If `Buyer` has a key member `person`, itself an entity reference, then only through `keyMembers` is that reachable as an entity.
 A type that declares no key does not declare `key` either, and selecting it is a validation error.
 
-`keySeparator` is required by the matching rules for entity-typed properties.
-A condition on a property that references a composite-key type matches against its key members concatenated with that type's separator, so the separator must be known before such a condition can be constructed.
-The same concatenation is what `key` yields when selected on such a type directly.
+`keySeparator` is required to construct a condition on `key` of a composite-key type.
+Such a condition matches against the key members concatenated with that type's separator, which is also what `key` yields when selected.
 
 Union types are included, with `rootField` set to `null`.
 They are reachable as property types but are not root fields, so a model needs to distinguish "query this as a root field" from "this type exists but cannot be queried directly", which the presence of a root field answers.
@@ -149,18 +127,17 @@ For a union, `properties` are its members.
 
 `typeKind` records one fact that cannot be derived from `type` alone.
 The set of value types is closed and documented in the query guide, so a value can be recognised from its type name, but an entity type cannot be distinguished from a union type that way.
-The distinction matters at the point of use: a union exposes neither `key`, `desc` nor `id`, and accepts no arguments, so it must be traversed through a member.
-Without `typeKind`, every entity-typed property that is selected but not filtered on is a guess.
+The distinction matters at the point of use: a union exposes neither `key`, `desc` nor `id`, and accepts no arguments, so it must be traversed through a member, both in a selection and in a condition.
+Without `typeKind`, selecting `key` on an entity-typed property is a guess.
 
-`collectional` exists because a condition placed inside a collectional property is silently discarded while the query is composed.
-No error is reported and the result contains entities that do not match the condition, so a model must be able to recognise a collection before it attempts to filter through one.
+`collectional` exists because a collectional property cannot be constrained in `where`: the condition type of its owner has no field for it, and a condition on it is a validation error.
 
 For a collectional property, `type` reports the type of its elements, because the type of such a property is determined from its element type when the corresponding GraphQL field is built.
 That is also the type to query as a root field when filtering by the contents of a collection.
 
 `arguments` is already determined by `FieldSchema` when building field definitions and is surfaced rather than recomputed.
 
-`required` supports reasoning about missing values: every condition implicitly excludes entities where the property is unassigned, and `required` identifies the properties for which that cannot occur.
+`required` supports reasoning about missing values: every atomic condition other than `isNull` excludes entities where the property is unassigned, even under `not`, and `required` identifies the properties for which that cannot occur.
 
 ### Excluded metadata
 
@@ -168,9 +145,6 @@ Property-level annotations are deliberately **not** exposed.
 This covers `@AfterChange`, `@BeforeChange`, `@Dependent`, `@Subtitles`, `@SkipActivatableTracking` and `@SkipEntityExistsValidation`.
 They describe mutation-time behaviour and this API is read-only, so they cannot inform a query.
 They are also costly: on `WorkOrder` they account for 6,026 of 11,047 description bytes, and they disclose internal handler class names.
-
-The same reasoning applies to the `description` strings that `FieldSchema.metaInformationFor` appends to field definitions.
-Once the structured fields above are available, a description should carry title and description only.
 
 This decision is recorded on `EntityTypeIntrospection` so that it stays next to the code that would otherwise reintroduce it.
 
@@ -180,6 +154,8 @@ This decision is recorded on `EntityTypeIntrospection` so that it stays next to 
   Every authorisation check is a database query: `authoriseReading` reaches `SecurityTokenController.canAccess`, which counts active security role associations, and nothing on that path is cached.
   `_entityType` therefore costs one query per visible type, plus one per `@Authorise`d property of every type it describes, so an unfiltered query over the whole domain costs a query per entity type.
   Memoising the decision for the duration of a request is the obvious remedy.
+- Reduce the descriptions of property fields to title and description.
+  `FieldSchema.metaInformationFor` appends annotation-derived meta-information to them, which the structured fields of `_Property` largely cover.
 - Consider modelling `_Property.type` as a GraphQL type rather than a name.
   Resolving it to `_EntityType` would let a single query retrieve a type's properties together with the key shape of every type they reference, which is otherwise one request per referenced type.
   Points to settle: value types have no `_EntityType`, so a nullable entity-typed field alongside the existing name is likely simpler than a union; the domain graph is cyclic, so this interacts with the maximum query depth instrumentation; and `typeKind` becomes derivable from the resolved type's `kind`, so the two decisions should be taken together.
@@ -189,10 +165,16 @@ This decision is recorded on `EntityTypeIntrospection` so that it stays next to 
 **User request:** "Show me all work orders in progress ordered by priority for cost centre A"
 
 **Step 1 — Entity identification.**
-The LLM reads `tg://entities` and identifies `workOrder` (title: "Work Order").
+The LLM queries the meta-schema for a catalogue of entity types.
+```graphql
+{
+  _entityType { name rootField title desc }
+}
+```
+Among the results, it identifies `WorkOrder` (title: "Work Order"), queried through root field `workOrder`.
 
 **Step 2 — Schema discovery.**
-The LLM queries the meta-schema for the types it expects to use.
+The LLM queries the meta-schema for the shape of the types it expects to use.
 ```graphql
 {
   _entityType(like: "WorkOrder,WorkOrderStatus,Priority,CostCentre") {
@@ -240,19 +222,18 @@ The LLM formats and presents the results to the user.
 
 ### Module Dependencies
 
-`platform-mcp` depends on `platform-pojo-bl`, which provides:
-- `IWebApi` — the interface for executing GraphQL queries
-- Entity model classes and annotations — for generating resource content
-- `IApplicationDomainProvider` — for enumerating domain entity types
-
-The runtime implementation of `IWebApi` (`GraphQLService`) resides in `platform-dao`.
+`platform-mcp` depends on:
+- `platform-pojo-bl` — `IWebApi`, the interface for executing GraphQL queries, and `IUserProvider`, which sets the user that a query runs as.
+- `platform-dao` — `GraphQLService`, the runtime implementation of `IWebApi`.
+- `platform-web-resources` — the Restlet infrastructure through which the MCP server is exposed as a web resource.
+- `mcp-core` and `mcp-json-jackson2` — the MCP Java SDK, with stateless HTTP transport.
 
 ### Authorisation
 
-The MCP server inherits the TG authorisation model:
-- `GraphiQL_CanExecute_Token` — controls access to the MCP server as a whole.
+Access to the MCP server as a whole is controlled by an API key, configured as `web.api.key.mcp` and supplied in HTTP header `X-API-Key`.
+Every request runs as the application user configured as `mcp.user`, and from there the MCP server inherits the TG authorisation model:
 - `Entity_CanRead_Token` — controls per-entity query access.
-- `Entity_CanReadModel_Token` — controls schema visibility (which entities and properties appear in MCP resources).
+- `Entity_CanReadModel_Token` — controls model visibility: which entities and properties appear in the schema and in `_entityType`.
 
 `FieldVisibility` enforces `Entity_CanReadModel_Token` for the domain schema.
 The meta-schema does the same, at both type and property level, so that `_entityType` cannot describe what the current user is not authorised to read.
@@ -279,13 +260,13 @@ The first is intended; the second is inherited from the schema and only partly s
    The type-level check is separate and knows nothing of this, applying to every type described.
    Withdrawing the default `_CanReadModel_Token` therefore removes a union from the meta-schema while leaving it untouched in the schema.
 
-   That a union escapes property authorisation at all looks like an oversight in `FieldVisibility` rather than a decision: a union member carrying `@Authorise` is unauthorised in the schema today.
+   That a union escapes property authorisation at all looks like an oversight in `FieldVisibility` rather than a decision: a union member carrying `@Authorise` is shown in the schema regardless of its token.
    Whatever is settled there will hold for the meta-schema without further work, which is the point of taking the properties from the same method.
 
 ### Visibility Rules and Where They Are Encoded
 
-The GraphQL schema, the `_entityType` meta-schema and the `tg://entities` resource must all describe the same domain.
-Set out below is every rule that decides what the schema exposes, what the meta-schema does with each one today, and where each is to be stated from now on.
+The GraphQL schema and the `_entityType` meta-schema must describe the same domain.
+Set out below is every rule that decides what the schema exposes, and where each is encoded.
 
 #### The rules
 
@@ -295,7 +276,7 @@ Static rules are settled when `GraphQLService` builds the schema and hold for th
 |---|------|------------|
 | S1 | A type is a domain type of a visible kind: persistent or synthetic, and not `@DenyIntrospection`. Unions are visible as property types but get no root field. | `GraphQLCommon.streamQueryableTypes` and `streamVisibleTypes` |
 | S2 | A type is not excluded in its own right — abstract, no `@KeyType`, an enum, and the other generic exclusions. | `createGraphQLTypeFor`, through `isExcluded(type, "")` |
-| S3 | The candidate properties of a type are its key members and properties, or its members if it is a union. | `GraphQLService.propertiesForGraphQlFields` |
+| S3 | The candidate properties of a type are its key members and properties, or its members if it is a union. | `GraphQLCommon.propertiesForGraphQlFields` |
 | S4 | A property is not excluded — `@Invisible`, `@Ignore`, `key` without `@KeyTitle`, `desc` without `@DescTitle`, a property whose type is itself excluded, and the rest. | `createGraphQLTypeFor`, through `isExcluded(type, property)` |
 | S5 | A property's type is one the Web API supports, which also fixes the field's GraphQL type and its arguments. | `FieldSchema.determineFieldType` |
 | S6 | A type left with no field is not a type at all and is dropped. | `createGraphQLTypeFor` |
@@ -310,7 +291,6 @@ Dynamic rules are evaluated per request, because the answer depends on who is as
 
 Both reach the schema through `GraphqlFieldVisibility`, which graphql-java consults for the fields of a type.
 It is not consulted for the fields of `Query`, so a root field survives even where its type has been reduced to `id`.
-
 
 ### Duplicate Fields in Sub-Selections
 
