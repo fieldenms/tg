@@ -58,7 +58,8 @@ public class GraphQLService implements IWebApi {
     private static final Logger LOGGER = getLogger(GraphQLService.class);
     private static final String ERR_EXECUTING_QUERY = "Query [%s] execution completed with errors [%s].";
     private static final String ERR_EXECUTING_QUERY_WITH_EX = "Query [%s] execution completed with exception.";
-    public static final Integer DEFAULT_MAX_QUERY_DEPTH = 15; // this is the lowest value needed to load schema in GraphiQL editor (for version >= 3.2.3)
+    public static final int DEFAULT_MAX_QUERY_DEPTH = 15; // this is the lowest value needed to load schema in GraphiQL editor (for version >= 3.2.3)
+    public static final int DEFAULT_MAX_PAGE_CAPACITY = 100;
     public static final String WARN_INSUFFICIENT_MAX_QUERY_DEPTH = "Web API maximum query depth [%s] is insufficient for GraphiQL editor. Minimum value [" + DEFAULT_MAX_QUERY_DEPTH + "] was used.";
 
     private final GraphQLSchema schema;
@@ -79,6 +80,7 @@ public class GraphQLService implements IWebApi {
     @Inject
     public GraphQLService(
         final @Named("web.api.maxQueryDepth") Integer maxQueryDepth,
+        final @Named("web.api.maxPageCapacity") Integer maxPageCapacity,
         final IApplicationDomainProvider applicationDomainProvider,
         final ICompanionObjectFinder coFinder,
         final IAuthorisationModel authorisationModel,
@@ -92,6 +94,9 @@ public class GraphQLService implements IWebApi {
             if (maxQueryDepth == null || maxQueryDepth.compareTo(0) < 0) {
                 throw new WebApiException("GraphQL max query depth must be specified and cannot be negative.");
             }
+            if (maxPageCapacity == null || maxPageCapacity.compareTo(0) < 0) {
+                throw new WebApiException("GraphQL max page capacity must be specified and cannot be negative.");
+            }
             this.maxQueryDepth = maxQueryDepth;
 
             LOGGER.info("\tmaxQueryDepth = {}", maxQueryDepth);
@@ -103,7 +108,7 @@ public class GraphQLService implements IWebApi {
             final var dictionary = createDictionary(streamVisibleTypes(applicationDomainProvider).collect(toCollection(LinkedHashSet::new)));
 
             LOGGER.info("\tBuilding query type...");
-            final GraphQLObjectType queryType = createQueryType(queryableTypes, coFinder, codeRegistryBuilder, authorisationModel, securityTokenProvider);
+            final GraphQLObjectType queryType = createQueryType(queryableTypes, coFinder, codeRegistryBuilder, authorisationModel, securityTokenProvider, maxPageCapacity);
 
             LOGGER.info("\tBuilding field visibility...");
             codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisationModel, queryableTypes, securityTokenProvider));
@@ -200,7 +205,8 @@ public class GraphQLService implements IWebApi {
             final ICompanionObjectFinder coFinder,
             final GraphQLCodeRegistry.Builder codeRegistryBuilder,
             final IAuthorisationModel authorisationModel,
-            final ISecurityTokenProvider securityTokenProvider)
+            final ISecurityTokenProvider securityTokenProvider,
+            final int maxPageCapacity)
     {
         final Builder queryTypeBuilder = newObject().name(QUERY_TYPE_NAME).description("Query following **entities** represented as GraphQL root fields:");
         entityTypes.forEach(entityType -> {
@@ -214,7 +220,7 @@ public class GraphQLService implements IWebApi {
                 .argument(PAGE_CAPACITY_ARGUMENT)
                 .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName)))
             );
-            codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName), new RootEntityFetcher<>(entityType, coFinder, authorisationModel, securityTokenProvider));
+            codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName), new RootEntityFetcher<>(entityType, coFinder, authorisationModel, securityTokenProvider, maxPageCapacity));
         });
         return queryTypeBuilder.build();
     }
