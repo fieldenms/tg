@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web_api;
 
 import graphql.Scalars;
 import graphql.language.Field;
+import graphql.language.FragmentDefinition;
 import graphql.schema.*;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -22,6 +23,8 @@ import ua.com.fielden.platform.utils.CharSequenceEnum;
 import ua.com.fielden.platform.utils.ImmutableListUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -35,7 +38,6 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
 import static ua.com.fielden.platform.security.tokens.Template.READ;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
-import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.validateDuplicateFields;
@@ -176,37 +178,44 @@ public class EntityAggregation {
                 final Class<? extends AbstractEntity<?>> entityType,
                 final DataFetchingEnvironment environment)
         {
+            final var fields = streamFields(environment.getField().getSelectionSet(), environment.getFragmentsByName()).toList();
             return addYields(addGroupBy(select(entityType).where().condition(EntityCondToEqlCompiler.compile(environment)),
-                                        environment),
-                             environment)
+                                        fields, environment),
+                             fields, environment)
                     .modelAsAggregate();
         }
 
         /// Enhances `query` with yields for the fields that were selected.
         ///
         /// @param query  [ICompleted] or [ISubsequentCompletedAndYielded]
+        /// @param fields  selection set of the root field, with fragments expanded
         /// @param environment  contains selected fields
         ///
         private <T extends AbstractEntity<?>> ICompletedCommon<T> addYields(
                 final ICompletedCommon<T> query,
+                final List<Field> fields,
                 final DataFetchingEnvironment environment)
         {
             interface F<U extends AbstractEntity<?>> extends Function<ICompletedCommon<U>, ICompletedCommon<U>> {}
 
-            final F<T> fCount = q -> findField(environment.getField().getSelectionSet(), Fields.count)
+            final F<T> fCount = q -> findField(fields, Fields.count)
                     .map(_ -> addYield(q, expr().ifNull().expr(expr().countAll().model()).then().val(0).model(), Fields.count))
                     .orElse(q);
-            final F<T> fAvg = q -> findField(environment.getField().getSelectionSet(), Fields.avg)
-                    .map(avg -> addYieldsForField(q, avg, path -> expr().avgOf().prop(toQualifiedName(tail(path))).model()))
+            final F<T> fAvg = q -> findField(fields, Fields.avg)
+                    .map(avg -> addYieldsForField(q, avg, path -> expr().avgOf().prop(toQualifiedName(tail(path))).model(),
+                                                  environment))
                     .orElse(q);
-            final F<T> fSum = q -> findField(environment.getField().getSelectionSet(), Fields.sum)
-                    .map(sum -> addYieldsForField(q, sum, path -> expr().sumOf().prop(toQualifiedName(tail(path))).model()))
+            final F<T> fSum = q -> findField(fields, Fields.sum)
+                    .map(sum -> addYieldsForField(q, sum, path -> expr().sumOf().prop(toQualifiedName(tail(path))).model(),
+                                                  environment))
                     .orElse(q);
-            final F<T> fMin = q -> findField(environment.getField().getSelectionSet(), Fields.min)
-                    .map(min -> addYieldsForField(q, min, path -> expr().minOf().prop(toQualifiedName(tail(path))).model()))
+            final F<T> fMin = q -> findField(fields, Fields.min)
+                    .map(min -> addYieldsForField(q, min, path -> expr().minOf().prop(toQualifiedName(tail(path))).model(),
+                                                  environment))
                     .orElse(q);
-            final F<T> fMax = q -> findField(environment.getField().getSelectionSet(), Fields.max)
-                    .map(max -> addYieldsForField(q, max, path -> expr().maxOf().prop(toQualifiedName(tail(path))).model()))
+            final F<T> fMax = q -> findField(fields, Fields.max)
+                    .map(max -> addYieldsForField(q, max, path -> expr().maxOf().prop(toQualifiedName(tail(path))).model(),
+                                                  environment))
                     .orElse(q);
 
             return fCount
@@ -219,20 +228,22 @@ public class EntityAggregation {
 
         private <T extends AbstractEntity<?>> ICompletedCommon<T> addGroupBy(
                 final ICompleted<T> query,
+                final List<Field> fields,
                 final DataFetchingEnvironment environment)
         {
-            final var maybeGroupBy = findField(environment.getField().getSelectionSet(), Fields.groupBy);
+            final var maybeGroupBy = findField(fields, Fields.groupBy);
             if (maybeGroupBy.isEmpty()) {
                 return query;
             }
             final var groupBy = maybeGroupBy.get();
-            final var paths = paths(groupBy);
+            final var paths = paths(groupBy, environment.getFragmentsByName());
             if (paths.isEmpty()) {
                 return query;
             }
             else {
                 final var grouped = foldLeft(paths, query, (acc, path) -> acc.groupBy().prop(toQualifiedName(tail(path))));
-                return addYieldsForField(grouped, groupBy, path -> expr().prop(toQualifiedName(tail(path))).model());
+                return addYieldsForField(grouped, groupBy, path -> expr().prop(toQualifiedName(tail(path))).model(),
+                                         environment);
             }
         }
 
@@ -251,9 +262,10 @@ public class EntityAggregation {
         private <T extends AbstractEntity<?>> ICompletedCommon<T> addYieldsForField(
                 final ICompletedCommon<T> query,
                 final Field field,
-                final Function<List<Field>, ExpressionModel> mkExpr)
+                final Function<List<Field>, ExpressionModel> mkExpr,
+                final DataFetchingEnvironment environment)
         {
-            final var paths = paths(field);
+            final var paths = paths(field, environment.getFragmentsByName());
             if (paths.isEmpty()) {
                 return query;
             }
@@ -270,16 +282,20 @@ public class EntityAggregation {
 
         /// Returns all root-to-leaf paths, where the root is given by `field`.
         ///
-        private static List<List<Field>> paths(final Field field) {
+        private static List<List<Field>> paths(final Field field, final Map<String, FragmentDefinition> fragments) {
             final var ss = field.getSelectionSet();
             if (ss == null) {
                 return List.of(List.of(field));
             }
 
-            final var result = ss.getSelections().stream().mapMulti(typeFilter(Field.class))
-                    .flatMap(f -> paths(f).stream().map(p -> ImmutableListUtils.prepend(field, p)))
+            final var result = streamFields(ss, fragments)
+                    .flatMap(f -> paths(f, fragments).stream().map(p -> ImmutableListUtils.prepend(field, p)))
                     .toList();
             return result.isEmpty() ? List.of(List.of(field)) : result;
+        }
+
+        private static Optional<Field> findField(final List<Field> fields, final CharSequence name) {
+            return fields.stream().filter(f -> f.getName().contentEquals(name)).findFirst();
         }
 
     }
