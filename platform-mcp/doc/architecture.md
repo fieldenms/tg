@@ -124,13 +124,16 @@ For a union, `properties` are its members.
 | `collectional` | Whether the property is collectional |
 | `arguments` | GraphQL arguments accepted by this property field, e.g., `["order"]` |
 | `required` | Whether the property is always assigned |
+| `filterable` | Whether the property can be used in a condition |
 
 `typeKind` records one fact that cannot be derived from `type` alone.
 The set of value types is closed and documented in the query guide, so a value can be recognised from its type name, but an entity type cannot be distinguished from a union type that way.
 The distinction matters at the point of use: a union exposes neither `key`, `desc` nor `id`, and accepts no arguments, so it must be traversed through a member, both in a selection and in a condition.
 Without `typeKind`, selecting `key` on an entity-typed property is a guess.
 
-`collectional` exists because a collectional property cannot be constrained in `where`: the condition type of its owner has no field for it, and a condition on it is a validation error.
+`filterable` reports whether a property can be constrained in `where`, which is the case exactly when the condition type of its owner has a field for it.
+`filterable` and the fields of the condition type are both derived from `FluentConditions.isFilterable`, which excludes collectional and crit-only properties.
+A condition on a property that is not filterable is a validation error.
 
 For a collectional property, `type` reports the type of its elements, because the type of such a property is determined from its element type when the corresponding GraphQL field is built.
 That is also the type to query as a root field when filtering by the contents of a collection.

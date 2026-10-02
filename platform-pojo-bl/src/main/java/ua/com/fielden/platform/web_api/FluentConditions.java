@@ -29,8 +29,8 @@ import static graphql.schema.GraphQLInputObjectType.newInputObject;
 import static java.lang.reflect.Modifier.isAbstract;
 import static java.util.stream.Collectors.*;
 import static java.util.stream.Stream.concat;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isCollectional;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
@@ -114,6 +114,12 @@ public class FluentConditions {
 
     public static boolean isEntityCondType(final GraphQLType type) {
         return type instanceof GraphQLNamedInputType it && it.getName().endsWith("_Cond");
+    }
+
+    /// Returns true if the specified property is filterable (i.e., can be used in filtering conditions).
+    ///
+    public static boolean isFilterable(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
+        return !isCritOnly(entityType, property) && !isCollectional(entityType, property.toString());
     }
 
     /// Value condition types, one for each value type that can be the type of a filterable property.
@@ -315,8 +321,7 @@ public class FluentConditions {
         final var fields = propertiesForGraphQlFields(entityType)
                 .stream()
                 .filter(prop -> graphQlEntityType.getField(prop.getName()) != null)
-                // TODO Crit-only properties are to be supported.
-                .filter(prop -> !isCritOnly(entityType, prop.getName()))
+                .filter(prop -> isFilterable(entityType, prop.getName()))
                 .map(prop -> {
                     final var type = mkGraphQlEntityPropCondType(entityType, prop.getName(), schema);
                     if (type == null) {
@@ -348,7 +353,7 @@ public class FluentConditions {
             final CharSequence property,
             final GraphQLSchema schema)
     {
-        if (isCollectional(determineClass(entityType, property.toString(), true, false))) {
+        if (isCollectional(entityType, property.toString())) {
             return null;
         }
         final var propType = determinePropertyType(entityType, property);

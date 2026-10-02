@@ -43,6 +43,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDe
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.web_api.FieldSchema.bold;
 import static ua.com.fielden.platform.web_api.FieldVisibility.isModelReadable;
+import static ua.com.fielden.platform.web_api.FluentConditions.isFilterable;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.streamVisibleTypes;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
 
@@ -138,6 +139,7 @@ public class EntityTypeIntrospection {
     /// @param collectional  Whether the property holds a collection of values.
     /// @param arguments     Names of the GraphQL arguments accepted by this property.
     /// @param required      Whether the property is always assigned.
+    /// @param filterable    Whether the property can be used in filtering conditions.
     ///
     public record Property (
             String name,
@@ -147,7 +149,8 @@ public class EntityTypeIntrospection {
             TypeKind typeKind,
             boolean collectional,
             List<String> arguments,
-            boolean required
+            boolean required,
+            boolean filterable
     ) {}
 
     private final IApplicationDomainProvider appDomainProvider;
@@ -311,7 +314,7 @@ public class EntityTypeIntrospection {
                         .build(),
                 newFieldDefinition()
                         .name("collectional")
-                        .description("Whether this property holds a collection of values. A condition placed on a property inside a collectional property is silently discarded, so a collection can only be read. To filter by its contents, query the element type as a root field instead.")
+                        .description("Whether this property holds a collection of values. A collectional property is not filterable, so a collection can only be read. To filter by its contents, query the element type as a root field instead.")
                         .type(Scalars.GraphQLBoolean)
                         .build(),
                 newFieldDefinition()
@@ -322,6 +325,11 @@ public class EntityTypeIntrospection {
                 newFieldDefinition()
                         .name("required")
                         .description("Whether this property is always assigned.")
+                        .type(Scalars.GraphQLBoolean)
+                        .build(),
+                newFieldDefinition()
+                        .name("filterable")
+                        .description("Whether this property can be used in filtering conditions.")
                         .type(Scalars.GraphQLBoolean)
                         .build());
         return newObject()
@@ -442,7 +450,8 @@ public class EntityTypeIntrospection {
                 // A field can exist where the domain has no metadata to go with it.
                 // E.g., `version` on a synthetic type that does not yield it.
                 // Such a property can be considered not required.
-                isBoolean(propertyType) || domainMetadata.forPropertyOpt(entityType, field.getName()).map(pm -> pm.is(REQUIRED)).orElse(false));
+                isBoolean(propertyType) || domainMetadata.forPropertyOpt(entityType, field.getName()).map(pm -> pm.is(REQUIRED)).orElse(false),
+                isFilterable(entityType, field.getName()));
     }
 
     private TypeKind typeKindOf(final Class<?> valueType) {
