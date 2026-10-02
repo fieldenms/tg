@@ -44,7 +44,7 @@ It is an ordinary root field, so it may be selected alongside data fields and ba
 {
   _entityType {
     name rootField title desc kind keyType keyMembers keySeparator hasDesc
-    properties { name title desc type typeKind collectional required }
+    properties { name title desc type typeKind collectional required filterable }
   }
 }
 ```
@@ -74,7 +74,7 @@ Example — describe the types that a work order query will use:
 {
   _entityType(like: "WorkOrder,WorkOrderStatus,Priority,CostCentre") {
     name rootField keyType keyMembers keySeparator hasDesc
-    properties { name type typeKind collectional required }
+    properties { name type typeKind collectional required filterable }
   }
 }
 ```
@@ -106,6 +106,7 @@ Example — describe the types that a work order query will use:
 | `collectional` | Whether the property holds a collection of values. |
 | `arguments` | Names of the arguments this property field accepts: `order` (see [Ordering](#ordering)), or none for a union-typed or collectional property. |
 | `required` | Whether the property is always assigned. |
+| `filterable` | Whether the property can be used in a condition. |
 
 Four of these fields decide how a property is used in a query.
 
@@ -115,7 +116,8 @@ Four of these fields decide how a property is used in a query.
 The set of value types is closed and listed in [Value Types](#value-types), so a value type is recognisable by name, but an entity type and a union type are not distinguishable that way.
 The distinction decides how the property is used: a union exposes neither `key`, `desc` nor `id`, and is both read and filtered through one of its members, as shown in [Union-Typed Properties](#union-typed-properties).
 
-`collectional` identifies a property that can be read but never used in a condition.
+`filterable` identifies the properties that a condition may refer to.
+A property that is not filterable, such as a collectional property, can be read but never used in a condition.
 To filter by the contents of a collection, see [Limitations](#limitations).
 
 `required` supports reasoning about missing values, which is described in [Missing Values](#missing-values).
@@ -154,7 +156,7 @@ The same inventory items are matched by `where: { cond: { key: { like: "MAIN *" 
 
 Every root field, both `e` and `e_agg`, accepts argument `where`, which restricts the entities returned.
 For `e_agg`, the condition restricts the entities before they are grouped.
-A condition may refer to any non-collectional property that `_entityType` describes, whether or not that property is selected.
+A condition may refer to any property that `_entityType` describes as `filterable`, whether or not that property is selected.
 `where` is an ordinary argument, so it may also be supplied as a variable of type `E_Cond`, and the same variable can be passed to `e` and `e_agg`.
 
 ### Structure
@@ -269,7 +271,7 @@ A condition on it names the members in `cond`:
 
 Errors are reported in `errors`.
 These are validation errors, which fail the whole query document, including every other root field batched with it:
-- a field or operator that the condition type does not have, e.g. a misspelt property, a collectional property, or an operator on an entity-typed property;
+- a field or operator that the condition type does not have, e.g. a misspelt property, a property that is not `filterable`, or an operator on an entity-typed property;
 - a value of the wrong type, or a `null` element in `in` or `notIn`;
 - an `E_Cond` object with no field or with more than one field, reported as `Exactly one key must be specified for OneOf type '…_Cond'.`
 
@@ -541,7 +543,7 @@ An execution error fails only the root field in which it occurs.
 {
   _entityType(like: "WorkOrder,WorkOrderStatus,CostCentre") {
     name rootField keyType hasDesc
-    properties { name type typeKind collectional required }
+    properties { name type typeKind collectional required filterable }
   }
   workOrderStatus { key desc }
 }

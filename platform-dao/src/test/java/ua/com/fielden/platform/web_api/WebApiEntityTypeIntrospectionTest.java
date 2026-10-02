@@ -34,7 +34,7 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
     ///
     private static final String ALL_FIELDS_TEMPLATE =
             "{_entityType%s{name rootField title kind keyType keyMembers keySeparator hasDesc " +
-            "properties{name type typeKind collectional arguments required}}}";
+            "properties{name type typeKind collectional arguments required filterable}}}";
 
     private static final String ALL_FIELDS = ALL_FIELDS_TEMPLATE.formatted("");
 
@@ -389,6 +389,66 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Field `filterable`
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    @Test
+    public void properties_of_value_and_entity_types_are_filterable() {
+        final var entityType = getType(queryAllTypes(), "TgWebApiEntity");
+
+        assertThat(List.of(ID, KEY, "intProp", "moneyProp", "dateProp", "hyperlinkProp", "colourProp", "model"))
+                .allSatisfy(name -> assertThat(getProperty(entityType, name).get("filterable"))
+                        .as("Property [%s].", name)
+                        .isEqualTo(true));
+    }
+
+    @Test
+    public void a_collectional_property_is_not_filterable() {
+        final var activeRoles = getProperty(getType(queryAllTypes(), "User"), "activeRoles");
+
+        assertEquals(true, activeRoles.get("collectional"));
+        assertEquals(false, activeRoles.get("filterable"));
+    }
+
+    @Test
+    public void crit_only_properties_are_not_filterable() {
+        final var allTypes = queryAllTypes();
+
+        assertEquals(false, getProperty(getType(allTypes, "TgWebApiEntitySyntheticSingle"), "date").get("filterable"));
+        assertEquals(false, getProperty(getType(allTypes, "TgWebApiEntitySyntheticMulti"), "datePeriod").get("filterable"));
+    }
+
+    /// A property is described as filterable exactly when it can be named in field `cond` of the condition type of its entity type,
+    /// which is what a client is meant to rely upon when it composes a condition.
+    ///
+    @Test
+    public void filterable_properties_are_exactly_the_fields_of_the_condition_type() {
+        final var inputFields = querySchemaInputFieldsByType();
+        final var queryableTypes = queryAllTypes().stream().filter(ty -> ty.get("rootField") != null).toList();
+
+        assertThat(queryableTypes).isNotEmpty();
+        assertThat(queryableTypes).allSatisfy(typeObject -> {
+            final var name = (String) typeObject.get("name");
+            assertThat(namesOfFilterableProperties(typeObject))
+                    .as("Filterable properties of [%s].", name)
+                    .containsExactlyInAnyOrderElementsOf(inputFields.getOrDefault("%s_Cond_cond".formatted(name), List.of()));
+        });
+    }
+
+    /// A property that cannot be read cannot be used in conditions either, so withholding it removes it from both the description and the condition type.
+    ///
+    @Test
+    public void a_property_that_cannot_be_read_is_neither_described_nor_available_in_conditions() {
+        assertThat(namesOfFilterableProperties(getType(queryAllTypes(), "TgVehicleModel"))).contains("make");
+        assertThat(querySchemaInputFieldsByType().get("TgVehicleModel_Cond_cond")).contains("make");
+
+        removeAccessTo(TgVehicleModel_CanRead_make_Token.class);
+
+        assertThat(queryPropertyNames("TgVehicleModel")).doesNotContain("make");
+        assertThat(querySchemaInputFieldsByType().get("TgVehicleModel_Cond_cond")).doesNotContain("make");
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Agreement with the schema
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -592,9 +652,30 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
         return ((List<Map<String, Object>>) type.get("fields")).stream().map(field -> (String) field.get("name")).toList();
     }
 
+    /// Input field names of every input object type the schema exposes, by type name, through standard GraphQL introspection.
+    ///
+    @SuppressWarnings("unchecked")
+    private Map<String, List<String>> querySchemaInputFieldsByType() {
+        final var result = webApi.execute(input("{__schema{types{name inputFields{name}}}}"));
+        assertNoErrors(result);
+        final var schema = (Map<String, Object>) data(result).get("__schema");
+        return ((List<Map<String, Object>>) schema.get("types")).stream()
+                .filter(ty -> ty.get("inputFields") != null)
+                .collect(toMap(ty -> (String) ty.get("name"),
+                               ty -> ((List<Map<String, Object>>) ty.get("inputFields")).stream().map(field -> (String) field.get("name")).toList()));
+    }
+
     @SuppressWarnings("unchecked")
     private static List<String> namesOfProperties(final Map<String, Object> entityType) {
         return ((List<Map<String, Object>>) entityType.get("properties")).stream().map(prop -> (String) prop.get("name")).toList();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> namesOfFilterableProperties(final Map<String, Object> entityType) {
+        return ((List<Map<String, Object>>) entityType.get("properties")).stream()
+                .filter(prop -> Boolean.TRUE.equals(prop.get("filterable")))
+                .map(prop -> (String) prop.get("name"))
+                .toList();
     }
 
     /// Withdraws `token` from the role of the current user.
