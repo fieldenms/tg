@@ -13,12 +13,9 @@ import ua.com.fielden.platform.test.runners.H2DomainDrivenTestCaseRunner;
 import ua.com.fielden.platform.test.runners.PostgresqlDomainDrivenTestCaseRunner;
 import ua.com.fielden.platform.test.runners.SqlServerDomainDrivenTestCaseRunner;
 
-/**
- * A test runner that selects a test configuration {@link ITestContext} from either {@link H2DomainDrivenTestCaseRunner} or {@link PostgresqlDomainDrivenTestCaseRunner} for running unit test.
- * The criteria for selecting the appropriate test runner is based on runtime settings.
- *
- * @author TG Team
- */
+/// A test runner that selects a test configuration [ITestContext] from either [H2DomainDrivenTestCaseRunner] or [PostgresqlDomainDrivenTestCaseRunner] for running unit test.
+/// The criteria for selecting the appropriate test runner is based on runtime settings.
+///
 public class H2OrPostgreSqlOrSqlServerContextSelector extends AbstractDomainDrivenTestCaseRunner {
 
     // Note: This assumes PostgreSQL is listening on port 5432 (the default).
@@ -32,6 +29,18 @@ public class H2OrPostgreSqlOrSqlServerContextSelector extends AbstractDomainDriv
 
     public H2OrPostgreSqlOrSqlServerContextSelector(final Class<?> klass, final Class<? extends DbCreator> dbCreatorType, final Optional<IDomainDrivenTestCaseConfiguration> testConfig) throws Exception {
         super(klass, dbCreatorType, testConfig);
+    }
+
+    /// Indicates whether system property `databaseUri` specifies a PostgreSQL test database.
+    ///
+    public static boolean isPostgreSql() {
+        return POSTGRESQL;
+    }
+
+    /// Indicates whether system property `databaseUri` specifies an SQL Server test database.
+    ///
+    public static boolean isSqlServer() {
+        return SQL_SERVER;
     }
 
     @Override
