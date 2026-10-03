@@ -28,6 +28,8 @@
         <javapoet.version>1.13.0</javapoet.version>
         <antlr.version>4.13.2</antlr.version>
         <vavr.version>1.0.1</vavr.version>
+        <mcp-core.version>1.1.1</mcp-core.version>
+        <mcp-json-jackson2.version>1.1.1</mcp-json-jackson2.version>
     </properties>
 
     <modules>
@@ -42,6 +44,7 @@
         <module>platform-web-ui</module>
         <module>platform-benchmark</module>
         <module>platform-eql-grammar</module>
+        <module>platform-mcp</module>
     </modules>
 
     <dependencies>

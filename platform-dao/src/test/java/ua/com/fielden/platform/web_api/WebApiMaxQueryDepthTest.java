@@ -6,12 +6,12 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
-import ua.com.fielden.platform.utils.IDates;
 
 import java.util.Map;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_PAGE_CAPACITY;
 import static ua.com.fielden.platform.web_api.WebApiUtils.errors;
 import static ua.com.fielden.platform.web_api.WebApiUtils.input;
 
@@ -32,11 +32,14 @@ public class WebApiMaxQueryDepthTest extends AbstractDaoTestCase {
     private IWebApi webApiWithMaxQueryDepth(final int maxQueryDepth) {
         return new GraphQLService(
             maxQueryDepth,
+            DEFAULT_MAX_PAGE_CAPACITY,
             getInstance(IApplicationDomainProvider.class),
             getInstance(ICompanionObjectFinder.class),
-            getInstance(IDates.class),
             getInstance(IAuthorisationModel.class),
-            getInstance(ISecurityTokenProvider.class));
+            getInstance(ISecurityTokenProvider.class),
+            getInstance(EntityTypeIntrospection.class),
+            getInstance(EntityAggregation.class),
+            getInstance(FluentConditions.class));
     }
 
     @Test

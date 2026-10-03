@@ -58,7 +58,7 @@ public class WebApiMoneyFieldTest extends AbstractDaoTestCase {
     public void money_prop_returns_with_left_null_argument_literal() {
         createMoneyEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key moneyProp(from:null)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {moneyProp: {ge: null}}}){key moneyProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -74,7 +74,7 @@ public class WebApiMoneyFieldTest extends AbstractDaoTestCase {
     public void money_prop_returns_with_right_null_argument_literal() {
         createMoneyEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key moneyProp(to:null)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {moneyProp: {le: null}}}){key moneyProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -90,7 +90,7 @@ public class WebApiMoneyFieldTest extends AbstractDaoTestCase {
     public void money_prop_returns_with_left_non_empty_argument_literal() {
         createMoneyEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key moneyProp(from:2.5)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {moneyProp: {ge: 2.5}}}){key moneyProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -105,7 +105,7 @@ public class WebApiMoneyFieldTest extends AbstractDaoTestCase {
     public void money_prop_returns_with_right_non_empty_argument_literal() {
         createMoneyEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key moneyProp(to:7.5)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {moneyProp: {le: 7.5}}}){key moneyProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -120,7 +120,7 @@ public class WebApiMoneyFieldTest extends AbstractDaoTestCase {
     public void money_prop_returns_with_left_argument_variable() {
         createMoneyEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Money){tgWebApiEntity{key moneyProp(from:$val)}}"));
+        final Map<String, Object> result = webApi.execute(input("query($val:Money){tgWebApiEntity(where: {cond: {moneyProp: {ge: $val}}}){key moneyProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -136,7 +136,7 @@ public class WebApiMoneyFieldTest extends AbstractDaoTestCase {
     public void money_prop_returns_with_right_argument_variable() {
         createMoneyEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Money){tgWebApiEntity{key moneyProp(to:$val)}}"));
+        final Map<String, Object> result = webApi.execute(input("query($val:Money){tgWebApiEntity(where: {cond: {moneyProp: {le: $val}}}){key moneyProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -152,7 +152,7 @@ public class WebApiMoneyFieldTest extends AbstractDaoTestCase {
     public void money_prop_returns_with_left_null_argument_variable() {
         createMoneyEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Money){tgWebApiEntity{key moneyProp(from:$val)}}", linkedMapOf(t2("val", null))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Money){tgWebApiEntity(where: {cond: {moneyProp: {ge: $val}}}){key moneyProp}}", linkedMapOf(t2("val", null))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -168,7 +168,7 @@ public class WebApiMoneyFieldTest extends AbstractDaoTestCase {
     public void money_prop_returns_with_right_null_argument_variable() {
         createMoneyEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Money){tgWebApiEntity{key moneyProp(to:$val)}}", linkedMapOf(t2("val", null))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Money){tgWebApiEntity(where: {cond: {moneyProp: {le: $val}}}){key moneyProp}}", linkedMapOf(t2("val", null))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -184,7 +184,7 @@ public class WebApiMoneyFieldTest extends AbstractDaoTestCase {
     public void money_prop_returns_with_left_non_empty_argument_variable() {
         createMoneyEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Money){tgWebApiEntity{key moneyProp(from:$val)}}", linkedMapOf(t2("val", 2.5))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Money){tgWebApiEntity(where: {cond: {moneyProp: {ge: $val}}}){key moneyProp}}", linkedMapOf(t2("val", 2.5))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -199,7 +199,7 @@ public class WebApiMoneyFieldTest extends AbstractDaoTestCase {
     public void money_prop_returns_with_right_non_empty_argument_variable() {
         createMoneyEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Money){tgWebApiEntity{key moneyProp(to:$val)}}", linkedMapOf(t2("val", 7.5))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Money){tgWebApiEntity(where: {cond: {moneyProp: {le: $val}}}){key moneyProp}}", linkedMapOf(t2("val", 7.5))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
