@@ -33,9 +33,14 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 ///   - In case of an exception, which could occur during method invocation, the transaction is rolled back if it is active and the exception is propagated up.
 ///
 /// The last item ensures that any exception at any level of method invocation would ensure transaction rollback.
-/// If transaction is not active at the time of rollback then that means it has already been rolled back.
+/// If transaction is not active at the time of rollback then that means it has already been rolled back, or it has failed to begin.
 /// Please note that transaction can be started outside of this interceptor, which means it will not be committed within it, and the transaction originator is responsible for commit.
 /// At the same time, if an exception occurs then transaction will be rolled back.
+///
+/// A failure to *begin* a transaction closes the session before the failure propagates.
+/// Such a failure typically indicates a broken connection, for example, after the database server has reset it.
+/// Current sessions are bound to threads, and a transaction that failed to begin is inactive, so the session would otherwise remain bound to the thread,
+/// holding on to the broken connection and failing every subsequent unit of work on that thread.
 ///
 /// A failure to *commit* is reported rather than swallowed.
 /// Committing is the point at which a unit of work becomes durable, so a failure there means nothing was persisted, however successfully the method itself ran.
@@ -133,7 +138,15 @@ public class SessionInterceptor implements MethodInterceptor {
         final boolean shouldCommit = !tr.isActive();
         if (!tr.isActive()) {
             LOGGER.debug(() -> "[%s] Starting new DB transaction".formatted(user));
-            tr.begin();
+            try {
+                tr.begin();
+            } catch (final Throwable ex) {
+                // The transaction remains inactive, so the error handling of the invocation would neither roll it back nor close the session.
+                // An open session stays bound to the current thread, and holds on to the connection that failed to begin the transaction.
+                // Closing it here ensures that the next unit of work on this thread obtains a new session and a new connection.
+                closeSession(session, user);
+                throw ex;
+            }
             session.setHibernateFlushMode(FlushMode.COMMIT);
             LOGGER.debug(() -> "[%s] Started new DB transaction".formatted(user));
             
