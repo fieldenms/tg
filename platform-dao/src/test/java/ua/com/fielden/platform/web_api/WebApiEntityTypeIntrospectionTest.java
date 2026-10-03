@@ -56,6 +56,18 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void a_boolean_property_is_required() {
+        final var booleanProperties = queryAllTypes().stream()
+                .flatMap(ty -> properties(ty).stream())
+                .filter(prop -> "Boolean".equals(prop.get("type")))
+                .toList();
+
+        assertFalse("The test domain is expected to contain boolean properties.", booleanProperties.isEmpty());
+        booleanProperties.forEach(prop -> assertEquals("Boolean property [%s] must be required.".formatted(prop.get("name")),
+                                                       true, prop.get("required")));
+    }
+
+    @Test
     public void a_collectional_property_is_identified_and_accepts_no_arguments() {
         final var activeRoles = getProperty(getType(queryAllTypes(), "User"), "activeRoles");
 
@@ -75,6 +87,20 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
         assertFalse("Union types are reachable as property types and must be described.", unions.isEmpty());
         unions.forEach(union -> {
             assertNull("Union [%s] must not be queryable, so it has no root field.".formatted(union.get("name")), union.get("rootField"));
+        });
+    }
+
+    @Test
+    public void a_type_without_a_key_reports_neither_key_members_nor_a_separator() {
+        final var noKeyTypes = queryAllTypes().stream()
+                .filter(ty -> "NO_KEY".equals(ty.get("keyType")))
+                .toList();
+
+        assertFalse("The test domain is expected to contain types without a key.", noKeyTypes.isEmpty());
+        noKeyTypes.forEach(entityType -> {
+            final var name = (String) entityType.get("name");
+            assertNull("Type [%s] without a key must not report key members.".formatted(name), entityType.get("keyMembers"));
+            assertNull("Type [%s] without a key must not report a separator.".formatted(name), entityType.get("keySeparator"));
         });
     }
 
@@ -105,6 +131,11 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
         final var result = webApi.execute(input(ALL_FIELDS));
         assertTrue(errors(result).toString(), errors(result).isEmpty());
         return (List<Map<String, Object>>) data(result).get(EntityTypeIntrospection.ENTITY_TYPE_ROOT_FIELD_NAME);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Map<String, Object>> properties(final Map<String, Object> entityType) {
+        return (List<Map<String, Object>>) entityType.get("properties");
     }
 
     private static Map<String, Object> getType(final List<Map<String, Object>> types, final String name) {

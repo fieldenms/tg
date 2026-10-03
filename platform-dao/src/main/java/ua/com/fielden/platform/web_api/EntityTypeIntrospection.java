@@ -343,7 +343,7 @@ public class EntityTypeIntrospection {
                 titleAndDesc.getValue(),
                 entityKindOf(entityType),
                 keyKind,
-                keyKind == null ? null : Finder.getKeyMembers(entityType).stream().map(Field::getName).toList(),
+                keyKind == null || keyKind == KeyKind.NO_KEY ? null : Finder.getKeyMembers(entityType).stream().map(Field::getName).toList(),
                 keyKind == KeyKind.COMPOSITE ? getKeyMemberSeparator((Class<? extends AbstractEntity<DynamicEntityKey>>) entityType) : null,
                 queryable && hasDescProperty(entityType),
                 entityType);
@@ -398,7 +398,7 @@ public class EntityTypeIntrospection {
                                         collectional,
                                         // A collectional property accepts no arguments; see `determineFieldType`.
                                         collectional ? List.of() : arguments.stream().map(GraphQLArgument::getName).toList(),
-                                        pm.is(REQUIRED));
+                                        isBoolean(valueType) || pm.is(REQUIRED));
                             }));
                 });
     }
