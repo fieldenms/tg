@@ -84,63 +84,19 @@ Neither kind is restated in the fetchers; see [Visibility Rules and Where They A
 
 Where the two legitimately diverge, it is because a schema and a catalogue are under different obligations; see [Authorisation](#authorisation), which records each such divergence.
 
-### `_EntityType`
+### Structure
 
-| Field | Description |
-|-------|-------------|
-| `name` | GraphQL type name (e.g., `WorkOrder`) |
-| `rootField` | GraphQL root field name (e.g., `workOrder`), or `null` if not root-queryable. A type with no root field is reachable only as a property type |
-| `title` | Human-readable entity title |
-| `desc` | Entity description |
-| `kind` | `PERSISTENT`, `SYNTHETIC` or `UNION` |
-| `keyType` | `SIMPLE`, `COMPOSITE` or `NO_KEY` |
-| `keyMembers` | Names of the key members if the key is composite; `["key"]` if the key is simple; `null` otherwise |
-| `keySeparator` | Separator used to concatenate composite key members, or `null` for other key shapes |
-| `hasDesc` | Whether this type declares a description -- whether property `desc` exists |
-| `properties` | List of properties, see [`_Property`](#_property) |
+The fields of `_EntityType` and `_Property`, and how a client uses them, are described in the [query guide](../src/main/resources/mcp/graphql-query-guide.md#domain-discovery), which is the reference read by MCP clients.
+What follows concerns how the meta-schema derives what it reports.
 
-`keyType` and `keyMembers` exist because there is no rule to generalise from.
-`key` is selectable on every type whose key has a shape at all, but what it yields differs: for a simple key it is the key itself, typed accordingly, whereas for a composite key it is a string -- the members concatenated with `keySeparator`.
-For example, if `WorkOrder` has a composite key whose single member is `number`, then both `key` and `number` may be selected, and only `number` is typed, and constrained in `where`, as a number.
-If `Buyer` has a key member `person`, itself an entity reference, then only through `keyMembers` is that reachable as an entity.
-A type that declares no key does not declare `key` either, and selecting it is a validation error.
+`keyType` and `keyMembers` exist because the shape of a key cannot be inferred from the fields of a type: `key` is a field of every type that has a key, but it yields the key itself for a simple key and a concatenated string for a composite one.
 
-`keySeparator` is required to construct a condition on `key` of a composite-key type.
-Such a condition matches against the key members concatenated with that type's separator, which is also what `key` yields when selected.
+`filterable` and the fields of a condition type are both derived from `FluentConditions.isFilterable`, which excludes collectional and crit-only properties.
+A property is therefore reported as filterable exactly when the condition type of its owner has a field for it.
 
-Union types are included, with `rootField` set to `null`.
-They are reachable as property types but are not root fields, so a model needs to distinguish "query this as a root field" from "this type exists but cannot be queried directly", which the presence of a root field answers.
-For a union, `properties` are its members.
+For a collectional property, `type` reports the type of its elements, because the GraphQL field of such a property is typed by its element type.
 
-### `_Property`
-
-| Field | Description |
-|-------|-------------|
-| `name` | Property name as used in GraphQL |
-| `title` | Human-readable property title |
-| `desc` | Property description |
-| `type` | Name of the property's type: a value type, or an entity type name matching `_EntityType.name`. For a collectional property, the type of its elements |
-| `typeKind` | `VALUE`, `ENTITY` or `UNION` |
-| `collectional` | Whether the property is collectional |
-| `arguments` | GraphQL arguments accepted by this property field, e.g., `["order"]` |
-| `required` | Whether the property is always assigned |
-| `filterable` | Whether the property can be used in a condition |
-
-`typeKind` records one fact that cannot be derived from `type` alone.
-The set of value types is closed and documented in the query guide, so a value can be recognised from its type name, but an entity type cannot be distinguished from a union type that way.
-The distinction matters at the point of use: a union exposes neither `key`, `desc` nor `id`, and accepts no arguments, so it must be traversed through a member, both in a selection and in a condition.
-Without `typeKind`, selecting `key` on an entity-typed property is a guess.
-
-`filterable` reports whether a property can be constrained in `where`, which is the case exactly when the condition type of its owner has a field for it.
-`filterable` and the fields of the condition type are both derived from `FluentConditions.isFilterable`, which excludes collectional and crit-only properties.
-A condition on a property that is not filterable is a validation error.
-
-For a collectional property, `type` reports the type of its elements, because the type of such a property is determined from its element type when the corresponding GraphQL field is built.
-That is also the type to query as a root field when filtering by the contents of a collection.
-
-`arguments` is already determined by `FieldSchema` when building field definitions and is surfaced rather than recomputed.
-
-`required` supports reasoning about missing values: every atomic condition other than `isNull` excludes entities where the property is unassigned, even under `not`, and `required` identifies the properties for which that cannot occur.
+`arguments` is determined by `FieldSchema` when field definitions are built, and is read from those definitions.
 
 ### Excluded metadata
 
