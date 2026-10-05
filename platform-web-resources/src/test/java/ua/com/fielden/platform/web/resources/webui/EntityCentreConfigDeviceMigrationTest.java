@@ -1,42 +1,21 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import com.google.inject.Inject;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.menu.sample.MiUserRole;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
-import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
-import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
-import ua.com.fielden.platform.web.resources.test.AbstractWebResourceWithDaoTestCase;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -50,19 +29,12 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
-import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.loadConfigByUuid;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.loadLinkConfig;
 
 /// Tests the scripts of issue #2795.
 /// They migrate MOBILE Entity Centre configurations into the namespace shared by all devices.
@@ -87,23 +59,13 @@ import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.loadL
 /// The scripts are dialect-specific.
 /// This test therefore runs only against PostgreSQL or SQL Server, as selected by `-DdatabaseUri.prefix`.
 ///
-public class EntityCentreConfigDeviceMigrationTest extends AbstractWebResourceWithDaoTestCase {
+public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreConfigTestCase {
 
-    private static final Class<MiUserRole> MI_TYPE = MiUserRole.class;
     private static final String LEGACY_MOBILE_PREFIX = "MOBILE";
 
     /// SQL Server batches are separated by `GO`, which is a client-side command rather than SQL.
     ///
     private static final Pattern GO = Pattern.compile("^\\s*GO\\s*$", MULTILINE);
-
-    private static final fetch<EntityCentreConfig> CONFIG_FETCH = FETCH_CONFIG_AND_INSTRUMENT
-        .with("preferred").with("preferredOnMobile").with("configUuid").with("configBody")
-        .with("runAutomatically").with("dashboardable");
-
-    @Inject private ICompanionObjectFinder coFinder;
-    @Inject private IWebUiConfig webUiConfig;
-    @Inject private ICriteriaGenerator critGenerator;
-    @Inject private ICentreConfigSharingModel sharingModel;
 
     private User base;
     private User user;
@@ -133,20 +95,14 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractWebResourceWi
             "The migration scripts are dialect-specific, and are applied to PostgreSQL and SQL Server only.",
             dbVersion() == POSTGRESQL || dbVersion() == MSSQL
         );
-        final IUser coUser = coFinder.find(User.class);
-        base = coUser.findUser("BASE");
-        user = coUser.findUser("USER");
-        sharer = coUser.findUser("SHARER");
-        loner = coUser.findUser("LONER");
+        base = findUser("BASE");
+        user = findUser("USER");
+        sharer = findUser("SHARER");
+        loner = findUser("LONER");
 
         createConfigurationsAsBeforeTheMerge();
         rowsBefore = rows();
         applyMigrationScript();
-    }
-
-    @After
-    public void forgetTheDevice() {
-        getInstance(IDeviceProvider.class).setDeviceProfile(null);
     }
 
     @Test
@@ -307,76 +263,6 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractWebResourceWi
             .setPreferredOnMobile(false);
     }
 
-    /// Opens the `saveAsName`d configuration of `owner`, as loading the centre in the application does.
-    /// This initialises its FRESH, SAVED and PREVIOUSLY_RUN centres, where they are missing.
-    ///
-    private EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> open(
-        final User owner,
-        final Optional<String> saveAsName
-    ) {
-        final var freshCentre = updateCentre(owner, MI_TYPE, FRESH_CENTRE_NAME, saveAsName, webUiConfig, coFinder);
-        updateCentre(owner, MI_TYPE, SAVED_CENTRE_NAME, saveAsName, webUiConfig, coFinder);
-        updateCentre(owner, MI_TYPE, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, webUiConfig, coFinder);
-        return createCriteriaValidationPrototype(
-            MI_TYPE,
-            saveAsName,
-            freshCentre,
-            coFinder,
-            critGenerator,
-            0L,
-            owner,
-            webUiConfig,
-            sharingModel
-        );
-    }
-
-    /// Saves the configuration loaded into `criteria` as a new one named `saveAsName`, exactly as `Save As` does.
-    /// The modifications holder is the one the client sends for an unchanged criteria form.
-    ///
-    private void saveAs(final EnhancedCentreEntityQueryCriteria<?, ?> criteria, final String saveAsName) {
-        final var modifHolder = new HashMap<String, Object>(Map.of(VERSION, 0, "@@metaValues", Map.of()));
-        criteria.setCentreContextHolder(new_(CentreContextHolder.class).setModifHolder(modifHolder));
-        criteria.saveCentre(saveAsName, "%s description".formatted(saveAsName), false, null);
-    }
-
-    private static Consumer<ICentreDomainTreeManagerAndEnhancer> withPageCapacity(final int pageCapacity) {
-        return centre -> centre.getSecondTick().setPageCapacity(pageCapacity);
-    }
-
-    /// Opens the configuration with `configUuid` for `owner`, as opening a centre URI with that uuid does.
-    /// This is also how a configuration selected in the Load dialog gets opened.
-    ///
-    private void openByUuid(final User owner, final String configUuid) {
-        open(owner, loadConfigByUuid(configUuid, owner, MI_TYPE, webUiConfig, coFinder, sharingModel)._1);
-    }
-
-    /// Opens a centre URI with criteria parameters, which loads the link configuration of `owner`.
-    /// Returns the `configUuid` of the link configuration.
-    ///
-    private String openLink(final User owner) {
-        final var saveAsNameAndConfigUuid = loadLinkConfig(owner, MI_TYPE, webUiConfig, coFinder);
-        open(owner, saveAsNameAndConfigUuid._1);
-        return saveAsNameAndConfigUuid._2.orElseThrow();
-    }
-
-    private String uuidOf(final User owner, final String saveAsName) {
-        return config(owner, FRESH_CENTRE_NAME, of(saveAsName)).getConfigUuid();
-    }
-
-    /// Creates a base user if `basedOnUser` is `null`, and a user derived from `basedOnUser` otherwise.
-    ///
-    private User newUser(final String name, final User basedOnUser) {
-        return new_(User.class, name)
-            .setBase(basedOnUser == null)
-            .setBasedOnUser(basedOnUser)
-            .setEmail(name + "@unit-test.software")
-            .setActive(true);
-    }
-
-    private void on(final DeviceProfile device) {
-        getInstance(IDeviceProvider.class).setDeviceProfile(device);
-    }
-
     //////////////////////////////////// Script ////////////////////////////////////
 
     private DbVersion dbVersion() {
@@ -418,60 +304,8 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractWebResourceWi
 
     //////////////////////////////////// Inspection ////////////////////////////////////
 
-    private Optional<String> preferred(final User owner) {
-        return retrievePreferredConfigName(owner, MI_TYPE, coFinder, webUiConfig);
-    }
-
-    private Map<String, LoadableCentreConfig> loadable(final User owner) {
-        return loadableConfigurations(owner, MI_TYPE, coFinder, sharingModel).apply(empty()).stream()
-            .collect(toMap(LoadableCentreConfig::getKey, identity()));
-    }
-
-    private static void assertOwn(final Map<String, LoadableCentreConfig> configs, final String saveAsName) {
-        final var config = configs.get(saveAsName);
-        assertNotNull("[%s] must be loadable.".formatted(saveAsName), config);
-        assertFalse("[%s] must be an own configuration.".formatted(saveAsName), config.isInherited());
-        assertNull("[%s] must not be reported as orphaned.".formatted(saveAsName), config.getOrphanedSharingMessage());
-    }
-
-    private static void assertInheritedFromBase(final Map<String, LoadableCentreConfig> configs, final String saveAsName) {
-        final var config = configs.get(saveAsName);
-        assertNotNull("[%s] must be loadable.".formatted(saveAsName), config);
-        assertTrue("[%s] must be inherited.".formatted(saveAsName), config.isInherited());
-        assertTrue("[%s] must be inherited from base.".formatted(saveAsName), config.isBase());
-    }
-
-    private static void assertInheritedFromShared(
-        final Map<String, LoadableCentreConfig> configs,
-        final String saveAsName,
-        final User sharer
-    ) {
-        final var config = configs.get(saveAsName);
-        assertNotNull("[%s] must be loadable.".formatted(saveAsName), config);
-        assertTrue("[%s] must be inherited.".formatted(saveAsName), config.isInherited());
-        assertTrue("[%s] must be inherited from shared.".formatted(saveAsName), config.isShared());
-        assertEquals(sharer, config.getSharedBy());
-    }
-
-    private void assertOpensUnchanged(final User owner, final String saveAsName) {
-        final var freshCentre = updateCentre(owner, MI_TYPE, FRESH_CENTRE_NAME, of(saveAsName), webUiConfig, coFinder);
-        final var savedCentre = updateCentre(owner, MI_TYPE, SAVED_CENTRE_NAME, of(saveAsName), webUiConfig, coFinder);
-        assertFalse("[%s] must open unchanged.".formatted(saveAsName), isFreshCentreChanged(freshCentre, savedCentre));
-    }
-
     private String body(final User owner, final String surrogateName, final String saveAsName) {
         return HexFormat.of().formatHex(config(owner, surrogateName, of(saveAsName)).getConfigBody());
-    }
-
-    /// Finds the `surrogateName` centre of the `saveAsName`d configuration of `owner`.
-    ///
-    private EntityCentreConfig config(final User owner, final String surrogateName, final Optional<String> saveAsName) {
-        return find(owner, NAME_OF.apply(surrogateName).apply(saveAsName));
-    }
-
-    private EntityCentreConfig find(final User owner, final String title) {
-        return findConfigOpt(MI_TYPE, owner, title, coFinder, CONFIG_FETCH)
-            .orElseThrow(() -> new IllegalStateException("Configuration [%s] of [%s] does not exist.".formatted(title, owner)));
     }
 
     /// The title of the `surrogateName` centre of the `saveAsName`d configuration on a phone.
@@ -496,11 +330,6 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractWebResourceWi
         return rowsBefore.stream()
             .filter(row -> row.owner().equals(owner.getId()) && row.title().equals(title))
             .findFirst();
-    }
-
-    private List<EntityCentreConfig> allConfigs() {
-        final EntityCentreConfigCo co = coFinder.find(EntityCentreConfig.class);
-        return co.getAllEntities(from(select(EntityCentreConfig.class).model()).with(CONFIG_FETCH).model());
     }
 
     private List<Row> rows() {
