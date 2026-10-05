@@ -44,7 +44,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Comparator.comparing;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.UUID.randomUUID;
 import static java.util.function.Function.identity;
 import static java.util.regex.Pattern.MULTILINE;
 import static java.util.stream.Collectors.toMap;
@@ -59,10 +58,11 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.loadConfigByUuid;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.loadLinkConfig;
 
 /// Tests the scripts of issue #2795.
 /// They migrate MOBILE Entity Centre configurations into the namespace shared by all devices.
@@ -268,8 +268,8 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractWebResourceWi
 
             final var userDefault = open(user, empty());
             userDefault.adjustCentre(withPageCapacity(25));
-            open(user, of("Base Config"));
-            loadSharedForTheFirstTime(user, sharer, "Shared Config");
+            openByUuid(user, uuidOf(base, "Base Config"));
+            openByUuid(user, uuidOf(sharer, "Shared Config"));
             linkUuid = openLink(user);
             saveAs(userDefault, "Clash");
             // Save As makes a configuration preferred, so the last one saved is the user's preferred one on a phone.
@@ -284,7 +284,7 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractWebResourceWi
         on(DESKTOP);
         saveAs(open(base, empty()), "Base Config");
         final var userDefault = open(user, empty());
-        open(user, of("Base Config"));
+        openByUuid(user, uuidOf(base, "Base Config"));
         saveAs(userDefault, "Clash (mobile)");
         saveAs(userDefault, "Desk");
         open(loner, empty());
@@ -343,48 +343,24 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractWebResourceWi
         return centre -> centre.getSecondTick().setPageCapacity(pageCapacity);
     }
 
-    /// Loads the `saveAsName`d configuration of `creator` by its uuid for the first time.
-    /// This is what `CriteriaResource.firstTimeLoadingFrom` does.
-    /// To be replaced by the method extracted from it.
+    /// Opens the configuration with `configUuid` for `owner`, as opening a centre URI with that uuid does.
+    /// This is also how a configuration selected in the Load dialog gets opened.
     ///
-    private void loadSharedForTheFirstTime(final User owner, final User creator, final String saveAsName) {
-        final var configUuid = config(creator, FRESH_CENTRE_NAME, of(saveAsName)).getConfigUuid();
-        final var upstreamConfig = findConfigOptByUuid(configUuid, MI_TYPE, SAVED_CENTRE_NAME, coFinder).orElseThrow();
-        final var freshConfigForCreator = findConfigOptByUuid(configUuid, creator, MI_TYPE, FRESH_CENTRE_NAME, coFinder).orElseThrow();
-        final var actualSaveAsName = of(obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME));
-        saveNewEntityCentreManager(
-            upstreamConfig.getConfigBody(),
-            MI_TYPE,
-            owner,
-            NAME_OF.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName),
-            freshConfigForCreator.getDesc(),
-            coFinder,
-            ecc -> ecc.setConfigUuid(configUuid).setRunAutomatically(freshConfigForCreator.isRunAutomatically())
-        );
-        saveNewEntityCentreManager(
-            upstreamConfig.getConfigBody(),
-            MI_TYPE,
-            owner,
-            NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName),
-            null,
-            coFinder,
-            ecc -> ecc.setRunAutomatically(false)
-        );
+    private void openByUuid(final User owner, final String configUuid) {
+        open(owner, loadConfigByUuid(configUuid, owner, MI_TYPE, webUiConfig, coFinder, sharingModel)._1);
     }
 
-    /// Opens a centre link with criteria parameters, as `CriteriaResource.prepareLinkConfigInfrastructure` does.
-    /// To be replaced by the method extracted from it.
-    /// Returns the `configUuid` given to the link configuration.
+    /// Opens a centre URI with criteria parameters, which loads the link configuration of `owner`.
+    /// Returns the `configUuid` of the link configuration.
     ///
     private String openLink(final User owner) {
-        final var link = of(LINK_CONFIG_TITLE);
-        updateCentre(owner, MI_TYPE, FRESH_CENTRE_NAME, link, webUiConfig, coFinder);
-        updateCentre(owner, MI_TYPE, SAVED_CENTRE_NAME, link, webUiConfig, coFinder);
-        final var configUuid = randomUUID().toString();
-        Stream.of(FRESH_CENTRE_NAME, SAVED_CENTRE_NAME).forEach(surrogateName ->
-            save(config(owner, surrogateName, link).setConfigUuid(configUuid))
-        );
-        return configUuid;
+        final var saveAsNameAndConfigUuid = loadLinkConfig(owner, MI_TYPE, webUiConfig, coFinder);
+        open(owner, saveAsNameAndConfigUuid._1);
+        return saveAsNameAndConfigUuid._2.orElseThrow();
+    }
+
+    private String uuidOf(final User owner, final String saveAsName) {
+        return config(owner, FRESH_CENTRE_NAME, of(saveAsName)).getConfigUuid();
     }
 
     /// Creates a base user if `basedOnUser` is `null`, and a user derived from `basedOnUser` otherwise.

@@ -192,88 +192,23 @@ public class CriteriaResource extends AbstractWebResource {
             final T2<Boolean, Optional<String>> wasLoadedPreviouslyAndConfigUuid = wasLoadedPreviouslyAndConfigUuid(getRequest());
             final boolean wasLoadedPreviously = wasLoadedPreviouslyAndConfigUuid._1;
             final Optional<String> configUuid = wasLoadedPreviouslyAndConfigUuid._2;
-            final Optional<String> actualSaveAsName;
-            final Optional<String> resolvedConfigUuid;
+            final T2<Optional<String>, Optional<String>> saveAsNameAndConfigUuid;
             if (!getQuery().isEmpty()) {
-                // start loading of link configuration with parameters;
-                // create two empty FRESH / SAVED centres if not yet created;
-                // return saveAsName and generated configUuid for further processing
-                final T2<Optional<String>, Optional<String>> saveAsNameAndConfigUuid = prepareLinkConfigInfrastructure();
-                actualSaveAsName = saveAsNameAndConfigUuid._1;
-                resolvedConfigUuid = saveAsNameAndConfigUuid._2;
-                // empty link config is taken from SAVED surrogate centre (which is always empty);
-                final var emptyCentre = updateCentre(
-                    user,
-                    miType,
-                    SAVED_CENTRE_NAME,
-                    actualSaveAsName,
-                    webUiConfig,
-                    companionFinder
-                );
-                // clear current 'link' surrogate FRESH centre -- this is to make it empty before applying new selection criteria parameters (client-side action after this request's response will be delivered);
-                commitCentreWithoutConflicts(
-                    user,
-                    miType,
-                    FRESH_CENTRE_NAME,
-                    actualSaveAsName,
-                    emptyCentre,
-                    null /* newDesc */,
-                    webUiConfig,
-                    companionFinder
-                );
+                saveAsNameAndConfigUuid = loadLinkConfig(user, miType, webUiConfig, companionFinder);
             } else if (configUuid.isPresent()) {
-                // start loading of configuration defined by concrete uuid;
-                // we look only through [link, own save-as, inherited from base, inherited from shared] set of configurations;
-                // default configurations are excluded in the lookup;
-                // only FRESH kind are looked for;
-                final var freshConfigOpt = findConfigOptByUuid(
-                    configUuid.get(),
+                saveAsNameAndConfigUuid = loadConfigByUuid(configUuid.get(), user, miType, webUiConfig, companionFinder, sharingModel);
+            } else {
+                saveAsNameAndConfigUuid = loadPreferredConfig(
+                    wasLoadedPreviously,
                     user,
                     miType,
-                    FRESH_CENTRE_NAME,
-                    companionFinder
+                    webUiConfig,
+                    companionFinder,
+                    sharingModel
                 );
-                final T2<Optional<String>, Boolean> actualSaveAsNameAndSharedIndicator;
-                if (freshConfigOpt.isPresent()) {
-                    // for current user we already have FRESH configuration with uuid loaded;
-                    final var preliminarySaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME));
-                    // updating is required from upstream configuration;
-                    if (!LINK_CONFIG_TITLE.equals(preliminarySaveAsName.get())) { // (but not for link configuration);
-                        actualSaveAsNameAndSharedIndicator = updateFromUpstream(configUuid.get(), preliminarySaveAsName);
-                    } else {
-                        actualSaveAsNameAndSharedIndicator = t2(preliminarySaveAsName, false);
-                    }
-                } else {
-                    // if there is no FRESH configuration then there are no [link, own save-as] configuration with the specified uuid;
-                    // however there can exist [base, shared] config for other user with the specified uuid;
-                    actualSaveAsNameAndSharedIndicator = firstTimeLoadingFrom(validateUuidAndGetUpstreamConfig(configUuid.get()).orElseThrow(Result::asRuntime));
-                }
-                actualSaveAsName = actualSaveAsNameAndSharedIndicator._1;
-                final boolean isInheritedFromShared = actualSaveAsNameAndSharedIndicator._2;
-                // configuration being loaded need to become preferred
-                if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get()) && !isInheritedFromShared) {
-                    makePreferred(user, miType, actualSaveAsName, companionFinder, webUiConfig);
-                }
-                resolvedConfigUuid = configUuid;
-            } else {
-                if (!wasLoadedPreviously) { // client-driven first time loading of centre's selection criteria
-                    // preferred configuration should be loaded
-                    final var preliminarySaveAsName = retrievePreferredConfigName(user, miType, companionFinder, webUiConfig);
-                    resolvedConfigUuid = updateCentreConfigUuid(user, miType, preliminarySaveAsName, companionFinder);
-                    if (resolvedConfigUuid.isPresent()) { // preferred config can be inherited from base / shared (link configs can not be preferred, no need to check it here)
-                        actualSaveAsName = updateFromUpstream(resolvedConfigUuid.get(), preliminarySaveAsName)._1; // it needs updating from upstream -- only for the configs that has configUuid aka non-default
-                    } else {
-                        actualSaveAsName = preliminarySaveAsName;
-                    }
-                } else {
-                    actualSaveAsName = empty(); // in case where first time loading has been occurred earlier we still prefer configuration specified by absence of uuid: default
-                    // Most likely a save-as configuration has just been left, so the preferred config needs updating.
-                    // Otherwise, the user may have gone to another centre and back from a loaded default config.
-                    // In that case, this call makes the default config preferred again.
-                    makePreferred(user, miType, actualSaveAsName, companionFinder, webUiConfig);
-                    resolvedConfigUuid = empty();
-                }
             }
+            final var actualSaveAsName = saveAsNameAndConfigUuid._1;
+            final var resolvedConfigUuid = saveAsNameAndConfigUuid._2;
             final var updatedFreshCentre = updateCentre(
                 user,
                 miType,
@@ -299,9 +234,178 @@ public class CriteriaResource extends AbstractWebResource {
         }, restUtil);
     }
 
+    /// Loads the link configuration of `user`, as opening a centre URI with criteria parameters does.
+    ///
+    /// Its FRESH and SAVED centres are created, if not yet created.
+    /// FRESH is cleared, so that the parameters are applied to an empty configuration on the client.
+    ///
+    /// Returns a pair containing the resulting `saveAsName` and `configUuid`.
+    ///
+    static T2<Optional<String>, Optional<String>> loadLinkConfig(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder
+    ) {
+        // start loading of link configuration with parameters;
+        // create two empty FRESH / SAVED centres if not yet created;
+        // return saveAsName and generated configUuid for further processing
+        final var saveAsNameAndConfigUuid = prepareLinkConfigInfrastructure(user, miType, webUiConfig, companionFinder);
+        final var actualSaveAsName = saveAsNameAndConfigUuid._1;
+        // empty link config is taken from SAVED surrogate centre (which is always empty);
+        final var emptyCentre = updateCentre(
+            user,
+            miType,
+            SAVED_CENTRE_NAME,
+            actualSaveAsName,
+            webUiConfig,
+            companionFinder
+        );
+        // Clear current 'link' surrogate FRESH centre.
+        // This makes it empty before the new selection criteria parameters are applied.
+        // They are applied on the client, after the response to this request is delivered.
+        commitCentreWithoutConflicts(
+            user,
+            miType,
+            FRESH_CENTRE_NAME,
+            actualSaveAsName,
+            emptyCentre,
+            null /* newDesc */,
+            webUiConfig,
+            companionFinder
+        );
+        return saveAsNameAndConfigUuid;
+    }
+
+    /// Loads the configuration of `user` with `configUuid`, as opening a centre URI with that uuid does.
+    ///
+    /// Link, own save-as, inherited from base and inherited from shared configurations are looked through.
+    /// Default configurations have no uuid, so they are never found.
+    /// A configuration not loaded by `user` yet is loaded for the first time from the configuration of its creator.
+    /// One already loaded is updated from upstream, if it is inherited.
+    /// The loaded configuration becomes preferred, unless it is a link or inherited from shared.
+    ///
+    /// Returns a pair containing the resulting `saveAsName` and `configUuid`.
+    ///
+    static T2<Optional<String>, Optional<String>> loadConfigByUuid(
+        final String configUuid,
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder,
+        final ICentreConfigSharingModel sharingModel
+    ) {
+        // start loading of configuration defined by concrete uuid;
+        // we look only through [link, own save-as, inherited from base, inherited from shared] set of configurations;
+        // default configurations are excluded in the lookup;
+        // only FRESH kind are looked for;
+        final var freshConfigOpt = findConfigOptByUuid(
+            configUuid,
+            user,
+            miType,
+            FRESH_CENTRE_NAME,
+            companionFinder
+        );
+        final T2<Optional<String>, Boolean> actualSaveAsNameAndSharedIndicator;
+        if (freshConfigOpt.isPresent()) {
+            // for current user we already have FRESH configuration with uuid loaded;
+            final var preliminarySaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME));
+            // updating is required from upstream configuration (but not for link configuration);
+            if (!LINK_CONFIG_TITLE.equals(preliminarySaveAsName.get())) {
+                actualSaveAsNameAndSharedIndicator = updateFromUpstream(
+                    configUuid,
+                    preliminarySaveAsName,
+                    user,
+                    miType,
+                    webUiConfig,
+                    companionFinder,
+                    sharingModel
+                );
+            } else {
+                actualSaveAsNameAndSharedIndicator = t2(preliminarySaveAsName, false);
+            }
+        } else {
+            // Without a FRESH configuration, there is no link or own save-as configuration with the specified uuid.
+            // However, a base or shared configuration of another user may have it.
+            final var upstreamConfig = validateUuidAndGetUpstreamConfig(configUuid, user, miType, companionFinder)
+                .orElseThrow(Result::asRuntime);
+            actualSaveAsNameAndSharedIndicator = firstTimeLoadingFrom(
+                upstreamConfig,
+                user,
+                miType,
+                webUiConfig,
+                companionFinder,
+                sharingModel
+            );
+        }
+        final var actualSaveAsName = actualSaveAsNameAndSharedIndicator._1;
+        final var isInheritedFromShared = actualSaveAsNameAndSharedIndicator._2;
+        // configuration being loaded need to become preferred
+        if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get()) && !isInheritedFromShared) {
+            makePreferred(user, miType, actualSaveAsName, companionFinder, webUiConfig);
+        }
+        return t2(actualSaveAsName, of(configUuid));
+    }
+
+    /// Loads the configuration of `user` that a centre opens with by default.
+    /// That is when its URI has neither a uuid nor criteria parameters.
+    ///
+    /// On the first loading, it is the preferred configuration, updated from upstream if it is inherited.
+    /// Afterwards, it is the default configuration, which becomes preferred.
+    ///
+    /// Returns a pair containing the resulting `saveAsName` and `configUuid`.
+    ///
+    static T2<Optional<String>, Optional<String>> loadPreferredConfig(
+        final boolean wasLoadedPreviously,
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder,
+        final ICentreConfigSharingModel sharingModel
+    ) {
+        final Optional<String> actualSaveAsName;
+        final Optional<String> resolvedConfigUuid;
+        // client-driven first time loading of centre's selection criteria
+        if (!wasLoadedPreviously) {
+            // preferred configuration should be loaded
+            final var preliminarySaveAsName = retrievePreferredConfigName(user, miType, companionFinder, webUiConfig);
+            resolvedConfigUuid = updateCentreConfigUuid(user, miType, preliminarySaveAsName, companionFinder);
+            // Preferred config can be inherited from base / shared.
+            // Link configs can not be preferred, so there is no need to check for them here.
+            if (resolvedConfigUuid.isPresent()) {
+                // it needs updating from upstream -- only for the configs that has configUuid aka non-default
+                actualSaveAsName = updateFromUpstream(
+                    resolvedConfigUuid.get(),
+                    preliminarySaveAsName,
+                    user,
+                    miType,
+                    webUiConfig,
+                    companionFinder,
+                    sharingModel
+                )._1;
+            } else {
+                actualSaveAsName = preliminarySaveAsName;
+            }
+        } else {
+            // First time loading has occurred earlier, so the default configuration (without uuid) is preferred.
+            actualSaveAsName = empty();
+            // Most likely a save-as configuration has just been left, so the preferred config needs updating.
+            // Otherwise, the user may have gone to another centre and back from a loaded default config.
+            // In that case, this call makes the default config preferred again.
+            makePreferred(user, miType, actualSaveAsName, companionFinder, webUiConfig);
+            resolvedConfigUuid = empty();
+        }
+        return t2(actualSaveAsName, resolvedConfigUuid);
+    }
+
     /// Validates `configUuid` to ensure the configuration exists and can be shared with the current `user`.
     ///
-    private Either<Result, EntityCentreConfig> validateUuidAndGetUpstreamConfig(final String configUuid) {
+    private static Either<Result, EntityCentreConfig> validateUuidAndGetUpstreamConfig(
+        final String configUuid,
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final ICompanionObjectFinder companionFinder
+    ) {
         // we look only for owners; "owning" is indicated by presence of SAVED configuration with the specified uuid
         final var savedConfigOptForOtherUser = findConfigOptByUuid(configUuid, miType, SAVED_CENTRE_NAME, companionFinder);
         if (savedConfigOptForOtherUser.isEmpty()) {
@@ -323,7 +427,14 @@ public class CriteriaResource extends AbstractWebResource {
 
     /// Implements the first-time loading of a configuration into `inherited from base / shared`.
     ///
-    private T2<Optional<String>, Boolean> firstTimeLoadingFrom(final EntityCentreConfig upstreamConfig) {
+    private static T2<Optional<String>, Boolean> firstTimeLoadingFrom(
+        final EntityCentreConfig upstreamConfig,
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder,
+        final ICentreConfigSharingModel sharingModel
+    ) {
         final String configUuid = upstreamConfig.getConfigUuid();
         final User upstreamConfigCreator = upstreamConfig.getOwner();
         final var preliminarySaveAsName = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME);
@@ -341,7 +452,7 @@ public class CriteriaResource extends AbstractWebResource {
             sharingModel.isSharedWith(configUuid, user).ifFailure(Result::throwRuntime);
             // current user gets uuid as part of sharing process from other base/non-base user;
             // need to determine non-conflicting name for current user from preliminarySaveAsName
-            actualSaveAsName = of(determineNonConflictingName(preliminarySaveAsName, -1));
+            actualSaveAsName = of(determineNonConflictingName(preliminarySaveAsName, -1, user, miType, companionFinder));
             final Function<String, Function<Boolean, Function<String, Consumer<Optional<String>>>>> createInheritedFromShared = surrogateName -> runAutomatically -> newDescription -> uuid -> saveNewEntityCentreManager(
                 upstreamConfig.getConfigBody(),
                 miType,
@@ -373,7 +484,13 @@ public class CriteriaResource extends AbstractWebResource {
     /// If that still conflicts, numeric suffixes `(shared 1)` through `(shared 9)` are attempted.
     /// If no unique name can be generated, an error is thrown.
     ///
-    private String determineNonConflictingName(final String preliminaryName, final int index) {
+    private static String determineNonConflictingName(
+        final String preliminaryName,
+        final int index,
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final ICompanionObjectFinder companionFinder
+    ) {
         final String name;
         if (index > 9) {
             throw failure(format(COULD_NOT_LOAD_CONFLICTING_SHARED_CONFIGURATION, preliminaryName));
@@ -381,14 +498,22 @@ public class CriteriaResource extends AbstractWebResource {
             name = preliminaryName + (index == -1 ? "" : format(CONFLICTING_TITLE_SUFFIX, index == 0 ? "" : " " + index));
         }
         return findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(of(name)), companionFinder, FETCH_CONFIG)
-            .map(conflictingConfig -> determineNonConflictingName(preliminaryName, index + 1))
+            .map(conflictingConfig -> determineNonConflictingName(preliminaryName, index + 1, user, miType, companionFinder))
             .orElse(name);
     }
 
     /// Updates a configuration already loaded by the `user` with the concrete `configUuid`
     /// from its upstream configuration, if it is inherited.
     ///
-    private T2<Optional<String>, Boolean> updateFromUpstream(final String configUuid, final Optional<String> saveAsName) {
+    private static T2<Optional<String>, Boolean> updateFromUpstream(
+        final String configUuid,
+        final Optional<String> saveAsName,
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder,
+        final ICentreConfigSharingModel sharingModel
+    ) {
         // look for config creator
         final var savedConfigOpt = findConfigOptByUuid(configUuid, miType, SAVED_CENTRE_NAME, companionFinder);
         if (savedConfigOpt.isPresent()) {
@@ -401,9 +526,12 @@ public class CriteriaResource extends AbstractWebResource {
                     // inherited from base
                     // Deleting the FRESH centre below also deletes its preferred flags, so they are recorded first.
                     final var preferredProfiles = preferredDeviceProfiles(user, miType, saveAsName, companionFinder);
-                    if (isCentreChanged(saveAsName)) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
+                    // If there are some user changes, only SAVED surrogate must be updated.
+                    // If such centre will be discarded, the base user changes will be loaded immediately.
+                    // Otherwise, base user changes will be loaded immediately after centre loading.
+                    if (isCentreChanged(saveAsName, user, miType, webUiConfig, companionFinder)) {
                         removeCentres(user, miType, saveAsName, companionFinder, SAVED_CENTRE_NAME);
-                    } else { // otherwise base user changes will be loaded immediately after centre loading
+                    } else {
                         removeCentres(user, miType, saveAsName, companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                     }
                     updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
@@ -417,7 +545,14 @@ public class CriteriaResource extends AbstractWebResource {
                 } else {
                     if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) {
                         // inherited from shared
-                        updateInheritedFromShared(savedConfig, miType, saveAsName, user, companionFinder, of(() -> isCentreChanged(saveAsName)));
+                        updateInheritedFromShared(
+                            savedConfig,
+                            miType,
+                            saveAsName,
+                            user,
+                            companionFinder,
+                            of(() -> isCentreChanged(saveAsName, user, miType, webUiConfig, companionFinder))
+                        );
                         return t2(of(obtainTitleFrom(savedConfig.getTitle(), SAVED_CENTRE_NAME)), true);
                     } // already loaded inherited from shared config was made unshared; the inherited from shared configuration now acts like own save-as configuration
                 }
@@ -429,7 +564,12 @@ public class CriteriaResource extends AbstractWebResource {
     /// Prepares FRESH / SAVED link configurations if they have not been created yet.
     /// Returns a pair containing the resulting `saveAsName` and `configUuid`.
     ///
-    private T2<Optional<String>, Optional<String>> prepareLinkConfigInfrastructure() {
+    private static T2<Optional<String>, Optional<String>> prepareLinkConfigInfrastructure(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder
+    ) {
         // 'link' configuration loading is not limited only to first time loading;
         // user can paste 'link' configuration URI into current app context;
         // usually it will look like default config URI (no uuid) with appended params;
@@ -472,7 +612,13 @@ public class CriteriaResource extends AbstractWebResource {
 
     /// Determines whether the FRESH configuration has been modified compared to the SAVED one.
     ///
-    private boolean isCentreChanged(final Optional<String> actualSaveAsName) {
+    private static boolean isCentreChanged(
+        final Optional<String> actualSaveAsName,
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder
+    ) {
         return isFreshCentreChanged(
             updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, webUiConfig, companionFinder),
             updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, webUiConfig, companionFinder)
