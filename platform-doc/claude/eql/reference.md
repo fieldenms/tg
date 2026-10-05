@@ -119,6 +119,27 @@ from(query)
 
 Execute via: `co(E.class).getAllEntities(qem)`, `.getPage(qem, page, size)`, `.stream(qem)` (use try-with-resources).
 
+### Choosing a retrieval method
+
+Pick the method by the expected size of the result:
+
+- **Small, bounded result** — e.g. the entities a user selected (`where id in (…)`), or a handful of configuration rows: use `getAllEntities(qem)`, and call `.stream()` on the returned list if a stream pipeline reads better.
+  A list holds no database resources, so there is nothing to close and no `try` block around the code that consumes it.
+- **Large or unbounded result** — e.g. batch processing over a whole table: use `stream(qem)` inside try-with-resources, so that entities are fetched incrementally instead of being materialised all at once.
+  The stream holds a database session and cursor until it is closed.
+- **One page for display or chunked processing**: use `getPage(qem, page, size)`.
+
+```java
+// Small, bounded — the engineer's selection of work orders.
+final String woNumbers = co(WorkOrder.class).getAllEntities(from(query).with(orderBy).with(fetch).model()).stream()
+        .map(WorkOrder::getNumber).collect(joining(", "));
+
+// Large or unbounded — must be closed.
+try (final Stream<WorkOrder> stream = co(WorkOrder.class).stream(from(allOpenWorkOrders).with(fetch).model())) {
+    stream.forEach(this::process);
+}
+```
+
 ## Existence Checks: `exists` over `count`
 
 When the goal is to check **whether matching rows exist** — not to obtain their count — prefer `co.exists(model)` over `co.count(model) == 0` (or `> 0`).

@@ -65,6 +65,12 @@ co$(Vehicle.class).findByKeyAndFetch(VehicleCo.FETCH_MODEL, key);
 ```
 Narrower fetches are fine for read-only access but never for the write path.
 
+**After `save`, use the returned instance — never the one you passed in.**
+The refetch refreshes the entire fetched subtree so every relationship carries its current `version`; the passed-in entity is left holding the old one.
+Reusing it, or anything reachable from it, risks `EntityWasUpdatedOrDeletedConcurrently` against a change your own save caused.
+`save(entity, Optional.empty())` and `quickSave` skip the refetch and return only an ID — after either, re-read before mutating anything from that graph.
+See `entity-model/reference.md` § *Why the refetch after save exists*.
+
 ## Calculated Properties
 
 ```java

@@ -1,10 +1,8 @@
 package ua.com.fielden.platform.test.transactional;
 
+import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Session;
-
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ISessionEnabled;
@@ -14,12 +12,14 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
 
-/**
- * A helper class for testing transactional support.
- *
- * @author TG Team
- *
- */
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+import java.sql.Connection;
+import java.util.stream.Stream;
+
+/// A helper class for testing transactional support.
+///
 public class LogicThatNeedsTransaction implements ISessionEnabled {
     private final IEntityDao<EntityWithMoney> dao;
     private Session session;
@@ -111,6 +111,30 @@ public class LogicThatNeedsTransaction implements ISessionEnabled {
         ((EntityWithMoneyDao) dao).saveTwoWithException(one, two);
     }
     
+    /// An entirely ordinary unit of work: the entity is saved through its companion, which flushes explicitly,
+    /// so the `INSERT` has already been sent to and accepted by the database.
+    ///
+    /// The physical connection is then dropped before the transaction commits.
+    /// This is exactly what a database failover, a connection-pool eviction, or an administrator terminating the backend does in production.
+    /// The `COMMIT` never reaches the server, so the database rolls the transaction back.
+    ///
+    @SessionRequired
+    public void saveThenLoseConnectionBeforeCommit(final String key) {
+        dao.save(factory.newEntity(EntityWithMoney.class, key, "flushed").setMoney(new Money("20.00")));
+        // Release the connection out from under the open transaction, as a pool eviction would.
+        getSession().doWork(Connection::close);
+    }
+
+    /// Saves an entity and returns an open stream over the same table.
+    /// The transaction stays open until the stream is closed — `SessionInterceptor` commits from a `Stream.onClose` handler.
+    /// A commit failure on this path therefore has to travel out of `Stream#close`.
+    ///
+    @SessionRequired
+    public Stream<EntityWithMoney> saveAndStream(final String key) {
+        dao.save(factory.newEntity(EntityWithMoney.class, key, "flushed").setMoney(new Money("20.00")));
+        return dao.stream(from(select(EntityWithMoney.class).model()).model());
+    }
+
     @SessionRequired(allowNestedScope = false)
     public void cannotBeInvokeWithinExistingTransaction() {
         singleTransactionInvocaion("20.00", "30.00");

@@ -46,8 +46,10 @@ public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.
             final AbstractQuery1 query)
     {
         final var expandUnionTypedYield1 = new ExpandUnionTypedYield1(context.domainMetadata());
+        final var expandSingleComponentTypedYield1 = new ExpandSingleComponentTypedYield1(context.domainMetadata());
         return yields.flatMap(y -> expandUnionTypedYield1.apply(y, context, query)
-                                       .orElseGet(() -> Stream.of(y.transform(context))));
+                                                         .or(() -> expandSingleComponentTypedYield1.apply(y, context, query).map(Stream::of))
+                                                         .orElseGet(() -> Stream.of(y.transform(context))));
     }
 
     public Collection<Yield1> getYields() {
