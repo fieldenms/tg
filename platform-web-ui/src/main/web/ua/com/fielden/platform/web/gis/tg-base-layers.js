@@ -28,7 +28,8 @@ export const BaseLayers = function () {
     const osmMap = L.tileLayer(osmUrl, {
         maxZoom: 19,
         minZoom: 0,
-        attribution: osmAttrib
+        attribution: osmAttrib,
+        referrerPolicy: 'strict-origin-when-cross-origin'
     });
     // const landMap = L.tileLayer(landUrl, {
     //     maxZoom: 18,
