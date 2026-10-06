@@ -2,8 +2,8 @@
 -- https://github.com/fieldenms/tg/issues/2795
 --
 -- Migrates MOBILE Entity Centre configurations into the joint namespace formerly owned by DESKTOP.
--- Apply it together with the `CentreUpdater` change that turns `deviceSpecific` into the identity function.
--- That change also introduces `EntityCentreConfig.preferredOnMobile`, whose column step 1 adds on every database.
+-- Apply it together with the platform release that shares Entity Centre configurations across devices.
+-- That release also introduces `EntityCentreConfig.preferredOnMobile`, whose column step 1 adds on every database.
 -- Apply it while the application is stopped, because it does not bump `_VERSION`.
 --
 -- A persisted title has the shape `MOBILE<surrogate>[<save-as name>]__________DIFFERENCES`.
@@ -29,7 +29,7 @@
 -- After steps 3 and 7, a mobile user opens the same configuration as before, unless its group was skipped.
 --
 -- A group whose new title is already taken is skipped and keeps its `MOBILE` prefix.
--- Such a group becomes a harmless orphan, unreachable once `deviceSpecific` stops producing that prefix.
+-- Such a group becomes a harmless orphan, unreachable because the application no longer produces that prefix.
 --
 -- Known and accepted, not addressed here, because base configurations are rare in the MOBILE namespace.
 -- A migrated default is named `Default (mobile)` for every user, so where a base user also had one, a derived user's
@@ -57,7 +57,7 @@ ALTER TABLE ENTITY_CENTRE_CONFIG ADD COLUMN IF NOT EXISTS PREFERREDONMOBILE_ CHA
 --
 -- A link configuration uses the reserved save-as name `_______________________link`.
 -- The `Load` dialog hides it by an exact match on that name, which a migrated title would no longer satisfy.
--- Deleting these rows also makes their `configUuid` resolve to nothing once the device filter is gone.
+-- Deleting these rows also makes their `configUuid` resolve to nothing, as uuids are now looked up across devices.
 DELETE FROM ENTITY_CENTRE_CONFIG
  WHERE left(TITLE, 6) = 'MOBILE'
    AND right(TITLE, 50) = '[_______________________link]__________DIFFERENCES';
