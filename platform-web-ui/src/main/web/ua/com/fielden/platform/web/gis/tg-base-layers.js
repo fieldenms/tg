@@ -1,6 +1,8 @@
 import { L } from '/resources/gis/leaflet/leaflet-lib.js';
+// Only the OpenStreetMap base layer is active by default.
 // Esri and Google base layers are commented out, because importing their libraries loads them in every application.
 // The Google library also injects the Google Maps script at application startup.
+// The Thunderforest landscape base layer is commented out as well.
 // The commented-out code serves as a reference for custom base layers in GIS components of end-applications.
 // Such GIS components should import the corresponding library themselves.
 // import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
@@ -10,12 +12,12 @@ export const BaseLayers = function () {
     const self = this;
 
     const osmLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
-    const thunLink = '<a href="http://thunderforest.com/">Thunderforest</a>';
+    // const thunLink = '<a href="http://thunderforest.com/">Thunderforest</a>';
 
     const osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
     const osmAttrib = '&copy; ' + osmLink + ' Contributors';
-    const landUrl = 'https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png';
-    const thunAttrib = '&copy; ' + osmLink + ' Contributors & ' + thunLink;
+    // const landUrl = 'https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png';
+    // const thunAttrib = '&copy; ' + osmLink + ' Contributors & ' + thunLink;
     
     // const esriTopographicMap = esri.basemapLayer('Topographic');
     // const esriStreetsMap = esri.basemapLayer('Streets');
@@ -28,11 +30,11 @@ export const BaseLayers = function () {
         minZoom: 0,
         attribution: osmAttrib
     });
-    const landMap = L.tileLayer(landUrl, {
-        maxZoom: 18,
-        minZoom: 0,
-        attribution: thunAttrib
-    });
+    // const landMap = L.tileLayer(landUrl, {
+    //     maxZoom: 18,
+    //     minZoom: 0,
+    //     attribution: thunAttrib
+    // });
     // var bingMap = new L.BingLayer("YOUR_BING_API_KEY"); -- need an API key to use it 
     // http://stackoverflow.com/questions/14442055/use-bing-maps-tiles-with-leaflet
     // const googleRoadMap = googleMutant({
@@ -58,7 +60,7 @@ export const BaseLayers = function () {
         // "Esri Imagery": esriImageryMap,
         // "Esri Dark Gray": esriDarkGrayMap,
         "Open Street Map": osmMap,
-        "Landscape": landMap,
+        // "Landscape": landMap,
         // "Google Roadmap": googleRoadMap,
         // "Google Sattelite": googleSatelliteMap,
         // "Google Hybrid": googleHybridMap,
