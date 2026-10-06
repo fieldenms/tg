@@ -5,6 +5,7 @@ import java.util.Properties;
 import java.util.function.Function;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.web.test.server.TgTestApplicationProperties.databaseConnectionProperties;
 import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.types.tuples.T3;
@@ -26,6 +27,9 @@ public class Vulcanize extends VulcanizingUtility {
      */
     public static void main(final String[] args) throws IOException {
         final T3<Properties, String[], String[]> propsAndAdditionalPaths = processVmArguments(args);
+        // The database connection comes from system properties, the same as for `Start` and `PopulateDb`.
+        // Database connection properties in the application properties file take precedence.
+        databaseConnectionProperties().forEach(propsAndAdditionalPaths._1::putIfAbsent);
         final Logger logger = getLogger(Vulcanize.class);
         logger.info("Starting app...");
         final TgTestApplicationConfiguration component = new TgTestApplicationConfiguration(propsAndAdditionalPaths._1);
