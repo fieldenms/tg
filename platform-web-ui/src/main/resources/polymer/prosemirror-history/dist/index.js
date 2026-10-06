@@ -127,7 +127,8 @@ class Branch {
     rebased(rebasedTransform, rebasedCount) {
         if (!this.eventCount)
             return this;
-        let rebasedItems = [], start = Math.max(0, this.items.length - rebasedCount);
+        rebasedCount = Math.min(this.items.length, rebasedCount);
+        let rebasedItems = [], start = this.items.length - rebasedCount;
         let mapping = rebasedTransform.mapping;
         let newUntil = rebasedTransform.steps.length;
         let eventCount = this.eventCount;
