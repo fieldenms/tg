@@ -11,13 +11,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
-import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -91,48 +89,138 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             final User user = userProvider.getUser();
             final Map<String, Object> wasRunHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
+            final var discarded = discardCentre(saveAsName, user, miType, webUiConfig, companionFinder, sharingModel);
             
-            final ICentreDomainTreeManagerAndEnhancer newFreshCentre;
-            
-            final Optional<LoadableCentreConfig> loadableConfig = findLoadableConfig(saveAsName, () -> loadableConfigurations(user, miType, device(), companionFinder, sharingModel).apply(of(saveAsName)).stream()); // this will also throw early failure in case where current configuration was deleted
-            final boolean isInherited = inherited(loadableConfig).isPresent();
-            final Optional<String> actualSaveAsName;
-            if (isInherited) {
-                if (inheritedFromBase(loadableConfig).isPresent()) { // inherited from base
-                    // remove cached instances of surrogate centres before updating from base user
-                    removeCentres(user, miType, device(), saveAsName, companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
-                    // it is necessary to use "fresh" instance of cdtme (after the discarding process)
-                    newFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder);
-                    updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), webUiConfig, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
-                    // must leave current configuration preferred after deletion (only for named configs -- always true for inherited ones)
-                    makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig);
-                    actualSaveAsName = saveAsName;
-                } else { // inherited from shared
-                    final Optional<EntityCentreConfig> upstreamConfig = updateInheritedFromShared(loadableConfig.get().getConfig() != null ? loadableConfig.get().getConfig().getConfigUuid() : null, miType, device(), saveAsName, user, companionFinder, empty());
-                    if (upstreamConfig.isPresent()) {
-                        actualSaveAsName = of(obtainTitleFrom(upstreamConfig.get().getTitle(), SAVED_CENTRE_NAME, device()));
-                        newFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, companionFinder);
-                    } else {
-                        actualSaveAsName = saveAsName;
-                        newFreshCentre = discardOwnSaveAsConfig(user, actualSaveAsName); // in some very unlikely (but possible) scenario original creator of shared config has deleted it since findLoadableConfig above invocation -- need to fallback to discarding as if the configuration is own save-as
-                    }
-                }
-            } else {
-                actualSaveAsName = saveAsName;
-                newFreshCentre = discardOwnSaveAsConfig(user, actualSaveAsName);
-            }
-            
-            final var criteriaIndication = createCriteriaIndication(wasRun, newFreshCentre, miType, actualSaveAsName, user, companionFinder, device(), webUiConfig);
-            return createCriteriaDiscardEnvelope(newFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, criteriaIndication, device(), isInherited ? of(ofNullable(updateCentreDesc(user, miType, actualSaveAsName, device(), companionFinder))) : empty(), webUiConfig, sharingModel);
+            final var criteriaIndication = createCriteriaIndication(
+                wasRun,
+                discarded.freshCentre(),
+                miType,
+                discarded.saveAsName(),
+                user,
+                companionFinder,
+                webUiConfig
+            );
+            return createCriteriaDiscardEnvelope(
+                discarded.freshCentre(),
+                miType,
+                discarded.saveAsName(),
+                user,
+                restUtil,
+                companionFinder,
+                critGenerator,
+                criteriaIndication,
+                discarded.inherited() ? of(ofNullable(updateCentreDesc(user, miType, discarded.saveAsName(), companionFinder))) : empty(),
+                webUiConfig,
+                sharingModel
+            );
         }, restUtil);
+    }
+    
+    /// The outcome of discarding the changes of a configuration.
+    ///
+    /// @param freshCentre  the FRESH centre after discarding
+    /// @param saveAsName  the name of the configuration after discarding, following a renamed upstream shared one
+    /// @param inherited  whether the configuration is inherited from base or from shared
+    ///
+    record DiscardedCentre(ICentreDomainTreeManagerAndEnhancer freshCentre, Optional<String> saveAsName, boolean inherited) {}
+    
+    /// Discards the changes of the `saveAsName`d configuration of `user`.
+    /// This is what the Discard action of an Entity Centre does.
+    ///
+    /// An own save-as, default or link configuration is reverted to its SAVED centre.
+    /// A configuration inherited from base is recreated from the base configuration.
+    /// It stays preferred on every device profile it was preferred on.
+    /// A configuration inherited from shared is updated from the shared configuration.
+    ///
+    static DiscardedCentre discardCentre(
+        final Optional<String> saveAsName,
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder,
+        final ICentreConfigSharingModel sharingModel
+    ) {
+        final ICentreDomainTreeManagerAndEnhancer newFreshCentre;
+        
+        // `findLoadableConfig` will also throw early failure in case where current configuration was deleted.
+        final var loadableConfig = findLoadableConfig(
+            saveAsName,
+            () -> loadableConfigurations(user, miType, companionFinder, sharingModel).apply(of(saveAsName)).stream()
+        );
+        final var isInherited = inherited(loadableConfig).isPresent();
+        final Optional<String> actualSaveAsName;
+        if (isInherited) {
+            if (inheritedFromBase(loadableConfig).isPresent()) {
+                // Inherited from base.
+                // Deleting the FRESH centre below also deletes its preferred flags, so they are recorded first.
+                final var preferredProfiles = preferredDeviceProfiles(user, miType, saveAsName, companionFinder);
+                // Remove cached instances of surrogate centres before updating from base user.
+                removeCentres(user, miType, saveAsName, companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+                // It is necessary to use "fresh" instance of cdtme (after the discarding process).
+                newFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
+                // Do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly.
+                updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
+                // Must leave current configuration preferred after deletion.
+                // This applies only to named configs, which inherited ones always are.
+                makePreferred(user, miType, saveAsName, companionFinder, webUiConfig);
+                // It must also stay preferred on any other device profile it was preferred on.
+                restorePreferred(user, miType, saveAsName, preferredProfiles, companionFinder, webUiConfig);
+                actualSaveAsName = saveAsName;
+            } else {
+                // Inherited from shared.
+                final var upstreamConfig = updateInheritedFromShared(
+                    loadableConfig.get().getConfig() != null ? loadableConfig.get().getConfig().getConfigUuid() : null,
+                    miType,
+                    saveAsName,
+                    user,
+                    companionFinder,
+                    empty()
+                );
+                if (upstreamConfig.isPresent()) {
+                    actualSaveAsName = of(obtainTitleFrom(upstreamConfig.get().getTitle(), SAVED_CENTRE_NAME));
+                    newFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, webUiConfig, companionFinder);
+                } else {
+                    actualSaveAsName = saveAsName;
+                    // Very unlikely, but the shared config may have been deleted since `findLoadableConfig` above.
+                    // Need to fallback to discarding as if the configuration is own save-as.
+                    newFreshCentre = discardOwnSaveAsConfig(actualSaveAsName, user, miType, webUiConfig, companionFinder);
+                }
+            }
+        } else {
+            actualSaveAsName = saveAsName;
+            newFreshCentre = discardOwnSaveAsConfig(actualSaveAsName, user, miType, webUiConfig, companionFinder);
+        }
+        return new DiscardedCentre(newFreshCentre, actualSaveAsName, isInherited);
     }
     
     /// Discards configuration that represents own save-as configuration (possibly converted from inherited), default or link.
     ///
-    private ICentreDomainTreeManagerAndEnhancer discardOwnSaveAsConfig(final User user, final Optional<String> actualSaveAsName) {
-        final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), webUiConfig, companionFinder);
+    private static ICentreDomainTreeManagerAndEnhancer discardOwnSaveAsConfig(
+        final Optional<String> actualSaveAsName,
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder
+    ) {
+        final var updatedSavedCentre = updateCentre(
+            user,
+            miType,
+            SAVED_CENTRE_NAME,
+            actualSaveAsName,
+            webUiConfig,
+            companionFinder
+        );
         // discards fresh centre's changes (fresh centre could have no changes)
-        return commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), updatedSavedCentre, null /* newDesc */, webUiConfig, companionFinder);
+        return commitCentreWithoutConflicts(
+            user,
+            miType,
+            FRESH_CENTRE_NAME,
+            actualSaveAsName,
+            updatedSavedCentre,
+            null /* newDesc */,
+            webUiConfig,
+            companionFinder
+        );
     }
     
 }

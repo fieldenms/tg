@@ -258,6 +258,19 @@
                 </excludes>
             </resource>
         </resources>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+            <!-- Database migration scripts, applied by tests that verify them against PostgreSQL and SQL Server. -->
+            <!-- They are excluded from the platform-db-evolution jar, hence taken from its sources. -->
+            <testResource>
+                <directory>../platform-db-evolution/src/main/resources</directory>
+                <includes>
+                    <include>sql/*-#2795-*.sql</include>
+                </includes>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

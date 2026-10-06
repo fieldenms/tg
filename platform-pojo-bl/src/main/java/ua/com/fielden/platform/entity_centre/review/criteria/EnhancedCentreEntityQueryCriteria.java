@@ -13,7 +13,6 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
 import java.util.List;
 import java.util.Map;
@@ -85,7 +84,6 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreSilentAdjuster;
     private Supplier<Optional<String>> shareErrorSupplier;
     private CentreContextHolder centreContextHolder;
-    private DeviceProfile device;
     private Class<? extends MiWithConfigurationSupport<?>> miType;
 
     @Inject
@@ -105,20 +103,6 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
      */
     public Class<? extends MiWithConfigurationSupport<?>> miType() {
         return miType;
-    }
-
-    /**
-     * Sets device profile for this selection criteria entity.
-     */
-    public void setDevice(final DeviceProfile device) {
-        this.device = device;
-    }
-
-    /**
-     * Device profile for this selection criteria entity.
-     */
-    public DeviceProfile device() {
-        return device;
     }
 
     public void setCentreColumnWidthsAdjuster(final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster) {

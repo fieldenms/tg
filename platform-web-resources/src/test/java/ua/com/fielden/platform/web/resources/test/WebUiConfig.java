@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.test_entities.Action1;
 import ua.com.fielden.platform.web.resources.webui.test_entities.Action2;
 import ua.com.fielden.platform.web.resources.webui.test_entities.Action3;
@@ -77,6 +78,9 @@ class WebUiConfig extends AbstractWebUiConfig {
                                     .build());
 
         builder.register(createEmptyMaster(TgVehicleModel.class));
+
+        // A standalone centre of the platform, for tests of Entity Centre configurations.
+        builder.register(UserRoleWebUiConfig.register(injector(), builder).centre);
     }
 
     @Override
