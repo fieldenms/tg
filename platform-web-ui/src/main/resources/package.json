@@ -94,6 +94,7 @@
       "stacky": "../_EXCLUDED_"
     },
     "serialize-javascript": "$serialize-javascript",
-    "glob": "$glob"
+    "glob": "$glob",
+    "chokidar": "../_EXCLUDED_"
   }
 }
