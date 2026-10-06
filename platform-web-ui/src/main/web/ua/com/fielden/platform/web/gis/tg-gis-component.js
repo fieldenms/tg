@@ -1,7 +1,9 @@
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import { L, leafletStylesName } from '/resources/gis/leaflet/leaflet-lib.js';
-import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
+// Esri feature layers (`_createEsriLayer`) are commented out, because the Esri library would load in every application.
+// The commented-out code serves as a reference for GIS components of end-applications.
+// import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
 import { _featureType, appendStylesTo } from '/resources/gis/tg-gis-utils.js';
 import { BaseLayers } from '/resources/gis/tg-base-layers.js';
 import { EntityStyling } from '/resources/gis/tg-entity-styling.js';
@@ -242,35 +244,35 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         return geoJson;
     };
 
-    self._createEsriLayer = function (url, _featureType, checkedByDefault = false) {
-        const esriOverlay = esri.featureLayer({
-            url: url,
-            style: function (feature) {
-                return self._entityStyling.getStyle(feature);
-            },
-            pointToLayer: function (feature, latlng) {
-                feature.properties._featureType = _featureType;
-                return self._markerFactory.createFeatureMarker(feature, latlng);
-            },
-            onEachFeature: function (feature, layer) {
-                feature.properties._featureType = _featureType;
-                layer.on('mouseover', function () {
-                    if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
-                        layer.bindPopup(self.createPopupContent(feature));
-                        feature.properties.popupContentInitialised = true;
-                    }
-                });
-                layer.on('click', function () { // dblclick
-                    if (!feature.properties.layerId) {
-                        feature.properties.layerId = layer._leaflet_id;
-                    }
-                    self._select.select(feature.properties.layerId);
-                });
-            }
-        });
-        esriOverlay._checkedByDefault = checkedByDefault;
-        return esriOverlay;
-    };
+    // self._createEsriLayer = function (url, _featureType, checkedByDefault = false) {
+    //     const esriOverlay = esri.featureLayer({
+    //         url: url,
+    //         style: function (feature) {
+    //             return self._entityStyling.getStyle(feature);
+    //         },
+    //         pointToLayer: function (feature, latlng) {
+    //             feature.properties._featureType = _featureType;
+    //             return self._markerFactory.createFeatureMarker(feature, latlng);
+    //         },
+    //         onEachFeature: function (feature, layer) {
+    //             feature.properties._featureType = _featureType;
+    //             layer.on('mouseover', function () {
+    //                 if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
+    //                     layer.bindPopup(self.createPopupContent(feature));
+    //                     feature.properties.popupContentInitialised = true;
+    //                 }
+    //             });
+    //             layer.on('click', function () { // dblclick
+    //                 if (!feature.properties.layerId) {
+    //                     feature.properties.layerId = layer._leaflet_id;
+    //                 }
+    //                 self._select.select(feature.properties.layerId);
+    //             });
+    //         }
+    //     });
+    //     esriOverlay._checkedByDefault = checkedByDefault;
+    //     return esriOverlay;
+    // };
 
     self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv);
     const overlays = self.createOverlays(self._markerCluster.getGisMarkerClusterGroup());
