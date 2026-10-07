@@ -9,6 +9,9 @@ import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.context.internal.ThreadLocalSessionContext;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.error.Result;
@@ -17,6 +20,8 @@ import ua.com.fielden.platform.ioc.session.exceptions.TransactionCommitException
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToThrowable;
 import ua.com.fielden.platform.security.user.User;
 
+import java.time.Duration;
+import java.util.concurrent.ThreadFactory;
 import java.util.stream.Stream;
 
 import static java.util.UUID.randomUUID;
@@ -49,6 +54,17 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 /// transaction could not be made durable — typically because of an infrastructure failure, such as a database
 /// failover or a terminated connection.
 ///
+/// A [VirtualMachineError], such as [StackOverflowError] or [OutOfMemoryError], discards the session instead of rolling back its transaction.
+/// Such an error can occur at any point, including in the middle of an exchange with the database, leaving the connection out of sync with the server,
+/// so the connection is aborted rather than reused, and the database rolls back the transaction when the connection closes.
+/// The same applies to an exception caused by such an error, as libraries may wrap it.
+/// For example, the thread-bound Hibernate session is a JDK dynamic proxy, which wraps an error thrown through it in [java.lang.reflect.UndeclaredThrowableException].
+/// Other errors, such as [LinkageError] or [AssertionError], are thrown at well-defined points, and are handled like exceptions,
+/// so that an error recurring in a unit of work does not cost a connection each time.
+/// The session is unbound from the thread before anything else, and the connection is aborted on a separate thread, because the stack of the current thread may be nearly exhausted.
+/// If even that does not complete, the session remains recorded for the thread, and the next invocation on the thread discards it before obtaining its own session.
+/// Either way, an error affects only the unit of work in which it occurred, and not later units of work on the same thread, which matters for pooled threads.
+///
 /// Two further behaviours are not apparent from a call site:
 ///   - The session is put into [FlushMode#COMMIT], so Hibernate never auto-flushes.
 ///     DML reaches the database when something flushes it explicitly, and otherwise during the commit.
@@ -61,14 +77,39 @@ public class SessionInterceptor implements MethodInterceptor {
     public static final String
             MSG_CLOSING_SESSION = "[%s] Closing session.",
             MSG_CLOSED_SESSION = "[%s] Closed session.",
+            MSG_CLOSED_DISCARDED_SESSION_WITH_ERROR = "[%s] Closed a discarded session with error.",
             WARN_TRANSACTION_ROLLBACK = "[%s] Transaction completed (rolled back) with error.",
+            WARN_DISCARDING_SESSION_PENDING_CLEANUP = "[%s] Discarding a session, whose cleanup after an error did not complete.",
+            WARN_DISCARD_SESSION_TIMEOUT = "[%s] Discarding a session did not complete within %s.",
             ERR_COULD_NOT_CLOSE_SESSION = "[%s] Could not close session.",
+            ERR_COULD_NOT_ABORT_CONNECTION = "[%s] Could not abort connection.",
             ERR_COULD_NOT_COMMIT = "[%s] Could not commit transaction.";
 
     private static final Logger LOGGER = getLogger(SessionInterceptor.class);
 
+    /// How long discarding a session waits for the thread that aborts its connection and closes it.
+    /// Both normally complete in milliseconds, as aborting a connection involves no exchange with the server.
+    /// Waiting ensures that the session is closed before the error propagates to enclosing scopes, which check whether it is still open.
+    /// The timeout bounds the delay of a failing unit of work if aborting or closing hangs: a warning is logged, the error propagates, and the discarding thread continues in the background.
+    private static final Duration DISCARD_SESSION_TIMEOUT = Duration.ofSeconds(10);
+    /// The maximum number of throwables examined in a chain of causes, when determining whether a throwable is caused by a [VirtualMachineError].
+    /// Actual chains are short — a few levels of wrapping by proxies, JDBC drivers and Hibernate.
+    /// The bound guards against a chain that is unexpectedly long or cyclic: [Throwable#initCause] prevents only a throwable from being its own cause, and [Throwable#getCause] may be overridden.
+    private static final int MAX_CAUSE_DEPTH = 32;
+    /// Created eagerly, so that discarding a session does not create it when the stack may be nearly exhausted.
+    /// A thread factory obtained from a builder is safe for use by concurrent threads.
+    private static final ThreadFactory DISCARDER_THREAD_FACTORY = Thread.ofPlatform().name("discard-session").daemon(true).factory();
+
     private final Provider<? extends SessionFactory> sessionFactory;
     private final ThreadLocal<String> transactionGuid = new ThreadLocal<>();
+    private final ThreadLocal<CleanupState> cleanupState = ThreadLocal.withInitial(CleanupState::new);
+
+    /// Per-thread record of a session whose cleanup after an error has not completed.
+    /// It is a mutable holder, so that recording requires a field assignment only, and no method call that could overflow a nearly exhausted stack.
+    ///
+    private static final class CleanupState {
+        private Session sessionPendingCleanup;
+    }
 
     public SessionInterceptor(final Provider<? extends SessionFactory> sessionFactory) {
         this.sessionFactory = sessionFactory;
@@ -77,43 +118,77 @@ public class SessionInterceptor implements MethodInterceptor {
     @Override
     public Object invoke(final MethodInvocation invocation) throws Throwable {
         final ISessionEnabled invocationOwner = (ISessionEnabled) invocation.getThis();
+        final User user = invocationOwner.getUser();
+        final CleanupState cleanupState = this.cleanupState.get();
+        // It might be the case that an earlier invocation on this thread owned a session scope that failed, and its error handling did not complete, for example, due to another StackOverflowError.
+        // Its session may still be bound to this thread, with an active transaction, and a connection that may be out of sync with the server.
+        // Obtaining the current session would then return that session, making this invocation a nested scope of a unit of work that has already failed.
+        // To prevent this, the session is discarded first, typically with ample stack, as the failed invocation has unwound.
+        // While a session is recorded, no session scope is active on this thread: it is recorded by the invocation that owns the scope,
+        // once all nested invocations have completed, and is cleared once cleanup completes.
+        if (cleanupState.sessionPendingCleanup != null) {
+            discardSessionPendingCleanup(cleanupState, user);
+        }
+
         final Session session = sessionFactory.get().getCurrentSession();
         final Transaction tr = session.getTransaction();
-        final User user = invocationOwner.getUser();
+        // The invocation that begins the transaction owns the session scope and is responsible for completing it.
+        final boolean ownsScope = !tr.isActive();
+        // The thread-bound session is a proxy that rejects most methods without an active transaction, which is the case after a failed commit or rollback.
+        // The underlying session is obtained while the transaction is active, so that it can be discarded after an error, whatever the transaction status.
+        Session underlyingSession = null;
 
         try {
             // This variable indicates whether a transaction commit should be handled in this method invocation.
             // Basically, if a transaction is activated in this method, then it should be committed only in this method.
             // Therefore, shouldCommit is assigned true only when the transaction is activated here.
             final boolean shouldCommit = initTransaction(invocationOwner, session, tr, user);
-            
-            // if should not commit, which means the session was initiated earlier in the call stack,
-            // and support for nested calls is not allowed, then an exception should be thrown.
+            underlyingSession = session.unwrap(Session.class);
+
+            // If we should not commit, which means the session was initiated earlier in the call stack,
+            // and support for nested calls is not allowed, then an exception is thrown.
             if (!shouldCommit && !invocation.getStaticPart().getAnnotation(SessionRequired.class).allowNestedScope()) {
                 throw new SessionScopingException(ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED.formatted(invocation.getMethod().getDeclaringClass().getName(), invocation.getMethod().getName()));
             }
             
-            // now let's proceed with the actual method invocation, which may throw an exception... or even a throwable...
+            // Now let's proceed with the actual method invocation, which may throw an exception... or even a throwable...
             final Object result = invocation.proceed();
             
-            // if this is the invocation that activated the current transaction, then we should commit it,
-            // but only if the result of invocation is not a stream -- in that case, closing of the session is the responsibility of that stream
+            // If this is the invocation that activated the current transaction, then we should commit it,
+            // but only if the result of invocation is not a stream -- in that case, closing of the session is the responsibility of that stream.
             if (shouldCommit && tr.isActive()) {
-                // if the result is a stream, then the current transaction becomes associated with that stream
-                // and needs to be committed once the stream has been processed
+                // If the result is a stream, then the current transaction becomes associated with that stream
+                // and needs to be committed once the stream has been processed.
                 if (result instanceof Stream<?> stream) {
+                    final Session streamSession = underlyingSession;
                     return stream.onClose(() -> {
                         try {
                             LOGGER.debug(() -> "[%s] Committing DB transaction on stream close.".formatted(user));
                             commitTransactionAndCloseSession(session, tr, user);
                             LOGGER.debug(() -> "[%s] Committed DB transaction on stream close.".formatted(user));
-                        } catch (final Exception ex) {
+                        } catch (final RuntimeException | VirtualMachineError ex) {
+                            // Committing can fail in three ways that matter here:
+                            //   - With a RuntimeException not caused by a VirtualMachineError, typically TransactionCommitException, after the session has been closed.
+                            //     It is logged and rethrown, as before.
+                            //   - With a VirtualMachineError, or a RuntimeException caused by one, such as UndeclaredThrowableException from the thread-bound session proxy.
+                            //     commitTransactionAndCloseSession propagates these without closing the session, so that it can be discarded instead.
+                            //   - Other errors, such as AssertionError, are not caught: commitTransactionAndCloseSession has already closed the session, and they propagate unchanged.
+                            // No checked exception can occur, so RuntimeException covers all exceptions.
+                            // This handler runs when the stream is closed, after this invocation has returned, and thus outside its error handling.
+                            // Without an enclosing invocation to discard the session, it is discarded here (refer to commitTransactionAndCloseSession).
+                            // Both unbinding the session, as part of discarding it, and removing the transaction GUID act on the thread that closes the stream.
+                            // If the stream were closed on a thread other than the one that created it, the session would remain bound to the latter;
+                            // streams are expected to be consumed and closed by the thread that created them, ideally with try-with-resources.
+                            if (isCausedByVirtualMachineError(ex) && streamSession.isOpen()) {
+                                transactionGuid.remove();
+                                discardSession(streamSession, user);
+                            }
                             LOGGER.fatal(() -> "[%s] Could not commit DB transaction on stream close.".formatted(user), ex);
                             throw ex;
                         }
                     });
                 }
-                // otherwise, commit the current transaction
+                // Otherwise, commit the current transaction.
                 else {
                     LOGGER.debug(() -> "[%s] Committing DB transaction".formatted(user));
                     commitTransactionAndCloseSession(session, tr, user);
@@ -121,15 +196,20 @@ public class SessionInterceptor implements MethodInterceptor {
                     return result;
                 }
             }
-            // otherwise, this is the case of a nested transaction
-            // should flush only if the current session is still open
-            // this check was not needed before migrating off Hibernate 3.2.6 GA
+            // Otherwise, this is the case of a nested transaction.
+            // We should flush only if the current session is still open.
+            // This check was not needed before migrating off Hibernate 3.2.6 GA.
             if (session.isOpen()) {
                 session.flush();
             }
             return result;
         } catch (final Throwable e) {
-            throw completeTransactionWithError(session, tr, e, user);
+            final Session discardableSession = underlyingSession != null ? underlyingSession : session;
+            // A field assignment requires no stack frame, so the session is recorded even if the stack is nearly exhausted.
+            if (ownsScope) {
+                cleanupState.sessionPendingCleanup = discardableSession;
+            }
+            throw completeTransactionWithError(cleanupState, session, discardableSession, tr, e, user);
         }
     }
 
@@ -170,17 +250,23 @@ public class SessionInterceptor implements MethodInterceptor {
         return shouldCommit;
     }
 
-    private Exception completeTransactionWithError(final Session session, final Transaction tr, final Throwable th, final User user) {
-        switch (th) {
-            // Most Result exceptions are validation errors, which are more relevant for debug messages.
-            case Result _ -> LOGGER.debug(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), th);
-            case SessionScopingException _ -> LOGGER.error(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), th);
-            case TransactionCommitException _ -> {} // Already logged before.
-            default -> LOGGER.warn(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), th);
-        }
+    /// Completes the session scope after `th`, and returns the exception to be thrown.
+    ///
+    /// Cleanup precedes logging, so that it runs with as much stack as is available.
+    /// If cleanup does not complete, the session remains recorded in `cleanupState`, and is discarded by the next invocation on this thread.
+    ///
+    /// @param discardableSession  the session underlying `session`, if obtained, which is used to discard it after a [VirtualMachineError]
+    ///
+    private Exception completeTransactionWithError(final CleanupState cleanupState, final Session session, final Session discardableSession, final Transaction tr, final Throwable th, final User user) {
         try {
-            // If transaction is active and there was an exception, it should be rolled back.
-            if (tr.isActive()) {
+            if (isCausedByVirtualMachineError(th)) {
+                // In nested scopes, the innermost scope discards the session, and the enclosing scopes find it closed.
+                if (discardableSession.isOpen()) {
+                    discardSession(discardableSession, user);
+                }
+            }
+            // Otherwise, if the transaction is active, it should be rolled back.
+            else if (session.isOpen() && tr.isActive()) {
                 LOGGER.debug(() -> "[%s] Rolling back DB transaction".formatted(user));
                 rollbackTransactionAndCloseSession(session, tr, user);
                 LOGGER.debug(() -> "[%s] Rolled back DB transaction".formatted(user));
@@ -188,24 +274,129 @@ public class SessionInterceptor implements MethodInterceptor {
         } finally {
             transactionGuid.remove();
         }
+        cleanupState.sessionPendingCleanup = null;
+
+        switch (th) {
+            // Most Result exceptions are validation errors, which are more relevant for debug messages.
+            case Result _ -> LOGGER.debug(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), th);
+            case SessionScopingException _ -> LOGGER.error(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), th);
+            case TransactionCommitException _ -> {} // Already logged before.
+            default -> LOGGER.warn(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), th);
+        }
         return th instanceof Exception ex ? ex : new TransactionRollbackDueToThrowable(th);
     }
 
+    /// Determines whether `th` is a [VirtualMachineError], or is caused by one.
+    /// The search is bounded, as a chain of causes may, in principle, be cyclic.
+    ///
+    private static boolean isCausedByVirtualMachineError(final Throwable th) {
+        Throwable cause = th;
+        for (int depth = 0; cause != null && depth < MAX_CAUSE_DEPTH; depth++) {
+            if (cause instanceof VirtualMachineError) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
+    }
+
+    /// Discards a session, whose cleanup after an error did not complete, before the current invocation obtains its session.
+    ///
+    private void discardSessionPendingCleanup(final CleanupState cleanupState, final User user) {
+        final Session session = cleanupState.sessionPendingCleanup;
+        cleanupState.sessionPendingCleanup = null;
+        LOGGER.warn(() -> WARN_DISCARDING_SESSION_PENDING_CLEANUP.formatted(user));
+        transactionGuid.remove();
+        discardSession(session, user);
+    }
+
+    /// Discards `session` after a [VirtualMachineError].
+    ///
+    /// Such an error, for example, [StackOverflowError], may interrupt an exchange with the database, which leaves the connection out of sync with the server.
+    /// Rolling back over such a connection may wait indefinitely for a response, and returning it to the pool passes the problem on to another unit of work.
+    /// Therefore, the connection is aborted, which closes it without any exchange with the server, and the session is closed without rolling back.
+    /// The database rolls back the transaction of a closed connection, and the connection pool removes a closed connection instead of reusing it.
+    ///
+    /// The session is first unbound from the current thread, which leaves the thread ready for the next unit of work.
+    /// Aborting and closing run on a new thread, as the stack of the current thread may be nearly exhausted.
+    /// A new thread per discarded session, rather than a pool, ensures that a discard that does not complete — for example, closing a connection that hangs — cannot delay later discards.
+    /// For the same reason as above, this path avoids lambdas and lazily created objects, whose first use requires class loading or linkage,
+    /// and obtains the session factory from the session, which is a plain getter.
+    ///
+    private void discardSession(final Session session, final User user) {
+        ThreadLocalSessionContext.unbind(session.getSessionFactory());
+        final Thread discarder = DISCARDER_THREAD_FACTORY.newThread(new SessionDiscarder(session, user));
+        discarder.start();
+        try {
+            if (!discarder.join(DISCARD_SESSION_TIMEOUT)) {
+                LOGGER.warn(() -> WARN_DISCARD_SESSION_TIMEOUT.formatted(user, DISCARD_SESSION_TIMEOUT));
+            }
+        } catch (final InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /// Aborts the connection of a session, and then closes the session.
+    ///
+    /// A closed session is skipped, as closing a session releases its connection, even if closing fails partway, and the session no longer holds it.
+    ///
+    private record SessionDiscarder(Session session, User user) implements Runnable {
+        @Override
+        public void run() {
+            // The connection is aborted regardless of the transaction status, which may be inaccurate after an error, for example, during commit.
+            try {
+                if (!session.isOpen()) {
+                    return;
+                }
+                final LogicalConnectionImplementor logicalConnection = session.unwrap(SharedSessionContractImplementor.class).getJdbcCoordinator().getLogicalConnection();
+                if (logicalConnection.isPhysicallyConnected()) {
+                    logicalConnection.getPhysicalConnection().abort(Runnable::run);
+                } else {
+                    LOGGER.debug(() -> "[%s] A discarded session holds no connection.".formatted(user));
+                }
+            } catch (final Exception ex) {
+                LOGGER.error(() -> ERR_COULD_NOT_ABORT_CONNECTION.formatted(user), ex);
+            }
+            // Closing a session with an aborted connection reports errors, which are expected.
+            try {
+                session.close();
+            } catch (final Exception ex) {
+                LOGGER.debug(() -> MSG_CLOSED_DISCARDED_SESSION_WITH_ERROR.formatted(user), ex);
+            }
+        }
+    }
+
+    /// Commits the transaction and closes the session.
+    ///
+    /// If committing fails with a [VirtualMachineError], or an exception caused by one, the session is not closed,
+    /// and the failure propagates to the error handling of the invocation, which discards the session.
+    /// Closing it here would return a connection that may be out of sync with the server to the pool.
+    /// In all other cases, the session is closed before this method completes.
+    ///
     private void commitTransactionAndCloseSession(final Session session, final Transaction tr, final User user) {
         try {
             if (tr.isActive()) {
                 tr.commit();
             }
+        } catch (final VirtualMachineError err) {
+            throw err;
         } catch (final Exception ex) {
+            if (isCausedByVirtualMachineError(ex)) {
+                throw ex;
+            }
             LOGGER.error(() -> ERR_COULD_NOT_COMMIT.formatted(user), ex);
             // A failed commit means the unit of work was not persisted, and must not be reported as success.
-            // The `finally` block below completes before this exception propagates, so the session is always closed and
-            // never left as a dead current session.
-            throw new TransactionCommitException(ERR_COULD_NOT_COMMIT.formatted(user), ex);
-        } finally {
+            // The session is closed before this exception propagates, so it is never left as a dead current session.
             transactionGuid.remove();
             closeSession(session, user);
+            throw new TransactionCommitException(ERR_COULD_NOT_COMMIT.formatted(user), ex);
+        } catch (final Error err) {
+            transactionGuid.remove();
+            closeSession(session, user);
+            throw err;
         }
+        transactionGuid.remove();
+        closeSession(session, user);
     }
 
     private static void rollbackTransactionAndCloseSession(final Session session, final Transaction tr, final User user) {
