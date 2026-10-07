@@ -25,6 +25,18 @@ createStyleModule(tgMasterGisComponentStylesName, tgMasterGisComponentStyles);
 const OPEN_STREET_MAP = 'Open Street Map';
 
 /**
+ * The mouse wheel zoom of Leaflet for the mouse wheel with Option (Alt), as charts in masters zoom.
+ * Other mouse wheel events are left to the master, which they scroll.
+ */
+const AltScrollWheelZoom = L.Map.ScrollWheelZoom.extend({
+    _onWheelScroll: function (event) {
+        if (event.altKey) {
+            L.Map.ScrollWheelZoom.prototype._onWheelScroll.call(this, event);
+        }
+    }
+});
+
+/**
  * A map of entities in an entity master, such as the master entity, an entity it refers to, or the entities of its collectional property.
  * It is created by 'tg-master-map', which passes the entities to draw to 'show'.
  *
@@ -38,7 +50,8 @@ const OPEN_STREET_MAP = 'Open Street Map';
  * Clustering is declared with 'createMarkerClusterGroup', which returns a Leaflet layer group, such as 'L.markerClusterGroup(...)';
  * the 'createMarkerCluster' of 'GisComponent' returns a 'MarkerCluster', which is specific to centre maps.
  *
- * The map zooms with its controls rather than with the mouse wheel, which scrolls the master.
+ * The map zooms with its controls, and with the mouse wheel with Option (Alt) around the cursor, as charts in masters zoom;
+ * the mouse wheel without Option scrolls the master.
  *
  * @param mapDiv -- the element of the map
  * @param host -- the element with Shadow DOM that contains 'mapDiv', where the styles are inserted
@@ -53,9 +66,11 @@ export const MasterGisComponent = function (mapDiv, host, ...otherStyles) {
     this._map = L.map(mapDiv, {
         layers: [this._baseLayers.getBaseLayer(this.defaultBaseLayer())],
         zoomControl: false, // added below in the same position as for centre maps
-        scrollWheelZoom: false,
+        scrollWheelZoom: false, // replaced by 'altScrollWheelZoom'
         doubleClickZoom: false
     }).setView(this.defaultCoordinates(), this.defaultZoomLevel());
+    this._map.addHandler('altScrollWheelZoom', AltScrollWheelZoom);
+    this._map.altScrollWheelZoom.enable();
     this._map.addControl(L.control.zoom({ position: 'topleft' }));
     this._map.addControl(L.control.scale({ imperial: false, position: 'bottomleft' }));
     const baseLayers = this._baseLayers.getBaseLayers();
