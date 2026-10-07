@@ -54,6 +54,10 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 /// transaction could not be made durable — typically because of an infrastructure failure, such as a database
 /// failover or a terminated connection.
 ///
+/// A failure to *roll back* discards the session, as described below for a [VirtualMachineError], instead of closing it.
+/// After such a failure, the state of the connection is unknown — the transaction may remain open on the server, holding its locks —
+/// and the connection pool would reuse the connection unless the failure indicates a broken connection.
+///
 /// A [VirtualMachineError], such as [StackOverflowError] or [OutOfMemoryError], discards the session instead of rolling back its transaction.
 /// Such an error can occur at any point, including in the middle of an exchange with the database, leaving the connection out of sync with the server,
 /// so the connection is aborted rather than reused, and the database rolls back the transaction when the connection closes.
@@ -83,6 +87,7 @@ public class SessionInterceptor implements MethodInterceptor {
             WARN_DISCARD_SESSION_TIMEOUT = "[%s] Discarding a session did not complete within %s.",
             ERR_COULD_NOT_CLOSE_SESSION = "[%s] Could not close session.",
             ERR_COULD_NOT_ABORT_CONNECTION = "[%s] Could not abort connection.",
+            ERR_COULD_NOT_ROLLBACK = "[%s] Could not roll back transaction. The session was discarded.",
             ERR_COULD_NOT_COMMIT = "[%s] Could not commit transaction.";
 
     private static final Logger LOGGER = getLogger(SessionInterceptor.class);
@@ -268,7 +273,7 @@ public class SessionInterceptor implements MethodInterceptor {
             // Otherwise, if the transaction is active, it should be rolled back.
             else if (session.isOpen() && tr.isActive()) {
                 LOGGER.debug(() -> "[%s] Rolling back DB transaction".formatted(user));
-                rollbackTransactionAndCloseSession(session, tr, user);
+                rollbackTransactionAndCloseSession(session, discardableSession, tr, user);
                 LOGGER.debug(() -> "[%s] Rolled back DB transaction".formatted(user));
             }
         } finally {
@@ -310,7 +315,7 @@ public class SessionInterceptor implements MethodInterceptor {
         discardSession(session, user);
     }
 
-    /// Discards `session` after a [VirtualMachineError].
+    /// Discards `session` after a [VirtualMachineError], or after a failure to roll back its transaction.
     ///
     /// Such an error, for example, [StackOverflowError], may interrupt an exchange with the database, which leaves the connection out of sync with the server.
     /// Rolling back over such a connection may wait indefinitely for a response, and returning it to the pool passes the problem on to another unit of work.
@@ -399,13 +404,23 @@ public class SessionInterceptor implements MethodInterceptor {
         closeSession(session, user);
     }
 
-    private static void rollbackTransactionAndCloseSession(final Session session, final Transaction tr, final User user) {
+    /// Rolls back the transaction and closes the session.
+    ///
+    /// If rolling back fails, for whatever reason, the session is discarded instead of being closed.
+    /// After such a failure, the state of the connection is unknown: the transaction may remain open on the server, holding its locks, or the connection may be out of sync with the server.
+    /// Closing the session would return the connection to the pool, which reuses it unless the failure indicates a broken connection (SQL state `08xxx`).
+    ///
+    /// @param discardableSession  the session underlying `session`, if obtained, which is used to discard it if rolling back fails
+    ///
+    private void rollbackTransactionAndCloseSession(final Session session, final Session discardableSession, final Transaction tr, final User user) {
         try {
             if (tr.isActive()) {
                 tr.rollback();
             }
-        } catch (final Exception ex) {
-            LOGGER.error(() -> "[%s] Could not rollback transaction. Transaction active: [%s].".formatted(user, tr.isActive()), ex);
+        } catch (final Throwable ex) {
+            discardSession(discardableSession, user);
+            LOGGER.error(() -> ERR_COULD_NOT_ROLLBACK.formatted(user), ex);
+            return;
         }
 
         closeSession(session, user);
