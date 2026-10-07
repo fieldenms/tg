@@ -1,6 +1,7 @@
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import { L, leafletStylesName } from '/resources/gis/leaflet/leaflet-lib.js';
+import { easyButton, leafletEasybuttonStylesName } from '/resources/gis/leaflet/easybutton/leaflet-easybutton-lib.js';
 import { _featureType, appendStylesTo } from '/resources/gis/tg-gis-utils.js';
 import { MarkerFactory, tgIconFactoryStylesName } from '/resources/gis/tg-marker-factory.js';
 import { TgReflector } from '/app/tg-reflector.js';
@@ -52,6 +53,7 @@ const AltScrollWheelZoom = L.Map.ScrollWheelZoom.extend({
  *
  * The map zooms with its controls, and with the mouse wheel with Option (Alt) around the cursor, as charts in masters zoom;
  * the mouse wheel without Option scrolls the master.
+ * As for centre maps, the controls start with a Fit to bounds button, which fits the drawn features into view as 'show' does.
  *
  * @param mapDiv -- the element of the map
  * @param host -- the element with Shadow DOM that contains 'mapDiv', where the styles are inserted
@@ -60,7 +62,8 @@ const AltScrollWheelZoom = L.Map.ScrollWheelZoom.extend({
 export const MasterGisComponent = function (mapDiv, host, ...otherStyles) {
     this._host = host;
     this._reflector = new TgReflector();
-    appendStylesTo(host, leafletStylesName, tgIconFactoryStylesName, tgMasterGisComponentStylesName, ...otherStyles);
+    appendStylesTo(host, leafletStylesName, leafletEasybuttonStylesName, tgIconFactoryStylesName, tgMasterGisComponentStylesName, ...otherStyles);
+    this._features = [];
 
     this._baseLayers = this.createBaseLayers();
     this._map = L.map(mapDiv, {
@@ -71,6 +74,7 @@ export const MasterGisComponent = function (mapDiv, host, ...otherStyles) {
     }).setView(this.defaultCoordinates(), this.defaultZoomLevel());
     this._map.addHandler('altScrollWheelZoom', AltScrollWheelZoom);
     this._map.altScrollWheelZoom.enable();
+    this._map.addControl(easyButton('fa-compress', () => this.fitToFeatures(this._features), 'Fit to bounds')); // above the zoom buttons, as for centre maps
     this._map.addControl(L.control.zoom({ position: 'topleft' }));
     this._map.addControl(L.control.scale({ imperial: false, position: 'bottomleft' }));
     const baseLayers = this._baseLayers.getBaseLayers();
@@ -96,6 +100,7 @@ export const MasterGisComponent = function (mapDiv, host, ...otherStyles) {
  */
 MasterGisComponent.prototype.show = function (entities) {
     const features = entities.map(entity => this.createFeature(entity)).filter(feature => !!feature.geometry);
+    this._features = features; // for the Fit to bounds button
     this._layer.clearLayers();
     features.forEach(feature => this._layer.addData(feature));
     if (this._clusterGroup) {
