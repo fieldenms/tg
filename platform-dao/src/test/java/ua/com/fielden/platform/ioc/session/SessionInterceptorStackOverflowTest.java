@@ -6,11 +6,13 @@ import com.google.inject.Injector;
 import com.zaxxer.hikari.HikariDataSource;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -188,6 +190,25 @@ public class SessionInterceptorStackOverflowTest {
         assertTrue(interrupted);
         assertFalse(probe.getSession().isOpen());
         assertTrue(before.isClosed());
+    }
+
+    /// Committing on closing a stream may fail with a [VirtualMachineError], outside the error handling of any invocation.
+    /// The session is discarded on closing the stream, and the next unit of work on the same thread obtains another connection.
+    /// The failure is provoked by a process that Hibernate runs before completing the transaction, from which an error propagates unchanged,
+    /// so that Hibernate neither rolls back the transaction nor releases the connection.
+    ///
+    @Test
+    public void virtual_machine_error_during_commit_on_closing_a_stream_discards_the_connection() throws SQLException {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        final Connection before = probe.physicalConnection();
+
+        final var error = new InternalError("Purposeful error.");
+        final Stream<Integer> stream = probe.selectOneAndReturnStreamThatFailsToCommit(error);
+        assertSame(error, assertThrows(InternalError.class, stream::close));
+
+        assertFalse(probe.getSession().isOpen());
+        assertTrue(before.isClosed());
+        assertNotSame(before, probe.physicalConnection());
     }
 
     /// A unit of work, whose session is discarded in a nested scope, may still complete without an error in its owning scope:
@@ -376,6 +397,17 @@ public class SessionInterceptorStackOverflowTest {
             } catch (final TransactionRollbackDueToThrowable _) {
                 // The error is deliberately ignored, as an enclosing scope might do.
             }
+            return Stream.of(1);
+        }
+
+        /// Queries the database, and returns a stream, which commits the transaction when closed.
+        /// Committing fails, as a process that Hibernate runs before completing the transaction throws `error`.
+        ///
+        @SessionRequired
+        public Stream<Integer> selectOneAndReturnStreamThatFailsToCommit(final Error error) {
+            selectOneInCurrentSession(getSession());
+            final BeforeTransactionCompletionProcess failingProcess = _ -> { throw error; };
+            getSession().unwrap(SessionImplementor.class).getActionQueue().registerProcess(failingProcess);
             return Stream.of(1);
         }
 

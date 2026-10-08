@@ -155,7 +155,8 @@ public class SessionInterceptor implements MethodInterceptor {
         // Obtaining the current session would then return that session, making this invocation a nested scope of a unit of work that has already failed.
         // To prevent this, the session is discarded first, typically with ample stack, as the failed invocation has unwound.
         // While a session is recorded, no session scope is active on this thread: it is recorded by the invocation that owns the scope,
-        // once all nested invocations have completed, and is cleared once cleanup completes.
+        // once all nested invocations have completed, or, for a stream returned by such an invocation, when committing fails on closing the stream,
+        // and is cleared once cleanup completes.
         if (cleanupState.sessionPendingCleanup != null) {
             discardSessionPendingCleanup(cleanupState, user);
         }
@@ -197,7 +198,11 @@ public class SessionInterceptor implements MethodInterceptor {
                 if (result instanceof Stream<?> stream) {
                     final Session streamSession = underlyingSession;
                     return stream.onClose(() -> {
+                        // The cleanup state of the thread that closes the stream, obtained before committing, so that the error handling needs no method call to obtain it.
+                        // It is obtained within the try block, so that an error in obtaining it, such as StackOverflowError, is handled like an error in committing.
+                        CleanupState closingCleanupState = null;
                         try {
+                            closingCleanupState = this.cleanupState.get();
                             LOGGER.debug(() -> "[%s] Committing DB transaction on stream close.".formatted(user));
                             commitTransactionAndCloseSession(session, tr, user);
                             LOGGER.debug(() -> "[%s] Committed DB transaction on stream close.".formatted(user));
@@ -211,13 +216,24 @@ public class SessionInterceptor implements MethodInterceptor {
                             // No checked exception can occur, so RuntimeException covers all exceptions.
                             // This handler runs when the stream is closed, after this invocation has returned, and thus outside its error handling.
                             // Without an enclosing invocation to discard the session, it is discarded here (refer to commitTransactionAndCloseSession).
-                            // Both unbinding the session, as part of discarding it, and removing the transaction GUID act on the thread that closes the stream.
+                            // Everything here acts on the thread that closes the stream: unbinding the session, as part of discarding it, removing the transaction GUID,
+                            // and, except in the case described below, recording the session pending cleanup, so that it does not affect a unit of work in progress on another thread.
                             // If the stream were closed on a thread other than the one that created it, the session would remain bound to the latter;
                             // streams are expected to be consumed and closed by the thread that created them, ideally with try-with-resources.
+                            //
+                            // If obtaining the cleanup state of the closing thread failed, the cleanup state of the thread that created the stream is used instead.
+                            // It is the cleanup state of the closing thread if the stream is closed as expected, by the thread that created it.
+                            // Selecting it requires no method call.
+                            final CleanupState recordingCleanupState = closingCleanupState != null ? closingCleanupState : cleanupState;
+                            // As in the error handling of an invocation, the session is recorded first, by a field assignment, which requires no stack frame.
+                            // If discarding it does not complete, the next invocation on this thread discards it, instead of becoming a nested scope of the failed unit of work.
+                            // A session that has already been closed remains recorded only until the record is cleared below.
+                            recordingCleanupState.sessionPendingCleanup = streamSession;
                             if (isCausedByVirtualMachineError(ex) && streamSession.isOpen()) {
                                 transactionGuid.remove();
-                                discardSession(cleanupState, streamSession, user);
+                                discardSession(recordingCleanupState, streamSession, user);
                             }
+                            recordingCleanupState.sessionPendingCleanup = null;
                             LOGGER.fatal(() -> "[%s] Could not commit DB transaction on stream close.".formatted(user), ex);
                             throw ex;
                         }
