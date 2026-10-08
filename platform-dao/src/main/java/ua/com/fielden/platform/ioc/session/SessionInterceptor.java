@@ -50,7 +50,7 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 ///
 /// A failure to *commit* is reported rather than swallowed.
 /// Committing is the point at which a unit of work becomes durable, so a failure there means nothing was persisted, however successfully the method itself ran.
-/// [TransactionCommitException] is thrown for this, and only after the session has been closed, so that cleanup is never skipped.
+/// [TransactionCommitException] is thrown for this, and only after the session has been discarded, so that cleanup is never skipped.
 /// It is deliberately distinct from a business failure: the work was valid and its statements were accepted, but the
 /// transaction could not be made durable — typically because of an infrastructure failure, such as a database
 /// failover or a terminated connection.
@@ -58,6 +58,7 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 /// A failure to *roll back* discards the session, as described below for a [VirtualMachineError], instead of closing it.
 /// After such a failure, the state of the connection is unknown — the transaction may remain open on the server, holding its locks —
 /// and the connection pool would reuse the connection unless the failure indicates a broken connection.
+/// The same applies to a failed commit, which may leave the transaction incomplete (refer to `commitTransactionAndCloseSession`).
 ///
 /// A [VirtualMachineError], such as [StackOverflowError] or [OutOfMemoryError], discards the session instead of rolling back its transaction.
 /// Such an error can occur at any point, including in the middle of an exchange with the database, leaving the connection out of sync with the server,
@@ -204,15 +205,15 @@ public class SessionInterceptor implements MethodInterceptor {
                         try {
                             closingCleanupState = this.cleanupState.get();
                             LOGGER.debug(() -> "[%s] Committing DB transaction on stream close.".formatted(user));
-                            commitTransactionAndCloseSession(session, tr, user);
+                            commitTransactionAndCloseSession(closingCleanupState, session, streamSession, tr, user);
                             LOGGER.debug(() -> "[%s] Committed DB transaction on stream close.".formatted(user));
                         } catch (final RuntimeException | VirtualMachineError ex) {
                             // Committing can fail in three ways that matter here:
-                            //   - With a RuntimeException not caused by a VirtualMachineError, typically TransactionCommitException, after the session has been closed.
+                            //   - With a RuntimeException not caused by a VirtualMachineError, typically TransactionCommitException, after the session has been discarded.
                             //     It is logged and rethrown, as before.
                             //   - With a VirtualMachineError, or a RuntimeException caused by one, such as UndeclaredThrowableException from the thread-bound session proxy.
                             //     commitTransactionAndCloseSession propagates these without closing the session, so that it can be discarded instead.
-                            //   - Other errors, such as AssertionError, are not caught: commitTransactionAndCloseSession has already closed the session, and they propagate unchanged.
+                            //   - Other errors, such as AssertionError, are not caught: commitTransactionAndCloseSession has already discarded the session, and they propagate unchanged.
                             // No checked exception can occur, so RuntimeException covers all exceptions.
                             // This handler runs when the stream is closed, after this invocation has returned, and thus outside its error handling.
                             // Without an enclosing invocation to discard the session, it is discarded here (refer to commitTransactionAndCloseSession).
@@ -242,7 +243,7 @@ public class SessionInterceptor implements MethodInterceptor {
                 // Otherwise, commit the current transaction.
                 else {
                     LOGGER.debug(() -> "[%s] Committing DB transaction".formatted(user));
-                    commitTransactionAndCloseSession(session, tr, user);
+                    commitTransactionAndCloseSession(cleanupState, session, underlyingSession, tr, user);
                     LOGGER.debug(() -> "[%s] Committed DB transaction".formatted(user));
                     return result;
                 }
@@ -366,7 +367,7 @@ public class SessionInterceptor implements MethodInterceptor {
         discardSession(cleanupState, session, user);
     }
 
-    /// Discards `session` after a [VirtualMachineError], or after a failure to roll back its transaction.
+    /// Discards `session` after a [VirtualMachineError], or after a failure to roll back or to commit its transaction.
     ///
     /// Such an error, for example, [StackOverflowError], may interrupt an exchange with the database, which leaves the connection out of sync with the server.
     /// Rolling back over such a connection may wait indefinitely for a response, and returning it to the pool passes the problem on to another unit of work.
@@ -426,6 +427,18 @@ public class SessionInterceptor implements MethodInterceptor {
     ///
     /// A closed session is skipped, as closing a session releases its connection, even if closing fails partway, and the session no longer holds it.
     ///
+    /// A thread-bound session closes itself once its transaction completes, as `ThreadLocalSessionContext` enables auto-close, which releases its connection.
+    /// For example, if committing fails before the JDBC commit, such as when flushing violates a constraint, Hibernate rolls back the transaction and the session closes,
+    /// returning the connection to the pool in a known state, so discarding the session costs no connection.
+    /// The connection is aborted only if the session holds one, as obtaining the physical connection of a session that holds none would acquire one from the pool, only to abort it.
+    /// A session remains open and holds its connection if its transaction did not complete, which is the case if:
+    ///   - the JDBC commit failed, which leaves its outcome unknown;
+    ///   - rolling back failed;
+    ///   - an error was thrown before completion, for example, while flushing, as Hibernate rolls back only after a [RuntimeException].
+    ///
+    /// A failure reported by the JDBC commit itself, such as a deferred constraint violation or a serialisation failure, therefore costs a connection,
+    /// even where the database has already rolled back the transaction.
+    ///
     private record SessionDiscarder(Session session, User user) implements Runnable {
         @Override
         public void run() {
@@ -457,9 +470,16 @@ public class SessionInterceptor implements MethodInterceptor {
     /// If committing fails with a [VirtualMachineError], or an exception caused by one, the session is not closed,
     /// and the failure propagates to the error handling of the invocation, which discards the session.
     /// Closing it here would return a connection that may be out of sync with the server to the pool.
-    /// In all other cases, the session is closed before this method completes.
     ///
-    private void commitTransactionAndCloseSession(final Session session, final Transaction tr, final User user) {
+    /// If committing fails otherwise, the session is discarded, as after a failed rollback.
+    /// The transaction may not have completed, in which case the state of the connection is unknown, and the connection pool would reuse it unless the failure indicates a broken connection.
+    /// Failures that Hibernate rolls back close the session, which discarding skips, so they cost no connection (refer to [SessionDiscarder]).
+    ///
+    /// In all cases other than a [VirtualMachineError], the session is closed or discarded before this method completes.
+    ///
+    /// @param discardableSession  the session underlying `session`, which is used to discard it if committing fails
+    ///
+    private void commitTransactionAndCloseSession(final CleanupState cleanupState, final Session session, final Session discardableSession, final Transaction tr, final User user) {
         try {
             if (tr.isActive()) {
                 tr.commit();
@@ -472,13 +492,13 @@ public class SessionInterceptor implements MethodInterceptor {
             }
             LOGGER.error(() -> ERR_COULD_NOT_COMMIT.formatted(user), ex);
             // A failed commit means the unit of work was not persisted, and must not be reported as success.
-            // The session is closed before this exception propagates, so it is never left as a dead current session.
+            // The session is discarded before this exception propagates, so it is never left as a dead current session.
             transactionGuid.remove();
-            closeSession(session, user);
+            discardSession(cleanupState, discardableSession, user);
             throw new TransactionCommitException(ERR_COULD_NOT_COMMIT.formatted(user), ex);
         } catch (final Error err) {
             transactionGuid.remove();
-            closeSession(session, user);
+            discardSession(cleanupState, discardableSession, user);
             throw err;
         }
         transactionGuid.remove();
