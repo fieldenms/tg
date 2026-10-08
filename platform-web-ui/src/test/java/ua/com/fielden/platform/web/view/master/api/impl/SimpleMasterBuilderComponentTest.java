@@ -39,7 +39,8 @@ public class SimpleMasterBuilderComponentTest {
     private static final String ENTITY_COMPONENT = "components/tg-vehicle-fuel-usages";
     private static final String PROPERTY_COMPONENT_DESC = "component [components/tg-fuel-chart] for property [TgPersistentEntityWithProperties.integerProp]";
     private static final String ENTITY_COMPONENT_DESC = "component [components/tg-vehicle-fuel-usages] in the entity master for [TgPersistentEntityWithProperties]";
-    private static final String MODIFICATION_STATE_ATTRS = "entity-modified='[[_bindingEntityModified]]' entity-edited='[[_editedPropsExist]]'";
+    /// The modification state and the context of the master, rendered by both component widgets after their own attributes.
+    private static final String MASTER_STATE_ATTRS = "entity-modified='[[_bindingEntityModified]]' entity-edited='[[_editedPropsExist]]' create-context-holder='[[_createContextHolder]]'";
 
     /// A selector distinct from [SingleActionSelector], to tell the selectors of different widgets apart.
     ///
@@ -59,7 +60,7 @@ public class SimpleMasterBuilderComponentTest {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).also());
 
         assertTrue(out.contains("import '/resources/components/tg-fuel-chart.js';"));
-        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' property-name='integerProp' prop-title='Integer prop' prop-desc='Integer prop desc' property-action-index='[[_propertyActionIndices.integerProp]]' block-when-unsaved " + MODIFICATION_STATE_ATTRS + ">"));
+        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' property-name='integerProp' prop-title='Integer prop' prop-desc='Integer prop desc' property-action-index='[[_propertyActionIndices.integerProp]]' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
     }
 
     @Test
@@ -79,14 +80,14 @@ public class SimpleMasterBuilderComponentTest {
                 .withAttr("mode", "full")
                 .also());
 
-        assertTrue(out.contains(MODIFICATION_STATE_ATTRS + " mode='full' centre-uuid='[[centreUuid]]'>"));
+        assertTrue(out.contains(MASTER_STATE_ATTRS + " mode='full' centre-uuid='[[centreUuid]]'>"));
     }
 
     @Test
     public void property_component_that_skips_blocking_has_no_blocking_flag_but_receives_modification_state_of_master() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).skipBlockingWhenUnsaved().also());
 
-        assertTrue(out.contains("property-action-index='[[_propertyActionIndices.integerProp]]' " + MODIFICATION_STATE_ATTRS + ">"));
+        assertTrue(out.contains("property-action-index='[[_propertyActionIndices.integerProp]]' " + MASTER_STATE_ATTRS + ">"));
         assertFalse(out.contains("block-when-unsaved"));
     }
 
@@ -114,7 +115,7 @@ public class SimpleMasterBuilderComponentTest {
         final String out = render(master().addComponent(ENTITY_COMPONENT).also());
 
         assertTrue(out.contains("import '/resources/components/tg-vehicle-fuel-usages.js';"));
-        assertTrue(out.contains("<tg-vehicle-fuel-usages id='component-0' entity='[[_currEntity]]' property-action-index='[[_propertyActionIndices.component-0]]' block-when-unsaved " + MODIFICATION_STATE_ATTRS + ">"));
+        assertTrue(out.contains("<tg-vehicle-fuel-usages id='component-0' entity='[[_currEntity]]' property-action-index='[[_propertyActionIndices.component-0]]' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
     }
 
     @Test
@@ -135,7 +136,7 @@ public class SimpleMasterBuilderComponentTest {
                 .skipBlockingWhenUnsaved()
                 .also());
 
-        assertTrue(out.contains("<tg-fuel-usages id='component-0' entity='[[_currEntity]]' property-action-index='[[_propertyActionIndices.component-0]]' " + MODIFICATION_STATE_ATTRS + " mode='compact'>"));
+        assertTrue(out.contains("<tg-fuel-usages id='component-0' entity='[[_currEntity]]' property-action-index='[[_propertyActionIndices.component-0]]' " + MASTER_STATE_ATTRS + " mode='compact'>"));
     }
 
     @Test
@@ -281,6 +282,12 @@ public class SimpleMasterBuilderComponentTest {
     public void attributes_rendered_by_both_component_widgets_cannot_be_declared() {
         assertConfigurationError(ERR_RESERVED_ATTR_NAME.formatted("entity", ENTITY_COMPONENT_DESC),
                 () -> master().addComponent(ENTITY_COMPONENT).withAttr("entity", "[[_currBindingEntity]]"));
+    }
+
+    @Test
+    public void context_of_master_rendered_by_both_component_widgets_cannot_be_declared() {
+        assertConfigurationError(ERR_RESERVED_ATTR_NAME.formatted("create-context-holder", PROPERTY_COMPONENT_DESC),
+                () -> master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withAttr("create-context-holder", "[[_createContextHolderForEmbeddedViews]]"));
     }
 
     @Test

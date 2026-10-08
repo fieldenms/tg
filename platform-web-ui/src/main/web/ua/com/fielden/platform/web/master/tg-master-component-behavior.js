@@ -58,6 +58,9 @@ const blockingPaneStyles = `
  * Changes that are not yet saved are those committed to the master, indicated by `entityModified`, and edits in progress, indicated by `entityEdited`.
  * `blockWhenUnsaved` may change at run time.
  *
+ * The component receives the context of the master through `createContextHolder`, and `masterEntityContext()` provides the master entity, including its unsaved changes,
+ * as the context of what the component runs, such as `getMasterEntity` of an embedded centre.
+ *
  * The behaviour is used with `behaviors: [...]` for an element declared with `Polymer({...})`, or with `mixinBehaviors([...], PolymerElement)` for a class-based element.
  */
 export const TgMasterComponentBehavior = {
@@ -120,6 +123,14 @@ export const TgMasterComponentBehavior = {
         },
 
         /**
+         * The function of the master that creates the contexts of its property and entity actions,
+         * with arguments `(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber)`.
+         */
+        createContextHolder: {
+            type: Function
+        },
+
+        /**
          * Indicates whether the component is blocked, which is reflected to attribute `blocked` for the component to style itself.
          */
         blocked: {
@@ -148,6 +159,13 @@ export const TgMasterComponentBehavior = {
             this.shadowRoot.append(this._blockingPane);
         }
         this._renderBlocking();
+    },
+
+    /**
+     * Returns the master entity, including its unsaved changes, in the form in which the contexts of the master carry it, as for property and entity actions.
+     */
+    masterEntityContext: function () {
+        return this.createContextHolder(null, null, 'true', null, null)['masterEntity'];
     },
 
     /**

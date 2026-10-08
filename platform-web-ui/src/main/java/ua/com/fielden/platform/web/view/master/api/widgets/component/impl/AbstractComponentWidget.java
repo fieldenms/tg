@@ -50,7 +50,7 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
     /// The names of attributes rendered by both component widgets, which cannot be declared.
     private static final Set<String> RESERVED_ATTR_NAMES = setOf(
             "debug", "id", "entity", "prop-title", "prop-desc", "property-action-index",
-            "block-when-unsaved", "entity-modified", "entity-edited",
+            "block-when-unsaved", "entity-modified", "entity-edited", "create-context-holder",
             "slot"); // the flex layout of a master assigns slots to its elements
 
     private final Class<? extends AbstractEntity<?>> entityType;
@@ -126,6 +126,13 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
         elementAttrs.put("block-when-unsaved", blockWhenUnsaved); // a `false` boolean attribute is not rendered
         elementAttrs.put("entity-modified", "[[_bindingEntityModified]]");
         elementAttrs.put("entity-edited", "[[_editedPropsExist]]");
+    }
+
+    /// Adds the context of the master to `elementAttrs`: `create-context-holder`, the function of the master that creates the contexts of its property and entity actions.
+    /// A component uses it to provide the master entity, including its unsaved changes, as the context of what it runs, such as an embedded centre.
+    ///
+    protected void addMasterContextAttribute(final Map<String, Object> elementAttrs) {
+        elementAttrs.put("create-context-holder", "[[_createContextHolder]]");
     }
 
     @Override
