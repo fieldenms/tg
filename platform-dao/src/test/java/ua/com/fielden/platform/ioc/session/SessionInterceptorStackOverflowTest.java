@@ -214,6 +214,24 @@ public class SessionInterceptorStackOverflowTest {
         assertNotSame(before, probe.physicalConnection());
     }
 
+    /// Committing at the end of a unit of work may fail with a [VirtualMachineError].
+    /// The session is not closed when committing fails this way, and the error handling of the invocation discards it instead,
+    /// so the next unit of work on the same thread obtains another connection.
+    /// The failure is provoked as in [#virtual_machine_error_during_commit_on_closing_a_stream_discards_the_connection].
+    ///
+    @Test
+    public void virtual_machine_error_during_commit_discards_the_connection() throws SQLException {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        final Connection before = probe.physicalConnection();
+
+        final var error = new InternalError("Purposeful error.");
+        assertSame(error, assertThrows(TransactionRollbackDueToThrowable.class, () -> probe.selectOneThatFailsToCommit(error)).getCause());
+
+        assertFalse(probe.getSession().isOpen());
+        assertTrue(before.isClosed());
+        assertNotSame(before, probe.physicalConnection());
+    }
+
     /// A unit of work, whose session is discarded in a nested scope, may still complete without an error in its owning scope:
     /// an enclosing scope catches the error and returns a stream, and committing then fails on closing the stream, outside the error handling of any invocation.
     /// Discarding that session must not prevent discarding the session of a later unit of work on the same thread.
@@ -401,6 +419,17 @@ public class SessionInterceptorStackOverflowTest {
                 // The error is deliberately ignored, as an enclosing scope might do.
             }
             return Stream.of(1);
+        }
+
+        /// Queries the database, and then returns.
+        /// Committing fails, as a process that Hibernate runs before completing the transaction throws `error`.
+        ///
+        @SessionRequired
+        public int selectOneThatFailsToCommit(final Error error) {
+            final int result = selectOneInCurrentSession(getSession());
+            final BeforeTransactionCompletionProcess failingProcess = _ -> { throw error; };
+            getSession().unwrap(SessionImplementor.class).getActionQueue().registerProcess(failingProcess);
+            return result;
         }
 
         /// Queries the database, and returns a stream, which commits the transaction when closed.
