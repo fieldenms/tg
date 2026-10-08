@@ -35,7 +35,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
  * <h5>HikariCP configuration properties</h5>
  * Refer to the official <a href='https://github.com/brettwooldridge/HikariCP?tab=readme-ov-file#gear-configuration-knobs-baby'>Gear Configuration</a> for more details.
  * <ul>
- * <li><i>hibernate.hikari.connectionTimeout</i> – a maximum waiting time in millis for a connection from the pool; defaults to 3000 (30 seconds);
+ * <li><i>hibernate.hikari.connectionTimeout</i> – a maximum waiting time in millis for a connection from the pool; defaults to 30000 (30 seconds);
  * <li><i>hibernate.hikari.minimumIdle</i> -- a minimum number of ideal connections in the pool; defaults to the same value as maximumPoolSize;
  * <li><i>hibernate.hikari.maximumPoolSize</i> -- a maximum number of actual connections in the pool; defaults to 10 (refer <a href='https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing">About Pool Sizing</a> for more information);
  * <li><i>hibernate.hikari.idleTimeout</i> -- a maximum time in millis that a connection is allowed to sit idle in the pool; defaults to 240000 (4 minutes), which is suitable for Azure SQL;
@@ -136,7 +136,7 @@ public class HibernateConfigurationFactory {
         setSafely(cfg, C3P0_ACQUIRE_INCREMENT);
         setSafely(cfg, C3P0_IDLE_TEST_PERIOD);
 
-        setSafely(cfg, HIKARI_CONNECTION_TIMEOUT, "3000"); // 30 seconds
+        setSafely(cfg, HIKARI_CONNECTION_TIMEOUT, "30000"); // 30 seconds
         setSafely(cfg, HIKARI_MIN_SIZE); // nothing, allowing HikariCP to do its thing
         setSafely(cfg, HIKARI_MAX_SIZE, "10"); // 10 connections are plenty in most cases
         setSafely(cfg, HIKARI_IDLE_TIMEOUT, "240000"); // 4 minutes
