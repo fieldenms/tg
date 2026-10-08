@@ -43,7 +43,7 @@ public class ComponentWidget extends AbstractComponentWidget {
         attrs.put("property-name", propertyName());
         attrs.put("prop-title", title());
         attrs.put("prop-desc", desc());
-        attrs.put("property-action-index", "[[_propertyActionIndices." + propertyName() + "]]");
+        attrs.put("property-action-index", propertyActionIndexBinding(propertyName()));
         addUnsavedStateAttributes(attrs);
         addMasterContextAttribute(attrs);
         return attrs;

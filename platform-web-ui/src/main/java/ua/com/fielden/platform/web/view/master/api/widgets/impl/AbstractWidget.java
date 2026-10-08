@@ -81,8 +81,15 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
         attrs.put("prop-desc", this.desc);
         attrs.put("current-state", "[[currentState]]");
         attrs.put("toaster", "[[toaster]]");
-        attrs.put("property-action-index", "[[_propertyActionIndices." + this.propertyName +"]]");
+        attrs.put("property-action-index", propertyActionIndexBinding(this.propertyName));
         return attrs;
+    }
+
+    /// The binding of the index of the property action to show for `key`, which is a property name, or the key of a component bound to the entity.
+    /// The master looks the key up among its property action indices as a whole, as a binding path, such as `_propertyActionIndices.location.gisInfo`, would treat a dot-notated property name as a path.
+    ///
+    protected static String propertyActionIndexBinding(final String key) {
+        return "[[_propertyActionIndex(_propertyActionIndices, \"" + key + "\")]]";
     }
 
     /// Creates an attributes that will be used for widget component generation.

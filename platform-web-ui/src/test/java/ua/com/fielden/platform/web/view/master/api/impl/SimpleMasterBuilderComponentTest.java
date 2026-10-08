@@ -60,7 +60,7 @@ public class SimpleMasterBuilderComponentTest {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).also());
 
         assertTrue(out.contains("import '/resources/components/tg-fuel-chart.js';"));
-        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' property-name='integerProp' prop-title='Integer prop' prop-desc='Integer prop desc' property-action-index='[[_propertyActionIndices.integerProp]]' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' property-name='integerProp' prop-title='Integer prop' prop-desc='Integer prop desc' " + actionIndexAttr("integerProp") + " block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
     }
 
     @Test
@@ -87,7 +87,7 @@ public class SimpleMasterBuilderComponentTest {
     public void property_component_that_skips_blocking_has_no_blocking_flag_but_receives_modification_state_of_master() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).skipBlockingWhenUnsaved().also());
 
-        assertTrue(out.contains("property-action-index='[[_propertyActionIndices.integerProp]]' " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " " + MASTER_STATE_ATTRS + ">"));
         assertFalse(out.contains("block-when-unsaved"));
     }
 
@@ -106,6 +106,24 @@ public class SimpleMasterBuilderComponentTest {
         assertEquals(Map.of("integerProp", SingleActionSelector.class), master.propertyActionSelectors());
     }
 
+    @Test
+    public void property_component_for_dot_notated_property_looks_up_its_action_index_by_the_whole_property_name() {
+        final IMaster<TgPersistentEntityWithProperties> master = done(master().addProp("entityProp.integerProp").asComponent(PROPERTY_COMPONENT).withAction(mkAction("propAction")).also());
+        final String out = render(master);
+
+        assertTrue(out.contains("<tg-fuel-chart id='component_4_entityProp.integerProp' entity='[[_currEntity]]' property-name='entityProp.integerProp' "));
+        assertTrue(out.contains(actionIndexAttr("entityProp.integerProp")));
+        assertEquals(Map.of("entityProp.integerProp", SingleActionSelector.class), master.propertyActionSelectors());
+    }
+
+    @Test
+    public void editor_for_dot_notated_property_looks_up_its_action_index_by_the_whole_property_name() {
+        final String out = render(master().addProp("entityProp.integerProp").asInteger().also());
+
+        assertTrue(out.contains("id='editor_4_entityProp.integerProp' "));
+        assertTrue(out.contains(actionIndexAttr("entityProp.integerProp")));
+    }
+
     ////////////////////////////////////////////////////////////////////////
     // Component bound to the entity
     ////////////////////////////////////////////////////////////////////////
@@ -115,7 +133,7 @@ public class SimpleMasterBuilderComponentTest {
         final String out = render(master().addComponent(ENTITY_COMPONENT).also());
 
         assertTrue(out.contains("import '/resources/components/tg-vehicle-fuel-usages.js';"));
-        assertTrue(out.contains("<tg-vehicle-fuel-usages id='component-0' entity='[[_currEntity]]' property-action-index='[[_propertyActionIndices.component-0]]' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains("<tg-vehicle-fuel-usages id='component-0' entity='[[_currEntity]]' " + actionIndexAttr("component-0") + " block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
     }
 
     @Test
@@ -136,7 +154,7 @@ public class SimpleMasterBuilderComponentTest {
                 .skipBlockingWhenUnsaved()
                 .also());
 
-        assertTrue(out.contains("<tg-fuel-usages id='component-0' entity='[[_currEntity]]' property-action-index='[[_propertyActionIndices.component-0]]' " + MASTER_STATE_ATTRS + " mode='compact'>"));
+        assertTrue(out.contains("<tg-fuel-usages id='component-0' entity='[[_currEntity]]' " + actionIndexAttr("component-0") + " " + MASTER_STATE_ATTRS + " mode='compact'>"));
     }
 
     @Test
@@ -208,8 +226,8 @@ public class SimpleMasterBuilderComponentTest {
                 .addComponent("components/tg-vehicle-chart").withMultiAction(multiAction(SecondActionSelector.class, mkAction("first"), mkAction("second"))).also());
         final String out = render(master);
 
-        assertTrue(out.contains("<tg-vehicle-fuel-usages id='component-0' entity='[[_currEntity]]' property-action-index='[[_propertyActionIndices.component-0]]' "));
-        assertTrue(out.contains("<tg-vehicle-chart id='component-1' entity='[[_currEntity]]' property-action-index='[[_propertyActionIndices.component-1]]' "));
+        assertTrue(out.contains("<tg-vehicle-fuel-usages id='component-0' entity='[[_currEntity]]' " + actionIndexAttr("component-0") + " "));
+        assertTrue(out.contains("<tg-vehicle-chart id='component-1' entity='[[_currEntity]]' " + actionIndexAttr("component-1") + " "));
         assertEquals(Map.of("integerProp", SingleActionSelector.class, "component-1", SecondActionSelector.class), master.propertyActionSelectors());
     }
 
@@ -347,6 +365,12 @@ public class SimpleMasterBuilderComponentTest {
     ////////////////////////////////////////////////////////////////////////
     // Helpers
     ////////////////////////////////////////////////////////////////////////
+
+    /// The rendered attribute with the index of the property action to show for `key`, which the master looks up as a whole.
+    ///
+    private static String actionIndexAttr(final String key) {
+        return "property-action-index='[[_propertyActionIndex(_propertyActionIndices, \"" + key + "\")]]'";
+    }
 
     private static IPropertySelector<TgPersistentEntityWithProperties> master() {
         return new SimpleMasterBuilder<TgPersistentEntityWithProperties>().forEntity(TgPersistentEntityWithProperties.class);

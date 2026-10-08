@@ -988,6 +988,15 @@ export const TgEntityBinderBehavior = {
 
     //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
     /**
+     * Returns the index of the property action to show for `key`, a property name or the key of a component bound to the entity, among `propertyActionIndices` of the received entity,
+     * or -1 if there is no index for `key`, in which case no property action is shown.
+     * The key is looked up as a whole, as a binding path would treat a dot-notated property name, such as 'location.gisInfo', as a path.
+     */
+    _propertyActionIndex: function (propertyActionIndices, key) {
+        return propertyActionIndices && typeof propertyActionIndices[key] === 'number' ? propertyActionIndices[key] : -1;
+    },
+
+    /**
      * Implements the default action to (re)bind freshly received entity. Entity receival is the result of actions Refresh, Validate, Save and Run.
      *
      * @param isRefreshingProcess -- value true indicates that the call happens as part of refresh lifecycle, which requires resetting the state.

@@ -68,7 +68,7 @@ public class EntityComponentWidget extends AbstractComponentWidget {
         attrs.put("entity", "[[_currEntity]]");
         title.ifPresent(value -> attrs.put("prop-title", value));
         desc.ifPresent(value -> attrs.put("prop-desc", value));
-        attrs.put("property-action-index", "[[_propertyActionIndices." + componentKey + "]]");
+        attrs.put("property-action-index", propertyActionIndexBinding(componentKey));
         addUnsavedStateAttributes(attrs);
         addMasterContextAttribute(attrs);
         return attrs;
