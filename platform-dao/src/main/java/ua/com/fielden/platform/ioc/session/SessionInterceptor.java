@@ -20,6 +20,7 @@ import ua.com.fielden.platform.ioc.session.exceptions.TransactionCommitException
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToThrowable;
 import ua.com.fielden.platform.security.user.User;
 
+import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.concurrent.ThreadFactory;
 import java.util.stream.Stream;
@@ -106,6 +107,18 @@ public class SessionInterceptor implements MethodInterceptor {
     /// Created eagerly, so that discarding a session does not create it when the stack may be nearly exhausted.
     /// A thread factory obtained from a builder is safe for use by concurrent threads.
     private static final ThreadFactory DISCARDER_THREAD_FACTORY = Thread.ofPlatform().name("discard-session").daemon(true).factory();
+
+    // Discarding a session creates a SessionDiscarder on a thread whose stack may be nearly exhausted.
+    // Its class is initialised here, so that its first use does not run the class loader and the verifier on that thread.
+    // Method `ensureInitialized` also links and initialises the class, whereas a class literal only loads it.
+    // The class literal shares its constant-pool entry with `new SessionDiscarder` in `discardSession`, so that reference is resolved here too.
+    static {
+        try {
+            MethodHandles.lookup().ensureInitialized(SessionDiscarder.class);
+        } catch (final IllegalAccessException ex) {
+            throw new ExceptionInInitializerError(ex);
+        }
+    }
 
     private final Provider<? extends SessionFactory> sessionFactory;
     private final ThreadLocal<String> transactionGuid = new ThreadLocal<>();
@@ -347,8 +360,9 @@ public class SessionInterceptor implements MethodInterceptor {
     /// The session is first unbound from the current thread, which leaves the thread ready for the next unit of work.
     /// Aborting and closing run on a new thread, as the stack of the current thread may be nearly exhausted.
     /// A new thread per discarded session, rather than a pool, ensures that a discard that does not complete — for example, closing a connection that hangs — cannot delay later discards.
-    /// For the same reason as above, this path avoids lambdas and lazily created objects, whose first use requires class loading or linkage,
-    /// and obtains the session factory from the session, which is a plain getter.
+    /// For the same reason as above, this path avoids lambdas, whose first use requires linkage, and uses only classes that are loaded beforehand:
+    /// the thread factory and [SessionDiscarder] are initialised together with this class.
+    /// It also obtains the session factory from the session, which is a plain getter.
     ///
     /// The session is discarded at most once per unit of work.
     /// Once the discarding thread has been started, later calls within the same unit of work return immediately (refer to [CleanupState#discarderStarted]).
