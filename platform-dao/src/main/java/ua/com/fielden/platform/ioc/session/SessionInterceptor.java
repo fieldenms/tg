@@ -43,10 +43,13 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 /// Please note that transaction can be started outside of this interceptor, which means it will not be committed within it, and the transaction originator is responsible for commit.
 /// At the same time, if an exception occurs then transaction will be rolled back.
 ///
+/// Beginning a transaction involves no exchange with the database, as pooled connections are handed out with auto-commit disabled (refer to `HibernateConfigurationFactory`).
+/// The connection is acquired by the first statement of a unit of work, so a broken connection, for example, after the database server has reset it,
+/// fails that statement, and is handled like any other failure within the unit of work.
+///
 /// A failure to *begin* a transaction closes the session before the failure propagates.
-/// Such a failure typically indicates a broken connection, for example, after the database server has reset it.
-/// Current sessions are bound to threads, and a transaction that failed to begin is inactive, so the session would otherwise remain bound to the thread,
-/// holding on to the broken connection and failing every subsequent unit of work on that thread.
+/// Current sessions are bound to threads, and a transaction that failed to begin is inactive, so the error handling would neither roll it back nor close the session,
+/// which would otherwise remain bound to the thread, and be reused by the next unit of work on that thread.
 ///
 /// A failure to *commit* is reported rather than swallowed.
 /// Committing is the point at which a unit of work becomes durable, so a failure there means nothing was persisted, however successfully the method itself ran.
@@ -273,9 +276,10 @@ public class SessionInterceptor implements MethodInterceptor {
             try {
                 tr.begin();
             } catch (final Throwable ex) {
+                // Beginning a transaction involves no exchange with the database (refer to HibernateConfigurationFactory), so the session holds no connection here.
                 // The transaction remains inactive, so the error handling of the invocation would neither roll it back nor close the session.
-                // An open session stays bound to the current thread, and holds on to the connection that failed to begin the transaction.
-                // Closing it here ensures that the next unit of work on this thread obtains a new session and a new connection.
+                // An open session stays bound to the current thread.
+                // Closing it here ensures that the next unit of work on this thread obtains a new session.
                 closeSession(session, user);
                 throw ex;
             }

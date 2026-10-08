@@ -50,7 +50,8 @@ import static ua.com.fielden.platform.test_config.H2OrPostgreSqlOrSqlServerConte
 /// Such an error must affect neither later units of work on the same thread, which matters for pooled threads such as those running scheduled jobs,
 /// nor units of work on other threads, which obtain connections from the same pool.
 ///
-/// The tests run the real [SessionInterceptor] over a real Hibernate session factory with thread-bound current sessions and HikariCP, following [SessionInterceptorBeginFailureTest].
+/// The tests run the real [SessionInterceptor] over a real Hibernate session factory with thread-bound current sessions and HikariCP, following [SessionInterceptorConnectionOutageTest].
+/// Pooled connections have auto-commit disabled, as TG configures them (refer to `HibernateConfigurationFactory`).
 ///
 /// Two groups of tests:
 ///   - Tests that throw an error at a known point run by default.
@@ -89,6 +90,8 @@ public class SessionInterceptorStackOverflowTest {
                 .applySetting(AvailableSettings.PASS, dbProps.getProperty("hibernate.connection.password"))
                 .applySetting(AvailableSettings.DIALECT, dbProps.getProperty("hibernate.dialect"))
                 .applySetting(AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread")
+                .applySetting(AvailableSettings.AUTOCOMMIT, "false")
+                .applySetting(AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, "true")
                 .applySetting("hibernate.hikari.connectionTimeout", String.valueOf(POOL_TIMEOUT_MILLIS))
                 .build();
         sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();

@@ -50,6 +50,7 @@ import static ua.com.fielden.platform.test_config.H2OrPostgreSqlOrSqlServerConte
 ///
 /// The tests run the real [SessionInterceptor] over a real Hibernate session factory with thread-bound current sessions and HikariCP,
 /// following [SessionInterceptorStackOverflowTest].
+/// Pooled connections have auto-commit disabled, as TG configures them (refer to `HibernateConfigurationFactory`).
 /// HikariCP obtains connections from [CompletionFailureSimulatingDataSource], which can make rolling back or committing fail with a SQL state that does not indicate a broken connection.
 /// HikariCP reuses a connection after such a failure.
 ///
@@ -75,12 +76,14 @@ public class SessionInterceptorCompletionFailureTest {
         final HikariConfig config = new HikariConfig();
         config.setDataSource(completionFailureSimulatingDataSource);
         config.setConnectionTimeout(POOL_TIMEOUT_MILLIS);
+        config.setAutoCommit(false);
         dataSource = new HikariDataSource(config);
 
         final var registry = new StandardServiceRegistryBuilder()
                 .applySetting(AvailableSettings.DATASOURCE, dataSource)
                 .applySetting(AvailableSettings.DIALECT, dbProps.getProperty("hibernate.dialect"))
                 .applySetting(AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread")
+                .applySetting(AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, "true")
                 .build();
         sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
 

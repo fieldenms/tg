@@ -5,12 +5,12 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.TransactionException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.exception.JDBCConnectionException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +21,7 @@ import ua.com.fielden.platform.test.runners.PostgresqlDomainDrivenTestCaseRunner
 import ua.com.fielden.platform.test.runners.SqlServerDomainDrivenTestCaseRunner.SqlServerTestContext;
 import ua.com.fielden.platform.test_config.ITestContext;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -31,6 +32,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntSupplier;
 
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.subclassesOf;
@@ -39,16 +42,20 @@ import static org.junit.Assume.assumeTrue;
 import static ua.com.fielden.platform.test_config.H2OrPostgreSqlOrSqlServerContextSelector.isPostgreSql;
 import static ua.com.fielden.platform.test_config.H2OrPostgreSqlOrSqlServerContextSelector.isSqlServer;
 
-/// A database connection may break while [SessionInterceptor] begins a transaction, for example, when the database server resets connections during maintenance.
-/// Such a failure must not affect later units of work on the same thread once the database is reachable again.
+/// A database connection may break, for example, when the database server resets connections during maintenance.
+/// Such a failure must not affect later units of work on the same thread, or on other threads, once the database is reachable again.
 ///
-/// The test runs the real [SessionInterceptor] over a real Hibernate session factory with thread-bound current sessions,
+/// Pooled connections have auto-commit disabled, as TG configures them (refer to `HibernateConfigurationFactory`).
+/// Beginning a transaction involves no exchange with the database, so a broken connection fails the first statement of a unit of work,
+/// which Hibernate reports as [JDBCConnectionException].
+///
+/// The tests run the real [SessionInterceptor] over a real Hibernate session factory with thread-bound current sessions,
 /// which is how TG applications are configured (`hibernate.current_session_context_class=thread`).
 /// The database is the test database specified by system property `databaseUri`, either PostgreSQL or SQL Server, with connection properties as used by the test runners.
 /// Only `SELECT 1` is executed, so the content of the database is irrelevant.
 /// The database is accessed through [OutageSimulatingConnectionProvider], which can simulate an outage.
 ///
-public class SessionInterceptorBeginFailureTest {
+public class SessionInterceptorConnectionOutageTest {
 
     private OutageSimulatingConnectionProvider connectionProvider;
     private SessionFactory sessionFactory;
@@ -65,6 +72,7 @@ public class SessionInterceptorBeginFailureTest {
                                                                     dbProps.getProperty("hibernate.connection.password"));
         final var registry = new StandardServiceRegistryBuilder()
                 .applySetting(AvailableSettings.CONNECTION_PROVIDER, connectionProvider)
+                .applySetting(AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, "true")
                 .applySetting(AvailableSettings.DIALECT, dbProps.getProperty("hibernate.dialect"))
                 .applySetting(AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread")
                 .build();
@@ -97,20 +105,20 @@ public class SessionInterceptorBeginFailureTest {
     }
 
     @Test
-    public void session_whose_transaction_failed_to_begin_is_closed() {
+    public void session_whose_connection_broke_is_closed() {
         final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
 
         connectionProvider.startOutage();
-        assertThrows(TransactionException.class, probe::selectOne);
+        assertThrows(JDBCConnectionException.class, probe::selectOne);
 
-        assertFalse("The session whose transaction failed to begin should be closed, and thus no longer bound to the thread.",
+        assertFalse("The session whose connection broke should be closed, and thus no longer bound to the thread.",
                     probe.getSession().isOpen());
     }
 
     @Test
     public void unit_of_work_on_the_same_thread_succeeds_once_the_database_is_reachable_again() {
         connectionProvider.startOutage();
-        assertThrows(TransactionException.class, injector.getInstance(DatabaseProbe.class)::selectOne);
+        assertThrows(JDBCConnectionException.class, injector.getInstance(DatabaseProbe.class)::selectOne);
         connectionProvider.endOutage();
 
         assertEquals(1, injector.getInstance(DatabaseProbe.class).selectOne());
@@ -121,7 +129,7 @@ public class SessionInterceptorBeginFailureTest {
     @Test
     public void unit_of_work_on_another_thread_succeeds_once_the_database_is_reachable_again() throws InterruptedException, ExecutionException {
         connectionProvider.startOutage();
-        assertThrows(TransactionException.class, injector.getInstance(DatabaseProbe.class)::selectOne);
+        assertThrows(JDBCConnectionException.class, injector.getInstance(DatabaseProbe.class)::selectOne);
         connectionProvider.endOutage();
 
         final ExecutorService anotherThread = Executors.newSingleThreadExecutor();
@@ -132,12 +140,50 @@ public class SessionInterceptorBeginFailureTest {
         }
     }
 
-    /// A unit of work that queries the database within a transaction managed by [SessionInterceptor].
+    /// Beginning a transaction involves no exchange with the database, so no connection is acquired until the first statement of a unit of work.
+    ///
+    @Test
+    public void beginning_a_transaction_acquires_no_connection() {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        final int acquiredBefore = connectionProvider.acquiredConnections();
+
+        assertEquals(acquiredBefore, probe.evaluate(connectionProvider::acquiredConnections));
+    }
+
+    /// A [VirtualMachineError] may interrupt the first exchange with the database in a unit of work, which leaves the connection out of sync with the server.
+    /// The connection is acquired within the unit of work, after its transaction has begun, so the session is discarded:
+    /// its connection is aborted instead of being returned to the pool.
+    ///
+    @Test
+    public void virtual_machine_error_during_the_first_exchange_with_the_database_aborts_the_connection() {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+
+        final var error = new InternalError("Purposeful error.");
+        connectionProvider.failFirstExchangeOfNextConnectionWith(error);
+        final Throwable thrown = assertThrows(Throwable.class, probe::selectOne);
+
+        assertTrue("The unit of work should fail with the error, possibly wrapped.", isCausedBy(thrown, error));
+        assertEquals(1, connectionProvider.abortedConnections());
+        assertFalse(probe.getSession().isOpen());
+    }
+
+    private static boolean isCausedBy(final Throwable thrown, final Throwable cause) {
+        for (Throwable current = thrown; current != null; current = current.getCause()) {
+            if (current == cause) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// Units of work within a transaction managed by [SessionInterceptor].
     ///
     public static class DatabaseProbe implements ISessionEnabled {
         private Session session;
         private String transactionGuid;
 
+        /// Queries the database.
+        ///
         @SessionRequired
         public int selectOne() {
             return getSession().doReturningWork(connection -> {
@@ -146,6 +192,13 @@ public class SessionInterceptorBeginFailureTest {
                     return resultSet.getInt(1);
                 }
             });
+        }
+
+        /// Evaluates `supplier` without accessing the database.
+        ///
+        @SessionRequired
+        public int evaluate(final IntSupplier supplier) {
+            return supplier.getAsInt();
         }
 
         @Override
@@ -174,19 +227,25 @@ public class SessionInterceptorBeginFailureTest {
         }
     }
 
-    /// Provides connections to a database and simulates an outage, which affects connections obtained while the outage lasts.
+    /// Provides connections to a database, with auto-commit disabled, as a connection pool configured by TG does.
+    /// Simulates an outage, which affects connections obtained while the outage lasts,
+    /// and can make the first exchange with the database of the next connection fail with an error.
     ///
-    /// Such a connection behaves as a pooled SQL Server connection does when the server resets it:
+    /// A connection obtained during an outage behaves as a pooled SQL Server connection does when the server resets it:
     ///   - the first round trip to the server fails with `Connection reset by peer` (SQL state `08S01`), as reported by the JDBC driver;
     ///   - any subsequent use fails with `Connection is closed`, as reported by HikariCP once it evicts the broken connection.
     ///
     /// Methods answered from the client-side state of a connection, such as `getAutoCommit()`, involve no round trip and succeed.
+    /// So do `close()` and `abort(Executor)`, which release the connection.
     ///
     public static class OutageSimulatingConnectionProvider implements ConnectionProvider {
         private final String url;
         private final String username;
         private final String password;
         private volatile boolean outage = false;
+        private volatile Error errorForNextConnection;
+        private final AtomicInteger acquiredConnections = new AtomicInteger();
+        private final AtomicInteger abortedConnections = new AtomicInteger();
 
         public OutageSimulatingConnectionProvider(final String url, final String username, final String password) {
             this.url = url;
@@ -202,27 +261,61 @@ public class SessionInterceptorBeginFailureTest {
             outage = false;
         }
 
+        /// Makes the first exchange with the database of the next connection fail with `error`, as if the error interrupted it.
+        ///
+        public void failFirstExchangeOfNextConnectionWith(final Error error) {
+            errorForNextConnection = error;
+        }
+
+        /// The number of connections provided so far.
+        ///
+        public int acquiredConnections() {
+            return acquiredConnections.get();
+        }
+
+        /// The number of connections aborted so far.
+        ///
+        public int abortedConnections() {
+            return abortedConnections.get();
+        }
+
         @Override
         public Connection getConnection() throws SQLException {
             final Connection connection = DriverManager.getConnection(url, username, password);
-            return outage ? brokenConnection(connection) : connection;
+            connection.setAutoCommit(false);
+            acquiredConnections.incrementAndGet();
+            final Error error = errorForNextConnection;
+            errorForNextConnection = null;
+            return simulatingConnection(connection, outage, error);
         }
 
-        private static Connection brokenConnection(final Connection connection) {
-            final AtomicBoolean reset = new AtomicBoolean(false);
+        private Connection simulatingConnection(final Connection connection, final boolean broken, final Error firstExchangeError) {
+            final AtomicBoolean exchanged = new AtomicBoolean(false);
             return (Connection) Proxy.newProxyInstance(Connection.class.getClassLoader(), new Class<?>[] {Connection.class}, (proxy, method, args) -> {
                 switch (method.getName()) {
                     case "close" -> { connection.close(); return null; }
-                    case "isClosed" -> { return reset.get(); }
+                    case "abort" -> { abortedConnections.incrementAndGet(); connection.close(); return null; }
+                    case "isClosed" -> { return broken ? exchanged.get() : connection.isClosed(); }
                     case "getAutoCommit" -> { return connection.getAutoCommit(); }
-                    case "toString" -> { return "Broken connection"; }
+                    case "toString" -> { return broken ? "Broken connection" : connection.toString(); }
                     case "hashCode" -> { return System.identityHashCode(proxy); }
                     case "equals" -> { return proxy == args[0]; }
                     default -> {
-                        if (reset.compareAndSet(false, true)) {
-                            throw new SQLException("Connection reset by peer", "08S01");
+                        final boolean first = exchanged.compareAndSet(false, true);
+                        if (broken) {
+                            if (first) {
+                                throw new SQLException("Connection reset by peer", "08S01");
+                            }
+                            throw new SQLException("Connection is closed", "08003");
                         }
-                        throw new SQLException("Connection is closed", "08003");
+                        if (first && firstExchangeError != null) {
+                            throw firstExchangeError;
+                        }
+                        try {
+                            return method.invoke(connection, args);
+                        } catch (final InvocationTargetException ex) {
+                            throw ex.getCause();
+                        }
                     }
                 }
             });
