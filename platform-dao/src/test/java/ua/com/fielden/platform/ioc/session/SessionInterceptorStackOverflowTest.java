@@ -16,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.ioc.session.exceptions.TransactionCommitException;
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToThrowable;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.runners.PostgresqlDomainDrivenTestCaseRunner.PostgresqlTestContext;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.subclassesOf;
@@ -151,6 +153,63 @@ public class SessionInterceptorStackOverflowTest {
 
         assertTrue(before.isClosed());
         assertNotSame(before, probe.physicalConnection());
+    }
+
+    /// In nested scopes, the innermost scope discards the session, and the enclosing scopes do not discard it again.
+    /// Each unit of work that fails this way has its own connection discarded, so nothing recorded about the first unit of work affects the second.
+    ///
+    @Test
+    public void virtual_machine_error_in_nested_scope_discards_the_connection_of_each_failing_unit_of_work() throws SQLException {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        for (int unitOfWork = 0; unitOfWork < 2; unitOfWork++) {
+            final Connection before = probe.physicalConnection();
+
+            assertThrows(TransactionRollbackDueToThrowable.class, () -> probe.selectOneAndThrowInNestedScope(new InternalError("Purposeful error.")));
+
+            assertTrue(before.isClosed());
+        }
+    }
+
+    /// An interrupt does not end the wait for the thread that discards the session.
+    /// The session is closed before the error propagates, as on a thread that is not interrupted, and the interrupt status is preserved.
+    ///
+    @Test
+    public void virtual_machine_error_on_interrupted_thread_discards_the_connection_before_the_error_propagates() throws SQLException {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        final Connection before = probe.physicalConnection();
+
+        final boolean interrupted;
+        try {
+            assertThrows(TransactionRollbackDueToThrowable.class, () -> probe.selectOneInterruptAndThrow(new InternalError("Purposeful error.")));
+        } finally {
+            interrupted = Thread.interrupted();
+        }
+
+        assertTrue(interrupted);
+        assertFalse(probe.getSession().isOpen());
+        assertTrue(before.isClosed());
+    }
+
+    /// A unit of work, whose session is discarded in a nested scope, may still complete without an error in its owning scope:
+    /// an enclosing scope catches the error and returns a stream, and committing then fails on closing the stream, outside the error handling of any invocation.
+    /// Discarding that session must not prevent discarding the session of a later unit of work on the same thread.
+    ///
+    @Test
+    public void virtual_machine_error_discards_the_connection_after_a_stream_returned_by_a_unit_of_work_whose_session_was_discarded() throws SQLException {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        final Connection first = probe.physicalConnection();
+
+        assertThrows(TransactionCommitException.class, () -> {
+            try (final Stream<Integer> stream = probe.catchErrorInNestedScopeAndReturnStream(new InternalError("Purposeful error."))) {
+                stream.forEach(_ -> {});
+            }
+        });
+        assertTrue(first.isClosed());
+
+        final Connection second = probe.physicalConnection();
+        assertThrows(TransactionRollbackDueToThrowable.class, () -> probe.selectOneAndThrow(new InternalError("Purposeful error.")));
+        assertFalse(probe.getSession().isOpen());
+        assertTrue(second.isClosed());
     }
 
     /// Each level of recursion executes a separate unit of work, which completes before the next level.
@@ -296,6 +355,36 @@ public class SessionInterceptorStackOverflowTest {
         @SessionRequired
         public void selectOneAndThrow(final Error error) {
             selectOneInCurrentSession(getSession());
+            throw error;
+        }
+
+        /// Queries the database, and then throws `error` from a nested unit of work.
+        ///
+        @SessionRequired
+        public void selectOneAndThrowInNestedScope(final Error error) {
+            selectOneInCurrentSession(getSession());
+            selectOneAndThrow(error);
+        }
+
+        /// Queries the database, catches `error` thrown from a nested scope, and returns a stream, which commits the transaction when closed.
+        ///
+        @SessionRequired
+        public Stream<Integer> catchErrorInNestedScopeAndReturnStream(final Error error) {
+            selectOneInCurrentSession(getSession());
+            try {
+                selectOneAndThrow(error);
+            } catch (final TransactionRollbackDueToThrowable _) {
+                // The error is deliberately ignored, as an enclosing scope might do.
+            }
+            return Stream.of(1);
+        }
+
+        /// Queries the database, interrupts the current thread, and then throws `error`.
+        ///
+        @SessionRequired
+        public void selectOneInterruptAndThrow(final Error error) {
+            selectOneInCurrentSession(getSession());
+            Thread.currentThread().interrupt();
             throw error;
         }
 
