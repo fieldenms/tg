@@ -37,6 +37,7 @@ import java.util.stream.Stream;
 
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.subclassesOf;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
@@ -212,6 +213,22 @@ public class SessionInterceptorStackOverflowTest {
         assertFalse(probe.getSession().isOpen());
         assertTrue(before.isClosed());
         assertNotSame(before, probe.physicalConnection());
+    }
+
+    /// Committing on closing a stream may fail with an exception caused by a [VirtualMachineError], after which Hibernate rolls back the transaction and closes the session.
+    /// There is no session left to discard, but its transaction GUID is removed nonetheless, so that the next unit of work on the same thread can begin its own session scope.
+    /// The failure is provoked by a process that Hibernate runs before completing the transaction, from which Hibernate wraps the exception in [org.hibernate.HibernateException].
+    ///
+    @Test
+    public void exception_caused_by_virtual_machine_error_during_commit_on_closing_a_stream_does_not_affect_the_next_unit_of_work() {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+
+        final var wrapped = new UndeclaredThrowableException(new InternalError("Purposeful error."));
+        final Stream<Integer> stream = probe.selectOneAndReturnStreamThatFailsToCommit(wrapped);
+        assertSame(wrapped, assertThrows(RuntimeException.class, stream::close).getCause());
+        assertFalse(probe.getSession().isOpen());
+
+        assertEquals(1, injector.getInstance(StrictDatabaseProbe.class).selectOne());
     }
 
     /// Committing at the end of a unit of work may fail with a [VirtualMachineError].
@@ -439,6 +456,17 @@ public class SessionInterceptorStackOverflowTest {
         public Stream<Integer> selectOneAndReturnStreamThatFailsToCommit(final Error error) {
             selectOneInCurrentSession(getSession());
             final BeforeTransactionCompletionProcess failingProcess = _ -> { throw error; };
+            getSession().unwrap(SessionImplementor.class).getActionQueue().registerProcess(failingProcess);
+            return Stream.of(1);
+        }
+
+        /// Queries the database, and returns a stream, which commits the transaction when closed.
+        /// Committing fails, as a process that Hibernate runs before completing the transaction throws `exception`.
+        ///
+        @SessionRequired
+        public Stream<Integer> selectOneAndReturnStreamThatFailsToCommit(final RuntimeException exception) {
+            selectOneInCurrentSession(getSession());
+            final BeforeTransactionCompletionProcess failingProcess = _ -> { throw exception; };
             getSession().unwrap(SessionImplementor.class).getActionQueue().registerProcess(failingProcess);
             return Stream.of(1);
         }
