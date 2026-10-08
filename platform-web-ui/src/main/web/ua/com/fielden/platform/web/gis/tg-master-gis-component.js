@@ -140,6 +140,22 @@ MasterGisComponent.prototype.fitToFeatures = function (features) {
 };
 
 /**
+ * Shows or hides the labels of features, which are their tooltips, as the labels toggle of centre maps does.
+ * Shown labels are repositioned, as tooltips are positioned with their sizes, which hidden labels do not have.
+ */
+MasterGisComponent.prototype.showLabels = function (show) {
+    this._map.getPane('tooltipPane').hidden = !show;
+    if (show) {
+        this._map.eachLayer(layer => {
+            const tooltip = layer.getTooltip(); // not 'isTooltipOpen()', which fails for layers without a tooltip, such as tile layers
+            if (tooltip && tooltip.isOpen()) {
+                tooltip.update();
+            }
+        });
+    }
+};
+
+/**
  * Updates the map after a change of size of its element.
  */
 MasterGisComponent.prototype.invalidateSize = function () {

@@ -1,3 +1,6 @@
+import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
+import '/resources/egi/tg-responsive-toolbar.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import { TgMasterComponentBehavior } from '/resources/master/tg-master-component-behavior.js';
@@ -9,21 +12,46 @@ const template = html`
             flex-direction: column;
         }
         .caption {
-            display: flex;
-            align-items: center;
             min-height: 24px;
+            line-height: 24px;
             font-size: 12px;
             color: var(--paper-input-container-color, var(--secondary-text-color));
-        }
-        .caption[hidden] {
-            display: none;
-        }
-        .caption-title {
-            flex: 1;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
             cursor: default;
+        }
+        .caption[hidden] {
+            display: none;
+        }
+        /* the toolbar under the caption, which moves the actions that do not fit into a dropdown, as the toolbar of the rich text editor */
+        .toolbar {
+            flex-shrink: 0;
+            padding-bottom: 4px;
+            /* the sizes of property actions, which the toolbar can move beyond the styles of the master */
+            --tg-ui-action-icon-button-width: 24px;
+            --tg-ui-action-icon-button-height: 24px;
+            --tg-ui-action-icon-button-padding: 4px;
+            --tg-ui-action-spinner-width: 20px;
+            --tg-ui-action-spinner-height: 20px;
+            --tg-ui-action-spinner-min-width: 20px;
+            --tg-ui-action-spinner-min-height: 20px;
+            --tg-ui-action-spinner-max-width: 20px;
+            --tg-ui-action-spinner-max-height: 20px;
+            --tg-ui-action-spinner-padding: 0px;
+            --tg-ui-action-spinner-margin-left: 0;
+            --tg-responsove-toolbar-expand-button: {
+                padding: 4px;
+                width: 24px;
+                height: 24px;
+                color: var(--paper-input-container-color, var(--secondary-text-color));
+            };
+            --tg-responsove-toolbar-dropdown-content: {
+                padding: 4px;
+            };
+        }
+        .toolbar[hidden] {
+            display: none;
         }
         .map-container {
             flex: 1;
@@ -38,10 +66,11 @@ const template = html`
             isolation: isolate;
         }
     </style>
-    <div class="caption" hidden$="[[!_hasCaption(propTitle, _hasPropertyActions)]]">
-        <span class="caption-title" tooltip-text$="[[propDesc]]">[[propTitle]]</span>
-        <slot name="property-action"></slot>
-    </div>
+    <div class="caption" hidden$="[[!propTitle]]" tooltip-text$="[[propDesc]]">[[propTitle]]</div>
+    <tg-responsive-toolbar id="toolbar" class="toolbar custom-responsive-toolbar" hidden$="[[!_hasToolbar(_hasPropertyActions, labelsToggle)]]">
+        <paper-icon-button slot="entity-specific-action" class="entity-specific-action" style$="[[_labelsToggleStyle(_labelsShown)]]" icon="icons:label" toggles active="{{_labelsShown}}" hidden$="[[!labelsToggle]]" tooltip-text="Show / hide map labels."></paper-icon-button>
+        <slot slot="entity-specific-action" class="entity-specific-action" name="property-action"></slot>
+    </tg-responsive-toolbar>
     <div class="map-container">
         <div id="map" class="map"></div>
     </div>
@@ -63,6 +92,10 @@ const template = html`
  * The map is created once it has a size, and is released when the component is detached.
  * The component fills the height of its layout cell, so that it grows with the master in a flexible row of the master layout, such as 'FLEXIBLE_ROW' of 'LayoutComposer'.
  * Its height is not less than 'min-height', which is also its height in a row laid out to the heights of its content.
+ *
+ * The title of the map is followed by a responsive toolbar, which moves the actions that do not fit into a dropdown.
+ * The toolbar has the property actions, and a toggle that shows and hides the labels of map features, as the labels toggle of centre maps, if attribute 'labels-toggle' is set.
+ * A property action reaches the map as 'action.masterMap', wherever the toolbar places the action, and the GIS component as 'action.masterMap.gisComponent' once the map is created.
  */
 Polymer({
     _template: template,
@@ -120,6 +153,29 @@ Polymer({
             observer: '_minHeightChanged'
         },
 
+        /**
+         * Indicates whether the toolbar has a toggle that shows and hides the labels of map features.
+         */
+        labelsToggle: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
+         * The GIS component that draws the map, or null while the map is not created.
+         */
+        gisComponent: {
+            type: Object,
+            value: null,
+            readOnly: true
+        },
+
+        _labelsShown: {
+            type: Boolean,
+            value: true,
+            observer: '_labelsShownChanged'
+        },
+
         _hasPropertyActions: {
             type: Boolean,
             value: false
@@ -132,6 +188,8 @@ Polymer({
 
     ready: function () {
         this._hasPropertyActions = this._propertyActions.length > 0;
+        // the toolbar moves the actions that do not fit into its dropdown, so the parent element of an action is not always this map
+        this._propertyActions.forEach(action => action.masterMap = this);
     },
 
     attached: function () {
@@ -144,9 +202,9 @@ Polymer({
         this._resizeObserver.disconnect();
         this._resizeObserver = null;
         cancelAnimationFrame(this._sizeChangedFrame);
-        if (this._gis) {
-            this._gis.remove();
-            this._gis = null;
+        if (this.gisComponent) {
+            this.gisComponent.remove();
+            this._setGisComponent(null);
         }
     },
 
@@ -154,14 +212,28 @@ Polymer({
         this.style.minHeight = minHeight;
     },
 
-    _hasCaption: function (propTitle, _hasPropertyActions) {
-        return !!propTitle || _hasPropertyActions;
+    _labelsShownChanged: function (labelsShown) {
+        if (this.gisComponent) {
+            this.gisComponent.showLabels(labelsShown);
+        }
+    },
+
+    _hasToolbar: function (_hasPropertyActions, labelsToggle) {
+        return _hasPropertyActions || labelsToggle;
+    },
+
+    /**
+     * The style of the labels toggle, which is inline, as the toolbar can move the toggle into its dropdown, beyond the styles of this component.
+     * The toggle has the size of property actions, and a border while the labels are shown, as the labels toggle of centre maps.
+     */
+    _labelsToggleStyle: function (labelsShown) {
+        return `width:24px;height:24px;padding:2px;box-sizing:border-box;border-radius:50%;border:2px solid ${labelsShown ? 'currentColor' : 'transparent'};`;
     },
 
     _entitiesChanged: function (entity, entityPath, propertyName) {
         this._entities = this._entitiesToShow(entity, propertyName || entityPath);
-        if (this._gis) {
-            this._gis.show(this._entities);
+        if (this.gisComponent) {
+            this.gisComponent.show(this._entities);
         }
     },
 
@@ -190,21 +262,27 @@ Polymer({
 
     /**
      * Creates the GIS component once the map has a size, and updates the map after later changes of size; the map has no size while hidden.
+     * The toolbar is resized with the map, as they have the same width.
      */
     _sizeChanged: function () {
         const mapDiv = this.$.map;
         if (mapDiv.offsetWidth === 0 || mapDiv.offsetHeight === 0) {
             return;
         }
-        if (this._gis) {
-            this._gis.invalidateSize();
+        if (!this.$.toolbar.hidden) {
+            this.$.toolbar.notifyResize();
+        }
+        if (this.gisComponent) {
+            this.gisComponent.invalidateSize();
         } else if (!this._creatingGis) {
             this._creatingGis = true;
             this._gisComponentClass.then(GisComponentClass => {
                 this._creatingGis = false;
-                if (GisComponentClass && this.isConnected && !this._gis) {
-                    this._gis = new GisComponentClass(mapDiv, this);
-                    this._gis.show(this._entities || []);
+                if (GisComponentClass && this.isConnected && !this.gisComponent) {
+                    // the GIS component is kept as soon as it creates the map, so that an error in drawing never leads to a second map in the same element
+                    this._setGisComponent(new GisComponentClass(mapDiv, this));
+                    this.gisComponent.showLabels(this._labelsShown);
+                    this.gisComponent.show(this._entities || []);
                 }
             });
         }
