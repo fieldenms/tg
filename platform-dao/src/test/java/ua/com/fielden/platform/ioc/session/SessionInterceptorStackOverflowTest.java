@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -229,6 +230,49 @@ public class SessionInterceptorStackOverflowTest {
         assertFalse(probe.getSession().isOpen());
 
         assertEquals(1, injector.getInstance(StrictDatabaseProbe.class).selectOne());
+    }
+
+    /// A [VirtualMachineError] may occur while a stream returned by a unit of work is traversed, outside the error handling of any invocation,
+    /// for example, while the JDBC driver fetches the next rows, which leaves the connection out of sync with the server.
+    /// Closing the stream discards the session instead of committing, and the next unit of work on the same thread obtains another connection.
+    /// The error is thrown by the action of `forEach`, which is invoked from within the traversal, as an error while fetching rows would propagate.
+    ///
+    @Test
+    public void virtual_machine_error_during_traversal_of_a_stream_discards_the_connection_on_stream_close() throws SQLException {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        final Connection before = probe.physicalConnection();
+
+        final var error = new InternalError("Purposeful error.");
+        final InternalError thrown = assertThrows(InternalError.class, () -> {
+            try (final Stream<Integer> stream = probe.selectOneAndReturnStream()) {
+                stream.forEach(_ -> { throw error; });
+            }
+        });
+
+        assertSame(error, thrown);
+        assertEquals(1, thrown.getSuppressed().length);
+        assertSame(error, assertThrows(TransactionRollbackDueToThrowable.class, () -> { throw thrown.getSuppressed()[0]; }).getCause());
+        assertFalse(probe.getSession().isOpen());
+        assertTrue(before.isClosed());
+        assertNotSame(before, probe.physicalConnection());
+    }
+
+    /// A parallel stream with a stateful operation, such as `sorted`, is traversed up to that operation before the unit of work returns it, within the error handling of the invocation.
+    /// If that traversal fails, the transaction is rolled back, and the stream is closed, so that its close handlers run, although the consumer never obtains the stream to close it.
+    ///
+    @Test
+    public void failure_while_a_parallel_stream_is_buffered_before_it_is_returned_closes_the_stream_and_rolls_back() throws SQLException {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        final Connection before = probe.physicalConnection();
+
+        final var exception = new IllegalStateException("Purposeful exception.");
+        final var closed = new AtomicBoolean(false);
+        assertSame(exception, assertThrows(IllegalStateException.class, () -> probe.selectOneAndReturnParallelStreamThatFailsToBuffer(exception, () -> closed.set(true))));
+
+        assertTrue("The close handler of the stream should have run.", closed.get());
+        assertFalse(probe.getSession().isOpen());
+        assertFalse(before.isClosed());
+        assertSame(before, probe.physicalConnection());
     }
 
     /// Committing at the end of a unit of work may fail with a [VirtualMachineError].
@@ -457,6 +501,23 @@ public class SessionInterceptorStackOverflowTest {
             selectOneInCurrentSession(getSession());
             final BeforeTransactionCompletionProcess failingProcess = _ -> { throw error; };
             getSession().unwrap(SessionImplementor.class).getActionQueue().registerProcess(failingProcess);
+            return Stream.of(1);
+        }
+
+        /// Queries the database, and returns a parallel sorted stream with `closeHandler`, whose elements are buffered before it is returned, as it is parallel and sorted.
+        /// Buffering fails, as an operation that precedes sorting throws `exception`.
+        ///
+        @SessionRequired
+        public Stream<Integer> selectOneAndReturnParallelStreamThatFailsToBuffer(final RuntimeException exception, final Runnable closeHandler) {
+            selectOneInCurrentSession(getSession());
+            return Stream.of(2, 1).onClose(closeHandler).parallel().<Integer>map(_ -> { throw exception; }).sorted();
+        }
+
+        /// Queries the database, and returns a stream, which commits the transaction when closed.
+        ///
+        @SessionRequired
+        public Stream<Integer> selectOneAndReturnStream() {
+            selectOneInCurrentSession(getSession());
             return Stream.of(1);
         }
 

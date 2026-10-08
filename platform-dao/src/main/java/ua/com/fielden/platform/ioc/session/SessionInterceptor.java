@@ -22,8 +22,12 @@ import ua.com.fielden.platform.security.user.User;
 
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
+import java.util.Comparator;
+import java.util.Spliterator;
 import java.util.concurrent.ThreadFactory;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static java.util.UUID.randomUUID;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -86,6 +90,8 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 ///     DML reaches the database when something flushes it explicitly, and otherwise during the commit.
 ///   - If an intercepted method returns a [Stream], the transaction outlives that method call and is committed when the stream is closed.
 ///     Such a stream *must* be closed, ideally via try-with-resources, or its transaction and connection are never released.
+///     If a failure propagates out of the traversal of the stream, closing it rolls back the transaction instead, or discards the session after a [VirtualMachineError],
+///     as an owning invocation would, and throws [TransactionRollbackDueToThrowable] (refer to `completeTransactionOnClose`).
 ///
 /// Finally, a GUID is generated per transaction and assigned to the invocation owner, which is how a single unit of work is identified downstream — by auditing, for example.
 ///
@@ -224,51 +230,7 @@ public class SessionInterceptor implements MethodInterceptor {
                 // If the result is a stream, then the current transaction becomes associated with that stream
                 // and needs to be committed once the stream has been processed.
                 if (result instanceof Stream<?> stream) {
-                    final Session streamSession = underlyingSession;
-                    return stream.onClose(() -> {
-                        // The cleanup state of the thread that closes the stream, obtained before committing, so that the error handling needs no method call to obtain it.
-                        // It is obtained within the try block, so that an error in obtaining it, such as StackOverflowError, is handled like an error in committing.
-                        CleanupState closingCleanupState = null;
-                        try {
-                            closingCleanupState = this.cleanupState.get();
-                            LOGGER.debug(() -> "[%s] Committing DB transaction on stream close.".formatted(user));
-                            commitTransactionAndCloseSession(closingCleanupState, session, streamSession, tr, user);
-                            LOGGER.debug(() -> "[%s] Committed DB transaction on stream close.".formatted(user));
-                        } catch (final RuntimeException | VirtualMachineError ex) {
-                            // Committing can fail in three ways that matter here:
-                            //   - With a RuntimeException not caused by a VirtualMachineError, typically TransactionCommitException, after the session has been discarded.
-                            //     It is logged and rethrown, as before.
-                            //   - With a VirtualMachineError, or a RuntimeException caused by one, such as UndeclaredThrowableException from the thread-bound session proxy.
-                            //     commitTransactionAndCloseSession propagates these without closing the session, so that it can be discarded instead.
-                            //   - Other errors, such as AssertionError, are not caught: commitTransactionAndCloseSession has already discarded the session, and they propagate unchanged.
-                            // No checked exception can occur, so RuntimeException covers all exceptions.
-                            // This handler runs when the stream is closed, after this invocation has returned, and thus outside its error handling.
-                            // Without an enclosing invocation to discard the session, it is discarded here (refer to commitTransactionAndCloseSession).
-                            // Everything here acts on the thread that closes the stream: unbinding the session, as part of discarding it, removing the transaction GUID,
-                            // and, except in the case described below, recording the session pending cleanup, so that it does not affect a unit of work in progress on another thread.
-                            // If the stream were closed on a thread other than the one that created it, the session would remain bound to the latter;
-                            // streams are expected to be consumed and closed by the thread that created them, ideally with try-with-resources.
-                            //
-                            // If obtaining the cleanup state of the closing thread failed, the cleanup state of the thread that created the stream is used instead.
-                            // It is the cleanup state of the closing thread if the stream is closed as expected, by the thread that created it.
-                            // Selecting it requires no method call.
-                            final CleanupState recordingCleanupState = closingCleanupState != null ? closingCleanupState : cleanupState;
-                            // As in the error handling of an invocation, the session is recorded first, by a field assignment, which requires no stack frame.
-                            // If discarding it does not complete, the next invocation on this thread discards it, instead of becoming a nested scope of the failed unit of work.
-                            // A session that has already been closed remains recorded only until the record is cleared below.
-                            recordingCleanupState.sessionPendingCleanup = streamSession;
-                            // The transaction GUID is removed whether or not the session is discarded.
-                            // commitTransactionAndCloseSession leaves it in place when propagating a VirtualMachineError, or an exception caused by one,
-                            // which includes the case where Hibernate has rolled back the transaction and closed the session.
-                            transactionGuid.remove();
-                            if (isCausedByVirtualMachineError(ex) && streamSession.isOpen()) {
-                                discardSession(recordingCleanupState, streamSession, user);
-                            }
-                            recordingCleanupState.sessionPendingCleanup = null;
-                            LOGGER.fatal(() -> "[%s] Could not commit DB transaction on stream close.".formatted(user), ex);
-                            throw ex;
-                        }
-                    });
+                    return completeTransactionOnClose(stream, cleanupState, session, underlyingSession, tr, user);
                 }
                 // Otherwise, commit the current transaction.
                 else {
@@ -291,7 +253,184 @@ public class SessionInterceptor implements MethodInterceptor {
             if (ownsScope) {
                 cleanupState.sessionPendingCleanup = discardableSession;
             }
-            throw completeTransactionWithError(cleanupState, ownsScope, session, discardableSession, tr, e, user);
+            completeTransactionWithError(cleanupState, ownsScope, session, discardableSession, tr, e, user);
+            // Exceptions propagate unchanged; other throwables are wrapped.
+            throw e instanceof Exception ex ? ex : new TransactionRollbackDueToThrowable(e);
+        }
+    }
+
+    /// Returns a stream that completes the transaction of the unit of work that `stream` was returned by, when it is closed.
+    ///
+    /// If the stream has been traversed without a failure, closing it commits the transaction.
+    /// Otherwise, a failure that propagated out of its traversal is a failure of its unit of work, so closing the stream completes the transaction
+    /// as the error handling of an owning invocation would: it rolls back the transaction, or, after a [VirtualMachineError] or an exception caused by one, discards the session,
+    /// and then throws [TransactionRollbackDueToThrowable], whether or not the failure was caught after it propagated.
+    /// The failure includes exceptions thrown by the operations of the stream pipeline, such as the action of `forEach`, as they are invoked from within the traversal.
+    /// A failure outside the traversal, for example, an exception thrown after the stream has been collected, but before it has been closed, is beyond the reach of this method.
+    ///
+    /// Failures are recorded by [TraversalFailureRecordingSpliterator], which wraps the spliterator of `stream`.
+    /// The returned stream closes `stream` before completing the transaction, so the close handlers of `stream`, such as closing a scrollable result set, run first.
+    ///
+    /// Creating the returned stream obtains the characteristics of that spliterator.
+    /// For a parallel stream with a stateful operation, such as `sorted`, this evaluates the pipeline up to that operation:
+    /// the elements are retrieved and buffered before this method returns, within the error handling of the invocation, rather than by the terminal operation of the consumer.
+    /// Sequential streams, and parallel streams without a stateful operation, are not traversed until the terminal operation.
+    /// If creating the returned stream fails, `stream` is closed before the failure propagates to the error handling of the invocation, so that its close handlers run.
+    /// A failure to close `stream` is added to that failure as a suppressed exception.
+    ///
+    /// @param cleanupState  the cleanup state of the thread that created the stream
+    /// @param streamSession  the session underlying `session`
+    ///
+    private <T> Stream<T> completeTransactionOnClose(final Stream<T> stream, final CleanupState cleanupState, final Session session, final Session streamSession, final Transaction tr, final User user) {
+        final TraversalFailure traversal = new TraversalFailure();
+        final Stream<T> recordingStream;
+        try {
+            recordingStream = StreamSupport.stream(new TraversalFailureRecordingSpliterator<>(stream.spliterator(), traversal), stream.isParallel());
+        } catch (final Throwable th) {
+            try {
+                stream.close();
+            } catch (final Throwable closeFailure) {
+                if (closeFailure != th) {
+                    th.addSuppressed(closeFailure);
+                }
+            }
+            throw th;
+        }
+        return recordingStream
+                .onClose(stream::close)
+                .onClose(() -> {
+            // A field read, which requires no method call.
+            final Throwable traversalFailure = traversal.failure;
+            // The cleanup state of the thread that closes the stream, obtained before completing the transaction, so that the error handling needs no method call to obtain it.
+            // It is obtained within the try block, so that an error in obtaining it, such as StackOverflowError, is handled like an error in committing.
+            CleanupState closingCleanupState = null;
+            try {
+                closingCleanupState = this.cleanupState.get();
+                if (traversalFailure == null) {
+                    LOGGER.debug(() -> "[%s] Committing DB transaction on stream close.".formatted(user));
+                    commitTransactionAndCloseSession(closingCleanupState, session, streamSession, tr, user);
+                    LOGGER.debug(() -> "[%s] Committed DB transaction on stream close.".formatted(user));
+                    return;
+                }
+            } catch (final RuntimeException | VirtualMachineError ex) {
+                // Committing can fail in three ways that matter here:
+                //   - With a RuntimeException not caused by a VirtualMachineError, typically TransactionCommitException, after the session has been discarded.
+                //     It is logged and rethrown, as before.
+                //   - With a VirtualMachineError, or a RuntimeException caused by one, such as UndeclaredThrowableException from the thread-bound session proxy.
+                //     commitTransactionAndCloseSession propagates these without closing the session, so that it can be discarded instead.
+                //   - Other errors, such as AssertionError, are not caught: commitTransactionAndCloseSession has already discarded the session, and they propagate unchanged.
+                // No checked exception can occur, so RuntimeException covers all exceptions.
+                // This handler runs when the stream is closed, after this invocation has returned, and thus outside its error handling.
+                // Without an enclosing invocation to discard the session, it is discarded here (refer to commitTransactionAndCloseSession).
+                // Everything here acts on the thread that closes the stream: unbinding the session, as part of discarding it, removing the transaction GUID,
+                // and, except in the case described below, recording the session pending cleanup, so that it does not affect a unit of work in progress on another thread.
+                // If the stream were closed on a thread other than the one that created it, the session would remain bound to the latter;
+                // streams are expected to be consumed and closed by the thread that created them, ideally with try-with-resources.
+                //
+                // If obtaining the cleanup state of the closing thread failed, the cleanup state of the thread that created the stream is used instead.
+                // It is the cleanup state of the closing thread if the stream is closed as expected, by the thread that created it.
+                // Selecting it requires no method call.
+                final CleanupState recordingCleanupState = closingCleanupState != null ? closingCleanupState : cleanupState;
+                // As in the error handling of an invocation, the session is recorded first, by a field assignment, which requires no stack frame.
+                // If discarding it does not complete, the next invocation on this thread discards it, instead of becoming a nested scope of the failed unit of work.
+                // A session that has already been closed remains recorded only until the record is cleared below.
+                recordingCleanupState.sessionPendingCleanup = streamSession;
+                // The transaction GUID is removed whether or not the session is discarded.
+                // commitTransactionAndCloseSession leaves it in place when propagating a VirtualMachineError, or an exception caused by one,
+                // which includes the case where Hibernate has rolled back the transaction and closed the session.
+                transactionGuid.remove();
+                if (isCausedByVirtualMachineError(ex) && streamSession.isOpen()) {
+                    discardSession(recordingCleanupState, streamSession, user);
+                }
+                recordingCleanupState.sessionPendingCleanup = null;
+                LOGGER.fatal(() -> "[%s] Could not commit DB transaction on stream close.".formatted(user), ex);
+                throw ex;
+            }
+            // The traversal of the stream failed, and the cleanup state of the closing thread has been obtained.
+            // As in the error handling of an owning invocation, the session is recorded first, by a field assignment, which requires no stack frame,
+            // and the record is cleared once the transaction has been completed.
+            // The failure is wrapped, rather than rethrown, as it has propagated already: try-with-resources would add it to itself as a suppressed exception, which is not permitted.
+            closingCleanupState.sessionPendingCleanup = streamSession;
+            completeTransactionWithError(closingCleanupState, true, session, streamSession, tr, traversalFailure, user);
+            throw new TransactionRollbackDueToThrowable(traversalFailure);
+        });
+    }
+
+    /// The first failure, if any, that propagated out of the traversal of a stream.
+    /// It is shared by the spliterators split from one another, which may be traversed by different threads, hence the volatile field.
+    ///
+    private static final class TraversalFailure {
+        private volatile Throwable failure;
+    }
+
+    /// A spliterator that records the first failure that propagates out of traversing `delegate`, and then rethrows it unchanged.
+    /// Recording is a field assignment, which requires no stack frame, so a failure is recorded even if the stack is nearly exhausted, as after a [StackOverflowError].
+    ///
+    private static final class TraversalFailureRecordingSpliterator<T> implements Spliterator<T> {
+        private final Spliterator<T> delegate;
+        private final TraversalFailure traversal;
+
+        private TraversalFailureRecordingSpliterator(final Spliterator<T> delegate, final TraversalFailure traversal) {
+            this.delegate = delegate;
+            this.traversal = traversal;
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super T> action) {
+            try {
+                return delegate.tryAdvance(action);
+            } catch (final Throwable th) {
+                if (traversal.failure == null) {
+                    traversal.failure = th;
+                }
+                throw th;
+            }
+        }
+
+        @Override
+        public void forEachRemaining(final Consumer<? super T> action) {
+            try {
+                delegate.forEachRemaining(action);
+            } catch (final Throwable th) {
+                if (traversal.failure == null) {
+                    traversal.failure = th;
+                }
+                throw th;
+            }
+        }
+
+        @Override
+        public Spliterator<T> trySplit() {
+            final Spliterator<T> split;
+            try {
+                split = delegate.trySplit();
+            } catch (final Throwable th) {
+                if (traversal.failure == null) {
+                    traversal.failure = th;
+                }
+                throw th;
+            }
+            return split == null ? null : new TraversalFailureRecordingSpliterator<>(split, traversal);
+        }
+
+        @Override
+        public long estimateSize() {
+            return delegate.estimateSize();
+        }
+
+        @Override
+        public long getExactSizeIfKnown() {
+            return delegate.getExactSizeIfKnown();
+        }
+
+        @Override
+        public int characteristics() {
+            return delegate.characteristics();
+        }
+
+        @Override
+        public Comparator<? super T> getComparator() {
+            return delegate.getComparator();
         }
     }
 
@@ -333,7 +472,7 @@ public class SessionInterceptor implements MethodInterceptor {
         return shouldCommit;
     }
 
-    /// Completes the session scope after `th`, and returns the exception to be thrown.
+    /// Completes the session scope after `th`, and logs it, but does not throw it, which is left to the caller.
     ///
     /// Cleanup precedes logging, so that it runs with as much stack as is available.
     /// If cleanup does not complete, the session remains recorded in `cleanupState`, and is discarded by the next invocation on this thread.
@@ -341,7 +480,7 @@ public class SessionInterceptor implements MethodInterceptor {
     /// @param ownsScope  whether the failed invocation owns the session scope, in which case the unit of work completes with this invocation
     /// @param discardableSession  the session underlying `session`, if obtained, which is used to discard it after a [VirtualMachineError], or if rolling back fails
     ///
-    private Exception completeTransactionWithError(final CleanupState cleanupState, final boolean ownsScope, final Session session, final Session discardableSession, final Transaction tr, final Throwable th, final User user) {
+    private void completeTransactionWithError(final CleanupState cleanupState, final boolean ownsScope, final Session session, final Session discardableSession, final Transaction tr, final Throwable th, final User user) {
         try {
             if (isCausedByVirtualMachineError(th)) {
                 // In nested scopes, the innermost scope discards the session, and the enclosing scopes find it closed,
@@ -372,7 +511,6 @@ public class SessionInterceptor implements MethodInterceptor {
             case TransactionCommitException _ -> {} // Already logged before.
             default -> LOGGER.warn(() -> WARN_TRANSACTION_ROLLBACK.formatted(user), th);
         }
-        return th instanceof Exception ex ? ex : new TransactionRollbackDueToThrowable(th);
     }
 
     /// Determines whether `th` is a [VirtualMachineError], or is caused by one.

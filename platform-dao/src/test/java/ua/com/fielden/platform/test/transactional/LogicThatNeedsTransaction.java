@@ -12,6 +12,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
 
+import static java.util.Comparator.comparing;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -133,6 +134,19 @@ public class LogicThatNeedsTransaction implements ISessionEnabled {
     public Stream<EntityWithMoney> saveAndStream(final String key) {
         dao.save(factory.newEntity(EntityWithMoney.class, key, "flushed").setMoney(new Money("20.00")));
         return dao.stream(from(select(EntityWithMoney.class).model()).model());
+    }
+
+    /// Saves entities with `keys`, and returns an open parallel stream of all entities, retrieved through the companion and sorted by key.
+    /// As with [#saveAndStream(String)], the transaction stays open until the stream is closed.
+    ///
+    /// The stream retrieved through the companion cannot be split, but sorting a parallel stream buffers its elements into an array, which can.
+    ///
+    @SessionRequired
+    public Stream<EntityWithMoney> saveAndStreamInParallelSortedByKey(final String... keys) {
+        for (final String key : keys) {
+            dao.save(factory.newEntity(EntityWithMoney.class, key, "flushed").setMoney(new Money("20.00")));
+        }
+        return dao.stream(from(select(EntityWithMoney.class).model()).model()).parallel().sorted(comparing(EntityWithMoney::getKey));
     }
 
     @SessionRequired(allowNestedScope = false)
