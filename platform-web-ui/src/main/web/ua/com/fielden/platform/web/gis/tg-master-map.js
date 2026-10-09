@@ -24,34 +24,29 @@ const template = html`
         .caption[hidden] {
             display: none;
         }
-        /* the toolbar under the caption, which moves the actions that do not fit into a dropdown, as the toolbar of the rich text editor */
+        /* the toolbar under the caption, which moves the actions that do not fit into a dropdown, as the toolbar of a map in an alternative view of a centre */
         .toolbar {
             flex-shrink: 0;
             padding-bottom: 4px;
-            /* the sizes of property actions, which the toolbar can move beyond the styles of the master */
-            --tg-ui-action-icon-button-width: 24px;
-            --tg-ui-action-icon-button-height: 24px;
-            --tg-ui-action-icon-button-padding: 4px;
-            --tg-ui-action-spinner-width: 20px;
-            --tg-ui-action-spinner-height: 20px;
-            --tg-ui-action-spinner-min-width: 20px;
-            --tg-ui-action-spinner-min-height: 20px;
-            --tg-ui-action-spinner-max-width: 20px;
-            --tg-ui-action-spinner-max-height: 20px;
-            --tg-ui-action-spinner-padding: 0px;
-            --tg-ui-action-spinner-margin-left: 0;
-            --tg-responsove-toolbar-expand-button: {
-                padding: 4px;
-                width: 24px;
-                height: 24px;
-                color: var(--paper-input-container-color, var(--secondary-text-color));
-            };
-            --tg-responsove-toolbar-dropdown-content: {
-                padding: 4px;
-            };
         }
         .toolbar[hidden] {
             display: none;
+        }
+        /* the property actions have the size of the actions in centre toolbars, rather than the smaller size that the master gives to property actions;
+           the master sizes them by custom properties of class 'property-action-icon', which are reset to the defaults of 'tg-ui-action' here,
+           as '!important' is the only way for the styles of slotted elements in this component to override the styles of the master*/
+        ::slotted(.property-action-icon) {
+            --tg-ui-action-icon-button-width: initial !important;
+            --tg-ui-action-icon-button-height: initial !important;
+            --tg-ui-action-icon-button-padding: initial !important;
+            --tg-ui-action-spinner-width: initial !important;
+            --tg-ui-action-spinner-height: initial !important;
+            --tg-ui-action-spinner-min-width: initial !important;
+            --tg-ui-action-spinner-min-height: initial !important;
+            --tg-ui-action-spinner-max-width: initial !important;
+            --tg-ui-action-spinner-max-height: initial !important;
+            --tg-ui-action-spinner-padding: initial !important;
+            --tg-ui-action-spinner-margin-left: initial !important;
         }
         .map-container {
             flex: 1;
@@ -67,7 +62,7 @@ const template = html`
         }
     </style>
     <div class="caption" hidden$="[[!propTitle]]" tooltip-text$="[[propDesc]]">[[propTitle]]</div>
-    <tg-responsive-toolbar id="toolbar" class="toolbar custom-responsive-toolbar" hidden$="[[!_hasToolbar(_hasPropertyActions, labelsToggle)]]">
+    <tg-responsive-toolbar id="toolbar" class="toolbar" hidden$="[[!_hasToolbar(_hasPropertyActions, labelsToggle)]]">
         <paper-icon-button slot="entity-specific-action" class="entity-specific-action" style$="[[_labelsToggleStyle(_labelsShown)]]" icon="icons:label" toggles active="{{_labelsShown}}" hidden$="[[!labelsToggle]]" tooltip-text="Show / hide map labels."></paper-icon-button>
         <slot slot="entity-specific-action" class="entity-specific-action" name="property-action"></slot>
     </tg-responsive-toolbar>
@@ -224,10 +219,10 @@ Polymer({
 
     /**
      * The style of the labels toggle, which is inline, as the toolbar can move the toggle into its dropdown, beyond the styles of this component.
-     * The toggle has the size of property actions, and a border while the labels are shown, as the labels toggle of centre maps.
+     * The toggle is round, with a border while the labels are shown, as the labels toggle of centre maps.
      */
     _labelsToggleStyle: function (labelsShown) {
-        return `width:24px;height:24px;padding:2px;box-sizing:border-box;border-radius:50%;border:2px solid ${labelsShown ? 'currentColor' : 'transparent'};`;
+        return `border-radius:50%;${labelsShown ? 'border:2px solid;' : ''}`;
     },
 
     _entitiesChanged: function (entity, entityPath, propertyName) {
