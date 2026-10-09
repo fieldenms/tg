@@ -6,11 +6,13 @@ import com.google.inject.Injector;
 import org.hibernate.BaseSessionEventListener;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.JDBCConnectionException;
 import org.junit.After;
 import org.junit.Before;
@@ -40,6 +42,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntSupplier;
+import java.util.stream.Stream;
 
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.subclassesOf;
@@ -352,6 +355,25 @@ public class SessionInterceptorConnectionOutageTest {
         assertFalse(failedSession.isOpen());
     }
 
+    /// Committing on closing a stream fails with an error other than a [VirtualMachineError], rolling back then fails, and discarding the session leaves it open.
+    /// The session remains recorded for the thread, and the next invocation on the thread discards it, and then proceeds.
+    ///
+    @Test
+    public void session_left_open_after_an_error_during_commit_on_closing_a_stream_is_discarded_by_the_next_invocation() {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+
+        final var error = new AssertionError("Purposeful error.");
+        final Stream<Integer> stream = probe.selectOneAndReturnStreamThatFailsToCommit(error);
+        final Session streamSession = probe.getSession();
+        connectionProvider.failNextRollbacks(1);
+        SessionEndFailingListener.failNextSessionEnds(1, new InternalError("Purposeful failure to close a session."));
+        assertSame(error, assertThrows(AssertionError.class, stream::close));
+        assertTrue(streamSession.isOpen());
+
+        assertEquals(1, probe.selectOne());
+        assertFalse(streamSession.isOpen());
+    }
+
     private static boolean isCausedBy(final Throwable thrown, final Throwable cause) {
         for (Throwable current = thrown; current != null; current = current.getCause()) {
             if (current == cause) {
@@ -402,6 +424,17 @@ public class SessionInterceptorConnectionOutageTest {
                 // The failure is deliberately ignored, as an enclosing scope might do.
                 return -1;
             }
+        }
+
+        /// Queries the database, and returns a stream, which commits the transaction when closed.
+        /// Committing fails, as a process that Hibernate runs before completing the transaction throws `error`, which Hibernate propagates unchanged.
+        ///
+        @SessionRequired
+        public Stream<Integer> selectOneAndReturnStreamThatFailsToCommit(final Error error) {
+            selectOneInCurrentSession();
+            final BeforeTransactionCompletionProcess failingProcess = _ -> { throw error; };
+            getSession().unwrap(SessionImplementor.class).getActionQueue().registerProcess(failingProcess);
+            return Stream.of(1);
         }
 
         /// Evaluates `supplier` without accessing the database.
@@ -478,7 +511,7 @@ public class SessionInterceptorConnectionOutageTest {
     /// Simulates an outage, which affects connections obtained while the outage lasts,
     /// and can make the first exchange with the database of the next connection fail with an error.
     /// Can also make connections unavailable, as when the connection pool is exhausted or the database is unreachable,
-    /// and make aborting connections fail with an error.
+    /// make rolling back fail with a SQL state that does not indicate a broken connection, and make aborting connections fail with an error.
     ///
     /// A connection obtained during an outage behaves as a pooled SQL Server connection does when the server resets it:
     ///   - the first round trip to the server fails with `Connection reset by peer` (SQL state `08S01`), as reported by the JDBC driver;
@@ -498,6 +531,7 @@ public class SessionInterceptorConnectionOutageTest {
         private volatile boolean connectionsUnavailable = false;
         private volatile Error abortFailure;
         private final AtomicInteger abortFailuresRemaining = new AtomicInteger();
+        private final AtomicInteger rollbackFailuresRemaining = new AtomicInteger();
         private final AtomicInteger requestedConnections = new AtomicInteger();
         private final AtomicInteger releasedConnections = new AtomicInteger();
         private final AtomicInteger acquiredConnections = new AtomicInteger();
@@ -527,6 +561,12 @@ public class SessionInterceptorConnectionOutageTest {
         ///
         public void makeConnectionsUnavailable(final boolean unavailable) {
             connectionsUnavailable = unavailable;
+        }
+
+        /// Makes the next `count` attempts to roll back a transaction fail with SQL state `HY000` (general error), which does not indicate a broken connection.
+        ///
+        public void failNextRollbacks(final int count) {
+            rollbackFailuresRemaining.set(count);
         }
 
         /// Makes the next `count` attempts to abort a connection fail with `failure`, leaving the connection open.
@@ -593,6 +633,9 @@ public class SessionInterceptorConnectionOutageTest {
                     case "hashCode" -> { return System.identityHashCode(proxy); }
                     case "equals" -> { return proxy == args[0]; }
                     default -> {
+                        if ("rollback".equals(method.getName()) && args == null && rollbackFailuresRemaining.getAndUpdate(n -> Math.max(n - 1, 0)) > 0) {
+                            throw new SQLException("Purposeful rollback failure.", "HY000");
+                        }
                         final boolean first = exchanged.compareAndSet(false, true);
                         if (broken) {
                             if (first) {

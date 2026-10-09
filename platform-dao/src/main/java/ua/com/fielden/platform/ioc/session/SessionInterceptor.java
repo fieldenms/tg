@@ -328,14 +328,15 @@ public class SessionInterceptor implements MethodInterceptor {
                     LOGGER.debug(() -> "[%s] Committed DB transaction on stream close.".formatted(user));
                     return;
                 }
-            } catch (final RuntimeException | VirtualMachineError ex) {
+            } catch (final RuntimeException | Error ex) {
                 // Committing can fail in three ways that matter here:
                 //   - With a RuntimeException not caused by a VirtualMachineError, typically TransactionCommitException, after the session has been discarded.
                 //     It is logged and rethrown, as before.
                 //   - With a VirtualMachineError, or a RuntimeException caused by one, such as UndeclaredThrowableException from the thread-bound session proxy.
                 //     commitTransactionAndCloseSession propagates these without closing the session, so that it can be discarded instead.
-                //   - Other errors, such as AssertionError, are not caught: commitTransactionAndCloseSession has already discarded the session, and they propagate unchanged.
-                // No checked exception can occur, so RuntimeException covers all exceptions.
+                //   - With another error, such as AssertionError, after commitTransactionAndCloseSession has rolled back the transaction and closed the session, or discarded it if rolling back failed.
+                //     It is logged and rethrown unchanged; if discarding left the session open, the session remains recorded below, so that the next invocation on this thread discards it.
+                // No checked exception can occur, so RuntimeException and Error cover all failures.
                 // This handler runs when the stream is closed, after this invocation has returned, and thus outside its error handling.
                 // Without an enclosing invocation to discard the session, it is discarded here (refer to commitTransactionAndCloseSession).
                 // Everything here acts on the thread that closes the stream: unbinding the session, as part of discarding it, removing the transaction GUID,
@@ -770,6 +771,13 @@ public class SessionInterceptor implements MethodInterceptor {
     /// A session that holds no connection is closed instead, as there is no connection to abort.
     /// This is the case if acquiring a connection for committing failed, and after failures that Hibernate rolls back, which close the session, so they cost no connection.
     ///
+    /// If committing fails with an error other than a [VirtualMachineError], such as [AssertionError], the error is thrown at a well-defined point, which leaves the connection in sync with the server,
+    /// and the session is closed rather than discarded, so that an error recurring at commit does not cost a connection each time:
+    ///   - If the error precedes the JDBC commit, typically while flushing, Hibernate neither commits nor rolls back the transaction, as it handles only exceptions.
+    ///     As after such an error in the method itself, the transaction is rolled back before the session is closed, and if rolling back fails, the session is discarded (refer to `rollbackTransactionAndCloseSession`).
+    ///   - If the error follows the JDBC commit, for example, in a process that Hibernate runs after completing the transaction, the transaction has been committed,
+    ///     so the session is closed without rolling back.
+    ///
     /// Committing requires a connection, which the session does not hold yet if the unit of work has executed no statement.
     /// Hibernate would acquire it on committing, and if that failed, roll back the transaction, which would acquire a connection again,
     /// waiting for one a second time if the connection pool is exhausted or the database is unreachable.
@@ -806,7 +814,7 @@ public class SessionInterceptor implements MethodInterceptor {
             throw new TransactionCommitException(ERR_COULD_NOT_COMMIT.formatted(user), ex);
         } catch (final Error err) {
             transactionGuid.remove();
-            discardSession(cleanupState, discardableSession, user);
+            rollbackTransactionAndCloseSession(cleanupState, session, discardableSession, tr, user);
             throw err;
         }
         transactionGuid.remove();

@@ -18,6 +18,7 @@ import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.ioc.session.SessionInterceptorStackOverflowTest.DatabaseProbe;
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionCommitException;
+import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToThrowable;
 import ua.com.fielden.platform.test.runners.PostgresqlDomainDrivenTestCaseRunner.PostgresqlTestContext;
 import ua.com.fielden.platform.test.runners.SqlServerDomainDrivenTestCaseRunner.SqlServerTestContext;
 import ua.com.fielden.platform.test_config.ITestContext;
@@ -200,6 +201,46 @@ public class SessionInterceptorCompletionFailureTest {
         assertNotSame(before, probe.physicalConnection());
     }
 
+    /// Committing fails before the JDBC commit with an error other than a [VirtualMachineError], as flushing might, for example, with [AssertionError].
+    /// Hibernate neither commits nor rolls back after an error, so the transaction is rolled back, as after such an error in the unit of work itself,
+    /// and the connection is returned to the pool for reuse, so that an error recurring at commit does not cost a connection each time.
+    ///
+    @Test
+    public void error_other_than_virtual_machine_error_before_jdbc_commit_rolls_back_and_keeps_the_connection() throws SQLException {
+        final CommitFailureProbe probe = injector.getInstance(CommitFailureProbe.class);
+        final Connection before = probe.physicalConnection();
+
+        final var error = new AssertionError("Purposeful error.");
+        assertSame(error, assertThrows(TransactionRollbackDueToThrowable.class, () -> probe.selectOneAndFailBeforeCommit(error)).getCause());
+
+        assertFalse(probe.getSession().isOpen());
+        assertFalse(before.isClosed());
+        assertEquals(0, dataSource.getHikariPoolMXBean().getActiveConnections());
+        assertSame(before, probe.physicalConnection());
+    }
+
+    /// As [#error_other_than_virtual_machine_error_before_jdbc_commit_rolls_back_and_keeps_the_connection], but rolling back fails too.
+    /// The session is discarded, which aborts its connection, as after any failure to roll back.
+    ///
+    @Test
+    public void error_other_than_virtual_machine_error_before_jdbc_commit_followed_by_failure_to_roll_back_discards_the_connection() throws SQLException {
+        final CommitFailureProbe probe = injector.getInstance(CommitFailureProbe.class);
+        final Connection before = probe.physicalConnection();
+
+        completionFailureSimulatingDataSource.failRollback(true);
+        final var error = new AssertionError("Purposeful error.");
+        try {
+            assertSame(error, assertThrows(TransactionRollbackDueToThrowable.class, () -> probe.selectOneAndFailBeforeCommit(error)).getCause());
+        } finally {
+            completionFailureSimulatingDataSource.failRollback(false);
+        }
+
+        assertFalse(probe.getSession().isOpen());
+        assertTrue(before.isClosed());
+        assertEquals(0, dataSource.getHikariPoolMXBean().getActiveConnections());
+        assertNotSame(before, probe.physicalConnection());
+    }
+
     /// A unit of work whose transaction has been marked for rollback only, for example, after a failed statement, invokes a nested scope, which fails,
     /// and rolling back then fails too.
     /// The session is discarded, which aborts its connection, as the nested scope uses the session underlying the thread-bound proxy, which the owning invocation obtained.
@@ -253,6 +294,16 @@ public class SessionInterceptorCompletionFailureTest {
         @SessionRequired
         public int selectOneAndFailBeforeCommit(final RuntimeException exception) {
             final BeforeTransactionCompletionProcess failingProcess = _ -> { throw exception; };
+            getSession().unwrap(SessionImplementor.class).getActionQueue().registerProcess(failingProcess);
+            return selectOne();
+        }
+
+        /// Queries the database, and then returns.
+        /// Committing fails, as a process that Hibernate runs before completing the transaction throws `error`, which Hibernate propagates unchanged.
+        ///
+        @SessionRequired
+        public int selectOneAndFailBeforeCommit(final Error error) {
+            final BeforeTransactionCompletionProcess failingProcess = _ -> { throw error; };
             getSession().unwrap(SessionImplementor.class).getActionQueue().registerProcess(failingProcess);
             return selectOne();
         }
