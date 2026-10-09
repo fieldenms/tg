@@ -168,6 +168,11 @@ public class SessionInterceptor implements MethodInterceptor {
         ///
         /// It is cleared at the same points as [#discarderStarted].
         private boolean closedWithoutRollback;
+        /// The thread-bound session of the current unit of work, and the session underlying it, which the invocation that owns the session scope records (refer to `underlyingSession`).
+        /// They are cleared once the unit of work completes, so that the thread does not retain the session, which is when the owning invocation completes,
+        /// or, if it returns a stream, when the stream is closed.
+        private Session scopeSession;
+        private Session scopeUnderlyingSession;
     }
 
     public SessionInterceptor(final Provider<? extends SessionFactory> sessionFactory) {
@@ -207,7 +212,8 @@ public class SessionInterceptor implements MethodInterceptor {
             cleanupState.discarderStarted = false;
             cleanupState.closedWithoutRollback = false;
         }
-        // The thread-bound session is a proxy that rejects most methods without an active transaction, which is the case after a failed commit or rollback.
+        // The thread-bound session is a proxy that rejects most methods unless its transaction is active, which is not the case after a failed commit or rollback,
+        // or once the transaction has been marked for rollback only.
         // The underlying session is obtained while the transaction is active, so that it can be discarded after an error, whatever the transaction status.
         Session underlyingSession = null;
 
@@ -216,7 +222,7 @@ public class SessionInterceptor implements MethodInterceptor {
             // Basically, if a transaction is activated in this method, then it should be committed only in this method.
             // Therefore, shouldCommit is assigned true only when the transaction is activated here.
             final boolean shouldCommit = initTransaction(invocationOwner, session, tr, user);
-            underlyingSession = session.unwrap(Session.class);
+            underlyingSession = underlyingSession(cleanupState, session, shouldCommit);
 
             // If we should not commit, which means the session was initiated earlier in the call stack,
             // and support for nested calls is not allowed, then an exception is thrown.
@@ -240,6 +246,7 @@ public class SessionInterceptor implements MethodInterceptor {
                 else {
                     LOGGER.debug(() -> "[%s] Committing DB transaction".formatted(user));
                     commitTransactionAndCloseSession(cleanupState, session, underlyingSession, tr, user);
+                    clearSessionScope(cleanupState, session);
                     LOGGER.debug(() -> "[%s] Committed DB transaction".formatted(user));
                     return result;
                 }
@@ -249,6 +256,10 @@ public class SessionInterceptor implements MethodInterceptor {
             // This check was not needed before migrating off Hibernate 3.2.6 GA.
             if (session.isOpen()) {
                 session.flush();
+            }
+            // An owning invocation reaches this point if its transaction was completed by a nested scope, which an enclosing scope caught.
+            if (shouldCommit) {
+                clearSessionScope(cleanupState, session);
             }
             return result;
         } catch (final Throwable e) {
@@ -313,6 +324,7 @@ public class SessionInterceptor implements MethodInterceptor {
                 if (traversalFailure == null) {
                     LOGGER.debug(() -> "[%s] Committing DB transaction on stream close.".formatted(user));
                     commitTransactionAndCloseSession(closingCleanupState, session, streamSession, tr, user);
+                    clearSessionScope(closingCleanupState, session);
                     LOGGER.debug(() -> "[%s] Committed DB transaction on stream close.".formatted(user));
                     return;
                 }
@@ -347,6 +359,7 @@ public class SessionInterceptor implements MethodInterceptor {
                     discardSession(recordingCleanupState, streamSession, user);
                 }
                 clearSessionPendingCleanup(recordingCleanupState);
+                clearSessionScope(recordingCleanupState, session);
                 LOGGER.fatal(() -> "[%s] Could not commit DB transaction on stream close.".formatted(user), ex);
                 throw ex;
             }
@@ -476,6 +489,38 @@ public class SessionInterceptor implements MethodInterceptor {
         return shouldCommit;
     }
 
+    /// Returns the session underlying `session`, the thread-bound session of the current invocation.
+    ///
+    /// The thread-bound session is a proxy, which rejects unwrapping it unless its transaction is active.
+    /// Within a unit of work, the transaction may cease to be active before a nested scope is invoked, for example, once a failed statement has marked it for rollback only.
+    /// Therefore, the invocation that owns the session scope unwraps the session, while the transaction it has just begun is active, and records it in `cleanupState`,
+    /// and nested invocations take the underlying session from there, which spares them unwrapping it through the proxy.
+    ///
+    /// A nested invocation takes the recorded session only if its thread-bound session is the one recorded, which identifies the unit of work.
+    /// Otherwise, for example, within a transaction begun outside this interceptor, it unwraps the session through the proxy.
+    ///
+    private static Session underlyingSession(final CleanupState cleanupState, final Session session, final boolean ownsScope) {
+        if (!ownsScope && cleanupState.scopeSession == session) {
+            return cleanupState.scopeUnderlyingSession;
+        }
+        final Session underlyingSession = session.unwrap(Session.class);
+        if (ownsScope) {
+            cleanupState.scopeSession = session;
+            cleanupState.scopeUnderlyingSession = underlyingSession;
+        }
+        return underlyingSession;
+    }
+
+    /// Clears the record of the session scope of `session` in `cleanupState`, once its unit of work has completed.
+    /// A record of another session, such as one from a stream closed on another thread, is left in place, and is replaced by the next invocation that owns a session scope.
+    ///
+    private static void clearSessionScope(final CleanupState cleanupState, final Session session) {
+        if (cleanupState.scopeSession == session) {
+            cleanupState.scopeSession = null;
+            cleanupState.scopeUnderlyingSession = null;
+        }
+    }
+
     /// Completes the session scope after `th`, and logs it, but does not throw it, which is left to the caller.
     ///
     /// Cleanup precedes logging, so that it runs with as much stack as is available.
@@ -506,6 +551,7 @@ public class SessionInterceptor implements MethodInterceptor {
             clearSessionPendingCleanup(cleanupState);
             cleanupState.discarderStarted = false;
             cleanupState.closedWithoutRollback = false;
+            clearSessionScope(cleanupState, session);
         }
 
         switch (th) {

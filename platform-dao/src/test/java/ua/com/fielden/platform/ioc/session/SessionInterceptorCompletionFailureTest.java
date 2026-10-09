@@ -200,6 +200,49 @@ public class SessionInterceptorCompletionFailureTest {
         assertNotSame(before, probe.physicalConnection());
     }
 
+    /// A unit of work whose transaction has been marked for rollback only, for example, after a failed statement, invokes a nested scope, which fails,
+    /// and rolling back then fails too.
+    /// The session is discarded, which aborts its connection, as the nested scope uses the session underlying the thread-bound proxy, which the owning invocation obtained.
+    /// The proxy rejects unwrapping it, unless the transaction is active, and would not let the connection be aborted.
+    ///
+    @Test
+    public void failure_to_roll_back_after_a_nested_scope_fails_within_a_transaction_marked_for_rollback_only_discards_the_connection() throws SQLException {
+        final MarkedRollbackProbe probe = injector.getInstance(MarkedRollbackProbe.class);
+        final Connection before = probe.physicalConnection();
+
+        completionFailureSimulatingDataSource.failRollback(true);
+        final var exception = new IllegalStateException("Purposeful exception.");
+        try {
+            assertSame(exception, assertThrows(IllegalStateException.class, () -> probe.selectOneMarkRollbackOnlyAndThrowInNestedScope(exception)));
+        } finally {
+            completionFailureSimulatingDataSource.failRollback(false);
+        }
+
+        assertFalse(probe.getSession().isOpen());
+        assertTrue(before.isClosed());
+        assertEquals(0, dataSource.getHikariPoolMXBean().getActiveConnections());
+        assertNotSame(before, probe.physicalConnection());
+    }
+
+    /// Units of work whose transaction is marked for rollback only before they invoke a nested scope, as a failed statement would mark it.
+    ///
+    public static class MarkedRollbackProbe extends DatabaseProbe {
+
+        @SessionRequired
+        public void selectOneMarkRollbackOnlyAndThrowInNestedScope(final RuntimeException exception) {
+            selectOne();
+            getSession().getTransaction().markRollbackOnly();
+            throwInNestedScope(exception);
+        }
+
+        /// The invocation of this method on `this` is intercepted, as Guice intercepts methods by subclassing.
+        ///
+        @SessionRequired
+        public void throwInNestedScope(final RuntimeException exception) {
+            throw exception;
+        }
+    }
+
     /// Units of work whose commit fails before the JDBC commit.
     ///
     public static class CommitFailureProbe extends DatabaseProbe {
