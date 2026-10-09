@@ -27,7 +27,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
  * <li><i><font color="981515">hibernate.connection.password</font></i> – required;
  * <li><i>hibernate.show_sql</i> – defaults to {@code false};
  * <li><i>hibernate.format_sql</i> – defaults to {@code false};
- * <li><i>hibernate.connection.autocommit</i> and <i>hibernate.connection.provider_disables_autocommit</i> – set by TG, and cannot be specified (refer to {@code setAutoCommitSettings}).
+ * <li><i>hibernate.connection.autocommit</i>, <i>hibernate.connection.provider_disables_autocommit</i> and <i>hibernate.hikari.autoCommit</i> – set by TG, and cannot be specified (refer to {@code setAutoCommitSettings}).
  * </ul>
  * <h4>DB connection pool providers and their properties</h4>
  * <i>hibernate.connection.provider_class</i> – HikariCP {@code org.hibernate.hikaricp.internal.HikariCPConnectionProvider} is used by default; c3p0 {@code org.hibernate.connection.C3P0ConnectionProvider} is also supported;
@@ -80,6 +80,7 @@ public class HibernateConfigurationFactory {
     private static final String HIKARI_MAX_SIZE = "hibernate.hikari.maximumPoolSize";
     private static final String HIKARI_IDLE_TIMEOUT = "hibernate.hikari.idleTimeout";
     private static final String HIKARI_MAX_LIFETIME = "hibernate.hikari.maxLifetime";
+    private static final String HIKARI_AUTO_COMMIT = "hibernate.hikari.autoCommit";
 
     private static final String HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
     private static final String CONNECTION_URL = "hibernate.connection.url";
@@ -161,24 +162,29 @@ public class HibernateConfigurationFactory {
     /// With SQL Server, this also saves two round trips per transaction, as its JDBC driver changes the auto-commit mode by executing a statement.
     ///
     /// Both supported connection pool providers apply `hibernate.connection.autocommit` to the connections they hand out.
+    /// HikariCP gives precedence to `hibernate.hikari.autoCommit`, as `HikariConfigurationUtil` copies every `hibernate.hikari.*` property after `hibernate.connection.autocommit`,
+    /// so that property is set to `false` too.
     /// Hibernate relies on `hibernate.connection.provider_disables_autocommit` without checking:
     /// if connections were handed out with auto-commit enabled, each statement would be committed on its own.
     /// A connection provider that does not apply `hibernate.connection.autocommit`, such as one that supplies a `DataSource` via `hibernate.connection.datasource`,
     /// cannot be used with these settings: its connections would have auto-commit enabled, while Hibernate would treat them as having it disabled.
     ///
-    /// Both settings are fixed, and specifying either of them is rejected, so that the configuration cannot reintroduce an exchange with the database when beginning a transaction.
+    /// These settings are fixed, and specifying any of them is rejected, so that the configuration cannot reintroduce an exchange with the database when beginning a transaction.
+    /// The configuration starts from the properties of Hibernate's `Environment`, which include JVM system properties and a `hibernate.properties` resource on the classpath.
+    /// The properties set here take precedence over those, as they are applied last when the session factory is built, so those sources cannot change these settings either.
     /// For application code, the settings matter only outside transactions managed by Hibernate, where pooled connections do not commit automatically.
     /// Database access in TG goes through transactions managed by Hibernate, which commit explicitly.
     /// Application code that obtains pooled connections in any other way must not rely on them committing automatically.
     ///
     static void setAutoCommitSettings(final Properties props, final Configuration cfg) {
-        for (final String property : new String[] {CONNECTION_AUTOCOMMIT, CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT}) {
+        for (final String property : new String[] {CONNECTION_AUTOCOMMIT, CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, HIKARI_AUTO_COMMIT}) {
             if (props.getProperty(property) != null) {
                 throw new InvalidArgumentException(ERR_AUTOCOMMIT_SETTING_SPECIFIED.formatted(property));
             }
         }
         cfg.setProperty(CONNECTION_AUTOCOMMIT, "false");
         cfg.setProperty(CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, "true");
+        cfg.setProperty(HIKARI_AUTO_COMMIT, "false");
     }
 
     private Configuration setSafely(final Configuration cfg, final String propertyName, final String defaultValue) {
