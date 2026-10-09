@@ -3,6 +3,7 @@ package ua.com.fielden.platform.security.authentication;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -21,29 +22,29 @@ import com.google.common.cache.Cache;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.ioc.session.exceptions.TransactionCommitException;
 import ua.com.fielden.platform.sample.domain.TgPerson;
+import ua.com.fielden.platform.security.session.ISsoSessionController;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.session.UserSessionDao;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.test.ioc.SsoSessionControllerForTesting;
 import ua.com.fielden.platform.test.ioc.TickerForSessionCache;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
-/**
- * A test case to cover various clearing routines of user session.
- *
- * @author TG Team
- *
- */
+/// A test case to cover various clearing routines of user session.
+///
 public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
 
     private final UserSessionDao coSession = (UserSessionDao) co$(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
     private final Cache<String, UserSession> cache = coSession.getCache();
     private final TickerForSessionCache cacheTicker = (TickerForSessionCache) getInstance(Ticker.class);
+    private final SsoSessionControllerForTesting ssoSessionController = (SsoSessionControllerForTesting) getInstance(ISsoSessionController.class);
 
     @Before
     public void startUp() {
@@ -51,6 +52,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
         up.setUsername(UNIT_TEST_USER, co(User.class));
         // due to global cache nature it needs to be invalidated in order to keep tests independent
         cache.invalidateAll();
+        ssoSessionController.failInvalidationWith(null);
     }
 
 
@@ -182,6 +184,34 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
         assertTrue("There should be the current session for USER2.", renewdSessionForUser2.isPresent());
     }
     
+    /// Invalidating SSO sessions fails with a [VirtualMachineError] in a nested session scope, which discards the session of `deleteSessionsBySid`.
+    /// `deleteSessionsBySid` logs and ignores the failure, and then deletes the user sessions in a transaction of its own, which commits,
+    /// but its own transaction cannot be committed, and clearing sessions by `sid` ends with [TransactionCommitException].
+    /// The cached sessions are cleared nevertheless, so that neither copy of the deleted sessions keeps them valid.
+    ///
+    @Test
+    public void clearing_user_sessions_by_sid_removes_them_from_cache_even_if_clearing_them_ends_with_an_exception() {
+        final String sidForUser1 = "5daf08eb-9dcd-4baa-91e3-51d3daed5ba5";
+        getInstance(IUserProvider.class).setUsername("USER1", co(User.class));
+        final User currUser1 = getInstance(IUserProvider.class).getUser();
+        constants.setNow(dateTime("2015-04-23 13:00:00"));
+        cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
+        final String authenticatorForUser1 = coSession.newSession(currUser1, true, sidForUser1).getAuthenticator().get().toString();
+
+        getInstance(IUserProvider.class).setUsername("USER2", co(User.class));
+        final User currUser2 = getInstance(IUserProvider.class).getUser();
+        final String authenticatorForUser2 = coSession.newSession(currUser2, true, "gda108eb-9dcd-4baa-18d3-51d3daed5ba5").getAuthenticator().get().toString();
+        assertEquals("Unexpected number of session in cache.", 2, cache.size());
+
+        ssoSessionController.failInvalidationWith(new InternalError("Purposeful SSO failure."));
+        assertThrows(TransactionCommitException.class, () -> coSession.clearAllWithSid(sidForUser1));
+
+        assertEquals("The user sessions should have been deleted from the database.", 0, coSession.count(select(UserSession.class).where().prop("sid").eq().val(sidForUser1).model()));
+        assertEquals("The user sessions should have been removed from cache.", 1, cache.size());
+        assertFalse("There should be no current session for USER1.", coSession.currentSession(currUser1, authenticatorForUser1, false).isPresent());
+        assertTrue("There should be the current session for USER2.", coSession.currentSession(currUser2, authenticatorForUser2, false).isPresent());
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
