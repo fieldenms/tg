@@ -3,6 +3,7 @@ package ua.com.fielden.platform.ioc.session;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import org.hibernate.BaseSessionEventListener;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
@@ -16,6 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionCommitException;
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToThrowable;
 import ua.com.fielden.platform.security.user.User;
@@ -59,6 +61,7 @@ import static ua.com.fielden.platform.test_config.H2OrPostgreSqlOrSqlServerConte
 /// Only `SELECT 1` is executed, so the content of the database is irrelevant.
 /// The database is accessed through [OutageSimulatingConnectionProvider], which can simulate an outage.
 /// Sessions are discarded by threads that [#discarderThreadFactory] creates, which counts them, and can make starting them fail.
+/// Closing a session can be made to fail before the session is marked as closed, by [SessionEndFailingListener].
 ///
 public class SessionInterceptorConnectionOutageTest {
 
@@ -75,6 +78,7 @@ public class SessionInterceptorConnectionOutageTest {
     @Before
     public void setUp() {
         assumeTrue("The test requires a PostgreSQL or SQL Server test database.", isPostgreSql() || isSqlServer());
+        SessionEndFailingListener.failNextSessionEnds(0, null);
         final ITestContext testContext = isPostgreSql() ? new PostgresqlTestContext() : new SqlServerTestContext();
         final Properties dbProps = testContext.mkDbProps(System.getProperty("databaseUri"));
 
@@ -86,6 +90,7 @@ public class SessionInterceptorConnectionOutageTest {
                 .applySetting(AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, "true")
                 .applySetting(AvailableSettings.DIALECT, dbProps.getProperty("hibernate.dialect"))
                 .applySetting(AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread")
+                .applySetting(AvailableSettings.AUTO_SESSION_EVENTS_LISTENER, SessionEndFailingListener.class.getName())
                 .build();
         sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
 
@@ -252,30 +257,99 @@ public class SessionInterceptorConnectionOutageTest {
         assertEquals(1, injector.getInstance(DatabaseProbe.class).selectOne());
     }
 
-    /// Discarding a session fails if a thread to discard it cannot be started, and aborting its connection on the current thread fails too.
-    /// The session remains recorded for the thread until discarding it completes, however many invocations on the thread that takes.
+    /// An error other than a [VirtualMachineError], such as [LinkageError], while aborting the connection of a discarded session does not prevent closing the session,
+    /// which releases its connection.
     ///
     @Test
-    public void session_whose_discarding_fails_remains_recorded_until_a_later_invocation_on_the_same_thread_discards_it() {
+    public void session_is_closed_if_aborting_its_connection_fails_with_an_error_other_than_virtual_machine_error() {
         final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
 
-        failToStartDiscarderThreads = true;
-        final var abortFailure = new InternalError("Purposeful abort failure.");
-        connectionProvider.failNextAborts(2, abortFailure);
+        connectionProvider.failNextAborts(1, new LinkageError("Purposeful abort failure."));
+        final int releasedBefore = connectionProvider.releasedConnections();
+        final var error = new InternalError("Purposeful error.");
+        assertSame(error, assertThrows(TransactionRollbackDueToThrowable.class, () -> probe.selectOneAndThrow(error)).getCause());
 
-        // The unit of work fails with an error, and discarding its session fails.
-        assertSame(abortFailure, assertThrows(InternalError.class, () -> probe.selectOneAndThrow(new InternalError("Purposeful error."))));
+        assertFalse(probe.getSession().isOpen());
+        assertEquals(0, connectionProvider.abortedConnections());
+        assertEquals(1, connectionProvider.releasedConnections() - releasedBefore);
+        assertEquals(1, injector.getInstance(DatabaseProbe.class).selectOne());
+    }
+
+    /// A [VirtualMachineError] while aborting the connection of a discarded session leaves the session open, rather than closing it on the same exhausted stack or heap,
+    /// where closing could fail after Hibernate has dropped the connection, which would then never be returned to the pool.
+    /// The session remains recorded for the thread, and the next invocation discards it.
+    ///
+    @Test
+    public void session_whose_connection_a_discarding_thread_fails_to_abort_with_virtual_machine_error_is_discarded_by_the_next_invocation() {
+        assertSessionLeftOpenByVirtualMachineErrorWhileAbortingIsDiscardedByNextInvocation();
+        assertTrue("Sessions should have been discarded by discarding threads.", discarderThreads.get() > 0);
+    }
+
+    /// As [#session_whose_connection_a_discarding_thread_fails_to_abort_with_virtual_machine_error_is_discarded_by_the_next_invocation],
+    /// but a thread to discard the session cannot be started, so the session is discarded on the current thread, which is where a [StackOverflowError] occurs in practice.
+    ///
+    @Test
+    public void session_whose_connection_the_current_thread_fails_to_abort_with_virtual_machine_error_is_discarded_by_the_next_invocation() {
+        failToStartDiscarderThreads = true;
+        assertSessionLeftOpenByVirtualMachineErrorWhileAbortingIsDiscardedByNextInvocation();
+    }
+
+    /// Makes aborting a connection fail once with a [StackOverflowError], and asserts that a unit of work that fails with an error fails as usual, leaving its session open,
+    /// and that the next invocation on the thread discards the session, by aborting its connection, and then proceeds.
+    ///
+    private void assertSessionLeftOpenByVirtualMachineErrorWhileAbortingIsDiscardedByNextInvocation() {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        connectionProvider.failNextAborts(1, new StackOverflowError("Purposeful abort failure."));
+
+        final var error = new InternalError("Purposeful error.");
+        assertSame(error, assertThrows(TransactionRollbackDueToThrowable.class, () -> probe.selectOneAndThrow(error)).getCause());
         final Session failedSession = probe.getSession();
         assertTrue(failedSession.isOpen());
+        assertEquals(0, connectionProvider.abortedConnections());
 
-        // The next invocation fails to discard the session too.
-        assertSame(abortFailure, assertThrows(InternalError.class, probe::selectOne));
-        assertTrue(failedSession.isOpen());
-
-        // The invocation after that discards the session, and then proceeds.
         assertEquals(1, probe.selectOne());
         assertFalse(failedSession.isOpen());
         assertEquals(1, connectionProvider.abortedConnections());
+    }
+
+    /// Discarding a session on a discarding thread leaves the session open, if closing it fails before the session is marked as closed.
+    /// The session remains recorded for the thread until a later invocation discards it.
+    ///
+    @Test
+    public void session_left_open_by_a_discarding_thread_remains_recorded_until_a_later_invocation_on_the_same_thread_discards_it() {
+        assertSessionLeftOpenByDiscardingRemainsRecordedUntilDiscarded();
+        assertTrue("Sessions should have been discarded by discarding threads.", discarderThreads.get() > 0);
+    }
+
+    /// As [#session_left_open_by_a_discarding_thread_remains_recorded_until_a_later_invocation_on_the_same_thread_discards_it],
+    /// but a thread to discard the session cannot be started, so the session is discarded on the current thread.
+    ///
+    @Test
+    public void session_left_open_by_discarding_on_the_current_thread_remains_recorded_until_a_later_invocation_on_the_same_thread_discards_it() {
+        failToStartDiscarderThreads = true;
+        assertSessionLeftOpenByDiscardingRemainsRecordedUntilDiscarded();
+    }
+
+    /// Makes closing a session fail twice, before the session is marked as closed, and asserts that:
+    ///   - a unit of work that fails with an error fails as usual, although discarding its session leaves the session open;
+    ///   - the next invocation on the thread cannot discard the session either, and fails, rather than proceed;
+    ///   - the invocation after that discards the session, and then proceeds.
+    ///
+    private void assertSessionLeftOpenByDiscardingRemainsRecordedUntilDiscarded() {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        SessionEndFailingListener.failNextSessionEnds(2, new InternalError("Purposeful failure to close a session."));
+
+        final var error = new InternalError("Purposeful error.");
+        assertSame(error, assertThrows(TransactionRollbackDueToThrowable.class, () -> probe.selectOneAndThrow(error)).getCause());
+        final Session failedSession = probe.getSession();
+        assertTrue(failedSession.isOpen());
+
+        final SessionScopingException thrown = assertThrows(SessionScopingException.class, probe::selectOne);
+        assertEquals(SessionInterceptor.ERR_COULD_NOT_DISCARD_SESSION_PENDING_CLEANUP.formatted(probe.getUser()), thrown.getMessage());
+        assertTrue(failedSession.isOpen());
+
+        assertEquals(1, probe.selectOne());
+        assertFalse(failedSession.isOpen());
     }
 
     private static boolean isCausedBy(final Throwable thrown, final Throwable cause) {
@@ -363,6 +437,30 @@ public class SessionInterceptorConnectionOutageTest {
         }
     }
 
+    /// A session event listener, which makes closing a session fail, while enabled by [#failNextSessionEnds(int, Error)].
+    /// Hibernate notifies the listeners of a session that it is ending before marking the session as closed and releasing its connection,
+    /// so the session remains open, and holds its connection.
+    /// Hibernate creates an instance per session, so the state is static, and reset before each test.
+    ///
+    public static class SessionEndFailingListener extends BaseSessionEventListener {
+        private static final AtomicInteger failuresRemaining = new AtomicInteger();
+        private static volatile Error failure;
+
+        /// Makes the next `count` sessions that are closed fail with `failure`.
+        ///
+        static void failNextSessionEnds(final int count, final Error failure) {
+            SessionEndFailingListener.failure = failure;
+            failuresRemaining.set(count);
+        }
+
+        @Override
+        public void end() {
+            if (failuresRemaining.getAndUpdate(n -> Math.max(n - 1, 0)) > 0) {
+                throw failure;
+            }
+        }
+    }
+
     /// A thread that fails to start, as when the process has reached its limit of threads.
     ///
     private static final class UnstartableThread extends Thread {
@@ -401,6 +499,7 @@ public class SessionInterceptorConnectionOutageTest {
         private volatile Error abortFailure;
         private final AtomicInteger abortFailuresRemaining = new AtomicInteger();
         private final AtomicInteger requestedConnections = new AtomicInteger();
+        private final AtomicInteger releasedConnections = new AtomicInteger();
         private final AtomicInteger acquiredConnections = new AtomicInteger();
         private final AtomicInteger abortedConnections = new AtomicInteger();
 
@@ -441,6 +540,12 @@ public class SessionInterceptorConnectionOutageTest {
         ///
         public int requestedConnections() {
             return requestedConnections.get();
+        }
+
+        /// The number of connections released so far, which Hibernate does when it closes a session that holds a connection.
+        ///
+        public int releasedConnections() {
+            return releasedConnections.get();
         }
 
         /// The number of connections provided so far.
@@ -510,6 +615,7 @@ public class SessionInterceptorConnectionOutageTest {
 
         @Override
         public void closeConnection(final Connection connection) throws SQLException {
+            releasedConnections.incrementAndGet();
             connection.close();
         }
 
