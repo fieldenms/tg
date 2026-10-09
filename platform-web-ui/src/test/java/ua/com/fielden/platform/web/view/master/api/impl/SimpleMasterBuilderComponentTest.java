@@ -64,6 +64,23 @@ public class SimpleMasterBuilderComponentTest {
     }
 
     @Test
+    public void property_component_receives_declared_title_and_description_in_place_of_those_of_its_property() {
+        final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withTitle("Fuel usage").withDesc("Fuel usage by month").also());
+
+        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' property-name='integerProp' prop-title='Fuel usage' prop-desc='Fuel usage by month' property-action-index="));
+    }
+
+    @Test
+    public void property_component_receives_title_or_description_of_its_property_unless_it_is_declared() {
+        final String out = render(master()
+                .addProp("integerProp").asComponent(PROPERTY_COMPONENT).withTitle("Fuel usage").also()
+                .addProp("bigDecimalProp").asComponent("components/tg-cost-chart").withDesc("Cost by month").also());
+
+        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' property-name='integerProp' prop-title='Fuel usage' prop-desc='Integer prop desc' property-action-index="));
+        assertTrue(out.contains("<tg-cost-chart id='component_4_bigDecimalProp' entity='[[_currEntity]]' property-name='bigDecimalProp' prop-title='BigDecimal prop' prop-desc='Cost by month' property-action-index="));
+    }
+
+    @Test
     public void property_component_element_name_can_differ_from_the_last_segment_of_its_import_path() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withElementName("tg-fuel-usage-chart").also());
 
@@ -360,6 +377,18 @@ public class SimpleMasterBuilderComponentTest {
     public void description_cannot_contain_an_interpolation() {
         assertConfigurationError(ERR_UNRENDERABLE_TEXT.formatted("description", ENTITY_COMPONENT_DESC, "Fuel usages in ${year}"),
                 () -> master().addComponent(ENTITY_COMPONENT).withDesc("Fuel usages in ${year}"));
+    }
+
+    @Test
+    public void title_of_property_component_cannot_contain_a_straight_single_quote() {
+        assertConfigurationError(ERR_UNRENDERABLE_TEXT.formatted("title", PROPERTY_COMPONENT_DESC, "Driver's fuel usage"),
+                () -> master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withTitle("Driver's fuel usage"));
+    }
+
+    @Test
+    public void description_of_property_component_is_required_if_declared() {
+        assertConfigurationError(ERR_NULL_TEXT.formatted("description", PROPERTY_COMPONENT_DESC),
+                () -> master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withDesc(null));
     }
 
     ////////////////////////////////////////////////////////////////////////

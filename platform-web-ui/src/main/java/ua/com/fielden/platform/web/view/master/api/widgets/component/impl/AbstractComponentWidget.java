@@ -19,7 +19,8 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 /// The base widget for both ways of adding an application-provided web component to a master:
 /// in place of an editor, with [ComponentWidget], or bound to the entity rather than to a property, with [EntityComponentWidget].
 ///
-/// It records the element name, the attributes, and whether the component is blocked while the master entity is unsaved.
+/// It records the title and description, the element name, the attributes, and whether the component is blocked while the master entity is unsaved.
+/// The title and description default to those of the property, which a component bound to the entity does not have.
 /// The element name defaults to the last segment of the import path.
 /// The declared attributes are rendered after the attributes of a concrete widget, in the order of declaration.
 ///
@@ -54,6 +55,8 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
             "slot"); // the flex layout of a master assigns slots to its elements
 
     private final Class<? extends AbstractEntity<?>> entityType;
+    private Optional<String> declaredTitle = empty();
+    private Optional<String> declaredDesc = empty();
     private Optional<String> elementName = empty();
     private final Map<String, String> attrs = new LinkedHashMap<>();
     private boolean blockWhenUnsaved = true;
@@ -63,6 +66,34 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
     protected AbstractComponentWidget(final String importPath, final Pair<String, String> titleDesc, final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
         super(validImportPath(importPath, entityType, propertyName), titleDesc, propertyName);
         this.entityType = entityType;
+    }
+
+    /// Declares the title of the component, rendered as `prop-title`, in place of the title of the property.
+    ///
+    public void withTitle(final String title) {
+        validateText("title", title);
+        this.declaredTitle = of(title);
+    }
+
+    /// Declares the description of the component, rendered as `prop-desc`, in place of the description of the property.
+    ///
+    public void withDesc(final String desc) {
+        validateText("description", desc);
+        this.declaredDesc = of(desc);
+    }
+
+    /// The declared title, or otherwise the title of the property, which is `null` for a component bound to the entity.
+    ///
+    @Override
+    protected String title() {
+        return declaredTitle.orElseGet(super::title);
+    }
+
+    /// The declared description, or otherwise the description of the property, which is `null` for a component bound to the entity.
+    ///
+    @Override
+    protected String desc() {
+        return declaredDesc.orElseGet(super::desc);
     }
 
     /// Overrides the element name that is otherwise derived from the import path.

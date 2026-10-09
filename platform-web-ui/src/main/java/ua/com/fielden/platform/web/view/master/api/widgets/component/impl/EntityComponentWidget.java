@@ -4,10 +4,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 /// A widget that represents an application-provided web component bound to the entity of a master rather than to any of its properties.
@@ -27,28 +25,12 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 public class EntityComponentWidget extends AbstractComponentWidget {
 
     private final String componentKey;
-    private Optional<String> title = empty();
-    private Optional<String> desc = empty();
 
     /// Creates a widget for the component at `importPath`, which is resolved as `/resources/<importPath>.js`, in a master for `entityType`.
     ///
     public EntityComponentWidget(final String importPath, final Class<? extends AbstractEntity<?>> entityType, final String componentKey) {
         super(importPath, pair(null, null), entityType, null);
         this.componentKey = componentKey;
-    }
-
-    /// Declares the title of the component, rendered as `prop-title`.
-    ///
-    public void withTitle(final String title) {
-        validateText("title", title);
-        this.title = of(title);
-    }
-
-    /// Declares the description of the component, rendered as `prop-desc`.
-    ///
-    public void withDesc(final String desc) {
-        validateText("description", desc);
-        this.desc = of(desc);
     }
 
     /// The key that identifies the component in the master, which distinguishes the components of a master from one another, from its editors and from its properties.
@@ -66,8 +48,9 @@ public class EntityComponentWidget extends AbstractComponentWidget {
         }
         attrs.put("id", componentKey);
         attrs.put("entity", "[[_currEntity]]");
-        title.ifPresent(value -> attrs.put("prop-title", value));
-        desc.ifPresent(value -> attrs.put("prop-desc", value));
+        // the component has no property to take the title and description from, so they are rendered only if declared
+        ofNullable(title()).ifPresent(value -> attrs.put("prop-title", value));
+        ofNullable(desc()).ifPresent(value -> attrs.put("prop-desc", value));
         attrs.put("property-action-index", propertyActionIndexBinding(componentKey));
         addUnsavedStateAttributes(attrs);
         addMasterContextAttribute(attrs);

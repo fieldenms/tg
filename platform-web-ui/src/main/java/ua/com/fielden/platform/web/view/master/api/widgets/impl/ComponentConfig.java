@@ -8,6 +8,8 @@ import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IComponentConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig0;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig1;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig2;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig3;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.ComponentWidget;
 
 import java.util.Objects;
@@ -25,19 +27,31 @@ public class ComponentConfig<T extends AbstractEntity<?>> implements IComponentC
     }
 
     @Override
-    public IComponentConfig0<T> withElementName(final String elementName) {
+    public IComponentConfig0<T> withTitle(final String title) {
+        widget.withTitle(title);
+        return this;
+    }
+
+    @Override
+    public IComponentConfig1<T> withDesc(final String desc) {
+        widget.withDesc(desc);
+        return this;
+    }
+
+    @Override
+    public IComponentConfig2<T> withElementName(final String elementName) {
         widget.withElementName(elementName);
         return this;
     }
 
     @Override
-    public IComponentConfig0<T> withAttr(final String name, final CharSequence value) {
+    public IComponentConfig2<T> withAttr(final String name, final CharSequence value) {
         widget.withAttr(name, Objects.toString(value, null));
         return this;
     }
 
     @Override
-    public IComponentConfig1<T> skipBlockingWhenUnsaved() {
+    public IComponentConfig3<T> skipBlockingWhenUnsaved() {
         widget.skipBlockingWhenUnsaved();
         return this;
     }
