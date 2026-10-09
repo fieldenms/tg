@@ -51,6 +51,12 @@ public class EntityComponentConfig<T extends AbstractEntity<?>> implements IEnti
     }
 
     @Override
+    public IEntityComponentConfig2<T> withPropAttr(final String name, final CharSequence propPath) {
+        widget.withPropAttr(name, Objects.toString(propPath, null));
+        return this;
+    }
+
+    @Override
     public IEntityComponentConfig3<T> skipBlockingWhenUnsaved() {
         widget.skipBlockingWhenUnsaved();
         return this;

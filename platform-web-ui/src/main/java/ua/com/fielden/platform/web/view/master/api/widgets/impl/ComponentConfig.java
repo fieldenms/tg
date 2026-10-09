@@ -51,6 +51,12 @@ public class ComponentConfig<T extends AbstractEntity<?>> implements IComponentC
     }
 
     @Override
+    public IComponentConfig2<T> withPropAttr(final String name, final CharSequence propPath) {
+        widget.withPropAttr(name, Objects.toString(propPath, null));
+        return this;
+    }
+
+    @Override
     public IComponentConfig3<T> skipBlockingWhenUnsaved() {
         widget.skipBlockingWhenUnsaved();
         return this;

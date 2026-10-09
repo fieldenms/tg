@@ -15,6 +15,15 @@ public interface IComponentConfig2<T extends AbstractEntity<?>> extends ICompone
     ///
     IComponentConfig2<T> withAttr(final String name, final CharSequence value);
 
+    /// Declares an attribute of the component element that is bound to the value of a property of the entity of the master.
+    ///
+    /// The property is a name, which may be dot-notated, such as `location.gisInfo`, or a metamodel reference, such as `Location_.gisInfo()`.
+    /// The value follows the entity that the component is bound to, and is passed to the component as is, such as an entity, a number or a collection of entities.
+    /// The property must be fetched with the master entity.
+    /// The attribute is ordered and replaced as one declared with [#withAttr(String, CharSequence)].
+    ///
+    IComponentConfig2<T> withPropAttr(final String name, final CharSequence propPath);
+
     /// Keeps the component interactive while the master entity is unsaved.
     ///
     /// By default, a component in a master for a persistent entity type is blocked while the entity is new or has changes that are not yet saved.

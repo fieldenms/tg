@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.commons.lang3.StringUtils.countMatches;
+import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 /// The base widget for both ways of adding an application-provided web component to a master:
@@ -23,6 +24,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 /// The title and description default to those of the property, which a component bound to the entity does not have.
 /// The element name defaults to the last segment of the import path.
 /// The declared attributes are rendered after the attributes of a concrete widget, in the order of declaration.
+/// An attribute has either a declared value, or is bound to the value of a property of the entity of the master.
 ///
 /// Blocking is declared by default, and is rendered as the `block-when-unsaved` flag.
 /// The modification state of the master is rendered regardless of the flag, so that it is available to the component also when blocking changes at run time:
@@ -41,6 +43,7 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
         ERR_INVALID_ATTR_NAME = "Invalid attribute name [%s] of %s: it should be in lowercase dash-case, such as [centre-uuid].",
         ERR_RESERVED_ATTR_NAME = "Attribute [%s] of %s is reserved by the platform.",
         ERR_UNBALANCED_BINDING = "The value of attribute [%s] of %s has an unbalanced binding expression: %s",
+        ERR_ATTR_FOR_MISSING_PROPERTY = "Attribute [%s] of %s cannot be bound to property [%s.%s], which does not exist.",
         ERR_NULL_TEXT = "The %s of %s is null.",
         ERR_UNRENDERABLE_TEXT = "The %s of %s contains a straight single quote, a backtick or ${, which cannot be rendered: [%s].";
 
@@ -107,17 +110,25 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
     /// Declaring an attribute again replaces its value, which lets a declaration override an attribute set elsewhere, such as in a shared configuration.
     ///
     public void withAttr(final String name, final String value) {
-        if (name == null || !ATTR_NAME.matcher(name).matches()) {
-            throw new EntityMasterConfigurationException(ERR_INVALID_ATTR_NAME.formatted(name, description()));
-        }
-        if (RESERVED_ATTR_NAMES.contains(name) || additionalReservedAttrNames().contains(name)) {
-            throw new EntityMasterConfigurationException(ERR_RESERVED_ATTR_NAME.formatted(name, description()));
-        }
+        validateAttrName(name);
         validateText("value of attribute [%s]".formatted(name), value);
         if (countMatches(value, "[[") != countMatches(value, "]]") || countMatches(value, "{{") != countMatches(value, "}}")) {
             throw new EntityMasterConfigurationException(ERR_UNBALANCED_BINDING.formatted(name, description(), value));
         }
         attrs.put(name, value);
+    }
+
+    /// Declares an attribute of the component element that is bound to the value of property `propPath` of the entity of the master, which may be dot-notated.
+    /// The value follows the entity, as attribute `entity` does, and is `null` while there is no entity.
+    /// The attribute is ordered and replaced as one declared with [#withAttr(String, String)].
+    ///
+    public void withPropAttr(final String name, final String propPath) {
+        validateAttrName(name);
+        if (propPath == null || propPath.isEmpty() || !isPropertyPresent(entityType, propPath)) {
+            throw new EntityMasterConfigurationException(ERR_ATTR_FOR_MISSING_PROPERTY.formatted(name, description(), entityType.getSimpleName(), propPath));
+        }
+        // the path is passed to the master as a string literal, as a binding path cannot be used for a property of an entity
+        attrs.put(name, "[[_propertyValue(_currEntity, \"" + propPath + "\")]]");
     }
 
     /// Keeps the component interactive while the entity is unsaved.
@@ -171,6 +182,15 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
         final Map<String, Object> customAttrs = super.createCustomAttributes();
         customAttrs.putAll(attrs);
         return customAttrs;
+    }
+
+    private void validateAttrName(final String name) {
+        if (name == null || !ATTR_NAME.matcher(name).matches()) {
+            throw new EntityMasterConfigurationException(ERR_INVALID_ATTR_NAME.formatted(name, description()));
+        }
+        if (RESERVED_ATTR_NAMES.contains(name) || additionalReservedAttrNames().contains(name)) {
+            throw new EntityMasterConfigurationException(ERR_RESERVED_ATTR_NAME.formatted(name, description()));
+        }
     }
 
     private String validElementName(final String name) {

@@ -997,6 +997,14 @@ export const TgEntityBinderBehavior = {
     },
 
     /**
+     * Returns the value of property `path` of `entity`, or null if there is no entity yet, for attributes of components that are bound to properties of the entity.
+     * A dot-notated path, such as 'location.gisInfo', is followed through the entities it refers to, as a binding path cannot be used for a property of an entity.
+     */
+    _propertyValue: function (entity, path) {
+        return entity ? entity.get(path) : null;
+    },
+
+    /**
      * Implements the default action to (re)bind freshly received entity. Entity receival is the result of actions Refresh, Validate, Save and Run.
      *
      * @param isRefreshingProcess -- value true indicates that the call happens as part of refresh lifecycle, which requires resetting the state.

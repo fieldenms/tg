@@ -101,6 +101,17 @@ public class SimpleMasterBuilderComponentTest {
     }
 
     @Test
+    public void attribute_bound_to_property_of_master_entity_is_ordered_and_replaced_as_declared_attributes_are() {
+        final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT)
+                .withAttr("limit", "10")
+                .withAttr("mode", "compact")
+                .withPropAttr("limit", "bigDecimalProp")
+                .also());
+
+        assertTrue(out.contains(MASTER_STATE_ATTRS + " limit='[[_propertyValue(_currEntity, \"bigDecimalProp\")]]' mode='compact'>"));
+    }
+
+    @Test
     public void property_component_that_skips_blocking_has_no_blocking_flag_but_receives_modification_state_of_master() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).skipBlockingWhenUnsaved().also());
 
@@ -172,6 +183,13 @@ public class SimpleMasterBuilderComponentTest {
                 .also());
 
         assertTrue(out.contains("<tg-fuel-usages id='component-0' entity='[[_currEntity]]' " + actionIndexAttr("component-0") + " " + MASTER_STATE_ATTRS + " mode='compact'>"));
+    }
+
+    @Test
+    public void attribute_of_entity_component_can_be_bound_to_dot_notated_property_of_master_entity() {
+        final String out = render(master().addComponent(ENTITY_COMPONENT).withPropAttr("fuel-limit", "entityProp.integerProp").also());
+
+        assertTrue(out.contains(MASTER_STATE_ATTRS + " fuel-limit='[[_propertyValue(_currEntity, \"entityProp.integerProp\")]]'>"));
     }
 
     @Test
@@ -359,6 +377,30 @@ public class SimpleMasterBuilderComponentTest {
     public void binding_expression_in_attribute_value_must_have_balanced_curly_braces() {
         assertConfigurationError(ERR_UNBALANCED_BINDING.formatted("selection", ENTITY_COMPONENT_DESC, "{{centreSelection}"),
                 () -> master().addComponent(ENTITY_COMPONENT).withAttr("selection", "{{centreSelection}"));
+    }
+
+    @Test
+    public void attribute_cannot_be_bound_to_missing_property() {
+        assertConfigurationError(ERR_ATTR_FOR_MISSING_PROPERTY.formatted("limit", PROPERTY_COMPONENT_DESC, "TgPersistentEntityWithProperties", "bigDecimalPropp"),
+                () -> master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withPropAttr("limit", "bigDecimalPropp"));
+    }
+
+    @Test
+    public void attribute_cannot_be_bound_to_the_entity_itself() {
+        assertConfigurationError(ERR_ATTR_FOR_MISSING_PROPERTY.formatted("limit", ENTITY_COMPONENT_DESC, "TgPersistentEntityWithProperties", ""),
+                () -> master().addComponent(ENTITY_COMPONENT).withPropAttr("limit", ""));
+    }
+
+    @Test
+    public void property_of_attribute_bound_to_property_is_required() {
+        assertConfigurationError(ERR_ATTR_FOR_MISSING_PROPERTY.formatted("limit", ENTITY_COMPONENT_DESC, "TgPersistentEntityWithProperties", null),
+                () -> master().addComponent(ENTITY_COMPONENT).withPropAttr("limit", null));
+    }
+
+    @Test
+    public void attribute_bound_to_property_cannot_have_reserved_name() {
+        assertConfigurationError(ERR_RESERVED_ATTR_NAME.formatted("entity", ENTITY_COMPONENT_DESC),
+                () -> master().addComponent(ENTITY_COMPONENT).withPropAttr("entity", "entityProp"));
     }
 
     @Test
