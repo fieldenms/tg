@@ -86,6 +86,14 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 /// and the next invocation on the thread discards it before obtaining its own session; an invocation that cannot discard it fails.
 /// Either way, an error affects only the unit of work in which it occurred, and not later units of work on the same thread, which matters for pooled threads.
 ///
+/// The hand-over of a connection between Hibernate and the connection pool is beyond the reach of this interceptor.
+/// A [VirtualMachineError] that strikes while completing a transaction releases its connection, once Hibernate has dropped its reference to it (`LogicalConnectionManagedImpl.releaseConnection`),
+/// leaves the session without the connection, so discarding the session aborts none.
+/// Hibernate returns the connection to the pool regardless, where it is reused: the error rarely interrupts an exchange with the server at that point,
+/// whereas aborting the connection could break another unit of work, which may already be using it.
+/// If such an error strikes within HikariCP, after it has taken the connection back, but before it has marked the connection as available,
+/// or while it hands out a connection, before the session holds it, the pool entry remains in use for good.
+///
 /// Two further behaviours are not apparent from a call site:
 ///   - The session is put into [FlushMode#COMMIT], so Hibernate never auto-flushes.
 ///     DML reaches the database when something flushes it explicitly, and otherwise during the commit.
