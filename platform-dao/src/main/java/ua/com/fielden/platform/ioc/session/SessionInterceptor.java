@@ -111,7 +111,6 @@ public class SessionInterceptor implements MethodInterceptor {
             MSG_CLOSED_DISCARDED_SESSION_WITH_ERROR = "[%s] Closed a discarded session with error.",
             WARN_TRANSACTION_ROLLBACK = "[%s] Transaction completed (rolled back) with error.",
             WARN_DISCARDED_SESSION_PENDING_CLEANUP = "[%s] Discarded a session, whose cleanup after an error had not completed.",
-            WARN_DISCARD_SESSION_TIMEOUT = "[%s] Discarding a session did not complete within %s.",
             ERR_COULD_NOT_CLOSE_SESSION = "[%s] Could not close session.",
             ERR_COULD_NOT_ABORT_CONNECTION = "[%s] Could not abort connection.",
             ERR_COULD_NOT_DISCARD_SESSION = "[%s] Could not discard session.",
@@ -659,7 +658,7 @@ public class SessionInterceptor implements MethodInterceptor {
         }
         cleanupState.discarderStarted = true;
         if (!awaitTermination(discarder)) {
-            LOGGER.warn(() -> WARN_DISCARD_SESSION_TIMEOUT.formatted(user, DISCARD_SESSION_TIMEOUT));
+            LOGGER.warn("[{}] Discarding a session did not complete within {}.", user, DISCARD_SESSION_TIMEOUT);
         }
         else if (session.isOpen()) {
             cleanupState.discarderStarted = false;
