@@ -162,6 +162,59 @@ public class SessionInterceptorStackOverflowTest {
         assertNotSame(before, probe.physicalConnection());
     }
 
+    /// A [VirtualMachineError] while closing a resource, for example, while a JDBC driver closes a result set, which may involve an exchange with the server,
+    /// is attached by try-with-resources as a suppressed throwable to an ordinary exception thrown before it.
+    /// It is recognised nevertheless, and the connection is aborted instead of being returned to the pool.
+    ///
+    @Test
+    public void virtual_machine_error_suppressed_by_try_with_resources_discards_the_connection() throws SQLException {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        final Connection before = probe.physicalConnection();
+
+        final var exception = new IllegalStateException("Purposeful exception.");
+        final var closeFailure = new InternalError("Purposeful error while closing a resource.");
+        assertSame(exception, assertThrows(IllegalStateException.class, () -> probe.selectOneAndThrowFromTryWithResourcesThatFailsToClose(exception, closeFailure)));
+        assertSame(closeFailure, exception.getSuppressed()[0]);
+
+        assertTrue(before.isClosed());
+        assertNotSame(before, probe.physicalConnection());
+    }
+
+    /// As [#virtual_machine_error_suppressed_by_try_with_resources_discards_the_connection], but the exception that suppresses the error is the cause of the one that propagates,
+    /// as when a library wraps the failure of the body.
+    ///
+    @Test
+    public void virtual_machine_error_suppressed_by_a_cause_discards_the_connection() throws SQLException {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        final Connection before = probe.physicalConnection();
+
+        final var cause = new IllegalStateException("Purposeful exception.");
+        cause.addSuppressed(new InternalError("Purposeful error while closing a resource."));
+        final var wrapped = new RuntimeException("Purposeful wrapper.", cause);
+        assertSame(wrapped, assertThrows(RuntimeException.class, () -> probe.selectOneAndThrow(wrapped)));
+
+        assertTrue(before.isClosed());
+        assertNotSame(before, probe.physicalConnection());
+    }
+
+    /// A [VirtualMachineError] deep in the chain of causes is recognised, even if the throwables in that chain have many suppressed throwables,
+    /// as the chain of causes is examined before them, so that they cannot exhaust the bound on the number of throwables examined.
+    ///
+    @Test
+    public void virtual_machine_error_in_the_chain_of_causes_is_recognised_despite_many_suppressed_throwables() throws SQLException {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        final Connection before = probe.physicalConnection();
+
+        final var wrapped = new RuntimeException("Purposeful wrapper.", new RuntimeException("Purposeful wrapper.", new InternalError("Purposeful error.")));
+        for (int index = 0; index < 40; index++) {
+            wrapped.addSuppressed(new IllegalStateException("Purposeful failure to close resource " + index + "."));
+        }
+        assertSame(wrapped, assertThrows(RuntimeException.class, () -> probe.selectOneAndThrow(wrapped)));
+
+        assertTrue(before.isClosed());
+        assertNotSame(before, probe.physicalConnection());
+    }
+
     /// In nested scopes, the innermost scope discards the session, and the enclosing scopes do not discard it again.
     /// Each unit of work that fails this way has its own connection discarded, so nothing recorded about the first unit of work affects the second.
     ///
@@ -532,6 +585,16 @@ public class SessionInterceptorStackOverflowTest {
             return Stream.of(1);
         }
 
+        /// Queries the database, and then throws `exception` from the body of try-with-resources, whose resource fails to close with `closeFailure`.
+        ///
+        @SessionRequired
+        public void selectOneAndThrowFromTryWithResourcesThatFailsToClose(final RuntimeException exception, final Error closeFailure) {
+            selectOneInCurrentSession(getSession());
+            try (final Resource _ = () -> { throw closeFailure; }) {
+                throw exception;
+            }
+        }
+
         /// Queries the database, interrupts the current thread, and then throws `error`.
         ///
         @SessionRequired
@@ -555,6 +618,14 @@ public class SessionInterceptorStackOverflowTest {
         public Connection physicalConnection() {
             return getSession().doReturningWork(connection -> connection.unwrap(Connection.class));
         }
+    }
+
+    /// A resource whose closing declares no checked exception, so that try-with-resources needs no handler for one.
+    ///
+    @FunctionalInterface
+    private interface Resource extends AutoCloseable {
+        @Override
+        void close();
     }
 
     /// A unit of work that must not be invoked within an existing session scope.

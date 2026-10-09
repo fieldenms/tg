@@ -75,7 +75,8 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 /// A [VirtualMachineError], such as [StackOverflowError] or [OutOfMemoryError], discards the session instead of rolling back its transaction.
 /// Such an error can occur at any point, including in the middle of an exchange with the database, leaving the connection out of sync with the server,
 /// so the connection is aborted rather than reused, and the database rolls back the transaction when the connection closes.
-/// The same applies to an exception caused by such an error, as libraries may wrap it.
+/// The same applies to an exception caused by such an error, as libraries may wrap it, and to one to which such an error is attached as a suppressed throwable,
+/// as try-with-resources does with a failure to close a resource after its body has failed.
 /// For example, the thread-bound Hibernate session is a JDK dynamic proxy, which wraps an error thrown through it in [java.lang.reflect.UndeclaredThrowableException].
 /// Other errors, such as [LinkageError] or [AssertionError], are thrown at well-defined points, and are handled like exceptions,
 /// so that an error recurring in a unit of work does not cost a connection each time.
@@ -127,10 +128,10 @@ public class SessionInterceptor implements MethodInterceptor {
     /// The timeout bounds the delay of a failing unit of work if aborting or closing hangs: a warning is logged, the error propagates, and the discarding thread continues in the background.
     /// The delay is incurred once per unit of work, whatever the nesting depth of its session scopes, as the session is discarded at most once (refer to [CleanupState#discarderStarted]).
     private static final Duration DISCARD_SESSION_TIMEOUT = Duration.ofSeconds(10);
-    /// The maximum number of throwables examined in a chain of causes, when determining whether a throwable is caused by a [VirtualMachineError].
-    /// Actual chains are short — a few levels of wrapping by proxies, JDBC drivers and Hibernate.
+    /// The maximum number of throwables examined, among the causes and suppressed throwables of a throwable, when determining whether it is caused by a [VirtualMachineError].
+    /// Actual chains are short — a few levels of wrapping by proxies, JDBC drivers and Hibernate, and a few resources closed by try-with-resources.
     /// The bound guards against a chain that is unexpectedly long or cyclic: [Throwable#initCause] prevents only a throwable from being its own cause, and [Throwable#getCause] may be overridden.
-    private static final int MAX_CAUSE_DEPTH = 32;
+    private static final int MAX_EXAMINED_THROWABLES = 32;
     /// Created eagerly, so that discarding a session does not create it when the stack may be nearly exhausted.
     /// A thread factory obtained from a builder is safe for use by concurrent threads.
     private static final ThreadFactory DISCARDER_THREAD_FACTORY = Thread.ofPlatform().name("discard-session").daemon(true).factory();
@@ -571,16 +572,55 @@ public class SessionInterceptor implements MethodInterceptor {
         }
     }
 
-    /// Determines whether `th` is a [VirtualMachineError], or is caused by one.
-    /// The search is bounded, as a chain of causes may, in principle, be cyclic.
+    /// Determines whether `th` is a [VirtualMachineError], or is caused by one, either as a cause or as a suppressed throwable, at any level.
+    ///
+    /// Suppressed throwables are examined, as try-with-resources attaches a failure to close a resource to the failure of its body, rather than propagating it.
+    /// For example, a [StackOverflowError] while a JDBC driver closes a result set, which may involve an exchange with the server, is suppressed by an ordinary exception thrown before it.
+    ///
+    /// The chain of causes of `th` is examined first, as wrapping is the common case, so that many suppressed throwables cannot exhaust the bound before the chain has been examined.
+    /// It is examined without allocating, unless a throwable in it has suppressed throwables, as memory may be exhausted.
+    /// Only if a throwable in that chain has suppressed throwables are they examined, breadth-first, together with their own causes and suppressed throwables.
+    ///
+    /// The search is iterative, as it runs in error handling, where the stack may be nearly exhausted, and bounded by [#MAX_EXAMINED_THROWABLES], as a chain may, in principle, be cyclic.
+    /// If the search itself fails, for example, with a `StackOverflowError`, the failure propagates, and the session remains recorded for the thread.
     ///
     private static boolean isCausedByVirtualMachineError(final Throwable th) {
-        Throwable cause = th;
-        for (int depth = 0; cause != null && depth < MAX_CAUSE_DEPTH; depth++) {
+        boolean hasSuppressed = false;
+        int chainLength = 0;
+        for (Throwable cause = th; cause != null && chainLength < MAX_EXAMINED_THROWABLES; cause = cause.getCause(), chainLength++) {
             if (cause instanceof VirtualMachineError) {
                 return true;
             }
-            cause = cause.getCause();
+            // getSuppressed() allocates only if there are suppressed throwables.
+            hasSuppressed = hasSuppressed || cause.getSuppressed().length > 0;
+        }
+        if (!hasSuppressed) {
+            return false;
+        }
+
+        // The throwables of the chain, which have been examined, followed by the suppressed throwables found, and their causes, which are yet to be examined.
+        final Throwable[] found = new Throwable[MAX_EXAMINED_THROWABLES];
+        int count = 0;
+        for (Throwable cause = th; count < chainLength; cause = cause.getCause()) {
+            found[count++] = cause;
+        }
+        for (int next = 0; next < count; next++) {
+            final Throwable current = found[next];
+            if (next >= chainLength) {
+                if (current instanceof VirtualMachineError) {
+                    return true;
+                }
+                final Throwable cause = current.getCause();
+                if (cause != null && count < found.length) {
+                    found[count++] = cause;
+                }
+            }
+            for (final Throwable suppressed : current.getSuppressed()) {
+                if (count == found.length) {
+                    break;
+                }
+                found[count++] = suppressed;
+            }
         }
         return false;
     }
