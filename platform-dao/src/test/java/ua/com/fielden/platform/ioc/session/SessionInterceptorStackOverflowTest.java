@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -41,6 +42,7 @@ import static com.google.inject.matcher.Matchers.subclassesOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -75,6 +77,8 @@ public class SessionInterceptorStackOverflowTest {
     private static final long ATTEMPT_TIMEOUT_MILLIS = 30_000;
     /// Fail fast if connections leak and the pool is exhausted, instead of waiting for the default 30 seconds per unit of work.
     private static final long POOL_TIMEOUT_MILLIS = 2_000;
+    /// How long the thread that discards a session waits before discarding it, in a test that requires discarding to take longer than an error takes to propagate.
+    private static final long DISCARDER_DELAY_MILLIS = 500;
 
     private SessionFactory sessionFactory;
     private HikariDataSource dataSource;
@@ -233,9 +237,26 @@ public class SessionInterceptorStackOverflowTest {
     /// An interrupt does not end the wait for the thread that discards the session.
     /// The session is closed before the error propagates, as on a thread that is not interrupted, and the interrupt status is preserved.
     ///
+    /// The thread that discards the session waits for [#DISCARDER_DELAY_MILLIS] before discarding it,
+    /// so that the session would still be open when the error propagates, if the interrupt ended the wait for that thread.
+    ///
     @Test
     public void virtual_machine_error_on_interrupted_thread_discards_the_connection_before_the_error_propagates() throws SQLException {
-        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+        final ThreadFactory delayedDiscarderThreadFactory = runnable -> Thread.ofPlatform().daemon(true).unstarted(() -> {
+            try {
+                Thread.sleep(DISCARDER_DELAY_MILLIS);
+            } catch (final InterruptedException _) {
+                Thread.currentThread().interrupt();
+            }
+            runnable.run();
+        });
+        final Injector delayedDiscarderInjector = Guice.createInjector(new AbstractModule() {
+            @Override
+            protected void configure() {
+                bindInterceptor(subclassesOf(ISessionEnabled.class), annotatedWith(SessionRequired.class), new SessionInterceptor(() -> sessionFactory, delayedDiscarderThreadFactory));
+            }
+        });
+        final DatabaseProbe probe = delayedDiscarderInjector.getInstance(DatabaseProbe.class);
         final Connection before = probe.physicalConnection();
 
         final boolean interrupted;
@@ -304,7 +325,9 @@ public class SessionInterceptorStackOverflowTest {
 
         assertSame(error, thrown);
         assertEquals(1, thrown.getSuppressed().length);
-        assertSame(error, assertThrows(TransactionRollbackDueToThrowable.class, () -> { throw thrown.getSuppressed()[0]; }).getCause());
+        final var rollback = assertThrows(TransactionRollbackDueToThrowable.class, () -> { throw thrown.getSuppressed()[0]; });
+        assertNull(rollback.getCause());
+        assertTrue(rollback.getMessage().contains(error.toString()));
         assertFalse(probe.getSession().isOpen());
         assertTrue(before.isClosed());
         assertNotSame(before, probe.physicalConnection());

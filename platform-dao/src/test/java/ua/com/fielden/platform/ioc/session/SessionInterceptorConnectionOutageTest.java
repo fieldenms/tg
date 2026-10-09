@@ -355,6 +355,80 @@ public class SessionInterceptorConnectionOutageTest {
         assertFalse(failedSession.isOpen());
     }
 
+    /// The error handling of a failed unit of work fails itself, as it might when the stack is nearly exhausted.
+    /// Here, determining whether a failure during the traversal of a stream is caused by a [VirtualMachineError] fails on closing the stream,
+    /// as the failure overrides `getCause()` to throw an error.
+    /// The traversal of a stream fails outside any intercepted invocation, which keeps Guice from invoking `getCause()` first, as it does in pruning the stack trace of a failure that it intercepts.
+    ///
+    /// The failure of the error handling propagates from closing the stream, without the failure of the traversal attached to it, as that has reached the consumer already.
+    /// Try-with-resources attaches the failure of the error handling to the failure of the traversal instead, so that neither is lost, and neither refers to itself through the other.
+    /// The session remains recorded for the thread, and the next invocation on the thread discards it, and then proceeds.
+    ///
+    @Test
+    public void failure_of_the_error_handling_on_closing_a_stream_propagates_without_the_failure_of_the_traversal_attached() {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+
+        final var handlingFailure = new InternalError("Purposeful failure of the error handling.");
+        final var exception = new IllegalStateException("Purposeful exception.") {
+            @Override
+            public synchronized Throwable getCause() {
+                throw handlingFailure;
+            }
+        };
+        final Stream<Integer> stream = probe.selectOneAndReturnStream();
+        final Session streamSession = probe.getSession();
+        final IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
+            try (stream) {
+                stream.forEach(_ -> { throw exception; });
+            }
+        });
+
+        assertSame(exception, thrown);
+        assertSame(handlingFailure, thrown.getSuppressed()[0]);
+        assertEquals(0, handlingFailure.getSuppressed().length);
+        assertTrue(streamSession.isOpen());
+
+        assertEquals(1, probe.selectOne());
+        assertFalse(streamSession.isOpen());
+    }
+
+    /// The error handling of a failed unit of work fails itself, within the invocation that failed.
+    /// Here, determining whether the failure is caused by a [VirtualMachineError] fails, as the failure overrides `getCause()` to throw an error when invoked by [SessionInterceptor],
+    /// and to behave as usual otherwise, as when Guice invokes it in pruning the stack trace of the failure, before the interceptor handles it.
+    ///
+    /// The failure of the error handling propagates instead of the failure of the unit of work, which has not reached the caller, and is attached to it as a suppressed throwable, so that it is not lost.
+    /// The session remains recorded for the thread, and the next invocation on the thread discards it, and then proceeds.
+    ///
+    @Test
+    public void failure_of_the_error_handling_of_an_invocation_propagates_with_the_failure_of_the_unit_of_work_attached() {
+        final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
+
+        final var handlingFailure = new InternalError("Purposeful failure of the error handling.");
+        final var exception = new IllegalStateException("Purposeful exception.") {
+            @Override
+            public synchronized Throwable getCause() {
+                final boolean invokedBySessionInterceptor = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+                        .walk(frames -> frames.skip(1).findFirst())
+                        .map(frame -> frame.getDeclaringClass() == SessionInterceptor.class)
+                        .orElse(false);
+                if (invokedBySessionInterceptor) {
+                    throw handlingFailure;
+                }
+                return super.getCause();
+            }
+        };
+        final InternalError thrown = assertThrows(InternalError.class, () -> probe.selectOneAndThrow(exception));
+        final Session failedSession = probe.getSession();
+
+        assertSame(handlingFailure, thrown);
+        assertEquals(1, thrown.getSuppressed().length);
+        assertSame(exception, thrown.getSuppressed()[0]);
+        assertTrue(failedSession.isOpen());
+
+        assertEquals(1, probe.selectOne());
+        assertFalse(failedSession.isOpen());
+    }
+
     /// Committing on closing a stream fails with an error other than a [VirtualMachineError], rolling back then fails, and discarding the session leaves it open.
     /// The session remains recorded for the thread, and the next invocation on the thread discards it, and then proceeds.
     ///
@@ -404,6 +478,14 @@ public class SessionInterceptorConnectionOutageTest {
             throw error;
         }
 
+        /// Queries the database, and then throws `exception`.
+        ///
+        @SessionRequired
+        public void selectOneAndThrow(final RuntimeException exception) {
+            selectOneInCurrentSession();
+            throw exception;
+        }
+
         private int selectOneInCurrentSession() {
             return getSession().doReturningWork(connection -> {
                 try (final var statement = connection.createStatement(); final var resultSet = statement.executeQuery("SELECT 1")) {
@@ -424,6 +506,14 @@ public class SessionInterceptorConnectionOutageTest {
                 // The failure is deliberately ignored, as an enclosing scope might do.
                 return -1;
             }
+        }
+
+        /// Queries the database, and returns a stream, which commits the transaction when closed.
+        ///
+        @SessionRequired
+        public Stream<Integer> selectOneAndReturnStream() {
+            selectOneInCurrentSession();
+            return Stream.of(1);
         }
 
         /// Queries the database, and returns a stream, which commits the transaction when closed.

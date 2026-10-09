@@ -61,8 +61,10 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 /// which would otherwise remain bound to the thread, and be reused by the next unit of work on that thread.
 ///
 /// A failure to *commit* is reported rather than swallowed.
-/// Committing is the point at which a unit of work becomes durable, so a failure there means nothing was persisted, however successfully the method itself ran.
-/// [TransactionCommitException] is thrown for this, and only after the session has been discarded, so that cleanup is never skipped.
+/// Committing is the point at which a unit of work becomes durable, so a failure there means that the unit of work may not have been persisted, however successfully the method itself ran.
+/// Whether it was depends on where committing failed: before the JDBC commit, the transaction is rolled back; in the JDBC commit itself, its outcome is unknown;
+/// after it, for example, in a synchronization that Hibernate notifies, the unit of work has been persisted.
+/// [TransactionCommitException] is thrown for this, and only after the session has been discarded or closed, so that cleanup is never skipped.
 /// It is deliberately distinct from a business failure: the work was valid and its statements were accepted, but the
 /// transaction could not be made durable — typically because of an infrastructure failure, such as a database
 /// failover or a terminated connection.
@@ -117,7 +119,8 @@ public class SessionInterceptor implements MethodInterceptor {
             ERR_COULD_NOT_DISCARD_SESSION = "[%s] Could not discard session.",
             ERR_COULD_NOT_DISCARD_SESSION_PENDING_CLEANUP = "[%s] Could not discard a session, whose cleanup after an error had not completed.",
             ERR_COULD_NOT_ROLLBACK = "[%s] Could not roll back transaction. The session was discarded.",
-            ERR_COULD_NOT_COMMIT = "[%s] Could not commit transaction.";
+            ERR_COULD_NOT_COMMIT = "[%s] Could not commit transaction.",
+            ERR_TRAVERSAL_OF_STREAM_FAILED = "[%s] Transaction rolled back, as the traversal of a stream failed with [%s].";
 
     private static final Logger LOGGER = getLogger(SessionInterceptor.class);
 
@@ -270,15 +273,24 @@ public class SessionInterceptor implements MethodInterceptor {
                 clearSessionScope(cleanupState, session);
             }
             return result;
-        } catch (final Throwable e) {
+        } catch (final Throwable ex) {
             final Session discardableSession = underlyingSession != null ? underlyingSession : session;
             // A field assignment requires no stack frame, so the session is recorded even if the stack is nearly exhausted.
             if (ownsScope) {
                 cleanupState.sessionPendingCleanup = discardableSession;
             }
-            completeTransactionWithError(cleanupState, ownsScope, session, discardableSession, tr, e, user);
+            try {
+                completeTransactionWithError(cleanupState, ownsScope, session, discardableSession, tr, ex, user);
+            } catch (final Throwable cleanupFailure) {
+                // The failure of the cleanup propagates instead of `ex`, which is attached to it, so that it is not lost.
+                // `ex` is older than the failure of the cleanup, and thus cannot refer to it, so the attachment creates no cycle.
+                if (cleanupFailure != ex) {
+                    cleanupFailure.addSuppressed(ex);
+                }
+                throw cleanupFailure;
+            }
             // Exceptions propagate unchanged; other throwables are wrapped.
-            throw e instanceof Exception ex ? ex : new TransactionRollbackDueToThrowable(e);
+            throw ex instanceof Exception e ? e : new TransactionRollbackDueToThrowable(ex);
         }
     }
 
@@ -287,7 +299,7 @@ public class SessionInterceptor implements MethodInterceptor {
     /// If the stream has been traversed without a failure, closing it commits the transaction.
     /// Otherwise, a failure that propagated out of its traversal is a failure of its unit of work, so closing the stream completes the transaction
     /// as the error handling of an owning invocation would: it rolls back the transaction, or, after a [VirtualMachineError] or an exception caused by one, discards the session,
-    /// and then throws [TransactionRollbackDueToThrowable], whether or not the failure was caught after it propagated.
+    /// and then throws [TransactionRollbackDueToThrowable], whether or not the failure was caught after it propagated, which refers to the failure in its message, rather than as its cause.
     /// The failure includes exceptions thrown by the operations of the stream pipeline, such as the action of `forEach`, as they are invoked from within the traversal.
     /// A failure outside the traversal, for example, an exception thrown after the stream has been collected, but before it has been closed, is beyond the reach of this method.
     ///
@@ -375,10 +387,12 @@ public class SessionInterceptor implements MethodInterceptor {
             // The traversal of the stream failed, and the cleanup state of the closing thread has been obtained.
             // As in the error handling of an owning invocation, the session is recorded first, by a field assignment, which requires no stack frame,
             // and the record is cleared once the transaction has been completed.
-            // The failure is wrapped, rather than rethrown, as it has propagated already: try-with-resources would add it to itself as a suppressed exception, which is not permitted.
+            // A new exception is thrown, rather than the failure, as the failure has propagated already: try-with-resources would add it to itself as a suppressed exception, which is not permitted.
+            // The new exception refers to the failure in its message, rather than as its cause, as try-with-resources attaches the new exception to the failure as a suppressed exception,
+            // and the failure would then refer to itself through it, a cycle that breaks serialising either exception, for example, to JSON.
             closingCleanupState.sessionPendingCleanup = streamSession;
             completeTransactionWithError(closingCleanupState, true, session, streamSession, tr, traversalFailure, user);
-            throw new TransactionRollbackDueToThrowable(traversalFailure);
+            throw new TransactionRollbackDueToThrowable(ERR_TRAVERSAL_OF_STREAM_FAILED.formatted(user, traversalFailure));
         });
     }
 
@@ -534,6 +548,9 @@ public class SessionInterceptor implements MethodInterceptor {
     ///
     /// Cleanup precedes logging, so that it runs with as much stack as is available.
     /// If cleanup does not complete, the session remains recorded in `cleanupState`, and is discarded by the next invocation on this thread.
+    /// If cleanup fails, its failure propagates unchanged, instead of `th`, which is not logged.
+    /// A caller to which `th` has not propagated attaches `th` to the failure of the cleanup, so that it is not lost (refer to `invoke`);
+    /// a caller to which it has propagated already, such as the consumer of a stream, does not, as that would create a cycle of suppressed throwables.
     ///
     /// @param ownsScope  whether the failed invocation owns the session scope, in which case the unit of work completes with this invocation
     /// @param discardableSession  the session underlying `session`, if obtained, which is used to discard it after a [VirtualMachineError], or if rolling back fails
@@ -850,7 +867,7 @@ public class SessionInterceptor implements MethodInterceptor {
                 throw ex;
             }
             LOGGER.error(() -> ERR_COULD_NOT_COMMIT.formatted(user), ex);
-            // A failed commit means the unit of work was not persisted, and must not be reported as success.
+            // A failed commit means that the unit of work may not have been persisted, and must not be reported as success.
             // The session is discarded or closed before this exception propagates, so it is never left as a dead current session.
             transactionGuid.remove();
             if (holdsConnection(discardableSession)) {

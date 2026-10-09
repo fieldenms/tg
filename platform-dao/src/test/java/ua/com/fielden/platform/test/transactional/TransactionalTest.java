@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.test.transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionCommitException;
@@ -182,8 +183,11 @@ public class TransactionalTest extends AbstractDaoTestCase {
     /// A failure that propagates out of the traversal of a stream returned by a `SessionRequired` method is a failure of its unit of work, as it would be without streaming.
     /// Closing the stream rolls back the transaction, instead of committing it, and reports the rollback, which try-with-resources adds to the failure as a suppressed exception.
     ///
+    /// The report refers to the failure in its message, rather than as its cause, so that the failure does not refer to itself through it,
+    /// which would break serialising the failure, for example, to JSON in a `Result`.
+    ///
     @Test
-    public void failure_during_traversal_of_a_stream_rolls_back_the_transaction_on_stream_close() {
+    public void failure_during_traversal_of_a_stream_rolls_back_the_transaction_on_stream_close() throws Exception {
         final String key = "streamed";
         final var exception = new IllegalStateException("Purposeful exception.");
         final IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
@@ -195,7 +199,9 @@ public class TransactionalTest extends AbstractDaoTestCase {
         assertSame(exception, thrown);
         assertEquals(1, thrown.getSuppressed().length);
         assertTrue(thrown.getSuppressed()[0] instanceof TransactionRollbackDueToThrowable);
-        assertSame(exception, thrown.getSuppressed()[0].getCause());
+        assertNull(thrown.getSuppressed()[0].getCause());
+        assertTrue(thrown.getSuppressed()[0].getMessage().contains(exception.toString()));
+        new ObjectMapper().writeValueAsString(thrown);
         assertFalse(logic.getSession().isOpen());
         assertNull("The flushed INSERT was rolled back with the transaction.", dao.findByKey(key));
     }
@@ -218,7 +224,8 @@ public class TransactionalTest extends AbstractDaoTestCase {
             }
         });
 
-        assertSame(exception, thrown.getCause());
+        assertNull(thrown.getCause());
+        assertTrue(thrown.getMessage().contains(exception.toString()));
         assertFalse(logic.getSession().isOpen());
         assertNull("The flushed INSERT was rolled back with the transaction.", dao.findByKey(key));
     }
@@ -248,7 +255,7 @@ public class TransactionalTest extends AbstractDaoTestCase {
         assertTrue(thrown == exception || thrown.getCause() == exception);
         assertEquals(1, thrown.getSuppressed().length);
         assertTrue(thrown.getSuppressed()[0] instanceof TransactionRollbackDueToThrowable);
-        assertSame(exception, thrown.getSuppressed()[0].getCause());
+        assertTrue(thrown.getSuppressed()[0].getMessage().contains(exception.toString()));
         assertFalse(logic.getSession().isOpen());
         for (final String key : keys) {
             assertNull("The flushed INSERT was rolled back with the transaction.", dao.findByKey(key));
