@@ -179,15 +179,18 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             return 0;
         }
 
-        // Delete user sessions and SSO sessions from the database in a separate transaction.
-        final int count = deleteSessionsBySid(sid);
-        logger.info(() -> "User sessions deleted [%s] for sid [%s].".formatted(count, sid));
-
-        // Delete all matching user sessions from cache.
-        final List<String> keys = cache.asMap().entrySet().stream().filter(p -> sid.equals(p.getValue().getSid())).map(Map.Entry::getKey).collect(toList());
-        cache.invalidateAll(keys);
-
-        return count;
+        try {
+            // Delete user sessions and SSO sessions from the database in a separate transaction.
+            final int count = deleteSessionsBySid(sid);
+            logger.info(() -> "User sessions deleted [%s] for sid [%s].".formatted(count, sid));
+            return count;
+        } finally {
+            // Delete all matching user sessions from cache, even if deleting them from the database ended with an exception.
+            // The exception may follow a deletion that has been committed, for example, if a synchronization that Hibernate notifies after the commit fails;
+            // the cached copies of the deleted sessions would then keep the sessions valid.
+            final List<String> keys = cache.asMap().entrySet().stream().filter(p -> sid.equals(p.getValue().getSid())).map(Map.Entry::getKey).collect(toList());
+            cache.invalidateAll(keys);
+        }
     }
 
     /// This method is used strictly to enforce deletion in a separate transaction.
