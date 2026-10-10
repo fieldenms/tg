@@ -52,6 +52,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
         up.setUsername(UNIT_TEST_USER, co(User.class));
         // due to global cache nature it needs to be invalidated in order to keep tests independent
         cache.invalidateAll();
+        ssoSessionController.failInvalidationWith(null);
         ssoSessionController.failAfterCommitWith(null);
     }
 
@@ -204,6 +205,45 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
 
         ssoSessionController.failAfterCommitWith(new IllegalStateException("Purposeful failure after the commit."));
         assertThrows(TransactionCommitException.class, () -> coSession.clearAllWithSid(sidForUser1));
+
+        assertEquals("The user sessions should have been deleted from the database.", 0, coSession.count(select(UserSession.class).where().prop("sid").eq().val(sidForUser1).model()));
+        assertEquals("The user sessions should have been removed from cache.", 1, cache.size());
+        assertFalse("There should be no current session for USER1.", coSession.currentSession(currUser1, authenticatorForUser1, false).isPresent());
+        assertTrue("There should be the current session for USER2.", coSession.currentSession(currUser2, authenticatorForUser2, false).isPresent());
+    }
+
+    /// Invalidating SSO sessions fails with an exception in a nested session scope, which rolls back the transaction of `deleteSessionsBySid`, and closes its session.
+    /// `deleteSessionsBySid` logs and ignores the failure, as invalidating SSO sessions is less critical, and then deletes the user sessions in a unit of work of its own, which commits.
+    /// Clearing sessions by `sid` completes without an error, and the deleted sessions are removed from cache.
+    ///
+    @Test
+    public void clearing_user_sessions_by_sid_deletes_them_even_if_invalidating_sso_sessions_fails_with_an_exception() {
+        assertClearingUserSessionsBySidDeletesThemEvenIfInvalidatingSsoSessionsFailsWith(new IllegalStateException("Purposeful SSO failure."));
+    }
+
+    /// As [#clearing_user_sessions_by_sid_deletes_them_even_if_invalidating_sso_sessions_fails_with_an_exception],
+    /// but invalidating SSO sessions fails with a [VirtualMachineError], which discards the session of `deleteSessionsBySid`, instead of rolling back its transaction.
+    ///
+    @Test
+    public void clearing_user_sessions_by_sid_deletes_them_even_if_invalidating_sso_sessions_fails_with_virtual_machine_error() {
+        assertClearingUserSessionsBySidDeletesThemEvenIfInvalidatingSsoSessionsFailsWith(new InternalError("Purposeful SSO failure."));
+    }
+
+    private void assertClearingUserSessionsBySidDeletesThemEvenIfInvalidatingSsoSessionsFailsWith(final Throwable ssoFailure) {
+        final String sidForUser1 = "5daf08eb-9dcd-4baa-91e3-51d3daed5ba5";
+        getInstance(IUserProvider.class).setUsername("USER1", co(User.class));
+        final User currUser1 = getInstance(IUserProvider.class).getUser();
+        constants.setNow(dateTime("2015-04-23 13:00:00"));
+        cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
+        final String authenticatorForUser1 = coSession.newSession(currUser1, true, sidForUser1).getAuthenticator().get().toString();
+
+        getInstance(IUserProvider.class).setUsername("USER2", co(User.class));
+        final User currUser2 = getInstance(IUserProvider.class).getUser();
+        final String authenticatorForUser2 = coSession.newSession(currUser2, true, "gda108eb-9dcd-4baa-18d3-51d3daed5ba5").getAuthenticator().get().toString();
+        assertEquals("Unexpected number of session in cache.", 2, cache.size());
+
+        ssoSessionController.failInvalidationWith(ssoFailure);
+        assertEquals("The number of deleted user sessions.", 1, coSession.clearAllWithSid(sidForUser1));
 
         assertEquals("The user sessions should have been deleted from the database.", 0, coSession.count(select(UserSession.class).where().prop("sid").eq().val(sidForUser1).model()));
         assertEquals("The user sessions should have been removed from cache.", 1, cache.size());
