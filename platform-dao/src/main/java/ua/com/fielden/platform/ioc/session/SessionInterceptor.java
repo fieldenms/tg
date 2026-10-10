@@ -94,9 +94,11 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 /// If a new thread cannot be started, the connection is aborted on the current thread instead.
 /// A failure to abort the connection does not prevent closing the session, unless it is a [VirtualMachineError], after which the session is left open, to be discarded again.
 /// If discarding leaves the session open, or the error handling is itself interrupted, for example, by another `StackOverflowError`, the session remains recorded for the thread,
-/// and the next invocation on the thread discards it before obtaining its own session; an invocation that cannot discard it fails.
+/// and the next invocation on the thread discards it before obtaining its own session.
 /// If discarding merely takes longer than `DISCARD_SESSION_TIMEOUT`, it continues in the background, and the record is cleared.
 /// Either way, an error affects only the unit of work in which it occurred, and not later units of work on the same thread, which matters for pooled threads.
+/// The exception is discarding that completes but leaves the session open, which requires it to fail with a [VirtualMachineError], for example, as memory is exhausted while aborting the connection:
+/// an invocation whose attempt to discard the session leaves it open fails with [SessionScopingException], rather than proceed, and the session remains recorded for the next invocation.
 ///
 /// The hand-over of a connection between Hibernate and the connection pool is beyond the reach of this interceptor.
 /// A [VirtualMachineError] that strikes while completing a transaction releases its connection, once Hibernate has dropped its reference to it (`LogicalConnectionManagedImpl.releaseConnection`),
@@ -664,6 +666,7 @@ public class SessionInterceptor implements MethodInterceptor {
     /// If discarding fails with an error, the error propagates, and the next invocation on this thread discards the session again.
     /// If discarding completes, but leaves the session open, the current invocation fails with [SessionScopingException], rather than proceed:
     /// there is a single record per thread, which the current invocation would overwrite, if it owned a session scope that failed.
+    /// This requires discarding to fail with a [VirtualMachineError], after which the session is deliberately left open (refer to [SessionDiscarder]).
     ///
     private void discardSessionPendingCleanup(final ThreadSessionState sessionState, final User user) {
         transactionGuid.remove();
