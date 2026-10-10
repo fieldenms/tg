@@ -140,7 +140,7 @@ public class SessionInterceptor implements MethodInterceptor {
     /// An interrupt does not end the wait, and the interrupt status of the thread is restored once the wait ends.
     /// The timeout bounds the delay of a failing unit of work if aborting or closing hangs: a warning is logged, the error propagates, and the discarding thread continues in the background.
     /// The delay is normally incurred once per unit of work, whatever the nesting depth of its session scopes, as the session is discarded at most once
-    /// (refer to [CleanupState#discarderStarted], which also describes a rare exception).
+    /// (refer to [ThreadSessionState#discarderStarted], which also describes a rare exception).
     private static final Duration DISCARD_SESSION_TIMEOUT = Duration.ofSeconds(10);
     /// The maximum number of throwables examined, among the causes and suppressed throwables of a throwable, when determining whether it is caused by a [VirtualMachineError].
     /// Actual chains are short — a few levels of wrapping by proxies, JDBC drivers and Hibernate, and a few resources closed by try-with-resources.
@@ -166,12 +166,18 @@ public class SessionInterceptor implements MethodInterceptor {
     /// Creates the threads that discard sessions, which is [#DISCARDER_THREAD_FACTORY] except in tests.
     private final ThreadFactory discarderThreadFactory;
     private final ThreadLocal<String> transactionGuid = new ThreadLocal<>();
-    private final ThreadLocal<CleanupState> cleanupState = ThreadLocal.withInitial(CleanupState::new);
+    private final ThreadLocal<ThreadSessionState> sessionState = ThreadLocal.withInitial(ThreadSessionState::new);
 
-    /// Per-thread record of the cleanup of a session after an error.
+    /// Per-thread state of the current session scope, and of the cleanup of a session after an error.
     /// It is a mutable holder, so that recording requires a field assignment only, and no method call that could overflow a nearly exhausted stack.
     ///
-    private static final class CleanupState {
+    /// The session pending cleanup is recorded only in error handling, and is cleared once cleanup has completed;
+    /// otherwise, it outlives the unit of work that failed, until a later invocation on the thread has discarded it.
+    /// The session of the current scope is recorded at the start of every unit of work, and is cleared once that unit of work completes;
+    /// if its error handling is interrupted, or a stream it returned is not closed on this thread, it is replaced at the start of the next unit of work.
+    /// During the error handling of an owning invocation, both may refer to the session of the same unit of work.
+    ///
+    private static final class ThreadSessionState {
         /// A session whose cleanup after an error has not completed.
         private Session sessionPendingCleanup;
         /// Whether a thread that discards the session of the current unit of work has been started, or the session has been discarded on the current thread, if a thread could not be started.
@@ -211,7 +217,7 @@ public class SessionInterceptor implements MethodInterceptor {
     public Object invoke(final MethodInvocation invocation) throws Throwable {
         final ISessionEnabled invocationOwner = (ISessionEnabled) invocation.getThis();
         final User user = invocationOwner.getUser();
-        final CleanupState cleanupState = this.cleanupState.get();
+        final ThreadSessionState sessionState = this.sessionState.get();
         // It might be the case that an earlier invocation on this thread owned a session scope that failed, and its error handling did not complete, for example, due to another StackOverflowError.
         // Its session may still be bound to this thread, with an active transaction, and a connection that may be out of sync with the server.
         // Obtaining the current session would then return that session, making this invocation a nested scope of a unit of work that has already failed.
@@ -219,8 +225,8 @@ public class SessionInterceptor implements MethodInterceptor {
         // While a session is recorded, no session scope is active on this thread: it is recorded by the invocation that owns the scope,
         // once all nested invocations have completed, or, for a stream returned by such an invocation, when completing the transaction on closing the stream fails, or follows a failed traversal,
         // and is cleared once cleanup completes.
-        if (cleanupState.sessionPendingCleanup != null) {
-            discardSessionPendingCleanup(cleanupState, user);
+        if (sessionState.sessionPendingCleanup != null) {
+            discardSessionPendingCleanup(sessionState, user);
         }
 
         final Session session = sessionFactory.get().getCurrentSession();
@@ -230,7 +236,7 @@ public class SessionInterceptor implements MethodInterceptor {
         // A new unit of work begins.
         // This must follow discarding a session pending cleanup, which may have been discarded already, as indicated by the flag.
         if (ownsScope) {
-            cleanupState.discarderStarted = false;
+            sessionState.discarderStarted = false;
         }
         // The thread-bound session is a proxy that rejects most methods unless its transaction is active, which is not the case after a failed commit or rollback,
         // or once the transaction has been marked for rollback only.
@@ -242,7 +248,7 @@ public class SessionInterceptor implements MethodInterceptor {
             // Basically, if a transaction is activated in this method, then it should be committed only in this method.
             // Therefore, shouldCommit is assigned true only when the transaction is activated here.
             final boolean shouldCommit = initTransaction(invocationOwner, session, tr, user);
-            underlyingSession = underlyingSession(cleanupState, session, shouldCommit);
+            underlyingSession = underlyingSession(sessionState, session, shouldCommit);
 
             // If we should not commit, which means the session was initiated earlier in the call stack,
             // and support for nested calls is not allowed, then an exception is thrown.
@@ -263,13 +269,13 @@ public class SessionInterceptor implements MethodInterceptor {
                 // If the result is a stream, then the current transaction becomes associated with that stream
                 // and needs to be committed once the stream has been processed.
                 if (result instanceof Stream<?> stream) {
-                    return completeTransactionOnClose(stream, cleanupState, session, underlyingSession, tr, user);
+                    return completeTransactionOnClose(stream, sessionState, session, underlyingSession, tr, user);
                 }
                 // Otherwise, commit the current transaction.
                 else {
                     LOGGER.debug(() -> "[%s] Committing DB transaction".formatted(user));
-                    commitTransactionAndCloseSession(cleanupState, session, underlyingSession, tr, user);
-                    clearSessionScope(cleanupState, session);
+                    commitTransactionAndCloseSession(sessionState, session, underlyingSession, tr, user);
+                    clearSessionScope(sessionState, session);
                     LOGGER.debug(() -> "[%s] Committed DB transaction".formatted(user));
                     return result;
                 }
@@ -281,17 +287,17 @@ public class SessionInterceptor implements MethodInterceptor {
             }
             // An owning invocation reaches this point if its transaction was completed by a nested scope, which an enclosing scope caught.
             if (shouldCommit) {
-                clearSessionScope(cleanupState, session);
+                clearSessionScope(sessionState, session);
             }
             return result;
         } catch (final Throwable ex) {
             final Session discardableSession = underlyingSession != null ? underlyingSession : session;
             // A field assignment requires no stack frame, so the session is recorded even if the stack is nearly exhausted.
             if (ownsScope) {
-                cleanupState.sessionPendingCleanup = discardableSession;
+                sessionState.sessionPendingCleanup = discardableSession;
             }
             try {
-                completeTransactionWithError(cleanupState, ownsScope, session, discardableSession, tr, ex, user);
+                completeTransactionWithError(sessionState, ownsScope, session, discardableSession, tr, ex, user);
             } catch (final Throwable cleanupFailure) {
                 // The failure of the cleanup propagates instead of `ex`, which is attached to it, so that it is not lost.
                 // `ex` is older than the failure of the cleanup, and thus cannot refer to it, so the attachment creates no cycle.
@@ -324,10 +330,10 @@ public class SessionInterceptor implements MethodInterceptor {
     /// If creating the returned stream fails, `stream` is closed before the failure propagates to the error handling of the invocation, so that its close handlers run.
     /// A failure to close `stream` is added to that failure as a suppressed exception.
     ///
-    /// @param cleanupState  the cleanup state of the thread that created the stream
+    /// @param sessionState  the session state of the thread that created the stream
     /// @param streamSession  the session underlying `session`
     ///
-    private <T> Stream<T> completeTransactionOnClose(final Stream<T> stream, final CleanupState cleanupState, final Session session, final Session streamSession, final Transaction tr, final User user) {
+    private <T> Stream<T> completeTransactionOnClose(final Stream<T> stream, final ThreadSessionState sessionState, final Session session, final Session streamSession, final Transaction tr, final User user) {
         final TraversalFailure traversal = new TraversalFailure();
         final Stream<T> recordingStream;
         try {
@@ -347,15 +353,15 @@ public class SessionInterceptor implements MethodInterceptor {
                 .onClose(() -> {
             // A field read, which requires no method call.
             final Throwable traversalFailure = traversal.failure;
-            // The cleanup state of the thread that closes the stream, obtained before completing the transaction, so that the error handling needs no method call to obtain it.
+            // The session state of the thread that closes the stream, obtained before completing the transaction, so that the error handling needs no method call to obtain it.
             // It is obtained within the try block, so that an error in obtaining it, such as StackOverflowError, is handled like an error in committing.
-            CleanupState closingCleanupState = null;
+            ThreadSessionState closingSessionState = null;
             try {
-                closingCleanupState = this.cleanupState.get();
+                closingSessionState = this.sessionState.get();
                 if (traversalFailure == null) {
                     LOGGER.debug(() -> "[%s] Committing DB transaction on stream close.".formatted(user));
-                    commitTransactionAndCloseSession(closingCleanupState, session, streamSession, tr, user);
-                    clearSessionScope(closingCleanupState, session);
+                    commitTransactionAndCloseSession(closingSessionState, session, streamSession, tr, user);
+                    clearSessionScope(closingSessionState, session);
                     LOGGER.debug(() -> "[%s] Committed DB transaction on stream close.".formatted(user));
                     return;
                 }
@@ -375,34 +381,34 @@ public class SessionInterceptor implements MethodInterceptor {
                 // If the stream were closed on a thread other than the one that created it, the session would remain bound to the latter;
                 // streams are expected to be consumed and closed by the thread that created them, ideally with try-with-resources.
                 //
-                // If obtaining the cleanup state of the closing thread failed, the cleanup state of the thread that created the stream is used instead.
-                // It is the cleanup state of the closing thread if the stream is closed as expected, by the thread that created it.
+                // If obtaining the session state of the closing thread failed, the session state of the thread that created the stream is used instead.
+                // It is the session state of the closing thread if the stream is closed as expected, by the thread that created it.
                 // Selecting it requires no method call.
-                final CleanupState recordingCleanupState = closingCleanupState != null ? closingCleanupState : cleanupState;
+                final ThreadSessionState recordingSessionState = closingSessionState != null ? closingSessionState : sessionState;
                 // As in the error handling of an invocation, the session is recorded first, by a field assignment, which requires no stack frame.
                 // If discarding it does not complete, the next invocation on this thread discards it, instead of becoming a nested scope of the failed unit of work.
                 // A session that has already been closed, or is being discarded, remains recorded only until the record is cleared below.
-                recordingCleanupState.sessionPendingCleanup = streamSession;
+                recordingSessionState.sessionPendingCleanup = streamSession;
                 // The transaction GUID is removed whether or not the session is discarded.
                 // commitTransactionAndCloseSession leaves it in place when propagating a VirtualMachineError, or an exception caused by one,
                 // which includes the case where Hibernate has rolled back the transaction and closed the session.
                 transactionGuid.remove();
                 if (isCausedByVirtualMachineError(ex) && streamSession.isOpen()) {
-                    discardSession(recordingCleanupState, streamSession, user);
+                    discardSession(recordingSessionState, streamSession, user);
                 }
-                clearSessionPendingCleanup(recordingCleanupState);
-                clearSessionScope(recordingCleanupState, session);
+                clearSessionPendingCleanup(recordingSessionState);
+                clearSessionScope(recordingSessionState, session);
                 LOGGER.fatal(() -> "[%s] Could not commit DB transaction on stream close.".formatted(user), ex);
                 throw ex;
             }
-            // The traversal of the stream failed, and the cleanup state of the closing thread has been obtained.
+            // The traversal of the stream failed, and the session state of the closing thread has been obtained.
             // As in the error handling of an owning invocation, the session is recorded first, by a field assignment, which requires no stack frame,
             // and the record is cleared once the transaction has been completed.
             // A new exception is thrown, rather than the failure, as the failure has propagated already: try-with-resources would add it to itself as a suppressed exception, which is not permitted.
             // The new exception refers to the failure in its message, rather than as its cause, as try-with-resources attaches the new exception to the failure as a suppressed exception,
             // and the failure would then refer to itself through it, a cycle that breaks serialising either exception, for example, to JSON.
-            closingCleanupState.sessionPendingCleanup = streamSession;
-            completeTransactionWithError(closingCleanupState, true, session, streamSession, tr, traversalFailure, user);
+            closingSessionState.sessionPendingCleanup = streamSession;
+            completeTransactionWithError(closingSessionState, true, session, streamSession, tr, traversalFailure, user);
             throw new TransactionRollbackDueToThrowable(ERR_TRAVERSAL_OF_STREAM_FAILED.formatted(user, traversalFailure));
         });
     }
@@ -527,38 +533,38 @@ public class SessionInterceptor implements MethodInterceptor {
     ///
     /// The thread-bound session is a proxy, which rejects unwrapping it unless its transaction is active.
     /// Within a unit of work, the transaction may cease to be active before a nested scope is invoked, for example, once a failed statement has marked it for rollback only.
-    /// Therefore, the invocation that owns the session scope unwraps the session, while the transaction it has just begun is active, and records it in `cleanupState`,
+    /// Therefore, the invocation that owns the session scope unwraps the session, while the transaction it has just begun is active, and records it in `sessionState`,
     /// and nested invocations take the underlying session from there, which spares them unwrapping it through the proxy.
     ///
     /// A nested invocation takes the recorded session only if its thread-bound session is the one recorded, which identifies the unit of work.
     /// Otherwise, for example, within a transaction begun outside this interceptor, it unwraps the session through the proxy.
     ///
-    private static Session underlyingSession(final CleanupState cleanupState, final Session session, final boolean ownsScope) {
-        if (!ownsScope && cleanupState.scopeSession == session) {
-            return cleanupState.scopeUnderlyingSession;
+    private static Session underlyingSession(final ThreadSessionState sessionState, final Session session, final boolean ownsScope) {
+        if (!ownsScope && sessionState.scopeSession == session) {
+            return sessionState.scopeUnderlyingSession;
         }
         final Session underlyingSession = session.unwrap(Session.class);
         if (ownsScope) {
-            cleanupState.scopeSession = session;
-            cleanupState.scopeUnderlyingSession = underlyingSession;
+            sessionState.scopeSession = session;
+            sessionState.scopeUnderlyingSession = underlyingSession;
         }
         return underlyingSession;
     }
 
-    /// Clears the record of the session scope of `session` in `cleanupState`, once its unit of work has completed.
+    /// Clears the record of the session scope of `session` in `sessionState`, once its unit of work has completed.
     /// A record of another session, such as one from a stream closed on another thread, is left in place, and is replaced by the next invocation that owns a session scope.
     ///
-    private static void clearSessionScope(final CleanupState cleanupState, final Session session) {
-        if (cleanupState.scopeSession == session) {
-            cleanupState.scopeSession = null;
-            cleanupState.scopeUnderlyingSession = null;
+    private static void clearSessionScope(final ThreadSessionState sessionState, final Session session) {
+        if (sessionState.scopeSession == session) {
+            sessionState.scopeSession = null;
+            sessionState.scopeUnderlyingSession = null;
         }
     }
 
     /// Completes the session scope after `th`, and logs it, but does not throw it, which is left to the caller.
     ///
     /// Cleanup precedes logging, so that it runs with as much stack as is available.
-    /// If cleanup does not complete, the session remains recorded in `cleanupState` by the invocation that owns the session scope, or by the stream that completes its transaction, and is discarded by the next invocation on this thread.
+    /// If cleanup does not complete, the session remains recorded in `sessionState` by the invocation that owns the session scope, or by the stream that completes its transaction, and is discarded by the next invocation on this thread.
     /// If cleanup fails, its failure propagates unchanged, instead of `th`, which is not logged.
     /// A caller to which `th` has not propagated attaches `th` to the failure of the cleanup, so that it is not lost (refer to `invoke`);
     /// a caller to which it has propagated already, such as the consumer of a stream, does not, as that would create a cycle of suppressed throwables.
@@ -566,28 +572,28 @@ public class SessionInterceptor implements MethodInterceptor {
     /// @param ownsScope  whether the failed invocation owns the session scope, in which case the unit of work completes with this invocation
     /// @param discardableSession  the session underlying `session`, if obtained, which is used to discard it after a [VirtualMachineError], or if rolling back fails
     ///
-    private void completeTransactionWithError(final CleanupState cleanupState, final boolean ownsScope, final Session session, final Session discardableSession, final Transaction tr, final Throwable th, final User user) {
+    private void completeTransactionWithError(final ThreadSessionState sessionState, final boolean ownsScope, final Session session, final Session discardableSession, final Transaction tr, final Throwable th, final User user) {
         try {
             if (isCausedByVirtualMachineError(th)) {
                 // In nested scopes, the innermost scope discards the session, and the enclosing scopes find it closed,
                 // or, if discarding has not completed in time, skip it in discardSession.
                 if (discardableSession.isOpen()) {
-                    discardSession(cleanupState, discardableSession, user);
+                    discardSession(sessionState, discardableSession, user);
                 }
             }
             // Otherwise, if the transaction is active, it should be rolled back.
             else if (session.isOpen() && tr.isActive()) {
                 LOGGER.debug(() -> "[%s] Rolling back DB transaction".formatted(user));
-                rollbackTransactionAndCloseSession(cleanupState, session, discardableSession, tr, user);
+                rollbackTransactionAndCloseSession(sessionState, session, discardableSession, tr, user);
                 LOGGER.debug(() -> "[%s] Rolled back DB transaction".formatted(user));
             }
         } finally {
             transactionGuid.remove();
         }
         if (ownsScope) {
-            clearSessionPendingCleanup(cleanupState);
-            cleanupState.discarderStarted = false;
-            clearSessionScope(cleanupState, session);
+            clearSessionPendingCleanup(sessionState);
+            sessionState.discarderStarted = false;
+            clearSessionScope(sessionState, session);
         }
 
         switch (th) {
@@ -659,23 +665,23 @@ public class SessionInterceptor implements MethodInterceptor {
     /// If discarding completes, but leaves the session open, the current invocation fails with [SessionScopingException], rather than proceed:
     /// there is a single record per thread, which the current invocation would overwrite, if it owned a session scope that failed.
     ///
-    private void discardSessionPendingCleanup(final CleanupState cleanupState, final User user) {
+    private void discardSessionPendingCleanup(final ThreadSessionState sessionState, final User user) {
         transactionGuid.remove();
-        discardSession(cleanupState, cleanupState.sessionPendingCleanup, user);
-        if (!cleanupState.discarderStarted) {
+        discardSession(sessionState, sessionState.sessionPendingCleanup, user);
+        if (!sessionState.discarderStarted) {
             throw new SessionScopingException(ERR_COULD_NOT_DISCARD_SESSION_PENDING_CLEANUP.formatted(user));
         }
-        cleanupState.sessionPendingCleanup = null;
+        sessionState.sessionPendingCleanup = null;
         LOGGER.warn(() -> WARN_DISCARDED_SESSION_PENDING_CLEANUP.formatted(user));
     }
 
     /// Clears the record of the session pending cleanup, unless that session is still open, and no thread is discarding it, which is the case if discarding it left it open.
     /// Such a session remains recorded, so that the next invocation on this thread discards it again.
     ///
-    private static void clearSessionPendingCleanup(final CleanupState cleanupState) {
-        final Session session = cleanupState.sessionPendingCleanup;
-        if (session == null || cleanupState.discarderStarted || !session.isOpen()) {
-            cleanupState.sessionPendingCleanup = null;
+    private static void clearSessionPendingCleanup(final ThreadSessionState sessionState) {
+        final Session session = sessionState.sessionPendingCleanup;
+        if (session == null || sessionState.discarderStarted || !session.isOpen()) {
+            sessionState.sessionPendingCleanup = null;
         }
     }
 
@@ -703,10 +709,10 @@ public class SessionInterceptor implements MethodInterceptor {
     ///
     /// The session is discarded at most once per unit of work.
     /// Once the discarding thread has been started, or the session has been discarded on the current thread, later calls within the same unit of work return immediately,
-    /// unless discarding has completed, but left the session open (refer to [CleanupState#discarderStarted]).
+    /// unless discarding has completed, but left the session open (refer to [ThreadSessionState#discarderStarted]).
     ///
-    private void discardSession(final CleanupState cleanupState, final Session session, final User user) {
-        if (cleanupState.discarderStarted) {
+    private void discardSession(final ThreadSessionState sessionState, final Session session, final User user) {
+        if (sessionState.discarderStarted) {
             return;
         }
         ThreadLocalSessionContext.unbind(session.getSessionFactory());
@@ -718,17 +724,17 @@ public class SessionInterceptor implements MethodInterceptor {
         } catch (final Throwable ex) {
             sessionDiscarder.run();
             if (!session.isOpen()) {
-                cleanupState.discarderStarted = true;
+                sessionState.discarderStarted = true;
             }
             LOGGER.warn("[{}] Could not start a thread to discard a session, which is discarded on the current thread instead.", user, ex);
             return;
         }
-        cleanupState.discarderStarted = true;
+        sessionState.discarderStarted = true;
         if (!awaitTermination(discarder)) {
             LOGGER.warn("[{}] Discarding a session did not complete within {}.", user, DISCARD_SESSION_TIMEOUT);
         }
         else if (session.isOpen()) {
-            cleanupState.discarderStarted = false;
+            sessionState.discarderStarted = false;
         }
     }
 
@@ -861,7 +867,7 @@ public class SessionInterceptor implements MethodInterceptor {
     ///
     /// @param discardableSession  the session underlying `session`, which is used to acquire its connection, and to discard it if committing fails
     ///
-    private void commitTransactionAndCloseSession(final CleanupState cleanupState, final Session session, final Session discardableSession, final Transaction tr, final User user) {
+    private void commitTransactionAndCloseSession(final ThreadSessionState sessionState, final Session session, final Session discardableSession, final Transaction tr, final User user) {
         try {
             if (tr.isActive()) {
                 // Called for its side effect: it acquires a connection if the session does not hold one yet, and does nothing otherwise.
@@ -881,14 +887,14 @@ public class SessionInterceptor implements MethodInterceptor {
             // The session is discarded or closed before this exception propagates, so it is never left as a dead current session.
             transactionGuid.remove();
             if (holdsConnection(discardableSession)) {
-                discardSession(cleanupState, discardableSession, user);
+                discardSession(sessionState, discardableSession, user);
             } else {
                 closeSession(session, user);
             }
             throw new TransactionCommitException(ERR_COULD_NOT_COMMIT.formatted(user), ex);
         } catch (final Error err) {
             transactionGuid.remove();
-            rollbackTransactionAndCloseSession(cleanupState, session, discardableSession, tr, user);
+            rollbackTransactionAndCloseSession(sessionState, session, discardableSession, tr, user);
             throw err;
         }
         transactionGuid.remove();
@@ -909,7 +915,7 @@ public class SessionInterceptor implements MethodInterceptor {
     ///
     /// @param discardableSession  the session underlying `session`, if obtained, which is used to determine whether it holds a connection, and to discard it if rolling back fails
     ///
-    private void rollbackTransactionAndCloseSession(final CleanupState cleanupState, final Session session, final Session discardableSession, final Transaction tr, final User user) {
+    private void rollbackTransactionAndCloseSession(final ThreadSessionState sessionState, final Session session, final Session discardableSession, final Transaction tr, final User user) {
         if (discardableSession != session && !holdsConnection(discardableSession)) {
             closeSession(session, user);
             return;
@@ -919,7 +925,7 @@ public class SessionInterceptor implements MethodInterceptor {
                 tr.rollback();
             }
         } catch (final Throwable ex) {
-            discardSession(cleanupState, discardableSession, user);
+            discardSession(sessionState, discardableSession, user);
             LOGGER.error(() -> ERR_COULD_NOT_ROLLBACK.formatted(user), ex);
             return;
         }
