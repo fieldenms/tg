@@ -52,7 +52,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
         up.setUsername(UNIT_TEST_USER, co(User.class));
         // due to global cache nature it needs to be invalidated in order to keep tests independent
         cache.invalidateAll();
-        ssoSessionController.failInvalidationWith(null);
+        ssoSessionController.failAfterCommitWith(null);
     }
 
 
@@ -184,9 +184,8 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
         assertTrue("There should be the current session for USER2.", renewdSessionForUser2.isPresent());
     }
     
-    /// Invalidating SSO sessions fails with a [VirtualMachineError] in a nested session scope, which discards the session of `deleteSessionsBySid`.
-    /// `deleteSessionsBySid` logs and ignores the failure, and then deletes the user sessions in a transaction of its own, which commits,
-    /// but its own transaction cannot be committed, and clearing sessions by `sid` ends with [TransactionCommitException].
+    /// The transaction of `deleteSessionsBySid`, which deletes the user sessions, fails after it has been committed, as a synchronization that Hibernate notifies after the commit fails,
+    /// so clearing sessions by `sid` ends with [TransactionCommitException], although the user sessions have been deleted.
     /// The cached sessions are cleared nevertheless, so that neither copy of the deleted sessions keeps them valid.
     ///
     @Test
@@ -203,7 +202,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
         final String authenticatorForUser2 = coSession.newSession(currUser2, true, "gda108eb-9dcd-4baa-18d3-51d3daed5ba5").getAuthenticator().get().toString();
         assertEquals("Unexpected number of session in cache.", 2, cache.size());
 
-        ssoSessionController.failInvalidationWith(new InternalError("Purposeful SSO failure."));
+        ssoSessionController.failAfterCommitWith(new IllegalStateException("Purposeful failure after the commit."));
         assertThrows(TransactionCommitException.class, () -> coSession.clearAllWithSid(sidForUser1));
 
         assertEquals("The user sessions should have been deleted from the database.", 0, coSession.count(select(UserSession.class).where().prop("sid").eq().val(sidForUser1).model()));

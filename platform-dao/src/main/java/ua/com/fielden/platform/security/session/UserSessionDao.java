@@ -186,8 +186,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             return count;
         } finally {
             // Delete all matching user sessions from cache, even if deleting them from the database ended with an exception.
-            // The exception may follow a deletion that has been committed, for example, if invalidating SSO sessions failed in a way that left the transaction of `deleteSessionsBySid` unable to commit,
-            // while the user sessions were deleted in a transaction of their own; their cached copies would then keep the sessions valid.
+            // The exception may follow a deletion that has been committed, for example, if a synchronization that Hibernate notifies after the commit fails;
+            // the cached copies of the deleted sessions would then keep the sessions valid.
             final List<String> keys = cache.asMap().entrySet().stream().filter(p -> sid.equals(p.getValue().getSid())).map(Map.Entry::getKey).collect(toList());
             cache.invalidateAll(keys);
         }

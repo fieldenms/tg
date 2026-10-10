@@ -59,6 +59,18 @@ public class TransactionalTest extends AbstractDaoTestCase {
         assertEquals(new Money("30.00"), two.getMoney());
     }
 
+    /// A unit of work handles the failure of a nested scope, which failed before executing any statement, as a nested save that fails validation would, and carries on.
+    /// The nested scope closes the session without rolling back, as the session holds no connection, and the unit of work treats its transaction as rolled back, rather than attempt to commit the closed session.
+    /// The work it carries on with finds no session bound to the thread, so it is a unit of work of its own, which commits.
+    ///
+    @Test
+    public void unit_of_work_that_handles_a_nested_failure_before_any_statement_and_carries_on_completes_without_an_error() {
+        logic.handleNestedFailureBeforeAnyStatementAndSave("carried on");
+
+        assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
+        assertNotNull("The work carried on with was committed.", dao.findByKey("carried on"));
+    }
+
     @Test
     public void nested_transactions_with_exception_rollback_all_changes() {
         assertNull(dao.findByKey("one"));

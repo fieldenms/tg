@@ -18,7 +18,6 @@ import org.junit.Before;
 import org.junit.Test;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.ioc.session.exceptions.TransactionCommitException;
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToThrowable;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.runners.PostgresqlDomainDrivenTestCaseRunner.PostgresqlTestContext;
@@ -370,7 +369,8 @@ public class SessionInterceptorStackOverflowTest {
     }
 
     /// A unit of work, whose session is discarded in a nested scope, may still complete without an error in its owning scope:
-    /// an enclosing scope catches the error and returns a stream, and committing then fails on closing the stream, outside the error handling of any invocation.
+    /// an enclosing scope catches the error and returns a stream.
+    /// The transaction of the discarded session is treated as rolled back, so the stream is returned as it is, and closing it commits nothing.
     /// Discarding that session must not prevent discarding the session of a later unit of work on the same thread.
     ///
     @Test
@@ -378,11 +378,9 @@ public class SessionInterceptorStackOverflowTest {
         final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
         final Connection first = probe.physicalConnection();
 
-        assertThrows(TransactionCommitException.class, () -> {
-            try (final Stream<Integer> stream = probe.catchErrorInNestedScopeAndReturnStream(new InternalError("Purposeful error."))) {
-                stream.forEach(_ -> {});
-            }
-        });
+        try (final Stream<Integer> stream = probe.catchErrorInNestedScopeAndReturnStream(new InternalError("Purposeful error."))) {
+            stream.forEach(_ -> {});
+        }
         assertTrue(first.isClosed());
 
         final Connection second = probe.physicalConnection();
