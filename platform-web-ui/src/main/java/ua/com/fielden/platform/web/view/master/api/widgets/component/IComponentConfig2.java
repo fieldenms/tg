@@ -2,34 +2,19 @@ package ua.com.fielden.platform.web.view.master.api.widgets.component;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-/// A contract for declaring attributes of a component element, and whether the component is blocked while the master entity is unsaved.
+/// A contract for declaring the height of a component in place of an editor.
 ///
 public interface IComponentConfig2<T extends AbstractEntity<?>> extends IComponentConfig3<T> {
 
-    /// Declares an attribute of the component element.
+    /// Specifies the height of the component in pixels, which makes the component resizable, as a rich text editor with a declared height.
     ///
-    /// The name is in dash-case, as it appears in HTML, such as `centre-uuid`.
-    /// The value is either static, such as `compact`, or a pass-through binding expression over the master, such as `[[centreUuid]]`.
-    /// Attributes are rendered in the order of their first declaration.
-    /// Declaring an attribute again replaces its value, which lets a declaration override an attribute set elsewhere, such as in a shared configuration.
+    /// The user resizes the component by dragging the resizer at its bottom right corner, and restores the declared height by double tapping the resizer.
+    /// The height set by the user is remembered in the browser, for the user, the entity type of the master and the component.
+    /// The component cannot be resized while it is blocked.
     ///
-    IComponentConfig2<T> withAttr(final String name, final CharSequence value);
-
-    /// Declares an attribute of the component element that is bound to the value of a property of the entity of the master.
+    /// By default, the component has no height of its own, and fills the height of its layout cell, such as in a flexible row of the master layout.
+    /// A component with a declared height should be laid out in a row that takes the height of its content instead.
     ///
-    /// The property is a name, which may be dot-notated, such as `location.gisInfo`, or a metamodel reference, such as `Location_.gisInfo()`.
-    /// The value follows the entity that the component is bound to, and is passed to the component as is, such as an entity, a number or a collection of entities.
-    /// The property must be fetched with the master entity.
-    /// The attribute is ordered and replaced as one declared with [#withAttr(String, CharSequence)].
-    ///
-    IComponentConfig2<T> withPropAttr(final String name, final CharSequence propPath);
-
-    /// Keeps the component interactive while the master entity is unsaved.
-    ///
-    /// By default, a component in a master for a persistent entity type is blocked while the entity is new or has changes that are not yet saved.
-    /// A pane then covers the component with a message to save or cancel the changes, and neither the component nor its property actions can be interacted with.
-    /// This declaration is intended for components that display values of the master entity itself, which stay consistent with it while it is unsaved.
-    ///
-    IComponentConfig3<T> skipBlockingWhenUnsaved();
+    IComponentConfig3<T> withHeight(final int height);
 
 }

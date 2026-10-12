@@ -20,9 +20,12 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 /// The base widget for both ways of adding an application-provided web component to a master:
 /// in place of an editor, with [ComponentWidget], or bound to the entity rather than to a property, with [EntityComponentWidget].
 ///
-/// It records the title and description, the element name, the attributes, and whether the component is blocked while the master entity is unsaved.
+/// It records the title and description, the element name, the height and minimum height, the attributes, and whether the component is blocked while the master entity is unsaved.
 /// The title and description default to those of the property, which a component bound to the entity does not have.
 /// The element name defaults to the last segment of the import path.
+/// A declared height makes the component resizable, and is rendered as `height` together with `entity-type`, the entity type of the master,
+/// under which, together with the element id, the client-side component contract remembers the height set by the user.
+/// A declared minimum height is rendered as `min-height`.
 /// The declared attributes are rendered after the attributes of a concrete widget, in the order of declaration.
 /// An attribute has either a declared value, or is bound to the value of a property of the entity of the master.
 ///
@@ -44,6 +47,8 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
         ERR_RESERVED_ATTR_NAME = "Attribute [%s] of %s is reserved by the platform.",
         ERR_UNBALANCED_BINDING = "The value of attribute [%s] of %s has an unbalanced binding expression: %s",
         ERR_ATTR_FOR_MISSING_PROPERTY = "Attribute [%s] of %s cannot be bound to property [%s.%s], which does not exist.",
+        ERR_INVALID_HEIGHT = "Invalid %s [%s] of %s: it should be a positive number of pixels.",
+        ERR_HEIGHT_LESS_THAN_MIN_HEIGHT = "The height [%s] of %s is less than its minimum height [%s].",
         ERR_NULL_TEXT = "The %s of %s is null.",
         ERR_UNRENDERABLE_TEXT = "The %s of %s contains a straight single quote, a backtick or ${, which cannot be rendered: [%s].";
 
@@ -54,6 +59,7 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
     /// The names of attributes rendered by both component widgets, which cannot be declared.
     private static final Set<String> RESERVED_ATTR_NAMES = setOf(
             "debug", "id", "entity", "prop-title", "prop-desc", "property-action-index",
+            "entity-type", "height", "min-height",
             "block-when-unsaved", "entity-modified", "entity-edited", "create-context-holder",
             "slot"); // the flex layout of a master assigns slots to its elements
 
@@ -61,6 +67,8 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
     private Optional<String> declaredTitle = empty();
     private Optional<String> declaredDesc = empty();
     private Optional<String> elementName = empty();
+    private Optional<Integer> height = empty();
+    private Optional<Integer> minHeight = empty();
     private final Map<String, String> attrs = new LinkedHashMap<>();
     private boolean blockWhenUnsaved = true;
 
@@ -103,6 +111,20 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
     ///
     public void withElementName(final String elementName) {
         this.elementName = of(validElementName(elementName));
+    }
+
+    /// Declares the height of the component in pixels, which makes the component resizable.
+    ///
+    public void withHeight(final int height) {
+        this.height = of(validHeight("height", height));
+        validateHeightNotLessThanMinHeight();
+    }
+
+    /// Declares the minimum height of the component in pixels.
+    ///
+    public void withMinHeight(final int minHeight) {
+        this.minHeight = of(validHeight("minimum height", minHeight));
+        validateHeightNotLessThanMinHeight();
     }
 
     /// Declares an attribute of the component element.
@@ -161,6 +183,17 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
         return elementName.orElseGet(() -> validElementName(super.elementName()));
     }
 
+    /// Adds the declared height and minimum height of the component to `elementAttrs`, as CSS lengths in pixels.
+    /// The height is accompanied by the entity type of the master, which, together with the element id, identifies the height set by the user.
+    ///
+    protected void addHeightAttributes(final Map<String, Object> elementAttrs) {
+        height.ifPresent(value -> {
+            elementAttrs.put("entity-type", entityType.getName());
+            elementAttrs.put("height", value + "px");
+        });
+        minHeight.ifPresent(value -> elementAttrs.put("min-height", value + "px"));
+    }
+
     /// Adds the attributes for the unsaved state of the master entity to `elementAttrs`:
     /// the `block-when-unsaved` flag, which is rendered only if blocking is declared, and the modification state of the master.
     ///
@@ -190,6 +223,19 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
         }
         if (RESERVED_ATTR_NAMES.contains(name) || additionalReservedAttrNames().contains(name)) {
             throw new EntityMasterConfigurationException(ERR_RESERVED_ATTR_NAME.formatted(name, description()));
+        }
+    }
+
+    private int validHeight(final String what, final int value) {
+        if (value <= 0) {
+            throw new EntityMasterConfigurationException(ERR_INVALID_HEIGHT.formatted(what, value, description()));
+        }
+        return value;
+    }
+
+    private void validateHeightNotLessThanMinHeight() {
+        if (height.isPresent() && minHeight.isPresent() && height.get() < minHeight.get()) {
+            throw new EntityMasterConfigurationException(ERR_HEIGHT_LESS_THAN_MIN_HEIGHT.formatted(height.get(), description(), minHeight.get()));
         }
     }
 

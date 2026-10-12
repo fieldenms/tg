@@ -10,6 +10,8 @@ import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentC
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig1;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig2;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig3;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig4;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig5;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.ComponentWidget;
 
 import java.util.Objects;
@@ -45,19 +47,31 @@ public class ComponentConfig<T extends AbstractEntity<?>> implements IComponentC
     }
 
     @Override
-    public IComponentConfig2<T> withAttr(final String name, final CharSequence value) {
+    public IComponentConfig3<T> withHeight(final int height) {
+        widget.withHeight(height);
+        return this;
+    }
+
+    @Override
+    public IComponentConfig4<T> withMinHeight(final int minHeight) {
+        widget.withMinHeight(minHeight);
+        return this;
+    }
+
+    @Override
+    public IComponentConfig4<T> withAttr(final String name, final CharSequence value) {
         widget.withAttr(name, Objects.toString(value, null));
         return this;
     }
 
     @Override
-    public IComponentConfig2<T> withPropAttr(final String name, final CharSequence propPath) {
+    public IComponentConfig4<T> withPropAttr(final String name, final CharSequence propPath) {
         widget.withPropAttr(name, Objects.toString(propPath, null));
         return this;
     }
 
     @Override
-    public IComponentConfig3<T> skipBlockingWhenUnsaved() {
+    public IComponentConfig5<T> skipBlockingWhenUnsaved() {
         widget.skipBlockingWhenUnsaved();
         return this;
     }

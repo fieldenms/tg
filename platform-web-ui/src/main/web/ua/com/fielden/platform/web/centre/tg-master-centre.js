@@ -29,7 +29,7 @@ const template = html`
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
-            cursor: default;Ï
+            cursor: default;
         }
         #loader {
             flex: 1;
@@ -68,6 +68,7 @@ const template = html`
  * The centre has its own uuid, so that its actions do not refresh the master.
  * The component fills the height of its layout cell, so that it grows with the master in a flexible row of the master layout, such as 'FLEXIBLE_ROW' of 'LayoutComposer'.
  * Its height is not less than 'min-height', which is also its height in a row laid out to the heights of its content.
+ * With a height declared with 'withHeight' in the Entity Master DSL, the component has that height instead, and is resizable by the user, as described in 'TgMasterComponentBehavior'.
  */
 Polymer({
     _template: template,
@@ -86,12 +87,11 @@ Polymer({
         },
 
         /**
-         * The least height of the component, as a CSS length.
+         * The least height of the component, as a CSS length, which is applied by 'TgMasterComponentBehavior'.
          */
         minHeight: {
             type: String,
-            value: '250px',
-            observer: '_minHeightChanged'
+            value: '250px'
         },
 
         /**
@@ -124,10 +124,6 @@ Polymer({
 
     ready: function () {
         this._hasPropertyActions = this._propertyActions.length > 0;
-    },
-
-    _minHeightChanged: function (minHeight) {
-        this.style.minHeight = minHeight;
     },
 
     _hasCaption: function (propTitle, _hasPropertyActions) {

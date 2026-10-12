@@ -87,6 +87,7 @@ const template = html`
  * The map is created once it has a size, and is released when the component is detached.
  * The component fills the height of its layout cell, so that it grows with the master in a flexible row of the master layout, such as 'FLEXIBLE_ROW' of 'LayoutComposer'.
  * Its height is not less than 'min-height', which is also its height in a row laid out to the heights of its content.
+ * With a height declared with 'withHeight' in the Entity Master DSL, the component has that height instead, and is resizable by the user, as described in 'TgMasterComponentBehavior'.
  *
  * The title of the map is followed by a responsive toolbar, which moves the actions that do not fit into a dropdown.
  * The toolbar has the property actions, and a toggle that shows and hides the labels of map features, as the labels toggle of centre maps, if attribute 'labels-toggle' is set.
@@ -140,12 +141,11 @@ Polymer({
         },
 
         /**
-         * The least height of the component, as a CSS length.
+         * The least height of the component, as a CSS length, which is applied by 'TgMasterComponentBehavior'.
          */
         minHeight: {
             type: String,
-            value: '200px',
-            observer: '_minHeightChanged'
+            value: '200px'
         },
 
         /**
@@ -201,10 +201,6 @@ Polymer({
             this.gisComponent.remove();
             this._setGisComponent(null);
         }
-    },
-
-    _minHeightChanged: function (minHeight) {
-        this.style.minHeight = minHeight;
     },
 
     _labelsShownChanged: function (labelsShown) {

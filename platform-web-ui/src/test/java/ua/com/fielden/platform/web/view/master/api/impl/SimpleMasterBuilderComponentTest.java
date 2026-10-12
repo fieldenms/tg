@@ -120,6 +120,20 @@ public class SimpleMasterBuilderComponentTest {
     }
 
     @Test
+    public void property_component_receives_declared_height_with_entity_type_of_master_and_declared_minimum_height() {
+        final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withHeight(300).withMinHeight(200).also());
+
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " entity-type='" + TgPersistentEntityWithProperties.class.getName() + "' height='300px' min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+    }
+
+    @Test
+    public void property_component_without_declared_height_receives_only_declared_minimum_height() {
+        final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withMinHeight(200).also());
+
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+    }
+
+    @Test
     public void property_component_action_is_rendered_as_property_action_of_its_property() {
         final EntityActionConfig propAction = mkAction("propAction");
         final IMaster<TgPersistentEntityWithProperties> master = done(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withAction(propAction).also());
@@ -183,6 +197,13 @@ public class SimpleMasterBuilderComponentTest {
                 .also());
 
         assertTrue(out.contains("<tg-fuel-usages id='component-0' entity='[[_currEntity]]' " + actionIndexAttr("component-0") + " " + MASTER_STATE_ATTRS + " mode='compact'>"));
+    }
+
+    @Test
+    public void entity_component_receives_declared_height_with_entity_type_of_master_without_minimum_height_unless_it_is_declared() {
+        final String out = render(master().addComponent(ENTITY_COMPONENT).withHeight(300).also());
+
+        assertTrue(out.contains("<tg-vehicle-fuel-usages id='component-0' entity='[[_currEntity]]' " + actionIndexAttr("component-0") + " entity-type='" + TgPersistentEntityWithProperties.class.getName() + "' height='300px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
     }
 
     @Test
@@ -401,6 +422,41 @@ public class SimpleMasterBuilderComponentTest {
     public void attribute_bound_to_property_cannot_have_reserved_name() {
         assertConfigurationError(ERR_RESERVED_ATTR_NAME.formatted("entity", ENTITY_COMPONENT_DESC),
                 () -> master().addComponent(ENTITY_COMPONENT).withPropAttr("entity", "entityProp"));
+    }
+
+    @Test
+    public void height_minimum_height_and_entity_type_of_master_rendered_by_both_component_widgets_cannot_be_declared_as_attributes() {
+        assertConfigurationError(ERR_RESERVED_ATTR_NAME.formatted("height", ENTITY_COMPONENT_DESC),
+                () -> master().addComponent(ENTITY_COMPONENT).withAttr("height", "300px"));
+        assertConfigurationError(ERR_RESERVED_ATTR_NAME.formatted("min-height", PROPERTY_COMPONENT_DESC),
+                () -> master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withAttr("min-height", "200px"));
+        assertConfigurationError(ERR_RESERVED_ATTR_NAME.formatted("entity-type", ENTITY_COMPONENT_DESC),
+                () -> master().addComponent(ENTITY_COMPONENT).withAttr("entity-type", "Vehicle"));
+    }
+
+    @Test
+    public void height_of_component_must_be_positive() {
+        assertConfigurationError(ERR_INVALID_HEIGHT.formatted("height", 0, ENTITY_COMPONENT_DESC),
+                () -> master().addComponent(ENTITY_COMPONENT).withHeight(0));
+    }
+
+    @Test
+    public void minimum_height_of_component_must_be_positive() {
+        assertConfigurationError(ERR_INVALID_HEIGHT.formatted("minimum height", -200, PROPERTY_COMPONENT_DESC),
+                () -> master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withMinHeight(-200));
+    }
+
+    @Test
+    public void height_of_component_cannot_be_less_than_its_minimum_height() {
+        assertConfigurationError(ERR_HEIGHT_LESS_THAN_MIN_HEIGHT.formatted(150, ENTITY_COMPONENT_DESC, 200),
+                () -> master().addComponent(ENTITY_COMPONENT).withHeight(150).withMinHeight(200));
+    }
+
+    @Test
+    public void height_of_component_may_equal_its_minimum_height() {
+        final String out = render(master().addComponent(ENTITY_COMPONENT).withHeight(200).withMinHeight(200).also());
+
+        assertTrue(out.contains(" height='200px' min-height='200px' "));
     }
 
     @Test

@@ -13,7 +13,7 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 ///
 /// The component is read-only.
 /// It is bound to the fully-fledged entity of the master, and receives the title and description declared for it, if any, the index of the action to show,
-/// and the context of the master.
+/// the context of the master, and its height and minimum height, if declared.
 /// Any other data it needs is declared as attributes, with either static values or pass-through binding expressions, such as `[[centreUuid]]`.
 /// By default, the component is blocked while the entity is unsaved, as rendered by [AbstractComponentWidget].
 ///
@@ -52,6 +52,7 @@ public class EntityComponentWidget extends AbstractComponentWidget {
         ofNullable(title()).ifPresent(value -> attrs.put("prop-title", value));
         ofNullable(desc()).ifPresent(value -> attrs.put("prop-desc", value));
         attrs.put("property-action-index", propertyActionIndexBinding(componentKey));
+        addHeightAttributes(attrs);
         addUnsavedStateAttributes(attrs);
         addMasterContextAttribute(attrs);
         return attrs;
