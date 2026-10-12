@@ -354,6 +354,63 @@
             });
         });
 
+        suite('LOCAL property value approximates from time only, when the browser and the server have different dates', function () {
+            // Independent time-zone mode, where the browser is in Melbourne and the server is in London.
+            // At 2026-07-15 15:00 UTC, it is already 16/07/2026 01:00 in Melbourne, but still 15/07/2026 16:00 in London.
+            // A time without a date gets the browser's date, which is the same date as for the 't' literal.
+            const nowMillis = Date.parse('2026-07-15T15:00:00Z');
+            let master, guess;
+
+            suiteSetup(() => {
+                guess = moment.tz.guess;
+                moment.tz.guess = (force) => 'Australia/Melbourne';
+                moment.tz.setDefault('Europe/London');
+            });
+            suiteTeardown(() => { moment.tz.guess = guess; moment.tz.setDefault(); });
+
+            setup(function () {
+                master = fixture('MasterFixture');
+                master.entityId = '77';
+            });
+
+            const correctlyApproximatesAtFixedNow = function (done, targetEditingValue, approximatedEditingValue, acceptedMillis) {
+                const ed = master.$.editor_4_dateProp;
+
+                // All checks happen after validation, when this test's request has completed.
+                // This way, a failing test leaves no pending request behind, and its failure is reported against this test.
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    assert.strictEqual(ed._editingValue, approximatedEditingValue, "_editingValue should be correct.");
+                    assert.strictEqual(ed._editorValidationMsg, null, 'Editor should not have error.');
+                    assert.strictEqual(ed._acceptedValue, acceptedMillis, "_acceptedValue should be correct.");
+                    assert.strictEqual(validatedEntity.get("dateProp"), acceptedMillis, "'dateProp' value should be correct.");
+                    assert.strictEqual(bindingEntity.get("dateProp"), acceptedMillis, "Binding 'dateProp' value should be correct.");
+                    done();
+                };
+
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    // The approximation happens synchronously on commit, so 'now' is fixed only for the commit.
+                    const realNow = moment.now;
+                    moment.now = () => nowMillis;
+                    try {
+                        ed._editingValue = targetEditingValue;
+                        ed.commit();
+                    } finally {
+                        moment.now = realNow;
+                    }
+                };
+
+                master.retrieve();
+            };
+
+            test('[10:00] to the browser\'s date [16/07/2026 10:00], not to the server\'s date [15/07/2026]', function (done) {
+                correctlyApproximatesAtFixedNow(done, '10:00', '16/07/2026 10:00', Date.parse('2026-07-16T09:00:00Z'));
+            });
+
+            test('[t] to the browser\'s date [16/07/2026 00:00], not to the server\'s date [15/07/2026]', function (done) {
+                correctlyApproximatesAtFixedNow(done, 't', '16/07/2026 00:00', Date.parse('2026-07-15T23:00:00Z'));
+            });
+        });
+
         suite('@TimeOnly UTC representation for', function () {
             // Worked before changes for issue #2737 -- time with millis renders via 'LTS' (HH:mm:ss.SSS).
             test('[1473057204015] to [06:33:24.015]', function () {
