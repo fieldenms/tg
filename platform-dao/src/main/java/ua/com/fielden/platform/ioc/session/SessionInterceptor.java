@@ -15,6 +15,7 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.ioc.HibernateConfigurationFactory;
 import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionCommitException;
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToThrowable;
@@ -33,33 +34,34 @@ import static java.util.UUID.randomUUID;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED;
 
-/// Intercepts methods annotated with [SessionRequired] to inject Hibernate session before the actual method execution.
+/// Intercepts methods annotated with [SessionRequired] to inject a Hibernate session before method execution.
+/// The class whose method is intercepted must implement [ISessionEnabled].
+///
 /// Nested invocation of methods annotated with [SessionRequired] is supported.
-/// For example, method `findAll()` could invoke method `findByCriteria()` — both with [SessionRequired].
 ///
-/// A very important functionality provided by this interceptor is transaction management:
-///   - If the current session has no active transaction then it is activated and the current method invocation is marked as the one that should commit it.
-///   - If the current session has an active transaction then the current method invocation is marked as the one that should NOT commit it.
-///   - In case of an exception, which could occur during method invocation, the transaction is rolled back if it is active and the exception is propagated up.
+/// Transactions are managed according to the following rules:
 ///
-/// The last item ensures that any exception at any level of method invocation would ensure transaction rollback.
-/// If transaction is not active at the time of rollback then that means it has already been rolled back, or it has failed to begin.
-/// An enclosing scope may catch the failure of a nested scope, which has rolled back the transaction, or closed or discarded the session.
-/// The owning invocation then does not commit, but completes as after a rollback, which it determines from whether its session is open, as Hibernate may still report the transaction as active.
-/// A discarded session is closed once discarding has completed.
-/// If discarding takes longer than `DISCARD_SESSION_TIMEOUT`, the session is still open, and the owning invocation attempts to commit it while the discarding thread may still be aborting its connection;
-/// the attempt then typically fails with [TransactionCommitException].
-/// Please note that transaction can be started outside of this interceptor, which means it will not be committed within it, and the transaction originator is responsible for commit.
-/// At the same time, if an exception occurs then transaction will be rolled back.
+/// - **If the intercepted method call has no active transaction**, it is activated, and the method call is considered to be
+///   in an _owning scope_ (after the call completes, the transaction will be committed).
 ///
-/// Beginning a transaction involves no exchange with the database, as pooled connections are handed out with auto-commit disabled (refer to `HibernateConfigurationFactory`).
-/// The connection is acquired by the first statement of a unit of work, so a broken connection, for example, after the database server has reset it,
-/// fails that statement, and is handled like any other failure within the unit of work.
-/// The session holds the connection from then on until its transaction completes.
-/// A session that holds no connection has no transaction on the server, so if a unit of work fails without acquiring a connection,
-/// for example, because the connection pool is exhausted or the database is unreachable, its session is closed without rolling back.
-/// Rolling back would acquire a connection only to roll back nothing, and if acquiring failed again, wait for a connection a second time.
-/// For the same reason, the connection is acquired before committing, if the unit of work has not acquired it yet, so that a failure to acquire it is not followed by Hibernate rolling back.
+/// - **If the intercepted method call does have an active transaction**, it is considered to be in a _nested scope_,
+///   (after the call completes, the transaction will NOT be committed).
+///
+/// - **If the intercepted method call throws**, the transaction is rolled back if it is active, and the exception is propagated.
+///
+///   This ensures that an exception thrown from any scope causes a transaction rollback.
+///   If the transaction is not active at the time of rollback, it must have already been rolled back or has failed to begin.
+///   An enclosing scope may catch the failure of a nested scope, which has rolled back the transaction, or closed or discarded the session.
+///   The owning scope then does not commit, but completes as after a rollback, which it determines from whether the session is open,
+///   as Hibernate may still report the transaction as active.
+///
+///   If discarding takes longer than [DISCARD_SESSION_TIMEOUT], the session remains open, and the owning scope attempts
+///   to commit it while the discarding thread may still be aborting its connection.
+///   The attempt then typically fails with [TransactionCommitException].
+///
+///   Please note that a transaction can be started outside of this interceptor, so it will not be committed within it,
+///   and the transaction originator is responsible for the commit.
+///   At the same time, if an exception occurs, the transaction will be rolled back.
 ///
 /// A failure to *begin* a transaction closes the session before the failure propagates.
 /// Current sessions are bound to threads, and a transaction that failed to begin is inactive, so the error handling would neither roll it back nor close the session,
@@ -75,12 +77,12 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 /// failover or a terminated connection.
 /// A [VirtualMachineError], or an exception caused by one, propagates to the error handling of the invocation, which discards the session, as described below.
 /// Another error propagates once the session has been closed, or discarded if rolling back fails;
-/// if the error preceded the JDBC commit, the transaction is rolled back first (refer to `commitTransactionAndCloseSession`).
+/// if the error preceded the JDBC commit, the transaction is rolled back first (refer to [commitTransactionAndCloseSession]).
 ///
 /// A failure to *roll back* discards the session, as described below for a [VirtualMachineError], instead of closing it.
 /// After such a failure, the state of the connection is unknown — the transaction may remain open on the server, holding its locks —
 /// and the connection pool would reuse the connection unless the failure indicates a broken connection.
-/// The same applies to a failed commit that leaves the session holding its connection, as the transaction may not have completed (refer to `commitTransactionAndCloseSession`).
+/// The same applies to a failed commit that leaves the session holding its connection, as the transaction may not have completed (refer to [commitTransactionAndCloseSession]).
 ///
 /// A [VirtualMachineError], such as [StackOverflowError] or [OutOfMemoryError], discards the session instead of rolling back its transaction.
 /// Such an error can occur at any point, including in the middle of an exchange with the database, leaving the connection out of sync with the server,
@@ -95,7 +97,7 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 /// A failure to abort the connection does not prevent closing the session, unless it is a [VirtualMachineError], after which the session is left open, to be discarded again.
 /// If discarding leaves the session open, or the error handling is itself interrupted, for example, by another `StackOverflowError`, the session remains recorded for the thread,
 /// and the next invocation on the thread discards it before obtaining its own session.
-/// If discarding merely takes longer than `DISCARD_SESSION_TIMEOUT`, it continues in the background, and the record is cleared.
+/// If discarding merely takes longer than [DISCARD_SESSION_TIMEOUT], it continues in the background, and the record is cleared.
 /// Either way, an error affects only the unit of work in which it occurred, and not later units of work on the same thread, which matters for pooled threads.
 /// The exception is discarding that completes but leaves the session open, which requires it to fail with a [VirtualMachineError], for example, as memory is exhausted while aborting the connection:
 /// an invocation whose attempt to discard the session leaves it open fails with [SessionScopingException], rather than proceed, and the session remains recorded for the next invocation.
@@ -119,7 +121,20 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 ///
 /// Finally, a GUID is generated per transaction and assigned to the invocation owner, which is how a single unit of work is identified downstream — by auditing, for example.
 ///
+/// ### Auto-commit is disabled
+///
+/// Beginning a transaction involves no exchange with the database, as pooled connections are handed out with auto-commit disabled (see [HibernateConfigurationFactory]).
+/// The connection is acquired by the first statement of a unit of work, so a broken connection, for example, after the database server has reset it,
+/// fails that statement, and is handled like any other failure within the unit of work.
+/// The session holds the connection from then on until its transaction completes.
+///
+/// A session that holds no connection has no transaction on the server, so if a unit of work fails without acquiring a connection,
+/// for example, because the connection pool is exhausted or the database is unreachable, its session is closed without rolling back.
+/// Rolling back would acquire a connection only to roll back nothing, and if acquiring failed again, wait for a connection a second time.
+/// For the same reason, the connection is acquired before committing so that a failure to acquire it is not followed by Hibernate rolling back.
+///
 public class SessionInterceptor implements MethodInterceptor {
+
     public static final String
             MSG_CLOSING_SESSION = "[%s] Closing session.",
             MSG_CLOSED_SESSION = "[%s] Closed session.",
@@ -165,7 +180,7 @@ public class SessionInterceptor implements MethodInterceptor {
     }
 
     private final Provider<? extends SessionFactory> sessionFactory;
-    /// Creates the threads that discard sessions, which is [#DISCARDER_THREAD_FACTORY] except in tests.
+    /// Creates the threads that discard sessions.
     private final ThreadFactory discarderThreadFactory;
     private final ThreadLocal<String> transactionGuid = new ThreadLocal<>();
     private final ThreadLocal<ThreadSessionState> sessionState = ThreadLocal.withInitial(ThreadSessionState::new);
@@ -208,7 +223,7 @@ public class SessionInterceptor implements MethodInterceptor {
         this(sessionFactory, DISCARDER_THREAD_FACTORY);
     }
 
-    /// For tests, which can make starting the threads that discard sessions fail.
+    /// A constructor for use in tests that require a custom discarder thread factory.
     ///
     SessionInterceptor(final Provider<? extends SessionFactory> sessionFactory, final ThreadFactory discarderThreadFactory) {
         this.sessionFactory = sessionFactory;
@@ -221,11 +236,11 @@ public class SessionInterceptor implements MethodInterceptor {
         final User user = invocationOwner.getUser();
         final ThreadSessionState sessionState = this.sessionState.get();
         // It might be the case that an earlier invocation on this thread owned a session scope that failed, and its error handling did not complete, for example, due to another StackOverflowError.
-        // Its session may still be bound to this thread, with an active transaction, and a connection that may be out of sync with the server.
-        // Obtaining the current session would then return that session, making this invocation a nested scope of a unit of work that has already failed.
+        // Its session may still be bound to this thread, with an active transaction and a connection that may be out of sync with the server.
+        // Obtaining the current session would then return that failed session, making this invocation a nested scope of a unit of work that has already failed.
         // To prevent this, the session is discarded first, typically with ample stack, as the failed invocation has unwound.
         // While a session is recorded, no session scope is active on this thread: it is recorded by the invocation that owns the scope,
-        // once all nested invocations have completed, or, for a stream returned by such an invocation, when completing the transaction on closing the stream fails, or follows a failed traversal,
+        // once all nested invocations have completed (for streams -- when the transaction on closing the stream fails or follows a failed traversal)
         // and is cleared once cleanup completes.
         if (sessionState.sessionPendingCleanup != null) {
             discardSessionPendingCleanup(sessionState, user);
@@ -246,34 +261,25 @@ public class SessionInterceptor implements MethodInterceptor {
         Session underlyingSession = null;
 
         try {
-            // This variable indicates whether a transaction commit should be handled in this method invocation.
-            // Basically, if a transaction is activated in this method, then it should be committed only in this method.
-            // Therefore, shouldCommit is assigned true only when the transaction is activated here.
             final boolean shouldCommit = initTransaction(invocationOwner, session, tr, user);
             underlyingSession = underlyingSession(sessionState, session, shouldCommit);
 
-            // If we should not commit, which means the session was initiated earlier in the call stack,
-            // and support for nested calls is not allowed, then an exception is thrown.
             if (!shouldCommit && !invocation.getStaticPart().getAnnotation(SessionRequired.class).allowNestedScope()) {
                 throw new SessionScopingException(ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED.formatted(invocation.getMethod().getDeclaringClass().getName(), invocation.getMethod().getName()));
             }
             
-            // Now let's proceed with the actual method invocation, which may throw an exception... or even a throwable...
-            final Object result = invocation.proceed();
+            final var result = invocation.proceed();
             
-            // If this is the invocation that activated the current transaction, then we should commit it,
-            // but only if the result of invocation is not a stream -- in that case, closing of the session is the responsibility of that stream.
+            // If this is the invocation that activated the current transaction, we should commit it.
+            // However, if its result is a stream, committing the transaction is the responsibility of that stream.
             // A transaction whose session has been closed is treated as rolled back, although Hibernate may still report it as active.
             // This is the case if a nested scope failed and closed or discarded the session, and an enclosing scope caught its failure: committing the closed session could only fail.
             // The session itself is checked, rather than state recorded for the thread, which a nested invocation that owns a session scope of its own would reset,
             // as an enclosing scope that catches a failure may carry on with further units of work, which find the session of the failed one unbound.
             if (shouldCommit && tr.isActive() && session.isOpen()) {
-                // If the result is a stream, then the current transaction becomes associated with that stream
-                // and needs to be committed once the stream has been processed.
                 if (result instanceof Stream<?> stream) {
                     return completeTransactionOnClose(stream, sessionState, session, underlyingSession, tr, user);
                 }
-                // Otherwise, commit the current transaction.
                 else {
                     LOGGER.debug(() -> "[%s] Committing DB transaction".formatted(user));
                     commitTransactionAndCloseSession(sessionState, session, underlyingSession, tr, user);
@@ -283,7 +289,6 @@ public class SessionInterceptor implements MethodInterceptor {
                 }
             }
             // Otherwise, this is a nested scope, or an owning invocation whose transaction a nested scope has completed, or whose session it has closed or discarded.
-            // The session is flushed only if it is still open.
             if (session.isOpen()) {
                 session.flush();
             }
@@ -293,9 +298,9 @@ public class SessionInterceptor implements MethodInterceptor {
             }
             return result;
         } catch (final Throwable ex) {
-            final Session discardableSession = underlyingSession != null ? underlyingSession : session;
-            // A field assignment requires no stack frame, so the session is recorded even if the stack is nearly exhausted.
+            final var discardableSession = underlyingSession != null ? underlyingSession : session;
             if (ownsScope) {
+                // A field assignment requires no stack frame, so the session is recorded even if the stack is nearly exhausted.
                 sessionState.sessionPendingCleanup = discardableSession;
             }
             try {
@@ -308,7 +313,6 @@ public class SessionInterceptor implements MethodInterceptor {
                 }
                 throw cleanupFailure;
             }
-            // Exceptions propagate unchanged; other throwables are wrapped.
             throw ex instanceof Exception e ? e : new TransactionRollbackDueToThrowable(ex);
         }
     }
@@ -335,7 +339,14 @@ public class SessionInterceptor implements MethodInterceptor {
     /// @param sessionState  the session state of the thread that created the stream
     /// @param streamSession  the session underlying `session`
     ///
-    private <T> Stream<T> completeTransactionOnClose(final Stream<T> stream, final ThreadSessionState sessionState, final Session session, final Session streamSession, final Transaction tr, final User user) {
+    private <T> Stream<T> completeTransactionOnClose(
+            final Stream<T> stream,
+            final ThreadSessionState sessionState,
+            final Session session,
+            final Session streamSession,
+            final Transaction tr,
+            final User user)
+    {
         final TraversalFailure traversal = new TraversalFailure();
         final Stream<T> recordingStream;
         try {
@@ -493,6 +504,11 @@ public class SessionInterceptor implements MethodInterceptor {
         }
     }
 
+    /// Begins a transaction if it is not active yet, or reuses an existing one.
+    /// Injects the session into `invocationOwner`.
+    ///
+    /// @return  whether the transaction should be committed after the invocation completes
+    ///
     private boolean initTransaction(final ISessionEnabled invocationOwner, final Session session, final Transaction tr, final User user) {
         invocationOwner.setSession(session);
         final boolean shouldCommit = !tr.isActive();
@@ -511,20 +527,17 @@ public class SessionInterceptor implements MethodInterceptor {
             session.setHibernateFlushMode(FlushMode.COMMIT);
             LOGGER.debug(() -> "[%s] Started new DB transaction".formatted(user));
             
-            // generate a GUID for the current transaction
             if (!StringUtils.isEmpty(transactionGuid.get())) {
-                throw new SessionScopingException("There should have been no transaction GUID assigned yet for a new session scope."); 
+                throw new SessionScopingException("Transaction GUID should not exist for a new session scope.");
             }
-            final String guid = randomUUID().toString();
+            final var guid = randomUUID().toString();
             transactionGuid.set(guid);
             invocationOwner.setTransactionGuid(guid);
         } else {
-            // assigned a transaction GUID, which should already be generated
-            final String guid = transactionGuid.get();
+            final var guid = transactionGuid.get();
             if (StringUtils.isEmpty(guid)) {
                 throw new SessionScopingException("A nested session scope is missing a transaction GUID."); 
             }
-            
             invocationOwner.setTransactionGuid(guid);
         }
         
@@ -535,8 +548,8 @@ public class SessionInterceptor implements MethodInterceptor {
     ///
     /// The thread-bound session is a proxy, which rejects unwrapping it unless its transaction is active.
     /// Within a unit of work, the transaction may cease to be active before a nested scope is invoked, for example, once a failed statement has marked it for rollback only.
-    /// Therefore, the invocation that owns the session scope unwraps the session, while the transaction it has just begun is active, and records it in `sessionState`,
-    /// and nested invocations take the underlying session from there, which spares them unwrapping it through the proxy.
+    /// Therefore, the invocation that owns the session scope unwraps the session, while the transaction it has just begun is active, and records it in `sessionState`.
+    /// Nested invocations take the underlying session from there, which spares them unwrapping it through the proxy.
     ///
     /// A nested invocation takes the recorded session only if its thread-bound session is the one recorded, which identifies the unit of work.
     /// Otherwise, for example, within a transaction begun outside this interceptor, it unwraps the session through the proxy.
@@ -568,13 +581,21 @@ public class SessionInterceptor implements MethodInterceptor {
     /// Cleanup precedes logging, so that it runs with as much stack as is available.
     /// If cleanup does not complete, the session remains recorded in `sessionState` by the invocation that owns the session scope, or by the stream that completes its transaction, and is discarded by the next invocation on this thread.
     /// If cleanup fails, its failure propagates unchanged, instead of `th`, which is not logged.
-    /// A caller to which `th` has not propagated attaches `th` to the failure of the cleanup, so that it is not lost (refer to `invoke`);
+    /// A caller to which `th` has not propagated attaches `th` to the failure of the cleanup, so that it is not lost (refer to [invoke]);
     /// a caller to which it has propagated already, such as the consumer of a stream, does not, as that would create a cycle of suppressed throwables.
     ///
     /// @param ownsScope  whether the failed invocation owns the session scope, in which case the unit of work completes with this invocation
     /// @param discardableSession  the session underlying `session`, if obtained, which is used to discard it after a [VirtualMachineError], or if rolling back fails
     ///
-    private void completeTransactionWithError(final ThreadSessionState sessionState, final boolean ownsScope, final Session session, final Session discardableSession, final Transaction tr, final Throwable th, final User user) {
+    private void completeTransactionWithError(
+            final ThreadSessionState sessionState,
+            final boolean ownsScope,
+            final Session session,
+            final Session discardableSession,
+            final Transaction tr,
+            final Throwable th,
+            final User user)
+    {
         try {
             if (isCausedByVirtualMachineError(th)) {
                 // In nested scopes, the innermost scope discards the session, and the enclosing scopes find it closed,
@@ -773,7 +794,7 @@ public class SessionInterceptor implements MethodInterceptor {
     ///
     /// A thread-bound session closes itself once its transaction completes, as `ThreadLocalSessionContext` enables auto-close, which releases its connection.
     /// For example, if committing fails before the JDBC commit, such as when flushing violates a constraint, Hibernate rolls back the transaction and the session closes,
-    /// returning the connection to the pool in a known state, and the session is then not discarded (refer to `commitTransactionAndCloseSession`).
+    /// returning the connection to the pool in a known state, and the session is then not discarded (refer to [commitTransactionAndCloseSession]).
     /// The connection is aborted only if the session holds one, as obtaining the physical connection of a session that holds none would acquire one from the pool, only to abort it.
     /// A session remains open and holds its connection if its transaction did not complete, which is the case if:
     ///   - the JDBC commit failed, which leaves its outcome unknown;
@@ -794,7 +815,7 @@ public class SessionInterceptor implements MethodInterceptor {
     /// On a discarding thread, with its fresh stack, this is practically a matter of memory exhaustion only.
     ///
     /// Errors are logged rather than propagated: on a discarding thread, an uncaught error would only be printed to the standard error stream.
-    /// The caller determines from the session whether discarding left it open (refer to `discardSession`).
+    /// The caller determines from the session whether discarding left it open (refer to [discardSession]).
     ///
     private record SessionDiscarder(Session session, User user) implements Runnable {
         @Override
@@ -870,7 +891,13 @@ public class SessionInterceptor implements MethodInterceptor {
     ///
     /// @param discardableSession  the session underlying `session`, which is used to acquire its connection, and to discard it if committing fails
     ///
-    private void commitTransactionAndCloseSession(final ThreadSessionState sessionState, final Session session, final Session discardableSession, final Transaction tr, final User user) {
+    private void commitTransactionAndCloseSession(
+            final ThreadSessionState sessionState,
+            final Session session,
+            final Session discardableSession,
+            final Transaction tr,
+            final User user)
+    {
         try {
             if (tr.isActive()) {
                 // Called for its side effect: it acquires a connection if the session does not hold one yet, and does nothing otherwise.
@@ -918,7 +945,13 @@ public class SessionInterceptor implements MethodInterceptor {
     ///
     /// @param discardableSession  the session underlying `session`, if obtained, which is used to determine whether it holds a connection, and to discard it if rolling back fails
     ///
-    private void rollbackTransactionAndCloseSession(final ThreadSessionState sessionState, final Session session, final Session discardableSession, final Transaction tr, final User user) {
+    private void rollbackTransactionAndCloseSession(
+            final ThreadSessionState sessionState,
+            final Session session,
+            final Session discardableSession,
+            final Transaction tr,
+            final User user)
+    {
         if (discardableSession != session && !holdsConnection(discardableSession)) {
             closeSession(session, user);
             return;
@@ -938,7 +971,7 @@ public class SessionInterceptor implements MethodInterceptor {
 
     /// Whether `session` is open and holds a connection, which is determined without acquiring one.
     ///
-    /// @param session  an underlying session, as opposed to its thread-bound proxy, which rejects unwrapping without an active transaction
+    /// @param session  an underlying session, as opposed to its thread-bound proxy which rejects unwrapping without an active transaction
     ///
     private static boolean holdsConnection(final Session session) {
         return session.isOpen() && logicalConnection(session).isPhysicallyConnected();
