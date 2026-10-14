@@ -68,7 +68,8 @@ public class TgEntityWithTimeZoneDatesWebUiConfig {
                     .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching TgEntityWithTimeZoneDates.")
                     .withAction(standardEditAction).also()
                 .addProp("dateProp").minWidth(100).also()
-                .addProp("datePropUtc").minWidth(100)
+                .addProp("datePropUtc").minWidth(100).also()
+                .addProp("datePropDependent").minWidth(100)
                 .addPrimaryAction(standardEditAction)
                 .build();
 
@@ -76,11 +77,12 @@ public class TgEntityWithTimeZoneDatesWebUiConfig {
         return entityCentre;
     }
     private EntityMaster<TgEntityWithTimeZoneDates> createMaster(final Injector injector) {
-        final String layout = LayoutComposer.mkGridForMaster(640, 1, 2);
+        final String layout = LayoutComposer.mkGridForMaster(960, 1, 3);
 
         final IMaster<TgEntityWithTimeZoneDates> masterConfig = new SimpleMasterBuilder<TgEntityWithTimeZoneDates>().forEntity(TgEntityWithTimeZoneDates.class)
                 .addProp("dateProp").asDateTimePicker().also()
                 .addProp("datePropUtc").asDateTimePicker().also()
+                .addProp("datePropDependent").asDateTimePicker().also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkActionLayoutForMaster())

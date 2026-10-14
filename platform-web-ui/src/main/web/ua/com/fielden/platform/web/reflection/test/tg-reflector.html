@@ -22,6 +22,7 @@
         import { CURRENCY_SYMBOL_SPACE } from '/resources/reflection/tg-numeric-utils.js';
         import '/app/tg-app-config.js'; // this is to trigger setting of LTS, LT and L formats in moment library instance to convert dates properly
         import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
+        import moment from '/resources/polymer/lib/moment-lib.js';
 
         suite('reflector\'s', function() {
             let reflector;
@@ -81,7 +82,7 @@
             test('Entity.toString: Date key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityDateKey');
                 entity.key = 0;
-                assert.strictEqual(entity.toString(), _millisDateRepresentation(entity.key, null, null));
+                assert.strictEqual(entity.toString(), _millisDateRepresentation(entity.key, null));
                 done();
             });
             
@@ -160,7 +161,7 @@
             test('tg_convert simple entity: Date key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityDateKey');
                 entity.key = 0;
-                assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.key, null, null));
+                assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.key, null));
                 done();
             });
             
@@ -275,7 +276,7 @@
                 entity.hyperlinkKey = null;
                 entity.entityKey = null;
                 entity.selfKey = null;
-                assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.dateKey, null, null));
+                assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.dateKey, null));
                 done();
             });
             
@@ -405,7 +406,7 @@
                 entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.entityKey.key = 'KEY2';
                 entity.selfKey = null;
-                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null, null) + ':1500:16000000000:1700.1234:1700:FFCC80:https://www.example.com:KEY2');
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null) + ':1500:16000000000:1700.1234:1700:FFCC80:https://www.example.com:KEY2');
                 done();
             });
             
@@ -422,7 +423,7 @@
                 entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.entityKey.key = 'KEY2';
                 entity.selfKey = null;
-                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null, null) + ':16000000000:FFCC80:KEY2');
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null) + ':16000000000:FFCC80:KEY2');
                 done();
             });
             
@@ -770,7 +771,7 @@
             test('tg_toString standard: Date converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.dateKey = 0;
-                assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey'), _millisDateRepresentation(entity.dateKey, null, null));
+                assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey'), _millisDateRepresentation(entity.dateKey, null));
                 done();
             });
             
@@ -1032,7 +1033,7 @@
             test('tg_toString for display: Date converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.dateKey = 0;
-                assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey', { display: true }), _millisDateRepresentation(entity.dateKey, null, null));
+                assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey', { display: true }), _millisDateRepresentation(entity.dateKey, null));
                 done();
             });
             
@@ -1175,7 +1176,7 @@
                 master.entityKey = null;
                 master.selfKey = null;
                 master.setOfEntitiesProp = [null, null, null];
-                assert.strictEqual(reflector.tg_toString(master.get('setOfEntitiesProp'), master.type(), 'setOfEntitiesProp', { collection: true, asTooltip: true }), '');
+                assert.strictEqual(reflector.tg_toString(master.get('setOfEntitiesProp'), master.type(), 'setOfEntitiesProp', { display: true, asTooltip: true }), '');
                 done();
             });
             
@@ -1216,7 +1217,7 @@
                 entity2.entityKey = null;
                 entity2.selfKey = master;
                 master.setOfEntitiesProp = [entity, null, entity, null, entity2, null];
-                assert.strictEqual(reflector.tg_toString(master.get('setOfEntitiesProp'), master.type(), 'setOfEntitiesProp', { collection: true, asTooltip: true }), '<b>STR1:MASTER, STR1:MASTER, STR2:MASTER</b><br>desc1, desc1');
+                assert.strictEqual(reflector.tg_toString(master.get('setOfEntitiesProp'), master.type(), 'setOfEntitiesProp', { display: true, asTooltip: true }), '<b>STR1:MASTER, STR1:MASTER, STR2:MASTER</b><br>desc1, desc1');
                 done();
             });
             
@@ -1246,7 +1247,7 @@
                 entity3.parentKey = master;
                 entity3.entityKey = null;
                 master.shortCollectionalProp = [entity1, null, entity2, null, entity3, null];
-                assert.strictEqual(reflector.tg_toString(master.get('shortCollectionalProp'), master.type(), 'shortCollectionalProp', { collection: true, asTooltip: true }), '<b>STR1, STR2</b><br>desc1');
+                assert.strictEqual(reflector.tg_toString(master.get('shortCollectionalProp'), master.type(), 'shortCollectionalProp', { display: true, asTooltip: true }), '<b>STR1, STR2</b><br>desc1');
                 done();
             });
             
@@ -1266,31 +1267,127 @@
                 entity3.parentKey = master;
                 entity3.entityKey = null;
                 master.shortCollectionalProp = [null, entity3, null];
-                assert.strictEqual(reflector.tg_toString(master.get('shortCollectionalProp'), master.type(), 'shortCollectionalProp', { collection: true, asTooltip: true }), '');
+                assert.strictEqual(reflector.tg_toString(master.get('shortCollectionalProp'), master.type(), 'shortCollectionalProp', { display: true, asTooltip: true }), '');
                 done();
             });
             
             test('tg_toString for collection: list of strings converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.listOfStringsProp = ['1', '', '2', null, '3', null];
-                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { collection: true }), '1, 2, 3');
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp'), '1, 2, 3');
                 done();
             });
             
             test('tg_toString for collection: list of strings converts with custom separator', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.listOfStringsProp = ['1', '', '2', null, '3', null];
-                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { collection: true, separator: ':' }), '1:2:3');
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { separator: ':' }), '1:2:3');
                 done();
             });
             
             test('tg_toString for collection: list of strings converts with mapping function', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.listOfStringsProp = ['1', '', '2', null, '3', null];
-                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { collection: true, mappingFunction: str => str ? '' + (+str * 2) : '' }), '2, 4, 6');
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { mappingFunction: str => str ? '' + (+str * 2) : '' }), '2, 4, 6');
                 done();
             });
-            
+
+            // Date tooltips surface the server time-zone representation for @DependentTimeZoneMode properties.
+            // The client time-zone (moment.tz.guess) and server time-zone (moment default / TG_APP.timeZone) are mocked here.
+            suite('date as tooltip (server time-zone for @DependentTimeZoneMode)', function () {
+                const SERVER_TIMEZONE = 'Australia/Melbourne';
+                const CLIENT_TIMEZONE = 'Europe/Kyiv';
+                const DATE_MILLIS = 1473057180015; // has milliseconds, so the full date+time format applies
+                let originalGuess, originalTgAppTimeZone;
+
+                suiteSetup(function () {
+                    originalGuess = moment.tz.guess;
+                    originalTgAppTimeZone = window.TG_APP.timeZone;
+                    moment.tz.guess = () => CLIENT_TIMEZONE;
+                    moment.tz.setDefault(SERVER_TIMEZONE);
+                    window.TG_APP.timeZone = SERVER_TIMEZONE;
+                });
+                suiteTeardown(function () {
+                    moment.tz.guess = originalGuess;
+                    moment.tz.setDefault();
+                    window.TG_APP.timeZone = originalTgAppTimeZone;
+                });
+
+                test('@DependentTimeZoneMode date appends the server time-zone representation when it differs', function (done) {
+                    const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                    entity.dateKey = DATE_MILLIS;
+                    const dateProp = entity.type().prop('dateKey');
+                    const savedDependent = dateProp._dependentTimeZoneMode;
+                    dateProp._dependentTimeZoneMode = true;
+                    try {
+                        const clientRep = _millisDateRepresentation(DATE_MILLIS, dateProp);
+                        moment.tz.guess = () => SERVER_TIMEZONE; // make the dependent enforcement yield the server rendering
+                        const serverRep = _millisDateRepresentation(DATE_MILLIS, dateProp);
+                        moment.tz.guess = () => CLIENT_TIMEZONE;
+                        assert.notStrictEqual(clientRep, serverRep, 'Premise: client and server renderings must differ for this instant.');
+                        const expected = '<b>' + clientRep + '</b><br>' + serverRep + ' (' + SERVER_TIMEZONE + ')';
+                        assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey', { display: true, asTooltip: true }), expected);
+                    } finally {
+                        dateProp._dependentTimeZoneMode = savedDependent;
+                    }
+                    done();
+                });
+
+                test('@DependentTimeZoneMode date omits the server line when client and server render equally', function (done) {
+                    const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                    entity.dateKey = DATE_MILLIS;
+                    const dateProp = entity.type().prop('dateKey');
+                    const savedDependent = dateProp._dependentTimeZoneMode;
+                    const savedGuess = moment.tz.guess;
+                    dateProp._dependentTimeZoneMode = true;
+                    moment.tz.guess = () => SERVER_TIMEZONE; // client zone equals server zone, so renderings are identical
+                    try {
+                        const rep = _millisDateRepresentation(DATE_MILLIS, dateProp);
+                        assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey', { display: true, asTooltip: true }), '<b>' + rep + '</b>');
+                    } finally {
+                        dateProp._dependentTimeZoneMode = savedDependent;
+                        moment.tz.guess = savedGuess;
+                    }
+                    done();
+                });
+
+                test('regular (non-dependent) date as tooltip has no server line', function (done) {
+                    const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                    entity.dateKey = DATE_MILLIS;
+                    const dateProp = entity.type().prop('dateKey');
+                    const savedDependent = dateProp._dependentTimeZoneMode;
+                    dateProp._dependentTimeZoneMode = false;
+                    try {
+                        const rep = _millisDateRepresentation(DATE_MILLIS, dateProp);
+                        assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey', { display: true, asTooltip: true }), '<b>' + rep + '</b>');
+                    } finally {
+                        dateProp._dependentTimeZoneMode = savedDependent;
+                    }
+                    done();
+                });
+
+                test('date as tooltip: empty (null) converts', function (done) {
+                    const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                    entity.dateKey = null;
+                    assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey', { display: true, asTooltip: true }), '');
+                    done();
+                });
+
+                test('@DependentTimeZoneMode date without tooltip converts to the plain client representation', function (done) {
+                    const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                    entity.dateKey = DATE_MILLIS;
+                    const dateProp = entity.type().prop('dateKey');
+                    const savedDependent = dateProp._dependentTimeZoneMode;
+                    dateProp._dependentTimeZoneMode = true;
+                    try {
+                        assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey', { display: true }), _millisDateRepresentation(DATE_MILLIS, dateProp));
+                    } finally {
+                        dateProp._dependentTimeZoneMode = savedDependent;
+                    }
+                    done();
+                });
+            });
+
             // Testing the access to 'key' property of different kinds of entities.
             // This property is of high importance and should be much in sync with server-side implementation.
             // At this stage only equality and toString implementation is used when accessing properties.
