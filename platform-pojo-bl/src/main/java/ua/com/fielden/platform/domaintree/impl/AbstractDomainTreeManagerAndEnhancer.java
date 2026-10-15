@@ -264,18 +264,18 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         }
 
         @Override
-        public void removeCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
-            baseEnhancer().removeCalculatedProperty(rootType, calculatedPropertyName);
+        public void removeCalculatedProperty(final Class<?> rootType, final String propertyPath) {
+            baseEnhancer().removeCalculatedProperty(rootType, propertyPath);
         }
 
         @Override
-        public ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
-            return baseEnhancer().getCalculatedProperty(rootType, calculatedPropertyName);
+        public ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String propertyPath) {
+            return baseEnhancer().getCalculatedProperty(rootType, propertyPath);
         }
 
         @Override
-        public ICalculatedProperty copyCalculatedProperty(final Class<?> rootType, final String calculatedPropertyName) {
-            return baseEnhancer().copyCalculatedProperty(rootType, calculatedPropertyName);
+        public ICalculatedProperty copyCalculatedProperty(final Class<?> rootType, final String propertyPath) {
+            return baseEnhancer().copyCalculatedProperty(rootType, propertyPath);
         }
 
         @Override

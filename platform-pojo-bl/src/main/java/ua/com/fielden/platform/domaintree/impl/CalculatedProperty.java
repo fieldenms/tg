@@ -443,69 +443,116 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         }
     }
 
-    /**
-     * Creates full {@link CalculatedProperty} with all keys initialised and validates it.
-     *
-     * @param factory
-     * @param root
-     * @param contextPath
-     * @param contextualExpression
-     * @param title
-     * @param desc
-     * @param attribute
-     * @param originationProperty
-     * @param domainTreeEnhancer
-     * @return
-     */
-    private static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale, final IDomainTreeEnhancer domainTreeEnhancer, final boolean validateTitleContextOfExtractedProperties) {
+    /// Creates full [CalculatedProperty] with all keys initialised and validates it.
+    ///
+    private static CalculatedProperty create(
+            final EntityFactory factory,
+            final Class<?> root,
+            final String contextPath,
+            final String contextualExpression,
+            final String title,
+            final String desc,
+            final CalculatedPropertyAttribute attribute,
+            final String originationProperty,
+            final Integer precision,
+            final Integer scale,
+            final IDomainTreeEnhancer domainTreeEnhancer,
+            final boolean validateTitleContextOfExtractedProperties)
+    {
         return setImportantStuff(contextualExpression, title, desc, attribute, originationProperty, precision, scale, createEmpty(factory, root, contextPath, domainTreeEnhancer, validateTitleContextOfExtractedProperties));
     }
 
-    /**
-     * Creates full {@link CalculatedProperty} with all keys initialised and validates it.
-     *
-     * @param factory
-     * @param root
-     * @param contextPath
-     * @param contextualExpression
-     * @param title
-     * @param desc
-     * @param attribute
-     * @param originationProperty
-     * @param domainTreeEnhancer
-     * @return
-     */
-    private static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale, final IDomainTreeEnhancer domainTreeEnhancer, final boolean validateTitleContextOfExtractedProperties) {
+    /// Creates full [CalculatedProperty] with all keys initialised and validates it.
+    ///
+    private static CalculatedProperty create(
+            final EntityFactory factory,
+            final Class<?> root,
+            final String contextPath,
+            final String customPropertyName,
+            final String contextualExpression,
+            final String title,
+            final String desc,
+            final CalculatedPropertyAttribute attribute,
+            final String originationProperty,
+            final Integer precision,
+            final Integer scale,
+            final IDomainTreeEnhancer domainTreeEnhancer,
+            final boolean validateTitleContextOfExtractedProperties)
+    {
         return setImportantStuff(customPropertyName, contextualExpression, title, desc, attribute, originationProperty, precision, scale, createEmpty(factory, root, contextPath, domainTreeEnhancer, validateTitleContextOfExtractedProperties));
     }
 
-    /**
-     * Creates full {@link CalculatedProperty} with all keys initialised and validates it.
-     *
-     * @return
-     */
-    private static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale, final IDomainTreeEnhancer domainTreeEnhancer) {
+    /// Creates full [CalculatedProperty] with all keys initialised and validates it.
+    ///
+    private static CalculatedProperty create(
+            final EntityFactory factory,
+            final Class<?> root,
+            final String contextPath,
+            final String contextualExpression,
+            final String title,
+            final String desc,
+            final CalculatedPropertyAttribute attribute,
+            final String originationProperty,
+            final Integer precision,
+            final Integer scale,
+            final IDomainTreeEnhancer domainTreeEnhancer)
+    {
         return create(factory, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, precision, scale, domainTreeEnhancer, true);
     }
 
-    /**
-     * Creates full {@link CalculatedProperty} with all keys initialised, validates it and throws validation exception if any.
-     */
-    protected final static CalculatedProperty createCorrect(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale, final IDomainTreeEnhancer domainTreeEnhancer) {
+    /// Creates full [CalculatedProperty] with all keys initialised, validates it and throws validation exception if any.
+    ///
+    protected static CalculatedProperty createCorrect(
+            final EntityFactory factory,
+            final Class<?> root,
+            final String contextPath,
+            final String contextualExpression,
+            final String title,
+            final String desc,
+            final CalculatedPropertyAttribute attribute,
+            final String originationProperty,
+            final Integer precision,
+            final Integer scale,
+            final IDomainTreeEnhancer domainTreeEnhancer)
+    {
         return createCorrect(factory, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, precision, scale, domainTreeEnhancer, true);
     }
 
-    /**
-     * Creates full {@link CalculatedProperty} with all keys initialised, validates it and throws validation exception if any.
-     */
-    protected final static CalculatedProperty createCorrect(final EntityFactory factory, final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale, final IDomainTreeEnhancer domainTreeEnhancer) {
+    /// Creates full [CalculatedProperty] with all keys initialised, validates it and throws validation exception if any.
+    ///
+    protected static CalculatedProperty createCorrect(
+            final EntityFactory factory,
+            final Class<?> root,
+            final String contextPath,
+            final String customPropertyName,
+            final String contextualExpression,
+            final String title,
+            final String desc,
+            final CalculatedPropertyAttribute attribute,
+            final String originationProperty,
+            final Integer precision,
+            final Integer scale,
+            final IDomainTreeEnhancer domainTreeEnhancer)
+    {
         return createCorrect(factory, root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, precision, scale, domainTreeEnhancer, true);
     }
 
-    /**
-     * Creates full {@link CalculatedProperty} with all keys initialised, validates it and throws validation exception if any.
-     */
-    protected final static CalculatedProperty createCorrect(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale, final IDomainTreeEnhancer domainTreeEnhancer, final boolean validateTitleContextOfExtractedProperties) {
+    /// Creates full [CalculatedProperty] with all keys initialised, validates it and throws validation exception if any.
+    ///
+    protected static CalculatedProperty createCorrect(
+            final EntityFactory factory,
+            final Class<?> root,
+            final String contextPath,
+            final String contextualExpression,
+            final String title,
+            final String desc,
+            final CalculatedPropertyAttribute attribute,
+            final String originationProperty,
+            final Integer precision,
+            final Integer scale,
+            final IDomainTreeEnhancer domainTreeEnhancer,
+            final boolean validateTitleContextOfExtractedProperties)
+    {
         final CalculatedProperty calc = create(factory, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, precision, scale, domainTreeEnhancer, validateTitleContextOfExtractedProperties);
 
         if (!calc.isValid().isSuccessful()) {
@@ -517,10 +564,23 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         return calc;
     }
 
-    /**
-     * Creates full {@link CalculatedProperty} with all keys initialised, validates it and throws validation exception if any.
-     */
-    protected final static CalculatedProperty createCorrect(final EntityFactory factory, final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale, final IDomainTreeEnhancer domainTreeEnhancer, final boolean validateTitleContextOfExtractedProperties) {
+    /// Creates full [CalculatedProperty] with all keys initialised, validates it and throws validation exception if any.
+    ///
+    protected static CalculatedProperty createCorrect(
+            final EntityFactory factory,
+            final Class<?> root,
+            final String contextPath,
+            final String customPropertyName,
+            final String contextualExpression,
+            final String title,
+            final String desc,
+            final CalculatedPropertyAttribute attribute,
+            final String originationProperty,
+            final Integer precision,
+            final Integer scale,
+            final IDomainTreeEnhancer domainTreeEnhancer,
+            final boolean validateTitleContextOfExtractedProperties)
+    {
         final CalculatedProperty calc = create(factory, root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, precision, scale, domainTreeEnhancer, validateTitleContextOfExtractedProperties);
 
         if (!calc.isValid().isSuccessful()) {
@@ -544,7 +604,16 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         return calc;
     }
 
-    private static CalculatedProperty setImportantStuff(final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale, final CalculatedProperty calc) {
+    private static CalculatedProperty setImportantStuff(
+            final String contextualExpression,
+            final String title,
+            final String desc,
+            final CalculatedPropertyAttribute attribute,
+            final String originationProperty,
+            final Integer precision,
+            final Integer scale,
+            final CalculatedProperty calc)
+    {
         calc.setContextualExpression(contextualExpression);
         calc.setTitle(title);
         calc.setDesc(desc);
