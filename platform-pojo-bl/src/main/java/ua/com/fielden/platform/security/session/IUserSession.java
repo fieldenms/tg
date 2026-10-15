@@ -131,13 +131,13 @@ public interface IUserSession extends IEntityDao<UserSession>, ISaveWithFetch<Us
      */
     void clearExpired();
     
-    /**
-     * Clears all sessions that match {@code sid}.
-     *
-     * @param sid
-     * 
-     * @return the number of deleted persistent sessions matching {@code sid}.
-     */
+    /// Clears all sessions that match `sid`, both persistent and cached.
+    ///
+    /// The cached sessions are cleared even if clearing the persistent sessions ends with an exception, which then propagates.
+    /// A session is valid as long as either its persistent or its cached copy exists.
+    ///
+    /// @return the number of deleted persistent sessions matching `sid`.
+    ///
     int clearAllWithSid(final String sid);
 
 }

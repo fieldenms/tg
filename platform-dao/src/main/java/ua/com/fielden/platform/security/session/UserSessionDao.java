@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.security.session;
 
 import com.google.common.cache.Cache;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -25,14 +26,11 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import java.security.SignatureException;
 import java.sql.PreparedStatement;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
@@ -179,15 +177,17 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             return 0;
         }
 
-        // Delete user sessions and SSO sessions from the database in a separate transaction.
-        final int count = deleteSessionsBySid(sid);
-        logger.info(() -> "User sessions deleted [%s] for sid [%s].".formatted(count, sid));
-
-        // Delete all matching user sessions from cache.
-        final List<String> keys = cache.asMap().entrySet().stream().filter(p -> sid.equals(p.getValue().getSid())).map(Map.Entry::getKey).collect(toList());
-        cache.invalidateAll(keys);
-
-        return count;
+        try {
+            // Delete user sessions and SSO sessions from the database in a separate transaction.
+            final int count = deleteSessionsBySid(sid);
+            logger.info(() -> "User sessions deleted [%s] for sid [%s].".formatted(count, sid));
+            return count;
+        } finally {
+            // Remove all matching user sessions from cache, even if the DB delete failed.
+            // The DB failure may follow a deletion that has been committed, (e.g., if a synchronization that Hibernate notifies after the commit fails),
+            // in which case the cached sessions are no longer valid and must be removed.
+            cache.invalidateAll(Maps.filterValues(cache.asMap(), us -> sid.equals(us.getSid())).keySet());
+        }
     }
 
     /// This method is used strictly to enforce deletion in a separate transaction.
