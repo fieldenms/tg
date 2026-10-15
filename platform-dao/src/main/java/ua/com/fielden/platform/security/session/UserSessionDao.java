@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.security.session;
 
 import com.google.common.cache.Cache;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -25,14 +26,11 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import java.security.SignatureException;
 import java.sql.PreparedStatement;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
@@ -185,11 +183,10 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             logger.info(() -> "User sessions deleted [%s] for sid [%s].".formatted(count, sid));
             return count;
         } finally {
-            // Delete all matching user sessions from cache, even if deleting them from the database ended with an exception.
-            // The exception may follow a deletion that has been committed, for example, if a synchronization that Hibernate notifies after the commit fails;
-            // the cached copies of the deleted sessions would then keep the sessions valid.
-            final List<String> keys = cache.asMap().entrySet().stream().filter(p -> sid.equals(p.getValue().getSid())).map(Map.Entry::getKey).collect(toList());
-            cache.invalidateAll(keys);
+            // Remove all matching user sessions from cache, even if the DB delete failed.
+            // The DB failure may follow a deletion that has been committed, (e.g., if a synchronization that Hibernate notifies after the commit fails),
+            // in which case the cached sessions are no longer valid and must be removed.
+            cache.invalidateAll(Maps.filterValues(cache.asMap(), us -> sid.equals(us.getSid())).keySet());
         }
     }
 
