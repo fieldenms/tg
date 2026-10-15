@@ -8,17 +8,12 @@ import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static ua.com.fielden.platform.ioc.HibernateConfigurationFactory.ERR_AUTOCOMMIT_SETTING_SPECIFIED;
-import static ua.com.fielden.platform.ioc.HibernateConfigurationFactory.setAutoCommitSettings;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.ioc.HibernateConfigurationFactory.*;
 
-/// Tests the auto-commit settings applied by [HibernateConfigurationFactory].
+/// Tests settings applied by [HibernateConfigurationFactory].
 ///
 public class HibernateConfigurationFactoryTest {
-
-    private static final String HIKARI_AUTO_COMMIT = "hibernate.hikari.autoCommit";
 
     @Test
     public void pooled_connections_have_auto_commit_disabled_and_Hibernate_relies_on_it() {
