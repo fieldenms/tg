@@ -79,19 +79,23 @@ Validation for the shape is necessary to make possible only meaninful Geo-zones 
 \end{figure}
 
 \newpage
-Map service changing is easily done by clicking on right top button. Basically tile services are not limited only by OpenStreetMap, Google, Yandex and Landscape, but at this stage only those are supported (figure~\ref{fig:09}). Please also note that several types of tiles for the same provider is available (for e.g. Sattelite, Roadmap or Terrain).
+Map service changing is easily done by clicking on right top button.
+By default, OpenStreetMap is the only base layer.
+A GIS component can define additional base layers, such as Google, Esri or Thunderforest tiles, by overriding \texttt{createBaseLayers()} and importing the corresponding Leaflet library itself.
+Several types of tiles for the same provider can be defined (e.g. Satellite, Roadmap or Terrain).
+Figure~\ref{fig:09} shows a GIS component with such custom base layers.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{chapters/01-geozones/images/09-changing-map-tiling-service.png}
-\caption{Changing map tiling service}\label{fig:09}
+\caption{Changing map tiling service (custom base layers)}\label{fig:09}
 \end{figure}
 
 \newpage
-The result of map changing to Google Roadmap from OpenStreetMap.
+The result of map changing from OpenStreetMap to a custom Google Roadmap base layer.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{chapters/01-geozones/images/10-changed-map-tiling-service.png}
-\caption{Changed map tiling service to Google Roadmap}\label{fig:10}
+\caption{Changed map tiling service to a custom Google Roadmap base layer}\label{fig:10}
 \end{figure}
