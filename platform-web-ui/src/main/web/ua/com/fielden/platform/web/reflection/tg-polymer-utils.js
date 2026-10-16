@@ -337,12 +337,13 @@ export const DeviceProfile = Object.freeze({
  */
 export const DEVICE_PROFILE_HEADER = 'Device-Profile';
 
-/**
- * The largest short screen edge, in CSS pixels, that still indicates a phone.
- *
- * Matches Android's 'sw600dp' convention and has a wide margin on either side: the largest phones sit near 430,
- * and the smallest tablet (iPad mini) at 744, so nothing real occupies the gap.
- */
+/// Short screen edge, in CSS pixels, below which a touch-operated device is classified as a phone.
+///
+/// Matches Android's `sw600dp` boundary, which Chrome also uses to tell a phone from a tablet.
+/// Phones sit below it (up to about 430) and iPads above it (from 744), but many 7–8″ Android tablets sit on it, at about 600.
+/// On Android, the OS Display size setting moves the short edge, so such a tablet can resolve to `MOBILE` from the next page load.
+/// Applications commonly set `minTabletWidth` to the same value, so that in portrait the mobile layout applies exactly to `MOBILE` devices.
+///
 const MOBILE_MAX_SHORT_EDGE = 600;
 
 /**
