@@ -1099,6 +1099,31 @@ function HTML(runner) {
         this.total = runner.total;
     }.bind(this));
     Mocha.reporters.HTML.call(this, runner);
+    /*TG #2350*/
+    // Progress is rendered from `runner.progress()`, where each suite has an equal share, filled in by its tests.
+    // These listeners run after the ones of Mocha for the same events, and override the progress rendered by Mocha.
+    // Percentages are truncated to one decimal place, so that 100% is shown only at the end of the run.
+    var renderProgress = function () {
+        var progressContainer = output.querySelector('#mocha-stats .progress-contain');
+        if (!progressContainer) {
+            return;
+        }
+        var percent = Math.floor(runner.progress() * 1000 + 1e-9) / 10;
+        progressContainer.getElementsByTagName('progress')[0].value = percent;
+        progressContainer.getElementsByTagName('div')[0].textContent = percent.toFixed(1) + '%';
+        var progressRing = [
+            progressContainer.getElementsByClassName('ring-flatlight')[0],
+            progressContainer.getElementsByClassName('ring-highlight')[0]
+        ];
+        var radius = parseFloat(getComputedStyle(progressRing[0]).getPropertyValue('r'));
+        var wholeArc = Math.PI * 2 * radius;
+        var highlightArc = percent * (wholeArc / 100);
+        progressRing[0].style['stroke-dasharray'] = '0,' + highlightArc + 'px,' + wholeArc + 'px';
+        progressRing[1].style['stroke-dasharray'] = highlightArc + 'px,' + wholeArc + 'px';
+    };
+    ['suite end', 'pass', 'fail', 'pending', 'test end', 'end'].forEach(function (eventName) {
+        runner.on(eventName, renderProgress);
+    });
 }
 // Woo! What a hack. This just saves us from adding a bunch of complexity around
 // style loading.
@@ -1158,6 +1183,11 @@ var MultiReporter = /** @class */ (function () {
         this.currentRunner = null;
         // ...while we buffer events for any other active runners.
         this.pendingEvents = [];
+        /*TG #2350*/
+        // Each suite has an equal share of progress (see `progress()`).
+        this.progressShares = numSuites;
+        this.completedProgressShares = 0;
+        this.currentTestsEnded = 0;
         this.emit('start');
     }
     /**
@@ -1208,9 +1238,13 @@ var MultiReporter = /** @class */ (function () {
         test.state = error ? 'failed' : 'passed';
         test.err = error;
         if (!estimated) {
-            this.total = this.total + ESTIMATED_TESTS_PER_SUITE;
+            /*TG #2350*/
+            this.adjustTotal(ESTIMATED_TESTS_PER_SUITE);
         }
         var runner = { total: 1 };
+        /*TG #2350*/
+        // A test outside of the estimate has no share of progress.
+        runner.withoutProgressShare = !estimated;
         this.proxyEvent('start', runner);
         this.proxyEvent('suite', runner, root);
         this.proxyEvent('test', runner, test);
@@ -1277,6 +1311,11 @@ var MultiReporter = /** @class */ (function () {
             this.onRunnerEnd(runner);
         }
         else {
+            /*TG #2350*/
+            // Completed tests of the current runner fill in its share of progress (see `progress()`).
+            if (eventName === 'test end') {
+                this.currentTestsEnded = this.currentTestsEnded + 1;
+            }
             this.cleanEvent(eventName, runner, extraArgs);
             this.emit.apply(this, [eventName].concat(extraArgs));
         }
@@ -1322,12 +1361,52 @@ var MultiReporter = /** @class */ (function () {
     /** @param {!Mocha.runners.Base} runner */
     MultiReporter.prototype.onRunnerStart = function (runner) {
         debug('MultiReporter#onRunnerStart:', runner.name);
-        this.total = this.total - ESTIMATED_TESTS_PER_SUITE + runner.total;
+        /*TG #2350*/
+        // From now on, a nested `MultiReporter` as `runner` propagates later changes of its `total` to this reporter.
+        this.adjustTotal(runner.total - ESTIMATED_TESTS_PER_SUITE);
+        runner.totalAccountedByParent = true;
+        // A Mocha runner without tests (e.g. of a page that only loads suites) gives up its share of progress.
+        if (runner.total === 0 && typeof runner.progress !== 'function') {
+            runner.withoutProgressShare = true;
+            this.progressShares = this.progressShares - 1;
+        }
+        this.currentTestsEnded = 0;
         this.currentRunner = runner;
+    };
+    /*TG #2350*/
+    // Changes `total` by `delta` and propagates the change to the parent reporter, if it has already read this `total`.
+    // The parent reads the `total` of an HTML suite once, on its `start` event, when it is still the estimate.
+    // The actual number of tests becomes known later, when the suite's own Mocha runner starts.
+    // Propagation keeps the top-level `total` (used for the favicon) equal to the actual number of tests.
+    MultiReporter.prototype.adjustTotal = function (delta) {
+        this.total = this.total + delta;
+        if (this.parent && this.totalAccountedByParent) {
+            this.parent.adjustTotal(delta);
+        }
+    };
+    /*TG #2350*/
+    // Returns the fraction of the run that is complete, from 0 to 1.
+    // Each suite, including the local tests of this reporter's page, has an equal share of progress.
+    // The share of the current suite is filled in proportion to its completed tests, once their number is known.
+    // For a nested `MultiReporter`, which runs the suites of an HTML page, the fraction comes from its `progress()`.
+    // Unlike `total`, which may grow as suites start, this fraction never decreases.
+    MultiReporter.prototype.progress = function () {
+        if (this.complete || this.progressShares <= 0) {
+            return 1;
+        }
+        var runner = this.currentRunner;
+        var currentProgress = !runner || runner.withoutProgressShare ? 0
+            : typeof runner.progress === 'function' ? runner.progress()
+            : Math.min(1, this.currentTestsEnded / runner.total);
+        return Math.min(1, (this.completedProgressShares + currentProgress) / this.progressShares);
     };
     /** @param {!Mocha.runners.Base} runner */
     MultiReporter.prototype.onRunnerEnd = function (runner) {
         debug('MultiReporter#onRunnerEnd:', runner.name);
+        /*TG #2350*/
+        if (!runner.withoutProgressShare) {
+            this.completedProgressShares = this.completedProgressShares + 1;
+        }
         this.currentRunner = null;
         this.flushPendingEvents();
     };
