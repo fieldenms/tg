@@ -58,7 +58,7 @@ public class WebApiBigDecimalFieldTest extends AbstractDaoTestCase {
     public void bigDecimal_prop_returns_with_left_null_argument_literal() {
         createBigDecimalEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key bigDecimalProp(from:null)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {bigDecimalProp: {ge: null}}}){key bigDecimalProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -74,7 +74,7 @@ public class WebApiBigDecimalFieldTest extends AbstractDaoTestCase {
     public void bigDecimal_prop_returns_with_right_null_argument_literal() {
         createBigDecimalEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key bigDecimalProp(to:null)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {bigDecimalProp: {le: null}}}){key bigDecimalProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -90,7 +90,7 @@ public class WebApiBigDecimalFieldTest extends AbstractDaoTestCase {
     public void bigDecimal_prop_returns_with_left_non_empty_argument_literal() {
         createBigDecimalEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key bigDecimalProp(from:2.5)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {bigDecimalProp: {ge: 2.5}}}){key bigDecimalProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -105,7 +105,7 @@ public class WebApiBigDecimalFieldTest extends AbstractDaoTestCase {
     public void bigDecimal_prop_returns_with_right_non_empty_argument_literal() {
         createBigDecimalEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key bigDecimalProp(to:7.5)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {bigDecimalProp: {le: 7.5}}}){key bigDecimalProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -120,7 +120,7 @@ public class WebApiBigDecimalFieldTest extends AbstractDaoTestCase {
     public void bigDecimal_prop_returns_with_left_argument_variable() {
         createBigDecimalEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:BigDecimal){tgWebApiEntity{key bigDecimalProp(from:$val)}}"));
+        final Map<String, Object> result = webApi.execute(input("query($val:BigDecimal){tgWebApiEntity(where: {cond: {bigDecimalProp: {ge: $val}}}){key bigDecimalProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -136,7 +136,7 @@ public class WebApiBigDecimalFieldTest extends AbstractDaoTestCase {
     public void bigDecimal_prop_returns_with_right_argument_variable() {
         createBigDecimalEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:BigDecimal){tgWebApiEntity{key bigDecimalProp(to:$val)}}"));
+        final Map<String, Object> result = webApi.execute(input("query($val:BigDecimal){tgWebApiEntity(where: {cond: {bigDecimalProp: {le: $val}}}){key bigDecimalProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -152,7 +152,7 @@ public class WebApiBigDecimalFieldTest extends AbstractDaoTestCase {
     public void bigDecimal_prop_returns_with_left_null_argument_variable() {
         createBigDecimalEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:BigDecimal){tgWebApiEntity{key bigDecimalProp(from:$val)}}", linkedMapOf(t2("val", null))));
+        final Map<String, Object> result = webApi.execute(input("query($val:BigDecimal){tgWebApiEntity(where: {cond: {bigDecimalProp: {ge: $val}}}){key bigDecimalProp}}", linkedMapOf(t2("val", null))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -168,7 +168,7 @@ public class WebApiBigDecimalFieldTest extends AbstractDaoTestCase {
     public void bigDecimal_prop_returns_with_right_null_argument_variable() {
         createBigDecimalEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:BigDecimal){tgWebApiEntity{key bigDecimalProp(to:$val)}}", linkedMapOf(t2("val", null))));
+        final Map<String, Object> result = webApi.execute(input("query($val:BigDecimal){tgWebApiEntity(where: {cond: {bigDecimalProp: {le: $val}}}){key bigDecimalProp}}", linkedMapOf(t2("val", null))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -184,7 +184,7 @@ public class WebApiBigDecimalFieldTest extends AbstractDaoTestCase {
     public void bigDecimal_prop_returns_with_left_non_empty_argument_variable() {
         createBigDecimalEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:BigDecimal){tgWebApiEntity{key bigDecimalProp(from:$val)}}", linkedMapOf(t2("val", 2.5))));
+        final Map<String, Object> result = webApi.execute(input("query($val:BigDecimal){tgWebApiEntity(where: {cond: {bigDecimalProp: {ge: $val}}}){key bigDecimalProp}}", linkedMapOf(t2("val", 2.5))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -199,7 +199,7 @@ public class WebApiBigDecimalFieldTest extends AbstractDaoTestCase {
     public void bigDecimal_prop_returns_with_right_non_empty_argument_variable() {
         createBigDecimalEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:BigDecimal){tgWebApiEntity{key bigDecimalProp(to:$val)}}", linkedMapOf(t2("val", 7.5))));
+        final Map<String, Object> result = webApi.execute(input("query($val:BigDecimal){tgWebApiEntity(where: {cond: {bigDecimalProp: {le: $val}}}){key bigDecimalProp}}", linkedMapOf(t2("val", 7.5))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -214,7 +214,7 @@ public class WebApiBigDecimalFieldTest extends AbstractDaoTestCase {
     public void bigDecimal_prop_filters_by_a_whole_number_literal_bound() {
         createBigDecimalEntities();
         // A whole-number literal is an IntValue (not a FloatValue); it must be accepted for a BigDecimal argument.
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key bigDecimalProp(from:2)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {bigDecimalProp: {ge: 2}}}){key bigDecimalProp}}"));
 
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -229,7 +229,7 @@ public class WebApiBigDecimalFieldTest extends AbstractDaoTestCase {
     public void bigDecimal_prop_with_a_non_numeric_literal_bound_results_in_errors() {
         createBigDecimalEntities();
         // A string literal is not a valid BigDecimal argument and must be rejected.
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key bigDecimalProp(from:\"x\")}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {bigDecimalProp: {ge: \"x\"}}}){key bigDecimalProp}}"));
 
         assertFalse(errors(result).isEmpty());
     }

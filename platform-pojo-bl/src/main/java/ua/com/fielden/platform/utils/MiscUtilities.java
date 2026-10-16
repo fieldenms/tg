@@ -2,10 +2,12 @@ package ua.com.fielden.platform.utils;
 
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.types.either.Either;
 
 import javax.swing.filechooser.FileFilter;
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
@@ -180,6 +182,20 @@ public class MiscUtilities {
 
     public static Optional<Boolean> optional(final boolean value) {
         return value ? OPTIONAL_TRUE : OPTIONAL_FALSE;
+    }
+
+    /// Reads the contents of a Java resource at `path`.
+    /// Throws if the resource is missing or could not be read.
+    ///
+    public static String readResource(final Class<?> klass, final String path, final Charset charset) {
+        try (final var is = klass.getResourceAsStream(path)) {
+            if (is == null) {
+                throw new InvalidStateException("Java resource [%s] is missing.".formatted(path));
+            }
+            return new String(is.readAllBytes(), charset);
+        } catch (final IOException e) {
+            throw new InvalidStateException("Could not read Java resource [%s].".formatted(path), e);
+        }
     }
 
     private static final Optional<Boolean> OPTIONAL_FALSE = Optional.of(Boolean.FALSE);

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.interfaces;
 
+import com.google.inject.ImplementedBy;
+import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
+
 /**
  * Interface interacting with current {@link DeviceProfile}.
  * Used internally in serialisation / criteria entity restoration / server resources logic; distinguishes requests 
@@ -8,6 +11,7 @@ package ua.com.fielden.platform.web.interfaces;
  * @author TG Team
  *
  */
+@ImplementedBy(ThreadLocalDeviceProvider.class)
 public interface IDeviceProvider {
     
     DeviceProfile getDeviceProfile();

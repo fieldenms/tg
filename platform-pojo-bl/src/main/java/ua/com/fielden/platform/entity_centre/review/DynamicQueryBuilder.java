@@ -85,7 +85,6 @@ public class DynamicQueryBuilder {
         private Boolean orNull = null;
         private Boolean not = null;
         private Integer orGroup = null;
-        private boolean matchAnywhere = true; // if QueryProperty represents a string criterion without wildcards, then match anywhere is the default behaviour.
 
         private final Class<?> entityClass;
         private final String propertyName;
@@ -181,17 +180,6 @@ public class DynamicQueryBuilder {
             this.single = isCritOnly() && Type.SINGLE.equals(critAnnotation.value());
         }
 
-        /// Creates [QueryProperty] ensuring that all its values (including [#value] and [#value2]) are empty.
-        /// All other state (e.g. [#datePrefix]) is empty (aka `null`) by default -- please enhance this method
-        /// if this will change in future.
-        ///
-        public static QueryProperty createEmptyQueryProperty(final Class<?> entityClass, final String propertyName) {
-            final QueryProperty queryProperty = new QueryProperty(entityClass, propertyName);
-            queryProperty.setValue(getEmptyValue(queryProperty.getType(), queryProperty.isSingle()));
-            queryProperty.setValue2(getEmptyValue(queryProperty.getType(), queryProperty.isSingle()));
-            return queryProperty;
-        }
-
         public static boolean critOnlyWithMnemonics(final CritOnly critAnnotation) {
             final CritOnly.Mnemonics mnemonics = critAnnotation.mnemonics() == CritOnly.Mnemonics.DEFAULT ? critAnnotation.value().defaultMnemonics : critAnnotation.mnemonics();
             return mnemonics == CritOnly.Mnemonics.WITH;
@@ -275,14 +263,6 @@ public class DynamicQueryBuilder {
 
         public void setOrGroup(final Integer orGroup) {
             this.orGroup = orGroup;
-        }
-
-        public boolean isMatchAnywhere() {
-            return matchAnywhere;
-        }
-
-        public void setMatchAnywhere(final boolean matchAnywhere) {
-            this.matchAnywhere = matchAnywhere;
         }
 
         /// Determines whether property have empty values.
@@ -456,6 +436,7 @@ public class DynamicQueryBuilder {
         public boolean isSingle() {
             return single;
         }
+
         public void setSingle(final boolean single) {
             this.single = single;
         }
@@ -661,6 +642,10 @@ public class DynamicQueryBuilder {
             }
         } else if (isString(type) || isRichText(type)) {
             return "";
+        } else if (isDynamicEntityKey(type)) {
+            // A composite key is matched as a string, but, like an entity-typed criterion, it accepts several values.
+            // Hence the empty value has to agree with what `buildAtomicCondition` reads the value as.
+            return single ? "" : new ArrayList<String>();
         } else if (isBoolean(type)) {
             return true;
         } else if (isRangeType(type)) {
@@ -703,11 +688,10 @@ public class DynamicQueryBuilder {
     }
 
     /// Adjusts string criteria by changing wildcards `*` to SQL wildcards `%`, if they exist.
-    /// Otherwise, if `property` requires "match anywhere", prepends and appends the wildcard to the criteria value to match anywhere.
+    /// Otherwise, prepends and appends wildcards to the specified criteria value to match anywhere.
     ///
-    private static String prepCritValuesForSingleStringTypedProp(final QueryProperty property) {
-        final String criteria = (String) property.getValue();
-        if (property.isMatchAnywhere() && !criteria.contains("*")) {
+    private static String prepCritValuesForSingleStringTypedProp(final String criteria) {
+        if (!criteria.contains("*")) {
             return prepare("*" + criteria + "*");
         }
         return prepare(criteria);
@@ -860,8 +844,8 @@ public class DynamicQueryBuilder {
     @SuppressWarnings("unchecked")
     private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property, final String propertyName, final IDates dates) {
         if (property.isSingle()) {
-            if (isString(property.getType()) || isRichText(property.getType())) {
-                return cond().prop(propertyName).iLike().val(prepCritValuesForSingleStringTypedProp(property)).model();
+            if (isString(property.getType()) || isRichText(property.getType()) || isDynamicEntityKey(property.getType())) {
+                return cond().prop(propertyName).iLike().val(prepCritValuesForSingleStringTypedProp((String) property.getValue())).model();
             }
             return propertyEquals(propertyName, property.getValue()); // this covers the PropertyDescriptor case too
         } else if (isRangeType(property.getType())) {
@@ -888,6 +872,8 @@ public class DynamicQueryBuilder {
             return is && !isNot ? cond().prop(propertyName).eq().val(true).model() : !is && isNot ? cond().prop(propertyName).eq().val(false).model() : null;
         } else if (isString(property.getType()) || isRichText(property.getType())) {
             return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepCritValuesForStringTypedProp((String) property.getValue())).model();
+        } else if (isDynamicEntityKey(property.getType())) {
+            return propertyLike(propertyName, (List<String>) property.getValue(), terminalPropertyOwner(property));
         } else if (isEntityType(property.getType())) {
             return isPropertyDescriptor(property.getType())
                     ? propertyDescriptorLike(propertyName, (List<String>) property.getValue(), (Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, property.getEntityClass(), property.getPropertyName()).value())
@@ -895,6 +881,16 @@ public class DynamicQueryBuilder {
         } else {
             throw new UnsupportedTypeException(property.getType());
         }
+    }
+
+    /// Returns the entity type that owns the terminal property in the path.
+    ///
+    /// For a simple property path `a`, this is the root type itself.
+    /// For property path `a.b`, this is the type of `a`.
+    ///
+    @SuppressWarnings("unchecked")
+    private static Class<? extends AbstractEntity<?>> terminalPropertyOwner(final QueryProperty property) {
+        return baseEntityType((Class<AbstractEntity<?>>) PropertyTypeDeterminator.transform(property.getEntityClass(), property.getPropertyName()).getKey());
     }
 
     /// Generates condition for crit-only single entity type property for property name and value.
@@ -976,8 +972,9 @@ public class DynamicQueryBuilder {
     }
 
     /// Starts query building with appropriate join condition.
+    /// Properties of the resulting query are referenced with [#createConditionProperty(String)].
     ///
-    private static <E extends AbstractEntity<?>> IJoin<E> createJoinCondition(final Class<E> managedType) {
+    public static <E extends AbstractEntity<?>> IJoin<E> createJoinCondition(final Class<E> managedType) {
         // Wrapping into additional query with all calculated properties materialised into columns is needed to handle SQL Server limitation of aggregation on sub-queries.
         return select(select(managedType).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).as(ALIAS);
     }

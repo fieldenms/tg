@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity_centre.review;
 import org.junit.Test;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
@@ -65,6 +66,10 @@ public class DynamicQueryBuilderTest {
         assertEquals("Empty value for property of Date type should be null.", null, getEmptyValue(Date.class, true));
         assertEquals("Empty value for property of Money type should be null.", null, getEmptyValue(Money.class, false));
         assertEquals("Empty value for property of Money type should be null.", null, getEmptyValue(Money.class, true));
+
+        // A composite key is matched as a string, but accepts several values, which is why its empty value follows the entity-typed shape.
+        assertEquals("Empty value for single property of DynamicEntityKey type should be empty string.", "", getEmptyValue(DynamicEntityKey.class, true));
+        assertEquals("Empty value for property of DynamicEntityKey type should be empty string list.", new ArrayList<String>(), getEmptyValue(DynamicEntityKey.class, false));
     }
 
     @SuppressWarnings("serial")

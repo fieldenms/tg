@@ -1025,6 +1025,12 @@ public class EntityUtils {
         }
     }
 
+    /// Returns true if the specified property is a crit-only property.
+    ///
+    public static boolean isCritOnly(final Class<?> type, final CharSequence property) {
+        return AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, type, property.toString());
+    }
+
     /**
      * A predicate that evaluates to {@code true} for entity types with "real" property {@code desc}.
      *

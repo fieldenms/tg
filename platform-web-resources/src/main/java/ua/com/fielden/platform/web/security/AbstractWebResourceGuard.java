@@ -11,6 +11,7 @@ import org.restlet.Response;
 import org.restlet.data.CookieSetting;
 import org.restlet.data.Method;
 import org.restlet.data.Status;
+import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
@@ -22,6 +23,8 @@ import ua.com.fielden.platform.web.sse.SseUtils;
 import java.util.Optional;
 
 import static java.lang.String.format;
+import static java.util.Comparator.comparingLong;
+import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.RESOURCES_URL_SUFFIX;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.CHECKSUM_URL_SUFFIX;
@@ -37,35 +40,25 @@ import static ua.com.fielden.platform.web.resources.webui.LoginResource.BINDING_
 /// Method [#getUser(String)] needs to be implemented to identify the currently logged-in user, making a request.
 ///
 public abstract class AbstractWebResourceGuard extends org.restlet.security.Authenticator {
-    private final Logger logger = LogManager.getLogger(getClass());
+
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
+
+    private final Logger logger = LogManager.getLogger(getClass());
     protected final Injector injector;
     private final IUniversalConstants constants;
     private final String domainName;
     private final String path;
 
-    /**
-     * Principle constructor.
-     *
-     * @param context
-     * @param injector
-     * @throws IllegalArgumentException
-     */
     public AbstractWebResourceGuard(final Context context, final String domainName, final String path, final Injector injector) {
         super(context);
-        if (injector == null) {
-            throw new IllegalArgumentException("Injector is required.");
-        }
-
-        this.injector = injector;
+        this.injector = requireNonNull(injector, "injector");
         this.constants = injector.getInstance(IUniversalConstants.class);
         this.domainName = domainName;
         this.path = path;
 
         if (StringUtils.isEmpty(domainName) || StringUtils.isEmpty(path)) {
-            throw new IllegalStateException("Both the domain name and the applicatin binding path should be provided.");
+            throw new ApplicationConfigurationException("The domain name and the application binding path must be present.");
         }
-
     }
 
     @Override
@@ -77,33 +70,43 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
         //      return true;
         //  }
         try {
-            logger.debug(format("Starting request authentication to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
+            logger.debug(() -> format("Starting request authentication to a resource at URI %s (%s, %s, %s)",
+                                      request.getResourceRef(),
+                                      request.getClientInfo().getAddress(),
+                                      request.getClientInfo().getAgentName(),
+                                      request.getClientInfo().getAgentVersion()));
 
-            final Optional<Authenticator> oAuth = extractAuthenticator(request);
-            if (!oAuth.isPresent()) {
-                logger.warn(format("Authenticator cookie is missing for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
+            final var maybeAuth = extractAuthenticator(request);
+            if (maybeAuth.isEmpty()) {
+                logger.warn(() -> format("Authenticator cookie is missing for a request to a resource at URI %s (%s, %s, %s)",
+                                         request.getResourceRef(),
+                                         request.getClientInfo().getAddress(),
+                                         request.getClientInfo().getAgentName(),
+                                         request.getClientInfo().getAgentVersion()));
                 redirectGetToLoginOrForbid(request, response);
                 return false;
             }
-
-            // authenticator is present
-            final Authenticator auth = oAuth.get();
+            final var auth = maybeAuth.get();
 
             // let's validate the authenticator
             final IUserSession coUserSession = injector.getInstance(IUserSession.class);
             // for SSE requests session ID should not be regenerated
             // this is due to the fact that for SSE requests no HTTP responses are sent, and so there is nothing to carry an updated cookie with a new authenticator back to the client
             final boolean skipRegeneration = SseUtils.isEventSourceRequest(request);
-            final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString(), enforceUserSessionEvictionWhenDbSessionIsMissing(), skipRegeneration);
-            if (!session.isPresent()) {
-                logger.warn(format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
+            final var maybeSession = coUserSession.currentSession(getUser(auth.username), auth.toString(), enforceUserSessionEvictionWhenDbSessionIsMissing(), skipRegeneration);
+            if (maybeSession.isEmpty()) {
+                logger.warn(() -> format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)",
+                                         request.getResourceRef(),
+                                         request.getClientInfo().getAddress(),
+                                         request.getClientInfo().getAgentName(),
+                                         request.getClientInfo().getAgentVersion()));
                 redirectGetToLoginOrForbid(request, response);
                 assignAuthenticatorCookieToExpire(response);
                 return false;
             }
-
+            final var session = maybeSession.get();
             // the provided authenticator was valid and a new cookie should be sent back to the client
-            assignAuthenticatingCookie(session.get().getUser(), constants.now(), session.get().getAuthenticator().get(), domainName, path, request, response);
+            assignAuthenticatingCookie(session.getUser(), constants.now(), session.getAuthenticator().get(), domainName, path, request, response);
 
         } catch (final Exception ex) {
             // in case of any internal exception forbid the request
@@ -118,12 +121,9 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
         return true;
     }
 
-    /**
-     * Redirects HTTP GET requests to the login resource. Forbids all other requests.
-     *
-     * @param request
-     * @param response
-     */
+    /// Redirects HTTP GET requests to the login resource.
+    /// Forbids all other requests.
+    ///
     protected void redirectGetToLoginOrForbid(final Request request, final Response response) {
         // GET requests can be redirected to the login resource, which takes care of both RSO and SSO workflows.
         // However, requests from a Service Worker must be forbidden rather than redirected.
@@ -138,28 +138,26 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
         }
     }
 
-    /**
-     * Extracts the latest user authenticator from the provided request.
-     * Returns an empty result in case no authenticating cookies was identified.
-     *
-     * @param request
-     * @return
-     */
+    /// Extracts the latest user authenticator from the request if one is present.
+    ///
     public static Optional<Authenticator> extractAuthenticator(final Request request) {
-        // convert non-empty authenticating cookies to authenticators and get the most recent one by expiry date...
         return request.getCookies().stream()
                 .filter(c -> AUTHENTICATOR_COOKIE_NAME.equals(c.getName()) && !StringUtils.isEmpty(c.getValue()))
                 .map(c -> fromString(c.getValue()))
-                .max((auth1, auth2) -> Long.compare(auth1.version, auth2.version));
+                .max(comparingLong(auth -> auth.version));
     }
 
-    /**
-     * A convenient method that creates an authenticating cookie based on the provided authenticator and associates it with the specified HTTP response.
-     *
-     * @param authenticator
-     * @param response
-     */
-    public static void assignAuthenticatingCookie(final User user, final DateTime now, final Authenticator authenticator, final String domainName, final String path, final Request request, final Response response) {
+    /// Creates an authenticating cookie based on `authenticator` and associates it with `response`.
+    ///
+    public static void assignAuthenticatingCookie(
+            final User user,
+            final DateTime now,
+            final Authenticator authenticator,
+            final String domainName,
+            final String path,
+            final Request request,
+            final Response response)
+    {
         // create a cookie that will carry an updated authenticator back to the client for further use
         // it is important to note that the time that will be used by further processing of this request is not known
         // and thus is not factored in for session authentication time frame
@@ -196,29 +194,18 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
         request.getClientInfo().setUser(restletUser);
     }
 
-    /**
-     * Should be implemented in accordance with requirements for obtaining the current user by name.
-     *
-     * @return
-     */
-    protected abstract User getUser(final String username);
+    /// Should be implemented in accordance with requirements for obtaining the current user by name.
+    ///
+    protected abstract User getUser(String username);
 
-    /**
-     * Assigns "expired" authentication cookie to inform the browser that this cookie is no longer valid.
-     * @param response
-     */
+    /// Assigns an "expired" authentication cookie to inform the browser that the cookie is no longer valid.
+    ///
     private void assignAuthenticatorCookieToExpire(final Response response) {
         final CookieSetting cookie = mkAuthenticationCookieToExpire(domainName, path);
         response.getCookieSettings().clear();
         response.getCookieSettings().add(cookie);
     }
 
-    /**
-     * A convenient factory method for creating expiring authentication cookies.
-     * @param domainName
-     * @param path
-     * @return
-     */
     public static CookieSetting mkAuthenticationCookieToExpire(final String domainName, final String path) {
         return new CookieSetting(
                 0 /*version*/,
@@ -232,19 +219,15 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
                 true /*accessRestricted*/);
     }
 
-    /**
-     * Indicates to the authenticator validation logic whether all user sessions needs to be evicted in case if a valid authenticator was provided, but a corresponding DB record was missing.
-     * @return
-     */
+    /// Indicates to the authenticator validation logic whether all user sessions should be evicted when a valid authenticator
+    /// is provided, but a corresponding DB record is missing.
+    ///
     protected boolean enforceUserSessionEvictionWhenDbSessionIsMissing() {
         return false;
     }
 
-    /**
-     * Sets the status for {@code response} as forbidden.
-     *
-     * @param response
-     */
+    /// Sets the status for `response` as forbidden.
+    ///
     private void forbid(final Response response) {
         response.setStatus(Status.CLIENT_ERROR_FORBIDDEN);
     }
