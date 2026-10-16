@@ -33,6 +33,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determ
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isCollectional;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 import static ua.com.fielden.platform.web_api.FieldVisibility.visibilityPredicate;
@@ -428,27 +429,44 @@ public class FluentConditions {
 
         @Override
         public List<GraphQLInputObjectField> getFieldDefinitions(final GraphQLInputFieldsContainer fieldsContainer) {
+            return entityTypeFrom(fieldsContainer)
+                    .map(entityType -> filterFieldDefinitions(entityType, fieldsContainer.getFieldDefinitions()))
+                    .orElseGet(() -> base.getFieldDefinitions(fieldsContainer));
+        }
+
+        @Override
+        public GraphQLInputObjectField getFieldDefinition(final GraphQLInputFieldsContainer fieldsContainer, final String fieldName) {
+            final var maybeEntityType = entityTypeFrom(fieldsContainer);
+            if (maybeEntityType.isEmpty()) {
+                return base.getFieldDefinition(fieldsContainer, fieldName);
+            }
+            else {
+                final var entityType = maybeEntityType.get();
+                final var fieldDef = fieldsContainer.getFieldDefinition(fieldName);
+                if (fieldDef == null) {
+                    return null;
+                }
+                return first(filterFieldDefinitions(entityType, List.of(fieldDef))).orElse(null);
+            }
+        }
+
+        private List<GraphQLInputObjectField> filterFieldDefinitions(
+                final Class<? extends AbstractEntity<?>> entityType,
+                final List<GraphQLInputObjectField> fieldDefinitions)
+        {
+            final var isVisible = visibilityPredicate(entityType, authorisationModel, securityTokenProvider);
+            return fieldDefinitions.stream().filter(field -> isVisible.test(field.getName())).toList();
+        }
+
+        private Optional<Class<? extends AbstractEntity<?>>> entityTypeFrom(final GraphQLInputFieldsContainer fieldsContainer) {
             return entityTypeNameFromGraphQlCondEntityCondType(fieldsContainer.getName())
                     .map(entitySimpleName -> {
                         final var entityType = domainTypes.get(entitySimpleName);
                         if (entityType == null) {
                             throw new WebApiException("Unrecognised entity type: %s.".formatted(entitySimpleName));
                         }
-                        final var isVisible = visibilityPredicate(entityType, authorisationModel, securityTokenProvider);
-                        return fieldsContainer.getFieldDefinitions()
-                                .stream()
-                                .filter(field -> isVisible.test(field.getName()))
-                                .toList();
-                    })
-                    .orElseGet(() -> base.getFieldDefinitions(fieldsContainer));
-        }
-
-        @Override
-        public GraphQLInputObjectField getFieldDefinition(final GraphQLInputFieldsContainer fieldsContainer, final String fieldName) {
-            return getFieldDefinitions(fieldsContainer).stream()
-                    .filter(def -> Objects.equals(fieldName, def.getName()))
-                    .findAny()
-                    .orElse(null);
+                        return entityType;
+                    });
         }
 
     }

@@ -9,7 +9,6 @@ import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -19,6 +18,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.isPropertyAuthorised;
 import static ua.com.fielden.platform.security.tokens.Template.READ_MODEL;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
 
 /// Default [GraphqlFieldVisibility] for GraphQL Web API implementation.
 ///
@@ -48,12 +48,11 @@ public class FieldVisibility implements GraphqlFieldVisibility {
         final String simpleName = fieldsContainer.getName();
         // Only consider containers that represent TG domain types (more specifically only those domain types that are used for Query root fields).
         if (domainTypes.containsKey(simpleName)) {
-            final var isVisible = visibilityPredicate(domainTypes.get(simpleName), authorisationModel, securityTokenProvider);
-            return fieldsContainer.getFieldDefinitions().stream()
-                    .filter(def -> isVisible.test(def.getName()))
-                    .toList();
+            return filterFieldDefinitions(domainTypes.get(simpleName), fieldsContainer.getFieldDefinitions());
         }
-        return fieldsContainer.getFieldDefinitions();
+        else {
+            return fieldsContainer.getFieldDefinitions();
+        }
     }
 
     /// Whether the current user is authorised to read the model of `entityType`.
@@ -83,10 +82,20 @@ public class FieldVisibility implements GraphqlFieldVisibility {
 
     @Override
     public GraphQLFieldDefinition getFieldDefinition(final GraphQLFieldsContainer fieldsContainer, final String fieldName) {
-        return getFieldDefinitions(fieldsContainer).stream()
-            .filter(def -> Objects.equals(fieldName, def.getName()))
-            .findAny()
-            .orElse(null);
+        final String simpleName = fieldsContainer.getName();
+        // Only consider containers that represent TG domain types (more specifically only those domain types that are used for Query root fields).
+        if (domainTypes.containsKey(simpleName)) {
+            final var fieldDefinition = fieldsContainer.getFieldDefinition(fieldName);
+            return fieldDefinition == null ? null : first(filterFieldDefinitions(domainTypes.get(simpleName), List.of(fieldDefinition))).orElse(null);
+        }
+        else {
+            return fieldsContainer.getFieldDefinition(fieldName);
+        }
+    }
+
+    private List<GraphQLFieldDefinition> filterFieldDefinitions(final Class<? extends AbstractEntity<?>> entityType, final List<GraphQLFieldDefinition> fieldDefinitions) {
+        final var isVisible = visibilityPredicate(entityType, authorisationModel, securityTokenProvider);
+        return fieldDefinitions.stream().filter(def -> isVisible.test(def.getName())).toList();
     }
 
 }
