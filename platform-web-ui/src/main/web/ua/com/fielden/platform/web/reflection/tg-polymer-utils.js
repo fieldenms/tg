@@ -380,8 +380,9 @@ export const deviceProfile = function () {
 /**
  * Returns 'true' if client application was loaded on a phone, 'false' otherwise (see AbstractWebResource and DeviceProfile for more details).
  *
- * The same profile is sent to the server as the 'Device-Profile' request header, so client and server can never
- * disagree. There are two device profiles, which makes this a phone-or-not question rather than a device-type one:
+ * The same profile is sent to the server in the 'Device-Profile' header with every request issued through
+ * '_requestHeaders', so the server resolves the profile the client assumes.
+ * There are two device profiles, which makes this a phone-or-not question rather than a device-type one:
  * tablets are large enough for the full application and are not mobile apps.
  *
  * It is very important not to confuse this function with MOBILE / TABLET / DESKTOP layouts (tg-tile-layout, tg-flex-layout).

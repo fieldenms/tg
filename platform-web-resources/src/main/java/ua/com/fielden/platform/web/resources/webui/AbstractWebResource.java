@@ -51,11 +51,11 @@ public abstract class AbstractWebResource extends ServerResource {
     /// The client is the single source of truth: it resolves the profile from hardware capabilities and sends it in
     /// the [#DEVICE_PROFILE_HEADER] header together with `Time-Zone` (see `deviceProfile` in `tg-polymer-utils.js`
     /// and `_requestHeaders` in `tg-request-headers.js`).
-    /// No server-side detection is attempted, so the client and the server cannot arrive at different answers for
-    /// the same session.
+    /// Within a page, the client sends the same profile with every request issued through `_requestHeaders`,
+    /// so the server resolves the profile the client assumes.
     ///
-    /// Requests without the header are those not issued by the client application itself -- the generated index
-    /// resource, the login page, static resources and Service Worker requests.
+    /// Requests without the header are those not issued through `_requestHeaders` -- the generated index resource,
+    /// the login page, the application configuration, static resources, Service Worker requests and server-sent events.
     /// None of them is profile-specific, so [DeviceProfile#DESKTOP] is returned for them.
     ///
     /// @return the profile named by [#DEVICE_PROFILE_HEADER], or [DeviceProfile#DESKTOP] if the header is absent or unrecognised.
