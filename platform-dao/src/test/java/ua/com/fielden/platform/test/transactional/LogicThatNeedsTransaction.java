@@ -12,6 +12,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
 
+import static java.util.Comparator.comparing;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -111,6 +112,26 @@ public class LogicThatNeedsTransaction implements ISessionEnabled {
         ((EntityWithMoneyDao) dao).saveTwoWithException(one, two);
     }
     
+    /// Invokes a nested scope that fails before executing any statement, as a nested save that fails validation would, handles its failure, and carries on by saving an entity with `key`.
+    /// The nested scope closes the session of this unit of work, so saving the entity finds no session bound to the thread, and owns a session scope of its own, which commits it.
+    ///
+    @SessionRequired
+    public void handleNestedFailureBeforeAnyStatementAndSave(final String key) {
+        try {
+            failBeforeAnyStatement();
+        } catch (final IllegalStateException _) {
+            // The failure is deliberately handled, as an enclosing scope might do, for example, to report it and carry on.
+        }
+        dao.save(factory.newEntity(EntityWithMoney.class, key, "saved after a handled failure").setMoney(new Money("20.00")));
+    }
+
+    /// Fails before executing any statement, as a nested save that fails validation would.
+    ///
+    @SessionRequired
+    public void failBeforeAnyStatement() {
+        throw new IllegalStateException("Purposeful validation failure.");
+    }
+
     /// An entirely ordinary unit of work: the entity is saved through its companion, which flushes explicitly,
     /// so the `INSERT` has already been sent to and accepted by the database.
     ///
@@ -133,6 +154,19 @@ public class LogicThatNeedsTransaction implements ISessionEnabled {
     public Stream<EntityWithMoney> saveAndStream(final String key) {
         dao.save(factory.newEntity(EntityWithMoney.class, key, "flushed").setMoney(new Money("20.00")));
         return dao.stream(from(select(EntityWithMoney.class).model()).model());
+    }
+
+    /// Saves entities with `keys`, and returns an open parallel stream of all entities, retrieved through the companion and sorted by key.
+    /// As with [#saveAndStream(String)], the transaction stays open until the stream is closed.
+    ///
+    /// The stream retrieved through the companion cannot be split, but sorting a parallel stream buffers its elements into an array, which can.
+    ///
+    @SessionRequired
+    public Stream<EntityWithMoney> saveAndStreamInParallelSortedByKey(final String... keys) {
+        for (final String key : keys) {
+            dao.save(factory.newEntity(EntityWithMoney.class, key, "flushed").setMoney(new Money("20.00")));
+        }
+        return dao.stream(from(select(EntityWithMoney.class).model()).model()).parallel().sorted(comparing(EntityWithMoney::getKey));
     }
 
     @SessionRequired(allowNestedScope = false)
