@@ -3,7 +3,7 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import { _requestHeaders } from '/resources/reflection/tg-request-headers.js';
 
 const template = html`
     <iron-ajax id="ajaxSender" headers="[[_headers]]" url="[[_url]]" method="POST" handle-as="json" on-response="_processValidatorResponse"
@@ -42,14 +42,12 @@ Polymer({
         },
         
         /**
-         * Additional headers for every 'iron-ajax' client-side requests. These only contain 
-         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
-         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
-         * to compute 'Now' moment properly.
+         * Additional headers sent with every 'iron-ajax' client-side request of this element.
+         * Produced by '_requestHeaders', which documents each header and what the server does with it.
          */
         _headers: {
             type: String,
-            value: _timeZoneHeader
+            value: _requestHeaders
         }
     },
 

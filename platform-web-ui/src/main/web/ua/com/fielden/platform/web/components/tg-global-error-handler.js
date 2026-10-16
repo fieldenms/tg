@@ -1,6 +1,6 @@
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import { _requestHeaders } from '/resources/reflection/tg-request-headers.js';
 import { containsRestrictedTags } from '/resources/reflection/tg-polymer-utils.js';
 
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
@@ -95,15 +95,12 @@ class TgGlobalErrorHandler extends PolymerElement {
             _errorQueue: Array,
 
             /**
-             * @property {String}
-             * Additional headers for 'iron-ajax' client-side requests. These only contain 
-             * our custom 'Time-Zone' header that indicates real time-zone for the client application.
-             * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
-             * to compute 'Now' moment properly.
+             * Additional headers sent with every 'iron-ajax' client-side request of this element.
+             * Produced by '_requestHeaders', which documents each header and what the server does with it.
              */
             _headers: {
                 type: String,
-                value: _timeZoneHeader
+                value: _requestHeaders
             },
         };
     }
