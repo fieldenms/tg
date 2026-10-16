@@ -359,9 +359,11 @@ let _deviceProfile;
  * the server, selects the main menu and namespaces Entity Centre configurations. Were it recomputed, moving the
  * window to a display of a different size could change it mid-session.
  *
- * The two conditions below do one job each. A coarse pointer means the device is touch-operated, which excludes
- * desktops and laptops whatever their resolution or display scaling. The short screen edge then separates a phone
- * from a tablet, which is touch-operated as well but large enough for the full application.
+ * The two conditions below do one job each.
+ * A coarse pointer means the device has a touch screen, which excludes desktops and laptops without one.
+ * The short screen edge then separates a phone from a tablet, which is touch-operated as well but large enough for the full application.
+ * Touchscreen laptops and 2-in-1s also have a coarse pointer, so only the short edge classifies them;
+ * at high display scaling it falls below 600 (e.g. 540 for a 1080p panel at 200%), and they resolve to `MOBILE`.
  *
  * 'screen' is used rather than 'window.innerWidth' because the viewport changes with resizing, split-screen and
  * browser chrome. Taking the smaller of the two screen dimensions makes the result orientation-invariant.
