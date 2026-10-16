@@ -21,7 +21,7 @@ export const BaseLayers = function (additionalBaseLayers = {}) {
     const self = this;
 
     const osmLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
-    const osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    const osmUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
     const osmAttrib = '&copy; ' + osmLink + ' Contributors';
 
     const osmMap = L.tileLayer(osmUrl, {
