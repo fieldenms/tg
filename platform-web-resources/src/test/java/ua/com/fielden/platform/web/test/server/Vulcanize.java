@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.web.vulcanizer.VulcanizingUtility;
@@ -9,31 +10,23 @@ import java.util.Properties;
 import java.util.function.Function;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.web.test.server.TgTestApplicationProperties.databaseConnectionProperties;
 import static ua.com.fielden.platform.web.test.server.TgTestApplicationProperties.defaultConfigFileName;
+import static ua.com.fielden.platform.web.test.server.TgTestApplicationProperties.putDatabaseConnectionPropertiesIfAbsent;
 
-/**
- * Web UI vulcanization launching class for TG example web server.
- *
- * @author TG Team
- *
- */
+/// Web UI vulcanization launching class for TG example web server.
+///
 public class Vulcanize extends VulcanizingUtility {
     
-    /**
-     * The procedure of vulcanization all-in-one.
-     *
-     * @param args
-     * @throws IOException 
-     */
+    /// The procedure of vulcanization all-in-one.
+    ///
+    /// @param args an optional application properties file (`*.properties`), followed by additional paths for the `PATH` environment variable and environment variables as `NAME=VALUE`.
+    ///             Without a properties file, it is determined by `databaseUri`, the same as for `Start` and `PopulateDb`.
+    /// @throws IOException
     public static void main(final String[] args) throws IOException {
-        // The application properties file is the first argument.
-        // Without arguments, it is determined by `databaseUri`, the same as for `Start` and `PopulateDb`.
-        final var effectiveArgs = args.length == 0 ? new String[] { defaultConfigFileName() } : args;
+        final var effectiveArgs = args.length > 0 && args[0].endsWith(".properties") ? args : ArrayUtils.addFirst(args, defaultConfigFileName());
         final T3<Properties, String[], String[]> propsAndAdditionalPaths = processVmArguments(effectiveArgs);
-        // The database connection comes from system properties, the same as for `Start` and `PopulateDb`.
-        // Database connection properties in the application properties file take precedence.
-        databaseConnectionProperties().forEach(propsAndAdditionalPaths._1::putIfAbsent);
+        // Database connection properties absent in the application properties file come from system properties, the same as for `Start` and `PopulateDb`.
+        putDatabaseConnectionPropertiesIfAbsent(propsAndAdditionalPaths._1);
         final Logger logger = getLogger(Vulcanize.class);
         logger.info("Starting app...");
         final TgTestApplicationConfiguration component = new TgTestApplicationConfiguration(propsAndAdditionalPaths._1);
