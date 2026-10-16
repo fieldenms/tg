@@ -1,7 +1,6 @@
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import { L, leafletStylesName } from '/resources/gis/leaflet/leaflet-lib.js';
-import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
 import { _featureType, appendStylesTo } from '/resources/gis/tg-gis-utils.js';
 import { BaseLayers } from '/resources/gis/tg-base-layers.js';
 import { EntityStyling } from '/resources/gis/tg-entity-styling.js';
@@ -242,36 +241,6 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         return geoJson;
     };
 
-    self._createEsriLayer = function (url, _featureType, checkedByDefault = false) {
-        const esriOverlay = esri.featureLayer({
-            url: url,
-            style: function (feature) {
-                return self._entityStyling.getStyle(feature);
-            },
-            pointToLayer: function (feature, latlng) {
-                feature.properties._featureType = _featureType;
-                return self._markerFactory.createFeatureMarker(feature, latlng);
-            },
-            onEachFeature: function (feature, layer) {
-                feature.properties._featureType = _featureType;
-                layer.on('mouseover', function () {
-                    if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
-                        layer.bindPopup(self.createPopupContent(feature));
-                        feature.properties.popupContentInitialised = true;
-                    }
-                });
-                layer.on('click', function () { // dblclick
-                    if (!feature.properties.layerId) {
-                        feature.properties.layerId = layer._leaflet_id;
-                    }
-                    self._select.select(feature.properties.layerId);
-                });
-            }
-        });
-        esriOverlay._checkedByDefault = checkedByDefault;
-        return esriOverlay;
-    };
-
     self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv);
     const overlays = self.createOverlays(self._markerCluster.getGisMarkerClusterGroup());
     self._overlays = overlays;
@@ -340,6 +309,7 @@ GisComponent.prototype.featureType = _featureType;
  * Creates overlays of domain-specific objects to be displayed on map.
  * User can tick/untick overlays by their names in right top corner's button.
  * Override this default implementation to provide custom map of overlays.
+ * Overlays of Esri feature services can be created with `createEsriFeatureLayer` from `tg-esri-layers.js`.
  */
 GisComponent.prototype.createOverlays = function (parentGroup) {
     const geoJsonLayer = this._createLayer(true, parentGroup);
@@ -358,6 +328,7 @@ GisComponent.prototype.overlayNameFor = function (entity) {
 
 /**
  * Creates component that defines base map layers. Override this method to define custom base layers. BaseLayers component (tg-base-layers) can be used as a basis.
+ * Base layers of other tile providers can be added by passing them to the BaseLayers constructor (e.g. from `tg-esri-layers.js`, `tg-google-layers.js` or `tg-thunderforest-layers.js`).
  */
 GisComponent.prototype.createBaseLayers = function () {
     return new BaseLayers();
