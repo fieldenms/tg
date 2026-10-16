@@ -30,7 +30,7 @@ import { TgLongTapHandlerBehaviour } from '/resources/components/tg-long-tap-han
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
-import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp, isHistoryEntryNumbered, rewriteHistoryEntryUri } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, generateUUID, isHistoryEntryNumbered, rewriteHistoryEntryUri } from '/resources/reflection/tg-polymer-utils.js';
 import { isExternalURL, processURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 import { _requestHeaders } from '/resources/reflection/tg-request-headers.js';
@@ -881,11 +881,8 @@ Polymer({
             }
             
             self.entityId = 'new';
+            // The server builds the menu for the profile sent in the 'Device-Profile' header (see MenuProducer).
             const context = self._reflector().createContextHolder(null, null, null, null, null, null, null);
-            // Currently there is a difference in constructing app menu content.
-            // We use isMobileApp differentiator when making 'retrieve' call for 'Menu' entity.
-            context['chosenProperty'] = isMobileApp() ? 'mobile' : 'desktop';
-            
             this.retrieve(context);
             this._toastGreeting().text = "Loading menu...";
             this._toastGreeting().hasMore = false;
