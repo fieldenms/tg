@@ -68,9 +68,20 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     private boolean principal = false;
 
     @IsProperty
-    @Title(value = "Is preferred?", desc = "Indicates whether this configuration is preferred over the others on the same menu item.")
+    @Title(
+        value = "Is preferred?",
+        desc = "Indicates whether this configuration is preferred over the others on the same menu item, on devices other than mobile."
+    )
     @MapTo
     private boolean preferred = false;
+
+    @IsProperty
+    @Title(
+        value = "Is preferred on mobile?",
+        desc = "Indicates whether this configuration is preferred over the others on the same menu item, on mobile devices."
+    )
+    @MapTo
+    private boolean preferredOnMobile = false;
 
     @IsProperty
     @MapTo
@@ -155,6 +166,16 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     @Observable
     public EntityCentreConfig setPreferred(final boolean value) {
         preferred = value;
+        return this;
+    }
+
+    public boolean isPreferredOnMobile() {
+        return preferredOnMobile;
+    }
+
+    @Observable
+    public EntityCentreConfig setPreferredOnMobile(final boolean value) {
+        preferredOnMobile = value;
         return this;
     }
 

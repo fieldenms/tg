@@ -249,10 +249,9 @@ public class WebResourceLoader implements IWebResourceLoader {
     }
 
     private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig) {
-        // At this stage (#231) we only support single EntityCentre instance for both MOBILE / DESKTOP applications.
-        // This means that starting the MOBILE or DESKTOP app for the first time will show us the same initial full-blown (aka-desktop)
-        // configuration; the user however could change the number of columns, resize their widths etc. for MOBILE and DESKTOP apps separately
-        // (see CentreUpdater.deviceSpecific method for more details).
+        // A single EntityCentre instance serves both MOBILE and DESKTOP applications.
+        // Both therefore start from the same initial configuration.
+        // Centre configurations are shared by both applications too, and only preferredness is kept per device profile.
 
         // In future potentially we would need to define distinct initial configurations for MOBILE and DESKTOP apps.
         // Here we would need to take device specific instance.

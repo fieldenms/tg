@@ -12,7 +12,6 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
-import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.complementCriteriaEntityBeforeRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
@@ -23,7 +22,6 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.cr
 public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
     private final ICompanionObjectFinder companionFinder;
     private final IUserProvider userProvider;
-    private final IDeviceProvider deviceProvider;
     private final ICriteriaGenerator critGenerator;
     private final IWebUiConfig webUiConfig;
     private final EntityFactory entityFactory;
@@ -33,14 +31,12 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
     public CriteriaEntityRestorer(
             final ICompanionObjectFinder companionFinder,
             final IUserProvider userProvider,
-            final IDeviceProvider deviceProvider,
             final ICriteriaGenerator critGenerator,
             final IWebUiConfig webUiConfig,
             final EntityFactory entityFactory,
             final ICentreConfigSharingModel sharingModel) {
         this.companionFinder = companionFinder;
         this.userProvider = userProvider;
-        this.deviceProvider = deviceProvider;
         this.critGenerator = critGenerator;
         this.webUiConfig = webUiConfig;
         this.entityFactory = entityFactory;
@@ -50,7 +46,15 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
     @Override
     public EnhancedCentreEntityQueryCriteria<?, ?> restoreCriteriaEntity(final CentreContextHolder centreContextHolder) {
         final User user = userProvider.getUser();
-        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity = createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), sharingModel);
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity = createCriteriaEntityForContext(
+            centreContextHolder,
+            companionFinder,
+            user,
+            critGenerator,
+            webUiConfig,
+            entityFactory,
+            sharingModel
+        );
         return complementCriteriaEntityBeforeRunning(criteriaEntity, webUiConfig, companionFinder, user, critGenerator, entityFactory, centreContextHolder, sharingModel);
     }
 
