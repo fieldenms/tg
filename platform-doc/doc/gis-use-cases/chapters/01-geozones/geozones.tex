@@ -81,7 +81,9 @@ Validation for the shape is necessary to make possible only meaninful Geo-zones 
 \newpage
 Map service changing is easily done by clicking on right top button.
 By default, OpenStreetMap is the only base layer.
-A GIS component can define additional base layers, such as Google, Esri or Thunderforest tiles, by overriding \texttt{createBaseLayers()} and importing the corresponding Leaflet library itself.
+A GIS component can define additional base layers, such as Google, Esri or Thunderforest tiles, by overriding \texttt{createBaseLayers()} and passing them to the \texttt{BaseLayers} constructor.
+Opt-in modules \texttt{tg-google-layers.js}, \texttt{tg-esri-layers.js} and \texttt{tg-thunderforest-layers.js} create Google, Esri and Thunderforest base layers.
+The Google and Esri modules load the corresponding libraries only for GIS components that import them.
 Several types of tiles for the same provider can be defined (e.g. Satellite, Roadmap or Terrain).
 Figure~\ref{fig:09} shows a GIS component with such custom base layers.
 
