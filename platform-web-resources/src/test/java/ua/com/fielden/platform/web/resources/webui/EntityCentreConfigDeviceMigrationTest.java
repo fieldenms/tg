@@ -48,11 +48,13 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 /// The fixture covers the following, for one standalone centre:
 ///
 /// - `BASE`, a base user, saves "Base Config" on a phone and on a desktop.
+///   On the phone, they also customise their default, which derived users must not get.
 /// - `SHARER`, another base user, saves "Shared Config" on a phone.
 /// - `USER`, derived from `BASE`, customises the default on a phone, and inherits "Base Config" there.
 ///   On the phone, they also load "Shared Config", and open a link.
 ///   Then they save "Clash" and "Mine" there, the latter becoming preferred.
 ///   On a desktop, they inherit "Base Config", and save "Clash (mobile)" and then "Desk", which becomes preferred.
+/// - `DESK_USER`, also derived from `BASE`, uses only a desktop.
 /// - `LONER`, derived from a base user who never used a phone, customises the default on a phone and saves nothing.
 ///   Their default on the phone ends up without a SAVED centre.
 ///
@@ -70,6 +72,7 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
     private User base;
     private User user;
     private User sharer;
+    private User deskUser;
     private User loner;
 
     /// Every configuration row as it was just before the script was applied.
@@ -86,6 +89,7 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
         final var baseUser = save(newUser("BASE", null));
         save(newUser("USER", baseUser));
         save(newUser("SHARER", null));
+        save(newUser("DESK_USER", baseUser));
         save(newUser("LONER", save(newUser("LONERS_BASE", null))));
     }
 
@@ -98,6 +102,7 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
         base = findUser("BASE");
         user = findUser("USER");
         sharer = findUser("SHARER");
+        deskUser = findUser("DESK_USER");
         loner = findUser("LONER");
 
         createConfigurationsAsBeforeTheMerge();
@@ -146,8 +151,8 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
         assertInheritedFromBase(userConfigs, "Base Config");
         assertInheritedFromBase(userConfigs, "Base Config (mobile)");
         assertInheritedFromShared(userConfigs, "Shared Config (mobile)", sharer);
-        // Known and accepted: the base user has a migrated default too, which the user's one is matched to by name.
-        assertInheritedFromBase(userConfigs, "Default (mobile)");
+        // The default of the base user is left behind, so the user's own one is not matched to it by name.
+        assertOwn(userConfigs, "Default (mobile)");
         assertFalse(userConfigs.containsKey("Mine"));
         assertFalse(userConfigs.containsKey("Clash"));
 
@@ -180,6 +185,48 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
     }
 
     @Test
+    public void loading_the_migrated_default_of_a_derived_user_keeps_their_own_configuration() {
+        on(MOBILE);
+        // The user's own default on a phone has page capacity 25, while the base user's one has 45.
+        assertEquals(25, pageCapacity(user, of("Default (mobile)")));
+
+        assertEquals(of("Default (mobile)"), load(open(user, empty()), "Default (mobile)"));
+
+        assertEquals(25, pageCapacity(user, of("Default (mobile)")));
+        assertEquals(of("Default (mobile)"), preferred(user));
+    }
+
+    @Test
+    public void discarding_the_migrated_default_of_a_derived_user_keeps_their_own_configuration() {
+        on(MOBILE);
+        final var configUuid = uuidOf(user, "Default (mobile)");
+
+        final var discarded = discard(user, of("Default (mobile)"));
+
+        assertFalse(discarded.inherited());
+        // The user's own default on a phone has page capacity 25, while the base user's one has 45.
+        assertEquals(25, pageCapacity(user, of("Default (mobile)")));
+        assertEquals(configUuid, uuidOf(user, "Default (mobile)"));
+    }
+
+    @Test
+    public void the_defaults_of_base_users_are_left_behind_and_not_offered_to_derived_users() {
+        // A derived user who never used a phone is offered the configurations the base user saved on a phone.
+        // The default of the base user from a phone is not among them.
+        final var deskUserConfigs = loadable(deskUser);
+        assertInheritedFromBase(deskUserConfigs, "Base Config (mobile)");
+        assertFalse(deskUserConfigs.containsKey("Default (mobile)"));
+        assertFalse(loadable(base).containsKey("Default (mobile)"));
+
+        // The rows of those defaults are left untouched.
+        // On a phone, base users therefore open the default shared with other devices.
+        final var rowsAfter = rows().stream().collect(toMap(Row::id, identity()));
+        final var baseUserDefaultsBefore = rowsBefore.stream().filter(this::isLegacyDefaultOfBaseUser).toList();
+        assertFalse(baseUserDefaultsBefore.isEmpty());
+        baseUserDefaultsBefore.forEach(row -> assertEquals(row, rowsAfter.get(row.id())));
+    }
+
+    @Test
     public void a_migrated_configuration_resolves_by_its_uuid_and_a_mobile_link_no_longer_exists() {
         final var mineUuid = rowBefore(user, SAVED_CENTRE_NAME, of("Mine")).configUuid();
         final var mine = findConfigOptByUuid(mineUuid, MI_TYPE, SAVED_CENTRE_NAME, coFinder);
@@ -195,10 +242,10 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
         final var clashBefore = rowsBefore.stream().filter(row -> row.isLegacyMobile() && row.title().contains("[Clash]")).toList();
         assertFalse(clashBefore.isEmpty());
         clashBefore.forEach(row -> assertEquals(row, rowsAfter.get(row.id())));
-        // Nothing else is left behind in the MOBILE namespace.
+        // Nothing else is left behind in the MOBILE namespace, apart from the defaults of base users.
         assertEquals(
             clashBefore.stream().map(Row::id).collect(toSet()),
-            rowsAfter.values().stream().filter(Row::isLegacyMobile).map(Row::id).collect(toSet())
+            rowsAfter.values().stream().filter(row -> row.isLegacyMobile() && !isLegacyDefaultOfBaseUser(row)).map(Row::id).collect(toSet())
         );
     }
 
@@ -220,6 +267,7 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
     private void createConfigurationsAsBeforeTheMerge() {
         onPhoneBeforeTheMerge(() -> {
             saveAs(open(base, empty()), "Base Config");
+            open(base, empty()).adjustCentre(withPageCapacity(45));
             saveAs(open(sharer, empty()), "Shared Config");
 
             final var userDefault = open(user, empty());
@@ -243,6 +291,7 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
         openByUuid(user, uuidOf(base, "Base Config"));
         saveAs(userDefault, "Clash (mobile)");
         saveAs(userDefault, "Desk");
+        open(deskUser, empty());
         open(loner, empty());
     }
 
@@ -303,6 +352,16 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
     }
 
     //////////////////////////////////// Inspection ////////////////////////////////////
+
+    private int pageCapacity(final User owner, final Optional<String> saveAsName) {
+        return updateCentre(owner, MI_TYPE, FRESH_CENTRE_NAME, saveAsName, webUiConfig, coFinder).getSecondTick().getPageCapacity();
+    }
+
+    /// Whether `row` belongs to the default configuration of a base user on a phone, as persisted before #2795.
+    ///
+    private boolean isLegacyDefaultOfBaseUser(final Row row) {
+        return row.isLegacyDefault() && Stream.of(base, sharer).anyMatch(baseUser -> baseUser.getId().equals(row.owner()));
+    }
 
     private String body(final User owner, final String surrogateName, final String saveAsName) {
         return HexFormat.of().formatHex(config(owner, surrogateName, of(saveAsName)).getConfigBody());
@@ -370,6 +429,12 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
 
         boolean isLegacyMobile() {
             return title.startsWith(LEGACY_MOBILE_PREFIX);
+        }
+
+        /// A default configuration has no save-as name in brackets.
+        ///
+        boolean isLegacyDefault() {
+            return isLegacyMobile() && !title.contains("[");
         }
 
     }

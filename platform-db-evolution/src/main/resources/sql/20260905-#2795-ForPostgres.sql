@@ -19,21 +19,25 @@
 --     1. Add the `PREFERREDONMOBILE_` column.
 --     2. Delete MOBILE link configurations.
 --     3. Move the preferredness of MOBILE configurations from `PREFERRED_` to `PREFERREDONMOBILE_`.
---     4. Rename each MOBILE configuration group into a named configuration carrying a ` (mobile)` suffix.
+--     4. Rename each MOBILE configuration group, except defaults of base users, into one carrying a ` (mobile)` suffix.
 --     5. Give every migrated default configuration a `configUuid`, as step 4 turns it into a named one.
 --     6. Make the SAVED row of every migrated default configuration a copy of its FRESH row, adding it where missing.
 --     7. Make a migrated `Default (mobile)` preferred on mobile, where no other configuration is.
 --
 -- Preferredness stays per device profile.
 -- `PREFERRED_` applies to devices other than mobile, and `PREFERREDONMOBILE_` applies to mobile.
--- After steps 3 and 7, a mobile user opens the same configuration as before, unless its group was skipped.
+-- After steps 3 and 7, a mobile user opens the same configuration as before, unless its group is left behind.
 --
 -- A group whose new title is already taken is skipped and keeps its `MOBILE` prefix.
 -- Such a group becomes a harmless orphan, unreachable because the application no longer produces that prefix.
 --
+-- The default configuration groups of base users are left behind in the same way.
+-- A migrated default is named `Default (mobile)` for every user, and inheritance from base is decided by name.
+-- A derived user's own `Default (mobile)` would be shown as inherited from base, and overwritten by Load or Discard.
+-- A derived user without one would be offered the base user's personal default, and could not delete it.
+-- On a phone, a base user whose default was left behind opens the default shared with other devices instead.
+--
 -- Known and accepted, not addressed here, because base configurations are rare in the MOBILE namespace.
--- A migrated default is named `Default (mobile)` for every user, so where a base user also had one, a derived user's
--- entry matches it by name in the `Load` dialog, is shown as inherited from base, and can no longer be deleted.
 -- A configuration inherited from base or shared stays correctly linked only because both sides are renamed by the
 -- same rule; a group skipped on one side but migrated on the other reproduces the defect described in issue #1626.
 --
@@ -134,7 +138,9 @@ SELECT p.ID                                       AS ID,
               END
            || ' (mobile)]'
            || '__________DIFFERENCES'             AS NEW_TITLE
-  FROM PARTS p;
+  FROM PARTS p
+ -- The default configuration groups of base users are left behind, see the header.
+ WHERE NOT (p.SAVE_AS_PART = '' AND EXISTS (SELECT 1 FROM USER_ u WHERE u._ID = p.OWNER_ID AND u.BASE_ = 'Y'));
 
 CREATE INDEX I_MOBILE_CONFIG__GROUP ON MOBILE_CONFIG(OWNER_ID, MENU_ID, SAVE_AS_PART);
 
