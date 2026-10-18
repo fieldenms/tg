@@ -1102,7 +1102,7 @@ function HTML(runner) {
     /*TG #2350*/
     // Progress is rendered from `runner.progress()`, where each suite has an equal share, filled in by its tests.
     // These listeners run after the ones of Mocha for the same events, and override the progress rendered by Mocha.
-    // Percentages are truncated to one decimal place, so that 100% is shown only at the end of the run.
+    // Percentages are truncated to one decimal place, so that 100% is shown only when progress is complete, and never as a result of rounding.
     var renderProgress = function () {
         var progressContainer = output.querySelector('#mocha-stats .progress-contain');
         if (!progressContainer) {
@@ -1375,8 +1375,9 @@ var MultiReporter = /** @class */ (function () {
     };
     /*TG #2350*/
     // Changes `total` by `delta` and propagates the change to the parent reporter, if it has already read this `total`.
-    // The parent reads the `total` of an HTML suite once, on its `start` event, when it is still the estimate.
-    // The actual number of tests becomes known later, when the suite's own Mocha runner starts.
+    // The parent reads the `total` of an HTML suite once, when it handles the suite's `start` event.
+    // If the suite runs concurrently with another one, this event is buffered, and the `total` read includes all changes made until then.
+    // Otherwise, the parent reads the estimate, and the actual number of tests becomes known later, when the suite's own Mocha runner starts.
     // Propagation keeps the top-level `total` (used for the favicon) equal to the actual number of tests.
     MultiReporter.prototype.adjustTotal = function (delta) {
         this.total = this.total + delta;
@@ -1389,7 +1390,7 @@ var MultiReporter = /** @class */ (function () {
     // Each suite, including the local tests of this reporter's page, has an equal share of progress.
     // The share of the current suite is filled in proportion to its completed tests, once their number is known.
     // For a nested `MultiReporter`, which runs the suites of an HTML page, the fraction comes from its `progress()`.
-    // Unlike `total`, which may grow as suites start, this fraction never decreases.
+    // Unlike `total`, which grows or shrinks as suites start or fail to load, this fraction never decreases.
     MultiReporter.prototype.progress = function () {
         if (this.complete || this.progressShares <= 0) {
             return 1;
@@ -1574,7 +1575,10 @@ function runSuites(reporter, childSuites, done) {
             childRunner.run(function (error) {
                 reporter.emit('childRunner end', childRunner);
                 if (error)
-                    reporter.emitOutOfBandTest(file, error);
+                    /*TG #2350*/
+                    // The suite of `file` is included in the estimate of `numSuites`.
+                    // Its failure replaces the suite's estimated tests and fills in its share of progress.
+                    reporter.emitOutOfBandTest(file, error, undefined, true);
                 next();
             });
         });
