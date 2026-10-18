@@ -434,6 +434,7 @@
                 });
 
                 test('a table with a heading in a cell, pasted on an empty line, keeps the horizontal line below the table', function () {
+                    // Fixed in #2861 by the ProseMirror update -- before it, the horizontal line below the table was dropped.
                     paste(input, WEB_PAGE_TABLE_WITH_HEADING_IN_CELL_AND_LINE_BELOW);
 
                     checkEditorContentIsValid(input);
@@ -444,6 +445,7 @@
                 });
 
                 test('text from a numbered list item of another editor, pasted on an empty line, stays a numbered list item', function () {
+                    // Fixed in #2861 by the ProseMirror update -- before it, the text did not stay a numbered list item.
                     paste(input, NUMBERED_LIST_ITEM_TEXT_FROM_ANOTHER_EDITOR);
 
                     const numberedItems = textsOf(savedValue(input), 'ol > li');
