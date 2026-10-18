@@ -525,7 +525,7 @@ export class TgDatetimePicker extends TgEditor {
                     return strWithoutSpaces;
                 } else {
                     const insertionPoint = firstSeparatorIndex + numberOfDigitsAfterLastSeparator + 1;
-                    const currYearStr = _momentTz(this.timeZone).format('YYYY');
+                    const currYearStr = this._now().format('YYYY');
                     return yearsOnEnding // years are only supported on beginning and ending of datePortionFormat (not in the middle, like MM-YYYY-DD)
                         ? strWithoutSpaces.slice(0, insertionPoint) + separator + currYearStr + ' ' + strWithoutSpaces.slice(insertionPoint)
                         : currYearStr + separator + strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint)
