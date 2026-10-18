@@ -92,6 +92,13 @@
             '<meta charset="utf-8"><table><thead><tr><th>Part</th><th>Quantity</th></tr></thead>' +
             '<tbody><tr><td><h3>Brake pads</h3></td><td>4</td></tr></tbody></table><hr>';
 
+        /// A table with a heading in its first cell, followed by an image, as a web page puts it into the clipboard.
+        /// A RichText table cell can only contain paragraphs and lists, so pasting moves the heading out of the table.
+        ///
+        const WEB_PAGE_TABLE_WITH_HEADING_IN_CELL_AND_IMAGE_BELOW =
+            '<meta charset="utf-8"><table><thead><tr><th>Part</th><th>Quantity</th></tr></thead>' +
+            `<tbody><tr><td><h3>Brake pads</h3></td><td>4</td></tr></tbody></table>${imageHtml('Brake pad diagram')}`;
+
         /// Text copied from inside a numbered list item of another web-based editor built on ProseMirror (e.g. with Tiptap).
         /// Such editors describe the list around the copied text in the `data-pm-slice` attribute.
         /// Their numbered lists have attributes that RichText does not have, such as `start` and `type`.
@@ -112,6 +119,16 @@
             '<form action="https://example.com/collect"><input name="secret" value="secret"><button>Send</button></form>';
 
         const wait = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+
+        /// Waits until `condition` holds, checking it every 10 milliseconds, but no longer than `timeout` milliseconds.
+        /// It returns in either case, so that the assertion that follows reports whether the condition holds.
+        ///
+        const waitUntil = async (condition, timeout = 1000) => {
+            const deadline = Date.now() + timeout;
+            while (!condition() && Date.now() < deadline) {
+                await wait(10);
+            }
+        };
 
         /// Creates an empty RichText input.
         /// The input calls `changeEventHandler` on undo, redo and focus loss, and `keyDownHandler` on every key press.
@@ -218,7 +235,8 @@
             input._editor.setSelection(from, to);
         }
 
-        /// Pastes `html` at the cursor, exactly as the editor handles a paste from the clipboard.
+        /// Pastes `html` at the cursor, through the editor's handling of pasted HTML.
+        /// The handling of the `paste` event itself, which reads the clipboard and deals with a pasted image file, is not involved.
         ///
         function paste(input, html) {
             editorView(input).pasteHTML(html);
@@ -444,6 +462,19 @@
                         .forEach(expected => assert.include(value.textContent, expected, `Text [${expected}] should be kept.`));
                 });
 
+                test('a table with a heading in a cell, pasted on an empty line, keeps the image below the table', function () {
+                    // Fixed in #2861 by the ProseMirror update -- before it, the image below the table was dropped.
+                    paste(input, WEB_PAGE_TABLE_WITH_HEADING_IN_CELL_AND_IMAGE_BELOW);
+
+                    checkEditorContentIsValid(input);
+                    const value = savedValue(input);
+                    const image = value.querySelector('img');
+                    assert.ok(image, 'The image below the table should be kept.');
+                    assert.strictEqual(image.getAttribute('alt'), 'Brake pad diagram', 'The alternative text of the image should be kept.');
+                    ['Part', 'Quantity', 'Brake pads', '4']
+                        .forEach(expected => assert.include(value.textContent, expected, `Text [${expected}] should be kept.`));
+                });
+
                 test('text from a numbered list item of another editor, pasted on an empty line, stays a numbered list item', function () {
                     // Fixed in #2861 by the ProseMirror update -- before it, the text did not stay a numbered list item.
                     paste(input, NUMBERED_LIST_ITEM_TEXT_FROM_ANOTHER_EDITOR);
@@ -519,8 +550,8 @@
                     const textNode = findTextNode(editable, 'coffee');
                     textNode.data = textNode.data.replace('coffee', 'é');
                     editable.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: 'é' }));
-                    // Give the editor time to finish the composition.
-                    await wait(200);
+                    // The editor finishes the composition asynchronously.
+                    await waitUntil(() => editorText(input) === 'Order a é now');
 
                     assert.strictEqual(editorText(input), 'Order a é now', 'The selected word should be replaced.');
                 });
