@@ -109,6 +109,33 @@ public class FluentConditions {
                 .query(enhanceQueryType(queryType, entityTypes)));
     }
 
+    /// Creates a field for the `Entity_Cond_cond` type that represents `property` of `entityType`.
+    /// Returns an empty optional if the property cannot be represented (e.g., has an unsupported type).
+    ///
+    public Optional<GraphQLInputObjectField> createEntityCondCondField(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final CharSequence property,
+            final GraphQLSchema schema)
+    {
+        final var type = mkGraphQlEntityPropCondType(entityType, property, schema);
+        if (type == null) {
+            return Optional.empty();
+        }
+        return Optional.of(newInputObjectField()
+                                   .name(entityCondCondFieldName(entityType, property))
+                                   .type(type)
+                                   .build());
+    }
+
+    /// Returns the name of a field of the `Entity_Cond_cond` type that represents `property` of `entityType`.
+    ///
+    public String entityCondCondFieldName(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final CharSequence property)
+    {
+        return property.toString();
+    }
+
     public static boolean hasEntityCondType(final Class<? extends AbstractEntity<?>> entityType, final GraphQLSchema schema) {
         return schema.getType(graphQlTypeNameForEntity(entityType)) != null;
     }
@@ -323,17 +350,8 @@ public class FluentConditions {
                 .stream()
                 .filter(prop -> graphQlEntityType.getField(prop.getName()) != null)
                 .filter(prop -> isFilterable(entityType, prop.getName()))
-                .map(prop -> {
-                    final var type = mkGraphQlEntityPropCondType(entityType, prop.getName(), schema);
-                    if (type == null) {
-                        return null;
-                    }
-                    return newInputObjectField()
-                            .name(prop.getName())
-                            .type(type)
-                            .build();
-                })
-                .filter(Objects::nonNull)
+                .map(prop -> createEntityCondCondField(entityType, prop.getName(), schema))
+                .flatMap(Optional::stream)
                 .toList();
         return newInputObject()
                 .name(graphQlTypeNameForCondEntityCond(entityType))

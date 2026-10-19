@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
@@ -228,6 +229,49 @@ public class GraphQLCommon {
         }
         else if (typeName.contains(DynamicTypeNamingService.APPENDIX)) {
             return Optional.ofNullable(schema.getObjectType(DynamicTypeNamingService.decodeOriginalTypeFrom(typeName)));
+        }
+        else {
+            return Optional.empty();
+        }
+    }
+
+    /// Retrieves from the schema a GraphQL type whose name is `typeName` and that is an instance of `expectedType`.
+    /// An alternative that does not throw is [#findCoercedType].
+    ///
+    /// @throws WebApiException  if the requested type does not exist or is not an instance of `expectedType`
+    ///
+    @SuppressWarnings("unchecked")
+    public static <T extends GraphQLType> T getCoercedType(
+            final GraphQLSchema schema,
+            final String typeName,
+            final Class<T> expectedType)
+    {
+        final var type = schema.getType(typeName);
+        if (type == null) {
+            throw new WebApiException("No such GraphQL type: %s".formatted(typeName));
+        }
+        else if (expectedType.isInstance(type)) {
+            return (T) type;
+        }
+        else {
+            throw new WebApiException(format("GraphQL type [%s] is [%s] while [%s] is expected.",
+                                             typeName, type.getClass().getTypeName(), expectedType.getTypeName()));
+        }
+    }
+
+    /// Retrieves from the schema a GraphQL type whose name is `typeName` and that is an instance of `expectedType`.
+    /// An empty optional is returned if the requested type does not exist or is not an instance of `expectedType`.
+    /// An alternative that throws is [#getCoercedType].
+    ///
+    @SuppressWarnings("unchecked")
+    public static <T extends GraphQLType> Optional<T> findCoercedType(
+            final GraphQLSchema schema,
+            final String typeName,
+            final Class<T> expectedType)
+    {
+        final var type = schema.getType(typeName);
+        if (expectedType.isInstance(type)) {
+            return Optional.of((T) type);
         }
         else {
             return Optional.empty();

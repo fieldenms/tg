@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.web_api;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.util.Map;
+import java.util.Set;
 
 /// Interface for the TG Web API, which provides a generic application querying capability to easily integrate
 /// domain knowledge within or outside of the application.
@@ -28,6 +31,9 @@ import java.util.Map;
 /// Other parts of the system may use that [IDomainTreeEnhancer] instance to enhance entity types with extra properties,
 /// which can then be queried through the Web API.
 ///
+/// Since enhancements occur at runtime, the Web API should be informed of each such enhancement, using methods
+/// [#propertiesAdded] and [#propertiesRemoved].
+///
 public interface IWebApi {
 
     /// Binding name for a [IDomainTreeEnhancer] singleton used to enhance entity types for the Web API.
@@ -51,4 +57,17 @@ public interface IWebApi {
     ///
     Map<String, Object> execute(Map<String, Object> input);
     
+    /// Updates the state of the Web API by adding the specified properties to `entityType` so that they can be accessed.
+    /// `entityType` is expected to represent an enhanced version of some domain type and contain the specified properties.
+    ///
+    /// @throws WebApiException  if `entityType` has no corresponding GraphQL type, or if a property cannot be added
+    ///
+    void propertiesAdded(Class<? extends AbstractEntity<?>> entityType, Set<? extends CharSequence> properties);
+
+    /// Updates the state of the Web API by removing the specified properties from `entityType` so that they can no longer be accessed.
+    ///
+    /// @throws WebApiException  if `entityType` has no corresponding GraphQL type, or if a non-existing property is given
+    ///
+    void propertiesRemoved(Class<? extends AbstractEntity<?>> entityType, Set<? extends CharSequence> properties);
+
 }

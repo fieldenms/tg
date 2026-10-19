@@ -7,18 +7,22 @@ import graphql.ExecutionInput;
 import graphql.analysis.MaxQueryDepthInstrumentation;
 import graphql.schema.*;
 import graphql.schema.GraphQLObjectType.Builder;
+import graphql.util.TraversalControl;
+import graphql.util.TraverserContext;
 import graphql.validation.QueryComplexityLimits;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static graphql.GraphQL.newGraphQL;
@@ -27,11 +31,11 @@ import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
+import static graphql.schema.SchemaTransformer.transformSchema;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
@@ -56,10 +60,9 @@ import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 /// Other parts of the system may use this [IDomainTreeEnhancer] instance to enhance entity types with extra properties,
 /// which can then be queried through GraphQL.
 ///
-/// The scope of such enhancements is limited to GraphQL (i.e., the enhanced entity types can be queried only via GraphQL).
-///
-/// TODO: Ability to access the extra properties in queries.
-/// The GraphQL schema is built once, so any extra properties can only be accessed dynamically, in the manner of [AbstractEntity#get].
+/// After an entity type is enhanced, the GraphQL schema has to be rebuilt for the enhancements be reflected in the GraphQL types.
+/// For example, if a property is added to `Vehicle`, the schema has to be rebuilt by adding a corresponding field to the GraphQL type `Vehicle`.
+/// This is achieved by storing the schema in [AtomicReference] and rebuilding it when requested.
 ///
 @Singleton
 public class GraphQLService implements IWebApi {
@@ -75,8 +78,9 @@ public class GraphQLService implements IWebApi {
     public static final String
             WARN_INSUFFICIENT_MAX_QUERY_DEPTH = "Web API maximum query depth [%s] is insufficient for GraphiQL editor. Minimum value [" + DEFAULT_MAX_QUERY_DEPTH + "] was used.";
 
-    private final GraphQLSchema schema;
+    private final AtomicReference<GraphQLSchema> schemaRef;
     private final Integer maxQueryDepth;
+    private final FluentConditions fluentConditions;
 
     /// Creates a GraphQLService instance based on `applicationDomainProvider` which contains all entity types.
     ///
@@ -105,6 +109,7 @@ public class GraphQLService implements IWebApi {
                 throw new WebApiException("GraphQL max page capacity must be specified and cannot be negative.");
             }
             this.maxQueryDepth = maxQueryDepth;
+            this.fluentConditions = fluentConditions;
 
             LOGGER.info("\tmaxQueryDepth = {}", maxQueryDepth);
             final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
@@ -130,12 +135,12 @@ public class GraphQLService implements IWebApi {
             codeRegistryBuilder.defaultDataFetcher(env -> fetching(env.getFieldDefinition().getName()));
 
             LOGGER.info("\tBuilding schema...");
-            schema = fluentConditions.enhanceSchema(entityAggregation.enhanceSchema(entityTypeIntrospection.enhanceSchema(
+            schemaRef = new AtomicReference<>(fluentConditions.enhanceSchema(entityAggregation.enhanceSchema(entityTypeIntrospection.enhanceSchema(
                     newSchema()
                     .codeRegistry(codeRegistryBuilder.build())
                     .query(queryType)
                     .additionalTypes(new LinkedHashSet<>(dictionary.values()))
-                    .build())));
+                    .build()))));
 
             LOGGER.info("GraphQL Web API...done");
         } catch (final Throwable t) {
@@ -147,7 +152,7 @@ public class GraphQLService implements IWebApi {
     @Override
     public Map<String, Object> execute(final Map<String, Object> input) {
         try {
-            final var graphQL = newGraphQL(schema)
+            final var graphQL = newGraphQL(schemaRef.get())
                     .queryExecutionStrategy(new GraphQLAsyncExecutionStrategy(new GraphQLSimpleDataFetcherExceptionHandler()))
                     .instrumentation(new MaxQueryDepthInstrumentation(maxQueryDepth))
                     .build();
@@ -183,6 +188,110 @@ public class GraphQLService implements IWebApi {
             LOGGER.error(() -> ERR_EXECUTING_QUERY_WITH_EX.formatted(input), throwable);
             throw throwable;
         }
+    }
+
+    @Override
+    public void propertiesAdded(final Class<? extends AbstractEntity<?>> entityType, final Set<? extends CharSequence> properties) {
+        if (properties.isEmpty()) {
+            return;
+        }
+
+        final var baseEntityType = PropertyTypeDeterminator.baseEntityType(entityType);
+
+        schemaRef.updateAndGet(oldSchema -> {
+            final var oldGraphQlEntityType = getGraphQlEntityType(oldSchema, baseEntityType.getSimpleName());
+            final var oldGraphQlEntityCondCondType = getCoercedType(oldSchema, graphQlTypeNameForCondEntityCond(baseEntityType), GraphQLInputObjectType.class);
+            return transformSchema(oldSchema, new GraphQLTypeVisitorStub() {
+                @Override
+                public TraversalControl visitGraphQLObjectType(
+                        final GraphQLObjectType node,
+                        final TraverserContext<GraphQLSchemaElement> context)
+                {
+                    // Modifying the entity type also covers the aggregation type which is defined in terms of that type.
+                    if (oldGraphQlEntityType.getName().equals(node.getName())) {
+                        final var newFields = properties.stream()
+                                .map(prop -> createGraphQLFieldDefinition(entityType, prop.toString())
+                                             .orElseThrow(() -> new WebApiException(format("GraphQL field cannot be created for [%s.%s].", entityType.getTypeName(), prop))))
+                                .toList();
+                        final var newNode = node.transform(b -> b.fields(newFields));
+                        return changeNode(context, newNode);
+                    }
+                    else {
+                        return super.visitGraphQLObjectType(node, context);
+                    }
+                }
+
+                @Override
+                public TraversalControl visitGraphQLInputObjectType(
+                        final GraphQLInputObjectType node,
+                        final TraverserContext<GraphQLSchemaElement> context)
+                {
+                    // Entity_Cond_cond type: add the new properties so that they can be filtered on.
+                    if (oldGraphQlEntityCondCondType.getName().equals(node.getName())) {
+                        final var newFields = properties.stream()
+                                .map(prop -> fluentConditions.createEntityCondCondField(entityType, prop, oldSchema))
+                                .flatMap(Optional::stream)
+                                .toList();
+                        final var newNode = node.transform(b -> b.fields(newFields));
+                        return changeNode(context, newNode);
+                    }
+                    else {
+                        return super.visitGraphQLInputObjectType(node, context);
+                    }
+                }
+            });
+        });
+    }
+
+    @Override
+    public void propertiesRemoved(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final Set<? extends CharSequence> properties)
+    {
+        if (properties.isEmpty()) {
+            return;
+        }
+
+        final var baseEntityType = PropertyTypeDeterminator.baseEntityType(entityType);
+
+        schemaRef.updateAndGet(oldSchema -> {
+            final var oldGraphQlEntityType = getGraphQlEntityType(oldSchema, baseEntityType.getSimpleName());
+            final var oldGraphQlEntityCondCondType = getCoercedType(oldSchema, graphQlTypeNameForCondEntityCond(baseEntityType), GraphQLInputObjectType.class);
+            return transformSchema(oldSchema, new GraphQLTypeVisitorStub() {
+                @Override
+                public TraversalControl visitGraphQLObjectType(
+                        final GraphQLObjectType node,
+                        final TraverserContext<GraphQLSchemaElement> context)
+                {
+                    // Modifying the entity type also covers the aggregation type which is defined in terms of that type.
+                    if (oldGraphQlEntityType.getName().equals(node.getName())) {
+                        final var newFields = node.getFields().stream().filter(fld -> !properties.contains(fld.getName())).toList();
+                        final var newNode = node.transform(b -> b.replaceFields(newFields));
+                        return changeNode(context, newNode);
+                    }
+                    else {
+                        return super.visitGraphQLObjectType(node, context);
+                    }
+                }
+
+                @Override
+                public TraversalControl visitGraphQLInputObjectType(
+                        final GraphQLInputObjectType node,
+                        final TraverserContext<GraphQLSchemaElement> context)
+                {
+                    // Entity_Cond_cond type.
+                    if (oldGraphQlEntityCondCondType.getName().equals(node.getName())) {
+                        final var namesOfFieldsToRemove = properties.stream().map(prop -> fluentConditions.entityCondCondFieldName(entityType, prop)).collect(toSet());
+                        final var newFields = node.getFields().stream().filter(fld -> !namesOfFieldsToRemove.contains(fld.getName())).toList();
+                        final var newNode = node.transform(b -> b.replaceFields(newFields));
+                        return changeNode(context, newNode);
+                    }
+                    else {
+                        return super.visitGraphQLInputObjectType(node, context);
+                    }
+                }
+            });
+        });
     }
 
     /// Creates a GraphQL dictionary (aka GraphQL "additional types") for the specified entity types.
