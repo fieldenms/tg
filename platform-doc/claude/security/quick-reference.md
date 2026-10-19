@@ -97,6 +97,17 @@ public int batchDelete(final Collection<Long> entitiesIds) { ... }
 Apply to DAO methods and producers.
 Combine with `@SessionRequired` for transactional methods.
 
+## CSRF Protection
+
+Web UI requests are authenticated by the `authenticator` cookie, which is `Secure`, `HttpOnly` and `SameSite=Lax` (`AbstractWebResourceGuard.mkAuthenticationCookie`).
+Restlet's `CookieSetting` has no `SameSite` support, so the attribute is appended to the cookie path, which Restlet writes verbatim for version-0 cookies; `AbstractWebResourceGuardCookieTest` verifies the rendered `Set-Cookie` header.
+`CsrfProtectionFilter` (`platform-web-resources`, package `web.filters`) rejects requests with unsafe methods (`POST`, `PUT`, `DELETE`, `PATCH`) with `403` when `Sec-Fetch-Site` is `same-site`/`cross-site`, or, without `Sec-Fetch-Site`, when `Origin` does not match the request host (`X-Forwarded-Host` takes precedence over the host of the request).
+Unsafe requests without either header are rejected; non-browser clients authenticating with the session cookie must send `Origin` matching the application host.
+Web API resources authenticated by headers (e.g. API keys) and attached to the `Component` default host are not affected.
+
+`AbstractWebUiResources` wires the filter in front of the resource guard, so every resource registered in `registerDomainWebResources` is covered.
+Resources that an application attaches elsewhere — e.g. to the `Component` default host, as with the login, logout and password reset resources — are outside this filter.
+
 ## Topic-Specific Gotcha
 
 **Audit security tokens are runtime-generated — do not hand-write them.**

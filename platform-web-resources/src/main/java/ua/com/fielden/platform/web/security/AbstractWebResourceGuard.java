@@ -39,6 +39,10 @@ import static ua.com.fielden.platform.web.resources.webui.LoginResource.BINDING_
 public abstract class AbstractWebResourceGuard extends org.restlet.security.Authenticator {
     private final Logger logger = LogManager.getLogger(getClass());
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
+    /// `Lax` withholds the authenticating cookie from cross-site subrequests and from cross-site navigations with unsafe methods (e.g. form `POST`), complementing [ua.com.fielden.platform.web.filters.CsrfProtectionFilter].
+    /// The cookie is still sent with cross-site top-level `GET` navigations, so links into the application from email or other sites open with the existing session.
+    ///
+    public static final String AUTHENTICATOR_COOKIE_SAME_SITE = "Lax";
     protected final Injector injector;
     private final IUniversalConstants constants;
     private final String domainName;
@@ -175,16 +179,7 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
             throw new IllegalStateException("What the hack is goinig on! maxAge for cookier is not > zero.");
         }
 
-        final CookieSetting newCookie = new CookieSetting(
-                0 /*version*/,
-                AUTHENTICATOR_COOKIE_NAME /*name*/,
-                authenticator.toString() /*value*/,
-                path /*path*/,
-                domainName /*domain*/,
-                null /*comment*/,
-                maxAge /* number of seconds before cookie expires */,
-                true /*secure*/, // if secure is set to true then this cookie would only be included into the request if it is done over HTTPS!
-                true /*accessRestricted*/);
+        final CookieSetting newCookie = mkAuthenticationCookie(authenticator.toString(), domainName, path, maxAge);
         // finally associate the refreshed authenticator with the response
         response.getCookieSettings().clear();
         response.getCookieSettings().add(newCookie);
@@ -220,15 +215,28 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
      * @return
      */
     public static CookieSetting mkAuthenticationCookieToExpire(final String domainName, final String path) {
+        return mkAuthenticationCookie("" /* empty value*/, domainName, path, 0 /* expires immediately */);
+    }
+
+    /// Creates the authenticating cookie with `value`, which expires in `maxAge` seconds.
+    ///
+    /// The cookie is `Secure` (included only into HTTPS requests), `HttpOnly` (inaccessible to scripts), and `SameSite=Lax` (see [#AUTHENTICATOR_COOKIE_SAME_SITE]).
+    ///
+    /// Restlet's [CookieSetting] has no notion of `SameSite`, and Restlet does not permit `Set-Cookie` as an extension header.
+    /// However, for version-0 cookies Restlet writes the path verbatim into `Set-Cookie` (`CookieSettingWriter`).
+    /// Attribute `SameSite` is therefore appended to the path, producing `Path=<path>; SameSite=Lax`.
+    /// `AbstractWebResourceGuardCookieTest` verifies the resulting header, guarding this behaviour against Restlet upgrades.
+    ///
+    static CookieSetting mkAuthenticationCookie(final String value, final String domainName, final String path, final int maxAge) {
         return new CookieSetting(
                 0 /*version*/,
-                AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME /*name*/,
-                "" /* empty value*/,
-                path,
+                AUTHENTICATOR_COOKIE_NAME /*name*/,
+                value,
+                path + "; SameSite=" + AUTHENTICATOR_COOKIE_SAME_SITE,
                 domainName,
                 null /*comment*/,
-                0 /* number of seconds before cookie expires, 0 -- expires immediately */,
-                true /*secure*/, // if secure is set to true then this cookie would only be included into the request if it is done over HTTPS!
+                maxAge /* number of seconds before cookie expires */,
+                true /*secure*/,
                 true /*accessRestricted*/);
     }
 
