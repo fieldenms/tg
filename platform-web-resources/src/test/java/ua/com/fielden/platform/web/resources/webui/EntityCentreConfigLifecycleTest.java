@@ -10,6 +10,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
@@ -132,6 +133,28 @@ public class EntityCentreConfigLifecycleTest extends AbstractEntityCentreConfigT
     }
 
     @Test
+    public void opening_a_configuration_inherited_from_base_by_its_uuid_keeps_its_unsaved_changes_and_renews_its_saved_centre() {
+        on(DESKTOP);
+        changeBaseConfigWhileUserHasUnsavedChanges();
+
+        openByUuid(user, uuidOf(base, "Base Config"));
+
+        assertEquals(25, pageCapacity(user, FRESH_CENTRE_NAME, of("Base Config")));
+        assertEquals(45, pageCapacity(user, SAVED_CENTRE_NAME, of("Base Config")));
+    }
+
+    @Test
+    public void loading_a_configuration_inherited_from_base_keeps_its_unsaved_changes_and_renews_its_saved_centre() {
+        on(DESKTOP);
+        changeBaseConfigWhileUserHasUnsavedChanges();
+
+        load(open(user, empty()), "Base Config");
+
+        assertEquals(25, pageCapacity(user, FRESH_CENTRE_NAME, of("Base Config")));
+        assertEquals(45, pageCapacity(user, SAVED_CENTRE_NAME, of("Base Config")));
+    }
+
+    @Test
     public void discarding_the_changes_of_a_configuration_inherited_from_base_keeps_it_preferred_on_both_devices() {
         on(DESKTOP);
         saveAs(open(base, empty()), "Base Config");
@@ -222,6 +245,22 @@ public class EntityCentreConfigLifecycleTest extends AbstractEntityCentreConfigT
         assertFalse(loadable(user).containsKey(LINK_CONFIG_TITLE));
         // A link configuration never becomes preferred.
         assertEquals(empty(), preferred(user));
+    }
+
+    /// `USER` inherits "Base Config", and changes its page capacity to 25 without saving.
+    /// `BASE` then changes the page capacity of "Base Config" to 45, and saves it.
+    ///
+    private void changeBaseConfigWhileUserHasUnsavedChanges() {
+        saveAs(open(base, empty()), "Base Config");
+        openByUuid(user, uuidOf(base, "Base Config"));
+        open(user, of("Base Config")).adjustCentre(withPageCapacity(25));
+
+        final var baseConfig = open(base, of("Base Config"));
+        baseConfig.adjustCentre(withPageCapacity(45));
+        saveChanges(baseConfig);
+
+        // The changes of the base user have not reached the user yet.
+        assertNotEquals(45, pageCapacity(user, SAVED_CENTRE_NAME, of("Base Config")));
     }
 
     private void assertPreferredOnBothDevices(final User owner, final String saveAsName) {

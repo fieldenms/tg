@@ -666,27 +666,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             validationPrototype.makePreferredConfig(empty()); // 'default' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
         });
         // updates inherited centre with title 'saveAsNameToLoad' from upstream base user's configuration -- just before LOAD action
-        validationPrototype.setInheritedFromBaseCentreUpdater(saveAsNameToLoad -> {
-            // Determine the device profiles on which the inherited configuration is preferred.
-            // Deleting its FRESH centre below also deletes its preferred flags, so they are recorded first.
-            final var preferredProfiles = preferredDeviceProfiles(user, miType, of(saveAsNameToLoad), companionFinder);
-            // determine whether inherited configuration is changed
-            final var centreChanged = isFreshCentreChanged(
-                updateCentre(user, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), webUiConfig, companionFinder),
-                updateCentre(user, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), webUiConfig, companionFinder)
-            );
-            if (centreChanged) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
-                removeCentres(user, miType, of(saveAsNameToLoad), companionFinder, SAVED_CENTRE_NAME);
-            } else { // otherwise base user changes will be loaded immediately after centre loading
-                removeCentres(user, miType, of(saveAsNameToLoad), companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
-            }
-            updateCentre(user, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), webUiConfig, companionFinder);
-            // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
-            updateCentre(user, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), webUiConfig, companionFinder);
-
-            // It must be left preferred after deletion, on every device profile it was preferred on.
-            restorePreferred(user, miType, of(saveAsNameToLoad), preferredProfiles, companionFinder, webUiConfig);
-        });
+        // Unsaved changes are kept, in which case only SAVED is renewed.
+        validationPrototype.setInheritedFromBaseCentreUpdater(saveAsNameToLoad ->
+            renewInheritedFromBase(user, miType, of(saveAsNameToLoad), true, webUiConfig, companionFinder)
+        );
         // updates inherited centre with title 'saveAsNameToLoad' from upstream shared configuration -- just before LOAD action
         validationPrototype.setInheritedFromSharedCentreUpdater(saveAsNameToLoad -> configUuid -> {
             return updateInheritedFromShared(configUuid, miType, of(saveAsNameToLoad), user, companionFinder, of(() -> isFreshCentreChanged(

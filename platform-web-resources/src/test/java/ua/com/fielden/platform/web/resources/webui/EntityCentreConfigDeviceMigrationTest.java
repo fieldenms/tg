@@ -188,11 +188,11 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
     public void loading_the_migrated_default_of_a_derived_user_keeps_their_own_configuration() {
         on(MOBILE);
         // The user's own default on a phone has page capacity 25, while the base user's one has 45.
-        assertEquals(25, pageCapacity(user, of("Default (mobile)")));
+        assertEquals(25, pageCapacity(user, FRESH_CENTRE_NAME, of("Default (mobile)")));
 
         assertEquals(of("Default (mobile)"), load(open(user, empty()), "Default (mobile)"));
 
-        assertEquals(25, pageCapacity(user, of("Default (mobile)")));
+        assertEquals(25, pageCapacity(user, FRESH_CENTRE_NAME, of("Default (mobile)")));
         assertEquals(of("Default (mobile)"), preferred(user));
     }
 
@@ -205,7 +205,7 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
 
         assertFalse(discarded.inherited());
         // The user's own default on a phone has page capacity 25, while the base user's one has 45.
-        assertEquals(25, pageCapacity(user, of("Default (mobile)")));
+        assertEquals(25, pageCapacity(user, FRESH_CENTRE_NAME, of("Default (mobile)")));
         assertEquals(configUuid, uuidOf(user, "Default (mobile)"));
     }
 
@@ -352,10 +352,6 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
     }
 
     //////////////////////////////////// Inspection ////////////////////////////////////
-
-    private int pageCapacity(final User owner, final Optional<String> saveAsName) {
-        return updateCentre(owner, MI_TYPE, FRESH_CENTRE_NAME, saveAsName, webUiConfig, coFinder).getSecondTick().getPageCapacity();
-    }
 
     /// Whether `row` belongs to the default configuration of a base user on a phone, as persisted before #2795.
     ///

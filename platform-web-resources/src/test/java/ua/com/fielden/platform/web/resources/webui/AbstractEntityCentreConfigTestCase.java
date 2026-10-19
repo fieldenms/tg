@@ -156,6 +156,12 @@ public abstract class AbstractEntityCentreConfigTestCase extends AbstractWebReso
         withUnchangedCriteria(criteria).saveCentre(saveAsName, "%s description".formatted(saveAsName), false, null);
     }
 
+    /// Saves the changes of the configuration that `criteria` is open with, as the Save action does.
+    ///
+    protected void saveChanges(final EnhancedCentreEntityQueryCriteria<?, ?> criteria) {
+        criteria.saveFreshCentre();
+    }
+
     /// Changes the title of the configuration that `criteria` is open with to `newSaveAsName`, as the Edit action does.
     ///
     protected void edit(final EnhancedCentreEntityQueryCriteria<?, ?> criteria, final String newSaveAsName) {
@@ -254,6 +260,12 @@ public abstract class AbstractEntityCentreConfigTestCase extends AbstractWebReso
         final var freshCentre = updateCentre(owner, MI_TYPE, FRESH_CENTRE_NAME, of(saveAsName), webUiConfig, coFinder);
         final var savedCentre = updateCentre(owner, MI_TYPE, SAVED_CENTRE_NAME, of(saveAsName), webUiConfig, coFinder);
         assertFalse("[%s] must open unchanged.".formatted(saveAsName), isFreshCentreChanged(freshCentre, savedCentre));
+    }
+
+    /// The page capacity of the `surrogateName` centre of the `saveAsName`d configuration of `owner`.
+    ///
+    protected int pageCapacity(final User owner, final String surrogateName, final Optional<String> saveAsName) {
+        return updateCentre(owner, MI_TYPE, surrogateName, saveAsName, webUiConfig, coFinder).getSecondTick().getPageCapacity();
     }
 
     protected String uuidOf(final User owner, final String saveAsName) {

@@ -152,19 +152,11 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
         if (isInherited) {
             if (inheritedFromBase(loadableConfig).isPresent()) {
                 // Inherited from base.
-                // Deleting the FRESH centre below also deletes its preferred flags, so they are recorded first.
-                final var preferredProfiles = preferredDeviceProfiles(user, miType, saveAsName, companionFinder);
-                // Remove cached instances of surrogate centres before updating from base user.
-                removeCentres(user, miType, saveAsName, companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
-                // It is necessary to use "fresh" instance of cdtme (after the discarding process).
-                newFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
-                // Do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly.
-                updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
+                // Discarding renews FRESH too, so that the changes of the base user are loaded.
+                newFreshCentre = renewInheritedFromBase(user, miType, saveAsName, false, webUiConfig, companionFinder);
                 // Must leave current configuration preferred after deletion.
                 // This applies only to named configs, which inherited ones always are.
                 makePreferred(user, miType, saveAsName, companionFinder, webUiConfig);
-                // It must also stay preferred on any other device profile it was preferred on.
-                restorePreferred(user, miType, saveAsName, preferredProfiles, companionFinder, webUiConfig);
                 actualSaveAsName = saveAsName;
             } else {
                 // Inherited from shared.

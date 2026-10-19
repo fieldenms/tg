@@ -59,6 +59,7 @@ import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableC
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isLink;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.*;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.*;
 
@@ -631,10 +632,11 @@ public class CentreUpdater {
     /// Returns the device profiles on which the `saveAsName`d configuration of `user` is preferred.
     ///
     /// The preferred flags of all device profiles are kept on the FRESH centre of a configuration.
-    /// Actions that delete and recreate that centre use this to restore the flags afterwards.
+    /// [#renewInheritedFromBase] deletes and recreates that centre.
+    /// It uses this to restore the flags afterwards.
     /// A default configuration is never preferred explicitly, so no profile is returned for it.
     ///
-    public static Set<DeviceProfile> preferredDeviceProfiles(
+    private static Set<DeviceProfile> preferredDeviceProfiles(
         final User user,
         final Class<? extends MiWithConfigurationSupport<?>> miType,
         final Optional<String> saveAsName,
@@ -708,13 +710,50 @@ public class CentreUpdater {
         makePreferredOn(user, miType, saveAsName, webUiConfig.currentDeviceProfile(), companionFinder, webUiConfig);
     }
 
+    /// Renews the surrogate centres of the `saveAsName`d configuration of `user`, inherited from base.
+    ///
+    /// They are deleted, and then recreated from the SAVED centre of the base configuration by [#updateCentre].
+    /// SAVED is always renewed.
+    /// FRESH is renewed too, unless `keepUnsavedChanges` is set and FRESH differs from SAVED.
+    /// Load and opening by uuid keep unsaved changes, so that Discard loads the changes of the base user later.
+    /// Discard itself does not.
+    ///
+    /// Deleting FRESH also deletes the preferred flags kept on it.
+    /// They are therefore recorded beforehand, and restored on every device profile they were set for.
+    /// Returns the FRESH centre after renewal.
+    ///
+    public static ICentreDomainTreeManagerAndEnhancer renewInheritedFromBase(
+        final User user,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final boolean keepUnsavedChanges,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder
+    ) {
+        final var preferredProfiles = preferredDeviceProfiles(user, miType, saveAsName, companionFinder);
+        final var hasUnsavedChanges = keepUnsavedChanges && isFreshCentreChanged(
+            updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, webUiConfig, companionFinder),
+            updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, webUiConfig, companionFinder)
+        );
+        if (hasUnsavedChanges) {
+            removeCentres(user, miType, saveAsName, companionFinder, SAVED_CENTRE_NAME);
+        } else {
+            removeCentres(user, miType, saveAsName, companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+        }
+        final var freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
+        // Do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly.
+        updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
+        restorePreferred(user, miType, saveAsName, preferredProfiles, companionFinder, webUiConfig);
+        return freshCentre;
+    }
+
     /// Makes `saveAsName`d configuration preferred again on each of `deviceProfiles`, unless it already is.
     ///
-    /// Actions that delete and recreate the FRESH centre of a configuration lose its preferred flags.
-    /// They record the flags with [#preferredDeviceProfiles(User, Class, Optional, ICompanionObjectFinder)] beforehand.
+    /// Deleting and recreating the FRESH centre of a configuration loses its preferred flags.
+    /// [#renewInheritedFromBase] records them beforehand.
     /// This method restores them afterwards.
     ///
-    public static void restorePreferred(
+    private static void restorePreferred(
         final User user,
         final Class<? extends MiWithConfigurationSupport<?>> miType,
         final Optional<String> saveAsName,

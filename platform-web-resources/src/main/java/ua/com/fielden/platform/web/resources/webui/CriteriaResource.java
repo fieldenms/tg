@@ -523,25 +523,11 @@ public class CriteriaResource extends AbstractWebResource {
             if (!areEqual(savedConfigCreator, user)) {
                 // current user didn't create this config -> it is inherited and needs updating
                 if (savedConfigCreator.isBase() && areEqual(savedConfigCreator, user.getBasedOnUser() /*id-only-proxy*/)) {
-                    // inherited from base
-                    // Deleting the FRESH centre below also deletes its preferred flags, so they are recorded first.
-                    final var preferredProfiles = preferredDeviceProfiles(user, miType, saveAsName, companionFinder);
-                    // If there are some user changes, only SAVED surrogate must be updated.
-                    // If such centre will be discarded, the base user changes will be loaded immediately.
-                    // Otherwise, base user changes will be loaded immediately after centre loading.
-                    if (isCentreChanged(saveAsName, user, miType, webUiConfig, companionFinder)) {
-                        removeCentres(user, miType, saveAsName, companionFinder, SAVED_CENTRE_NAME);
-                    } else {
-                        removeCentres(user, miType, saveAsName, companionFinder, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
-                    }
-                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
-                    // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
-                    updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
-
+                    // Inherited from base.
+                    // Unsaved changes are kept, in which case only SAVED is renewed.
+                    renewInheritedFromBase(user, miType, saveAsName, true, webUiConfig, companionFinder);
                     // Inherited from base always gets preferred on loading, and must be left preferred after deletion.
                     makePreferred(user, miType, saveAsName, companionFinder, webUiConfig);
-                    // It must also stay preferred on any other device profile it was preferred on.
-                    restorePreferred(user, miType, saveAsName, preferredProfiles, companionFinder, webUiConfig);
                 } else {
                     if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) {
                         // inherited from shared
