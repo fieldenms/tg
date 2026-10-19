@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web_api;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.junit.Test;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
@@ -12,6 +15,7 @@ import java.util.Map;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_PAGE_CAPACITY;
+import static ua.com.fielden.platform.web_api.IWebApi.WEB_API_DOMAIN_TREE_ENHANCER;
 import static ua.com.fielden.platform.web_api.WebApiUtils.errors;
 import static ua.com.fielden.platform.web_api.WebApiUtils.input;
 
@@ -23,6 +27,10 @@ public class WebApiMaxQueryDepthTest extends AbstractDaoTestCase {
     /// A query nested to depth 3 (`tgWebApiEntity` -> `model` -> `make`), with `__typename` as the leaf.
     /// This is the same nesting exercised by [WebApiIntrospectionTest], so the shape is known to be valid.
     private static final String DEEP_QUERY = "{tgWebApiEntity{model{make{__typename}}}}";
+
+    @Inject
+    @Named(WEB_API_DOMAIN_TREE_ENHANCER)
+    private IDomainTreeEnhancer domainTreeEnhancer;
 
     /// Creates a Web API service ([GraphQLService]) with an explicit maximum query depth, reusing the injected collaborators.
     /// The service is constructed directly, rather than via the `web.api.maxQueryDepth` property, so that depths below the IoC-enforced floor can be exercised.
@@ -39,7 +47,8 @@ public class WebApiMaxQueryDepthTest extends AbstractDaoTestCase {
             getInstance(ISecurityTokenProvider.class),
             getInstance(EntityTypeIntrospection.class),
             getInstance(EntityAggregation.class),
-            getInstance(FluentConditions.class));
+            getInstance(FluentConditions.class),
+            domainTreeEnhancer);
     }
 
     @Test

@@ -52,6 +52,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWith
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.ORDER;
 import static ua.com.fielden.platform.web_api.FieldSchema.ORDER_ARGUMENT;
+import static ua.com.fielden.platform.web_api.GraphQLCommon.getGraphQlEntityType;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.streamFields;
 
 /**
@@ -297,19 +298,22 @@ public class RootEntityUtils {
         return propAndArgumentsFrom(schema, graphQLField, "", QUERY_TYPE_NAME);
     }
     
-    /**
-     * Creates tuple of: {@code property}, its argument definitions and actual arguments.
-     * 
-     * @param schema -- GraphQL schema needed to extract argument definitions
-     * @param graphQLField -- field instance with actual arguments
-     * @param property
-     * @param parentTypeName -- name of parent GraphQL type that contains {@code graphQLField}
-     * @return
-     */
-    private static T3<String, List<GraphQLArgument>, List<Argument>> propAndArgumentsFrom(final GraphQLSchema schema, final Field graphQLField, final String property, final String parentTypeName) {
+    /// Creates a tuple of: `property`, its argument definitions, and actual argument values.
+    ///
+    /// @param graphQLField  field with actual arguments
+    /// @param parentTypeName  name of parent GraphQL type that contains `graphQLField`
+    ///
+    private static T3<String, List<GraphQLArgument>, List<Argument>> propAndArgumentsFrom(
+            final GraphQLSchema schema,
+            final Field graphQLField,
+            final String property,
+            final String parentTypeName)
+    {
+        final var objectType = getGraphQlEntityType(schema, parentTypeName);
         return t3(
             property,
-            ofNullable(schema.getObjectType(parentTypeName).getFieldDefinition(graphQLField.getName())) // there can be no field definition, e.g. this is the case for built-in data introspection __typename field
+            // There can be no field definition (e.g., built-in introspection __typename field).
+            ofNullable(objectType.getFieldDefinition(graphQLField.getName()))
                 .map(GraphQLFieldDefinition::getArguments) // argument definitions
                 .orElseGet(Collections::emptyList),
             graphQLField.getArguments() // arguments with actual values

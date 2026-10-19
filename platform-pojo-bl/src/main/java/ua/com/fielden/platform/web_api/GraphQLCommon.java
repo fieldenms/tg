@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web_api;
 
 import graphql.language.*;
 import graphql.schema.GraphQLNamedType;
+import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
 import jakarta.annotation.Nullable;
@@ -12,6 +13,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ImmutableListUtils;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
@@ -197,6 +199,39 @@ public class GraphQLCommon {
                         yield Stream.of();
                     }
                 });
+    }
+
+    /// Returns an object type whose name is `typeName`.
+    /// An alternative that does not throw is [#findGraphQlEntityType].
+    ///
+    /// If `typeName` names an enhanced entity type that does not exist in the schema (and enhanced types never do),
+    /// the original entity type is returned instead.
+    ///
+    /// This method should always be used instead of [GraphQLSchema#getObjectType].
+    ///
+    /// @throws WebApiException  if there is no such object type
+    ///
+    public static GraphQLObjectType getGraphQlEntityType(final GraphQLSchema schema, final String typeName) {
+        return findGraphQlEntityType(schema, typeName).orElseThrow(() -> new WebApiException("No such GraphQL type: %s".formatted(typeName)));
+    }
+
+    /// Returns an object type whose name is `typeName`.
+    /// An alternative that throws is [#getGraphQlEntityType].
+    ///
+    /// If `typeName` names an enhanced entity type that does not exist in the schema (and enhanced types never do),
+    /// the original entity type is returned instead.
+    ///
+    public static Optional<GraphQLObjectType> findGraphQlEntityType(final GraphQLSchema schema, final String typeName) {
+        final var type = schema.getObjectType(typeName);
+        if (type != null) {
+            return Optional.of(type);
+        }
+        else if (typeName.contains(DynamicTypeNamingService.APPENDIX)) {
+            return Optional.ofNullable(schema.getObjectType(DynamicTypeNamingService.decodeOriginalTypeFrom(typeName)));
+        }
+        else {
+            return Optional.empty();
+        }
     }
 
 }

@@ -10,6 +10,7 @@ import graphql.schema.GraphQLObjectType.Builder;
 import graphql.validation.QueryComplexityLimits;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
@@ -47,6 +48,19 @@ import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 ///
 /// At this stage only the `query` operation type is supported.
 ///
+/// ### Entity type enhancements
+///
+/// This implementation uses an [IDomainTreeEnhancer] singleton (bound to [IWebApi#WEB_API_DOMAIN_TREE_ENHANCER])
+/// to access enhanced entity types.
+///
+/// Other parts of the system may use this [IDomainTreeEnhancer] instance to enhance entity types with extra properties,
+/// which can then be queried through GraphQL.
+///
+/// The scope of such enhancements is limited to GraphQL (i.e., the enhanced entity types can be queried only via GraphQL).
+///
+/// TODO: Ability to access the extra properties in queries.
+/// The GraphQL schema is built once, so any extra properties can only be accessed dynamically, in the manner of [AbstractEntity#get].
+///
 @Singleton
 public class GraphQLService implements IWebApi {
 
@@ -71,15 +85,16 @@ public class GraphQLService implements IWebApi {
     ///
     @Inject
     public GraphQLService(
-        final @Named("web.api.maxQueryDepth") Integer maxQueryDepth,
-        final @Named("web.api.maxPageCapacity") Integer maxPageCapacity,
-        final IApplicationDomainProvider applicationDomainProvider,
-        final ICompanionObjectFinder coFinder,
-        final IAuthorisationModel authorisationModel,
-        final ISecurityTokenProvider securityTokenProvider,
-        final EntityTypeIntrospection entityTypeIntrospection,
-        final EntityAggregation entityAggregation,
-        final FluentConditions fluentConditions)
+            final @Named("web.api.maxQueryDepth") Integer maxQueryDepth,
+            final @Named("web.api.maxPageCapacity") Integer maxPageCapacity,
+            final IApplicationDomainProvider applicationDomainProvider,
+            final ICompanionObjectFinder coFinder,
+            final IAuthorisationModel authorisationModel,
+            final ISecurityTokenProvider securityTokenProvider,
+            final EntityTypeIntrospection entityTypeIntrospection,
+            final EntityAggregation entityAggregation,
+            final FluentConditions fluentConditions,
+            final @Named(WEB_API_DOMAIN_TREE_ENHANCER) IDomainTreeEnhancer domainTreeEnhancer)
     {
         try {
             LOGGER.info("GraphQL Web API...");
@@ -100,7 +115,13 @@ public class GraphQLService implements IWebApi {
             final var dictionary = createDictionary(streamVisibleTypes(applicationDomainProvider).collect(toCollection(LinkedHashSet::new)));
 
             LOGGER.info("\tBuilding query type...");
-            final GraphQLObjectType queryType = createQueryType(queryableTypes, coFinder, codeRegistryBuilder, authorisationModel, securityTokenProvider, maxPageCapacity);
+            final var queryType = createQueryType(queryableTypes,
+                                                  coFinder,
+                                                  codeRegistryBuilder,
+                                                  authorisationModel,
+                                                  securityTokenProvider,
+                                                  maxPageCapacity,
+                                                  domainTreeEnhancer);
 
             LOGGER.info("\tBuilding field visibility...");
             codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisationModel, queryableTypes, securityTokenProvider));
@@ -181,8 +202,8 @@ public class GraphQLService implements IWebApi {
     ///
     /// Root fields are named using [GraphQLCommon#rootFieldName].
     ///
-    /// @param entityTypes          entity types to register as root fields
-    /// @param codeRegistryBuilder  a place to register root data fetchers
+    /// @param entityTypes         entity types to register as root fields
+    /// @param codeRegistryBuilder a place to register root data fetchers
     ///
     private static GraphQLObjectType createQueryType(
             final Set<Class<? extends AbstractEntity<?>>> entityTypes,
@@ -190,7 +211,8 @@ public class GraphQLService implements IWebApi {
             final GraphQLCodeRegistry.Builder codeRegistryBuilder,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
-            final int maxPageCapacity)
+            final int maxPageCapacity,
+            final IDomainTreeEnhancer domainTreeEnhancer)
     {
         final Builder queryTypeBuilder = newObject().name(QUERY_TYPE_NAME).description("Query following **entities** represented as GraphQL root fields:");
         entityTypes.forEach(entityType -> {
@@ -203,7 +225,13 @@ public class GraphQLService implements IWebApi {
                 .argument(PAGE_NUMBER_ARGUMENT)
                 .argument(PAGE_CAPACITY_ARGUMENT)
                 .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName))));
-            codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName), new RootEntityFetcher<>(entityType, coFinder, authorisationModel, securityTokenProvider, maxPageCapacity));
+            codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName),
+                                            new RootEntityFetcher<>(entityType,
+                                                                    coFinder,
+                                                                    authorisationModel,
+                                                                    securityTokenProvider,
+                                                                    maxPageCapacity,
+                                                                    domainTreeEnhancer));
         });
         return queryTypeBuilder.build();
     }

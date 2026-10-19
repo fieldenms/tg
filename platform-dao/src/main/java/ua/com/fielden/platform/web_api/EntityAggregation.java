@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web_api;
 
+import com.google.inject.name.Named;
 import graphql.Scalars;
 import graphql.language.Field;
 import graphql.language.FragmentDefinition;
@@ -7,6 +8,7 @@ import graphql.schema.*;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -40,6 +42,7 @@ import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReadin
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
+import static ua.com.fielden.platform.web_api.IWebApi.WEB_API_DOMAIN_TREE_ENHANCER;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.validateDuplicateFields;
 
 /// GraphQL definitions that add aggregation over entity types.
@@ -63,18 +66,21 @@ public class EntityAggregation {
     private final ICompanionObjectFinder coFinder;
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
+    private final IDomainTreeEnhancer domainTreeEnhancer;
 
     @Inject
     protected EntityAggregation(
             final IApplicationDomainProvider appDomainProvider,
             final ICompanionObjectFinder coFinder,
             final IAuthorisationModel authorisationModel,
-            final ISecurityTokenProvider securityTokenProvider)
+            final ISecurityTokenProvider securityTokenProvider,
+            final @Named(WEB_API_DOMAIN_TREE_ENHANCER) IDomainTreeEnhancer domainTreeEnhancer)
     {
         this.appDomainProvider = appDomainProvider;
         this.coFinder = coFinder;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
+        this.domainTreeEnhancer = domainTreeEnhancer;
     }
 
     public GraphQLSchema enhanceSchema(final GraphQLSchema schema) {
@@ -155,14 +161,15 @@ public class EntityAggregation {
     }
 
     private DataFetcher<?> aggEntityFetcher(final Class<? extends AbstractEntity<?>> type) {
-        return new AggEntityFetcher(type, coFinder, authorisationModel, securityTokenProvider);
+        return new AggEntityFetcher(type, coFinder, authorisationModel, securityTokenProvider, domainTreeEnhancer);
     }
 
     private record AggEntityFetcher(
             Class<? extends AbstractEntity<?>> entityType,
             ICompanionObjectFinder coFinder,
             IAuthorisationModel authorisationModel,
-            ISecurityTokenProvider securityTokenProvider)
+            ISecurityTokenProvider securityTokenProvider,
+            IDomainTreeEnhancer domainTreeEnhancer)
             implements DataFetcher<List<EntityAggregates>>
     {
 
@@ -170,7 +177,9 @@ public class EntityAggregation {
         public List<EntityAggregates> get(final DataFetchingEnvironment environment) {
             authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
             validateDuplicateFields(environment.getField().getSelectionSet(), environment.getFragmentsByName());
-            final var query = buildQuery(entityType, environment);
+            // This typecast is safe in practice as all enhanced types extend their originals.
+            final var managedEntityType = (Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType);
+            final var query = buildQuery(managedEntityType, environment);
             return coFinder.find(EntityAggregates.class, true).getAllEntities(from(query).model());
         }
 

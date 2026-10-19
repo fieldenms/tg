@@ -30,8 +30,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.web_api.GraphQLService;
-import ua.com.fielden.platform.web_api.IWebApi;
+import ua.com.fielden.platform.web_api.GraphQLIocModule;
 
 import java.util.List;
 import java.util.Properties;
@@ -160,7 +159,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
 
         if (enableWebApi) { // in case where Web API has been turned on in application.properties ...
             // ... bind Web API to platform-dao GraphQL-based implementation
-            bind(IWebApi.class).to(GraphQLService.class);
+            install(new GraphQLIocModule());
         }
 
         requestStaticInjection(MultiInheritanceEntityVerificationService.class);

@@ -7,6 +7,7 @@ import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.PropertyDataFetcher;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -38,19 +39,22 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
     private final int maxPageCapacity;
-    
+    private final IDomainTreeEnhancer domainTreeEnhancer;
+
     public RootEntityFetcher(
             final Class<T> entityType,
             final ICompanionObjectFinder coFinder,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
-            final int maxPageCapacity)
+            final int maxPageCapacity,
+            final IDomainTreeEnhancer domainTreeEnhancer)
     {
         this.entityType = entityType;
         this.coFinder = coFinder;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
         this.maxPageCapacity = maxPageCapacity;
+        this.domainTreeEnhancer = domainTreeEnhancer;
     }
 
     /// Verifies whether  [#entityType] can be retrieved by the current user and returns an error if access is denied.
@@ -62,7 +66,9 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     public DataFetcherResult<List<T>> get(final DataFetchingEnvironment environment) {
         authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);// reading of entities should be authorised when running GraphQL query
         final T3<String, List<GraphQLArgument>, List<Argument>> rootArguments = rootPropAndArguments(environment.getGraphQLSchema(), environment.getField());
-        final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(environment, entityType);
+        // This typecast is safe in practice as all enhanced types extend their originals.
+        final var managedEntityType = (Class<T>) domainTreeEnhancer.getManagedType(entityType);
+        final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(environment, managedEntityType);
 
         final var _pageCapacity = getPageCapacity(environment, rootArguments);
         final var pageCapacity = _pageCapacity._1;

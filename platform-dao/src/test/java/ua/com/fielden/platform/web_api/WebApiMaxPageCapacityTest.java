@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web_api;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.junit.Test;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
@@ -9,6 +12,7 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
+import static ua.com.fielden.platform.web_api.IWebApi.WEB_API_DOMAIN_TREE_ENHANCER;
 import static ua.com.fielden.platform.web_api.RootEntityFetcher.ERR_PAGE_CAPACITY_TOO_LARGE;
 import static ua.com.fielden.platform.web_api.WebApiUtils.errors;
 import static ua.com.fielden.platform.web_api.WebApiUtils.input;
@@ -16,6 +20,9 @@ import static ua.com.fielden.platform.web_api.WebApiUtils.input;
 /// Test for the GraphQL Web API maximum page capacity, configured via the `web.api.maxPageCapacity` application property.
 ///
 public class WebApiMaxPageCapacityTest extends AbstractDaoTestCase {
+
+    @Inject @Named(WEB_API_DOMAIN_TREE_ENHANCER)
+    private IDomainTreeEnhancer domainTreeEnhancer;
 
     /// Creates a Web API service ([GraphQLService]) with an explicit maximum page capacity, reusing the injected collaborators.
     ///
@@ -29,7 +36,8 @@ public class WebApiMaxPageCapacityTest extends AbstractDaoTestCase {
                 getInstance(ISecurityTokenProvider.class),
                 getInstance(EntityTypeIntrospection.class),
                 getInstance(EntityAggregation.class),
-                getInstance(FluentConditions.class));
+                getInstance(FluentConditions.class),
+                domainTreeEnhancer);
     }
 
     @Test
