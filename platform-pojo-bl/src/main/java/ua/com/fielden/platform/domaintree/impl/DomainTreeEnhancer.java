@@ -589,6 +589,11 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     }
 
     @Override
+    public Optional<ICalculatedProperty> findCalculatedProperty(final Class<?> rootType, final String propertyPath) {
+        return Optional.ofNullable(calculatedProperty(rootType, propertyPath));
+    }
+
+    @Override
     public ICalculatedProperty copyCalculatedProperty(final Class<?> rootType, final String propertyPath) {
         return calculatedPropertyWhichShouldExist(rootType, propertyPath).copy();
     }

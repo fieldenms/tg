@@ -9,6 +9,7 @@ import ua.com.fielden.platform.error.Warning;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /// This interface defines how a domain can be enhanced with **calculated properties**.
 ///
@@ -92,6 +93,13 @@ public interface IDomainTreeEnhancer extends IRootTyped {
     /// @throws IncorrectCalcPropertyException  when the calculated property is incorrect
     ///
     ICalculatedProperty getCalculatedProperty(Class<?> rootType, String propertyPath);
+
+    /// Finds a calculated property whose path is `propertyPath` from `rootType` hierarchy.
+    ///
+    /// @param rootType  type of **root** entity, from which the calculated property should be obtained (not derived type)
+    /// @param propertyPath  the property path of the requested calculated property
+    ///
+    Optional<ICalculatedProperty> findCalculatedProperty(Class<?> rootType, String propertyPath);
 
     /// Copies a calculated property whose path is `propertyPath` from `rootType` hierarchy.
     ///

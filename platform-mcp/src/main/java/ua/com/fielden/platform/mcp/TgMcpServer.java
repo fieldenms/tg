@@ -12,26 +12,38 @@ import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
 import io.modelcontextprotocol.spec.McpSchema.ReadResourceResult;
 import io.modelcontextprotocol.spec.McpSchema.TextResourceContents;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.mcp.web.McpResource;
 import ua.com.fielden.platform.mcp.web.McpResourceFactory;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web_api.IWebApi;
+import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.BiFunction;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.MiscUtilities.readResource;
+import static ua.com.fielden.platform.web_api.IWebApi.WEB_API_DOMAIN_TREE_ENHANCER;
 
 /// MCP server that exposes a TG system to 3rd-party AI systems.
 ///
 /// Provides:
 /// - `tg://query-guide` resource — GraphQL query syntax reference.
 /// - `execute_query` tool — executes GraphQL queries against the TG system.
+/// - [#TOOL_ADD_CALCULATED_PROPERTY] — adds a calculated property to an entity type.
+/// - [#TOOL_REMOVE_CALCULATED_PROPERTY] — removes a calculated property from an entity type.
 ///
 /// Uses stateless HTTP transport.
 ///
@@ -43,6 +55,10 @@ public class TgMcpServer {
 
     private static final String SERVER_NAME = "tg-mcp-server";
     private static final String SERVER_VERSION = "0.1.0";
+
+    public static final String
+            TOOL_ADD_CALCULATED_PROPERTY = "add_calculated_property",
+            TOOL_REMOVE_CALCULATED_PROPERTY = "remove_calculated_property";
 
     /// Path to the Java resource containing the contents of MCP resource [#QUERY_GUIDE_RESOURCE_URI].
     /// This Java resource is resolved via [Class#getResource(String)], which means it should be present on the classpath.
@@ -67,16 +83,21 @@ public class TgMcpServer {
     private final McpStatelessSyncServer server;
 
     @Inject
-    protected TgMcpServer(final IWebApi webApi, final McpResourceFactory mcpResourceFactory, final IUserProvider userProvider) {
+    protected TgMcpServer(
+            final IWebApi webApi,
+            final McpResourceFactory mcpResourceFactory,
+            final IUserProvider userProvider,
+            final IApplicationDomainProvider appDomainProvider,
+            final @Named(WEB_API_DOMAIN_TREE_ENHANCER) IDomainTreeEnhancer domainTreeEnhancer)
+    {
         this.webApi = webApi;
         this.userProvider = userProvider;
 
-        // After the builder is finished, the server will start.
         server = McpServer.sync(mcpResourceFactory)
                 .serverInfo(SERVER_NAME, SERVER_VERSION)
                 .instructions("""
                               TG MCP Server provides access to a TG system's data via GraphQL.
-                              Read the tg://query-guide resource first to understand the query syntax, then use the execute_query tool to run queries.
+                              Read the tg://query-guide resource first to understand the query syntax, then use provided tools.
                               """)
                 .capabilities(McpSchema.ServerCapabilities.builder()
                                       .tools(false)
@@ -84,7 +105,10 @@ public class TgMcpServer {
                                       .build())
                 .resources(queryGuideResource())
                 .toolCall(executeQueryTool(), this::handleExecuteQuery)
+                .toolCall(addCalculatedPropertyTool(), new AddCalculatedProperty(appDomainProvider, domainTreeEnhancer))
+                .toolCall(removeCalculatedPropertyTool(), new RemoveCalculatedProperty(appDomainProvider, domainTreeEnhancer))
                 .build();
+        // After the builder is finished, the server will start.
     }
 
     // -- Resources --
@@ -138,6 +162,41 @@ public class TgMcpServer {
                 .build();
     }
 
+    private static McpSchema.Tool addCalculatedPropertyTool() {
+        return McpSchema.Tool.builder()
+                .name(TOOL_ADD_CALCULATED_PROPERTY)
+                .description("""
+                             Adds a calculated property.
+                             """)
+                .inputSchema(new McpSchema.JsonSchema(
+                        "object",
+                        Map.of("type", Map.of("type", "string",
+                                              "description", "Entity type to add the property to."),
+                               "name", Map.of("type", "string",
+                                              "description", "Property name."),
+                               "expression", Map.of("type", "string",
+                                                    "description", "Expression defining the calculated property.")),
+                        List.of("type", "name", "expression"),
+                        null, null, null))
+                .build();
+    }
+
+    private static McpSchema.Tool removeCalculatedPropertyTool() {
+        return McpSchema.Tool.builder()
+                .name(TOOL_REMOVE_CALCULATED_PROPERTY)
+                .description("""
+                             Removes the specified calculated property.
+                             """)
+                .inputSchema(new McpSchema.JsonSchema(
+                        "object",
+                        Map.of("type", Map.of("type", "string",
+                                              "description", "Entity type to remove the property from."),
+                               "name", Map.of("type", "string", "description", "Property name.")),
+                        List.of("type", "name"),
+                        null, null, null))
+                .build();
+    }
+
     /// Sets the current user on this thread from [McpTransportContext].
     ///
     private void setCurrentUser(final McpTransportContext context) {
@@ -184,6 +243,136 @@ public class TgMcpServer {
                     .isError(true)
                     .build();
         }
+    }
+
+    class AddCalculatedProperty implements BiFunction<McpTransportContext, CallToolRequest, CallToolResult> {
+
+        private final IApplicationDomainProvider appDomainProvider;
+        private final IDomainTreeEnhancer domainTreeEnhancer;
+
+        AddCalculatedProperty(
+                final IApplicationDomainProvider appDomainProvider,
+                final IDomainTreeEnhancer domainTreeEnhancer)
+        {
+            this.appDomainProvider = appDomainProvider;
+            this.domainTreeEnhancer = domainTreeEnhancer;
+        }
+
+        @Override
+        public CallToolResult apply(final McpTransportContext context, final CallToolRequest request) {
+            final var arguments = request.arguments();
+            if (!(arguments.get("type") instanceof String type)) {
+                return malformedInput("Argument [type] is required and must be a string.");
+            }
+            if (!(arguments.get("name") instanceof String name)) {
+                return malformedInput("Argument [name] is required and must be a string.");
+            }
+            if (!(arguments.get("expression") instanceof String expression)) {
+                return malformedInput("Argument [expression] is required and must be a string.");
+            }
+
+            setCurrentUser(context);
+
+            final var entityType = appDomainProvider.entityTypes().stream()
+                    .filter(ty -> ty.getSimpleName().equals(type))
+                    .findFirst()
+                    .orElseThrow(() -> new WebApiException("No such type: %s".formatted(type)));
+
+            try {
+                domainTreeEnhancer.addCalculatedProperty(
+                        entityType,
+                        "",
+                        name,
+                        expression,
+                        "Title",
+                        "Description",
+                        ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR,
+                        null,
+                        null,
+                        null);
+                domainTreeEnhancer.apply();
+                // Managed type must be accessed only after the calculated property is added.
+                final var managedType = (Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType);
+                webApi.propertiesAdded(managedType, Set.of(name));
+
+                return CallToolResult.builder()
+                        .addTextContent("Ok")
+                        .build();
+            } catch (final Exception e) {
+                try {
+                    domainTreeEnhancer.findCalculatedProperty(entityType, name)
+                            .ifPresent(_ -> domainTreeEnhancer.removeCalculatedProperty(entityType, name));
+                    final var managedType = (Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType);
+                    webApi.propertiesRemoved(managedType, Set.of(name));
+                } catch (final Exception cleanupEx) {
+                    LOGGER.error(() -> format("Failed to undo the effect of adding calculated property [%s.%s]. This failure will be suppressed.",
+                                              entityType.getSimpleName(), name),
+                                 cleanupEx);
+                    e.addSuppressed(cleanupEx);
+                }
+
+                final var msg = """
+                                Error adding calculated property [%s.%s] with expression:
+                                %s
+                                """.formatted(type, name, expression);
+                LOGGER.error(() -> msg, e);
+                return CallToolResult.builder()
+                        .addTextContent(msg + "\n" + e.getMessage())
+                        .isError(true)
+                        .build();
+            }
+        }
+
+    }
+
+    class RemoveCalculatedProperty implements BiFunction<McpTransportContext, CallToolRequest, CallToolResult> {
+
+        private final IApplicationDomainProvider appDomainProvider;
+        private final IDomainTreeEnhancer domainTreeEnhancer;
+
+        RemoveCalculatedProperty(
+                final IApplicationDomainProvider appDomainProvider,
+                final IDomainTreeEnhancer domainTreeEnhancer)
+        {
+            this.appDomainProvider = appDomainProvider;
+            this.domainTreeEnhancer = domainTreeEnhancer;
+        }
+
+        @Override
+        public CallToolResult apply(final McpTransportContext context, final CallToolRequest request) {
+            final var arguments = request.arguments();
+            if (!(arguments.get("type") instanceof String type)) {
+                return malformedInput("Argument [type] is required and must be a string.");
+            }
+            if (!(arguments.get("name") instanceof String name)) {
+                return malformedInput("Argument [name] is required and must be a string.");
+            }
+
+            setCurrentUser(context);
+
+            final var entityType = appDomainProvider.entityTypes().stream()
+                    .filter(ty -> ty.getSimpleName().equals(type))
+                    .findFirst()
+                    .orElseThrow(() -> new WebApiException("No such type: %s".formatted(type)));
+
+            try {
+                domainTreeEnhancer.removeCalculatedProperty(entityType, name);
+                domainTreeEnhancer.apply();
+                webApi.propertiesRemoved((Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType), Set.of(name));
+
+                return CallToolResult.builder()
+                        .addTextContent("Ok")
+                        .build();
+            } catch (final Exception e) {
+                final var msg = "Error removing calculated property [%s.%s].".formatted(type, name);
+                LOGGER.error(() -> msg, e);
+                return CallToolResult.builder()
+                        .addTextContent(msg + " " + e.getMessage())
+                        .isError(true)
+                        .build();
+            }
+        }
+
     }
 
     /// Creates an unsuccessful result that reports a malformed tool input.

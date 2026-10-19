@@ -2,13 +2,8 @@ package ua.com.fielden.platform.domaintree.impl;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
 
 import org.apache.logging.log4j.Logger;
 
@@ -271,6 +266,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         @Override
         public ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String propertyPath) {
             return baseEnhancer().getCalculatedProperty(rootType, propertyPath);
+        }
+
+        @Override
+        public Optional<ICalculatedProperty> findCalculatedProperty(final Class<?> rootType, final String propertyPath) {
+            return baseEnhancer().findCalculatedProperty(rootType, propertyPath);
         }
 
         @Override
