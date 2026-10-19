@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 
+import java.util.stream.Stream;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -28,6 +31,8 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 /// It sends [#DEVICE_PROFILE_HEADER] alongside it, from the same helper.
 ///
 public abstract class AbstractWebResource extends ServerResource {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /// Name of the request header carrying the [DeviceProfile] resolved by the client.
     /// Client-side counterpart is `DEVICE_PROFILE_HEADER` in `tg-polymer-utils.js`.
@@ -58,11 +63,21 @@ public abstract class AbstractWebResource extends ServerResource {
     /// the login page, the application configuration, static resources, Service Worker requests and server-sent events.
     /// None of them is profile-specific, so [DeviceProfile#DESKTOP] is returned for them.
     ///
-    /// @return the profile named by [#DEVICE_PROFILE_HEADER], or [DeviceProfile#DESKTOP] if the header is absent or unrecognised.
+    /// @return the profile named by [#DEVICE_PROFILE_HEADER], or [DeviceProfile#DESKTOP] if the header is absent or unrecognised;
+    ///         an unrecognised value is logged as a warning.
     ///
     private static DeviceProfile calculateDeviceProfile(final Request request) {
         final String profile = request.getHeaders().getFirstValue(DEVICE_PROFILE_HEADER, /*ignore case*/ true);
-        return MOBILE.name().equalsIgnoreCase(profile) ? MOBILE : DESKTOP;
+        if (profile == null) {
+            return DESKTOP;
+        }
+        return Stream.of(DeviceProfile.values())
+                .filter(p -> p.name().equalsIgnoreCase(profile))
+                .findFirst()
+                .orElseGet(() -> {
+                    LOGGER.warn("Unrecognised [{}] header value [{}], resolving to [{}].", DEVICE_PROFILE_HEADER, profile, DESKTOP);
+                    return DESKTOP;
+                });
     }
 
     /// Returns the [DeviceProfile] that is associated with this source request.
