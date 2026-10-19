@@ -36,6 +36,7 @@
 -- A derived user's own `Default (mobile)` would be shown as inherited from base, and overwritten by Load or Discard.
 -- A derived user without one would be offered the base user's personal default, and could not delete it.
 -- On a phone, a base user whose default was left behind opens the default shared with other devices instead.
+-- Those base users are reported right after step 4, one message per base user.
 --
 -- Known and accepted, not addressed here, because base configurations are rare in the MOBILE namespace.
 -- A configuration inherited from base or shared stays correctly linked only because both sides are renamed by the
@@ -152,6 +153,7 @@ DECLARE
     skipped_conflict INT := 0;
     skipped_error    INT := 0;
     uuids_assigned   INT := 0;
+    report           RECORD;
 BEGIN
     -- Groups are processed in order of their lowest `ID`, so that the outcome does not depend on the query plan.
     -- Two MOBILE groups can compete for one new title, for example a default one and a named one called `Default`.
@@ -219,6 +221,32 @@ BEGIN
     RAISE NOTICE 'Step 4: migrated % configuration(s), skipped % on conflict and % on error.',
         migrated, skipped_conflict, skipped_error;
     RAISE NOTICE 'Step 5: assigned a configUuid to % migrated default configuration(s).', uuids_assigned;
+
+    -- Report the base users whose default configurations were left behind in step 4, one message per base user.
+    -- After step 4, every MOBILE default of a base user is left behind, as such groups are never candidates.
+    -- A centre counts as embedded in a master when its simple name contains `Master_`.
+    -- Any other centre is reported as standalone or embedded, as its name alone cannot tell.
+    -- Only FRESH rows are looked at, so that each default configuration is counted once.
+    FOR report IN
+        SELECT d.BASE_USER AS base_user,
+               count(*) FILTER (WHERE NOT d.EMBEDDED) AS standalone_count,
+               string_agg(d.CENTRE, ', ' ORDER BY d.CENTRE) FILTER (WHERE NOT d.EMBEDDED) AS standalone_centres,
+               count(*) FILTER (WHERE d.EMBEDDED) AS embedded_count,
+               string_agg(d.CENTRE, ', ' ORDER BY d.CENTRE) FILTER (WHERE d.EMBEDDED) AS embedded_centres
+          FROM (SELECT u.KEY_ AS BASE_USER,
+                       substring(mm.KEY_ from '[^.]*$') AS CENTRE,
+                       position('Master_' in substring(mm.KEY_ from '[^.]*$')) > 0 AS EMBEDDED
+                  FROM ENTITY_CENTRE_CONFIG e
+                  JOIN USER_ u ON u._ID = e.ID_CRAFT AND u.BASE_ = 'Y'
+                  JOIN MAIN_MENU mm ON mm._ID = e.ID_MAIN_MENU
+                 WHERE e.TITLE = 'MOBILE__________FRESH__________DIFFERENCES') d
+         GROUP BY d.BASE_USER
+         ORDER BY d.BASE_USER
+    LOOP
+        RAISE NOTICE '%', 'Step 4: left behind defaults of base user [' || report.base_user || ']: '
+            || report.standalone_count || ' standalone or embedded (' || coalesce(report.standalone_centres, '') || '), '
+            || report.embedded_count || ' embedded in masters (' || coalesce(report.embedded_centres, '') || ').';
+    END LOOP;
 END $$;
 
 -- Step 6.

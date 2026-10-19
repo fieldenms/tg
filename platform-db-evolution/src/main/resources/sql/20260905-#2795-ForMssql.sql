@@ -36,6 +36,7 @@
 -- A derived user's own `Default (mobile)` would be shown as inherited from base, and overwritten by Load or Discard.
 -- A derived user without one would be offered the base user's personal default, and could not delete it.
 -- On a phone, a base user whose default was left behind opens the default shared with other devices instead.
+-- Those base users are reported right after step 4, one message per base user.
 --
 -- Known and accepted, not addressed here, because base configurations are rare in the MOBILE namespace.
 -- A configuration inherited from base or shared stays correctly linked only because both sides are renamed by the
@@ -239,6 +240,49 @@ PRINT 'Step 4: migrated ' + CAST(@migrated AS VARCHAR(20)) + ' configuration(s),
     + CAST(@skippedConflict AS VARCHAR(20)) + ' on conflict and '
     + CAST(@skippedError AS VARCHAR(20)) + ' on error.';
 PRINT 'Step 5: assigned a configUuid to ' + CAST(@uuidsAssigned AS VARCHAR(20)) + ' migrated default configuration(s).';
+GO
+
+-- Report the base users whose default configurations were left behind in step 4, one message per base user.
+-- After step 4, every MOBILE default of a base user is left behind, as such groups are never candidates.
+-- A centre counts as embedded in a master when its simple name contains `Master_`.
+-- Any other centre is reported as standalone or embedded, as its name alone cannot tell.
+-- Only FRESH rows are looked at, so that each default configuration is counted once.
+DECLARE @baseUser NVARCHAR(MAX), @standaloneCount INT, @standaloneCentres NVARCHAR(MAX);
+DECLARE @embeddedCount INT, @embeddedCentres NVARCHAR(MAX);
+
+DECLARE baseUserReport CURSOR LOCAL FAST_FORWARD FOR
+    SELECT d.BASE_USER,
+           SUM(1 - d.EMBEDDED),
+           STRING_AGG(CASE WHEN d.EMBEDDED = 0 THEN d.CENTRE END, ', ') WITHIN GROUP (ORDER BY d.CENTRE),
+           SUM(d.EMBEDDED),
+           STRING_AGG(CASE WHEN d.EMBEDDED = 1 THEN d.CENTRE END, ', ') WITHIN GROUP (ORDER BY d.CENTRE)
+      FROM (SELECT u.KEY_ AS BASE_USER,
+                   c.CENTRE,
+                   CASE WHEN CHARINDEX('Master_', c.CENTRE) > 0 THEN 1 ELSE 0 END AS EMBEDDED
+              FROM ENTITY_CENTRE_CONFIG e
+              JOIN USER_ u ON u._ID = e.ID_CRAFT AND u.BASE_ = 'Y'
+              JOIN MAIN_MENU mm ON mm._ID = e.ID_MAIN_MENU
+             CROSS APPLY (VALUES (CAST(RIGHT(mm.KEY_, CHARINDEX('.', REVERSE('.' + mm.KEY_)) - 1) AS NVARCHAR(MAX))))
+                   AS c(CENTRE)
+             WHERE e.TITLE = 'MOBILE__________FRESH__________DIFFERENCES') d
+     GROUP BY d.BASE_USER
+     ORDER BY d.BASE_USER;
+
+OPEN baseUserReport;
+FETCH NEXT FROM baseUserReport
+    INTO @baseUser, @standaloneCount, @standaloneCentres, @embeddedCount, @embeddedCentres;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    PRINT 'Step 4: left behind defaults of base user [' + @baseUser + ']: '
+        + CAST(@standaloneCount AS VARCHAR(20)) + ' standalone or embedded (' + ISNULL(@standaloneCentres, '') + '), '
+        + CAST(@embeddedCount AS VARCHAR(20)) + ' embedded in masters (' + ISNULL(@embeddedCentres, '') + ').';
+    FETCH NEXT FROM baseUserReport
+        INTO @baseUser, @standaloneCount, @standaloneCentres, @embeddedCount, @embeddedCentres;
+END
+
+CLOSE baseUserReport;
+DEALLOCATE baseUserReport;
 GO
 
 -- Step 6.
