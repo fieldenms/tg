@@ -66,7 +66,9 @@ public abstract class AbstractWebResource extends ServerResource {
     /// @return the profile named by [#DEVICE_PROFILE_HEADER], or [DeviceProfile#DESKTOP] if the header is absent or unrecognised;
     ///         an unrecognised value is logged as a warning.
     ///
-    private static DeviceProfile calculateDeviceProfile(final Request request) {
+    /// Package-private for testability.
+    ///
+    static DeviceProfile calculateDeviceProfile(final Request request) {
         final String profile = request.getHeaders().getFirstValue(DEVICE_PROFILE_HEADER, /*ignore case*/ true);
         if (profile == null) {
             return DESKTOP;
