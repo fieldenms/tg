@@ -17,10 +17,6 @@ import static ua.com.fielden.platform.web_api.WebApiUtils.input;
 ///
 public class WebApiMaxPageCapacityTest extends AbstractDaoTestCase {
 
-    /// A query nested to depth 3 (`tgWebApiEntity` -> `model` -> `make`), with `__typename` as the leaf.
-    /// This is the same nesting exercised by [WebApiIntrospectionTest], so the shape is known to be valid.
-    private static final String DEEP_QUERY = "{tgWebApiEntity{model{make{__typename}}}}";
-
     /// Creates a Web API service ([GraphQLService]) with an explicit maximum page capacity, reusing the injected collaborators.
     ///
     private IWebApi webApi(final int maxPageCapacity) {
