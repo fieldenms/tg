@@ -6,6 +6,7 @@ import io.modelcontextprotocol.json.jackson2.JacksonMcpJsonMapper;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpStatelessServerFeatures.SyncResourceSpecification;
 import io.modelcontextprotocol.server.McpStatelessSyncServer;
+import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpSchema.CallToolRequest;
 import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
@@ -24,7 +25,6 @@ import ua.com.fielden.platform.mcp.web.McpResourceFactory;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web_api.IWebApi;
-import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -48,6 +48,24 @@ import static ua.com.fielden.platform.web_api.IWebApi.WEB_API_DOMAIN_TREE_ENHANC
 /// Uses stateless HTTP transport.
 ///
 /// Requires a running TG instance with a GraphQL endpoint.
+///
+/// ### Error handling
+///
+/// There are 2 kinds of errors:
+///
+/// 1. Tool execution errors, represented as [CallToolResult] with [CallToolResult#isError()] set to true.
+///    Errors that can be corrected by clients, or that should be visible to clients, should be represented in this way.
+///    For example, invalid tool call arguments, violated business rules, and other application-level errors.
+///    In practice this means that tool handlers should catch exceptions and encode them in [CallToolResult].
+///
+/// 2. Protocol errors, represented as [McpError], which itself represents a JSON-RPC error.
+///    Internal server errors that should not necessarily be visible to clients should be represented in this way.
+///    For example, network failures, malformed JSON-RPC requests, and other system-level errors.
+///    In practice this means that an exception thrown by a tool handler is processed by the MCP SDK and returned to the
+///    client as a generic JSON-RPC error.
+///    Furthermore, MCP clients are not required to expose such errors to LLMs, unlike tool execution errors.
+///
+/// For more details, see [Error Handling](https://modelcontextprotocol.io/specification/2025-06-18/server/tools#error-handling).
 ///
 public class TgMcpServer {
 
@@ -210,7 +228,7 @@ public class TgMcpServer {
     ///
     /// A successful result is always a GraphQL response document, conforming to the schema at [#EXECUTE_QUERY_OUTPUT_SCHEMA_RESOURCE_PATH].
     /// This includes a query that could not be parsed, validated or executed: such failures are reported in `errors`, as prescribed by the GraphQL specification.
-    /// Only a malformed tool input and an exception yield an unsuccessful result (`isError` is `true`), which carries a diagnostic message instead of a GraphQL response document.
+    /// Tool execution errors yield an unsuccessful result (`isError` is `true`), which carries a diagnostic message instead of a GraphQL response document.
     ///
     /// A successful result is returned as structured content, and unstructured content is deliberately omitted.
     /// The MCP SDK derives a JSON text block from structured content whenever unstructured content is absent, which guarantees that both representations agree.
@@ -218,31 +236,29 @@ public class TgMcpServer {
     private CallToolResult handleExecuteQuery(final McpTransportContext context, final CallToolRequest request) {
         final var arguments = request.arguments();
         if (!(arguments.get("query") instanceof String query)) {
-            return malformedInput("Argument [query] is required and must be a string.");
+            return errorResult("Argument [query] is required and must be a string.");
         }
         if (!(arguments.getOrDefault("variables", Map.of()) instanceof Map<?, ?> variables)) {
-            return malformedInput("Argument [variables] must be an object.");
+            return errorResult("Argument [variables] must be an object.");
         }
 
         setCurrentUser(context);
 
+        final Map<String, Object> result;
         try {
-            final var result = webApi.execute(Map.of("query", query, "variables", variables));
-            // Unstructured content is deliberately omitted — it is derived from structured content by the MCP SDK.
-            return CallToolResult.builder()
-                    .structuredContent(result)
-                    .build();
+            result = webApi.execute(Map.of("query", query, "variables", variables));
         } catch (final Exception e) {
             LOGGER.error(() -> """
                                Error executing query:
                                %s
                                Variables: %s""".formatted(query, variables),
                          e);
-            return CallToolResult.builder()
-                    .addTextContent("Error executing query: " + e.getMessage())
-                    .isError(true)
-                    .build();
+            return errorResult("Error executing query: " + e.getMessage());
         }
+        // Unstructured content is deliberately omitted — it is derived from structured content by the MCP SDK.
+        return CallToolResult.builder()
+                .structuredContent(result)
+                .build();
     }
 
     class AddCalculatedProperty implements BiFunction<McpTransportContext, CallToolRequest, CallToolResult> {
@@ -262,21 +278,24 @@ public class TgMcpServer {
         public CallToolResult apply(final McpTransportContext context, final CallToolRequest request) {
             final var arguments = request.arguments();
             if (!(arguments.get("type") instanceof String type)) {
-                return malformedInput("Argument [type] is required and must be a string.");
+                return errorResult("Argument [type] is required and must be a string.");
             }
             if (!(arguments.get("name") instanceof String name)) {
-                return malformedInput("Argument [name] is required and must be a string.");
+                return errorResult("Argument [name] is required and must be a string.");
             }
             if (!(arguments.get("expression") instanceof String expression)) {
-                return malformedInput("Argument [expression] is required and must be a string.");
+                return errorResult("Argument [expression] is required and must be a string.");
             }
 
             setCurrentUser(context);
 
-            final var entityType = appDomainProvider.entityTypes().stream()
+            final var maybeEntityType = appDomainProvider.entityTypes().stream()
                     .filter(ty -> ty.getSimpleName().equals(type))
-                    .findFirst()
-                    .orElseThrow(() -> new WebApiException("No such type: %s".formatted(type)));
+                    .findFirst();
+            if (maybeEntityType.isEmpty()) {
+                return invalidArgument("type", "No such type: %s.".formatted(type));
+            }
+            final var entityType = maybeEntityType.get();
 
             try {
                 domainTreeEnhancer.addCalculatedProperty(
@@ -294,10 +313,6 @@ public class TgMcpServer {
                 // Managed type must be accessed only after the calculated property is added.
                 final var managedType = (Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType);
                 webApi.propertiesAdded(managedType, Set.of(name));
-
-                return CallToolResult.builder()
-                        .addTextContent("Ok")
-                        .build();
             } catch (final Exception e) {
                 try {
                     domainTreeEnhancer.findCalculatedProperty(entityType, name)
@@ -316,11 +331,12 @@ public class TgMcpServer {
                                 %s
                                 """.formatted(type, name, expression);
                 LOGGER.error(() -> msg, e);
-                return CallToolResult.builder()
-                        .addTextContent(msg + "\n" + e.getMessage())
-                        .isError(true)
-                        .build();
+                return errorResult(msg + "\n" + e.getMessage());
             }
+
+            return CallToolResult.builder()
+                    .addTextContent("Ok")
+                    .build();
         }
 
     }
@@ -342,44 +358,53 @@ public class TgMcpServer {
         public CallToolResult apply(final McpTransportContext context, final CallToolRequest request) {
             final var arguments = request.arguments();
             if (!(arguments.get("type") instanceof String type)) {
-                return malformedInput("Argument [type] is required and must be a string.");
+                return errorResult("Argument [type] is required and must be a string.");
             }
             if (!(arguments.get("name") instanceof String name)) {
-                return malformedInput("Argument [name] is required and must be a string.");
+                return errorResult("Argument [name] is required and must be a string.");
             }
 
             setCurrentUser(context);
 
-            final var entityType = appDomainProvider.entityTypes().stream()
+            final var maybeEntityType = appDomainProvider.entityTypes().stream()
                     .filter(ty -> ty.getSimpleName().equals(type))
-                    .findFirst()
-                    .orElseThrow(() -> new WebApiException("No such type: %s".formatted(type)));
+                    .findFirst();
+            if (maybeEntityType.isEmpty()) {
+                return invalidArgument("type", "No such type: %s.".formatted(type));
+            }
+            final var entityType = maybeEntityType.get();
 
             try {
                 domainTreeEnhancer.removeCalculatedProperty(entityType, name);
                 domainTreeEnhancer.apply();
                 webApi.propertiesRemoved((Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType), Set.of(name));
-
-                return CallToolResult.builder()
-                        .addTextContent("Ok")
-                        .build();
             } catch (final Exception e) {
                 final var msg = "Error removing calculated property [%s.%s].".formatted(type, name);
                 LOGGER.error(() -> msg, e);
-                return CallToolResult.builder()
-                        .addTextContent(msg + " " + e.getMessage())
-                        .isError(true)
-                        .build();
+                return errorResult(msg + " " + e.getMessage());
             }
+
+            return CallToolResult.builder()
+                    .addTextContent("Ok")
+                    .build();
         }
 
     }
 
-    /// Creates an unsuccessful result that reports a malformed tool input.
+    /// Creates a tool result representing an error.
     ///
-    private static CallToolResult malformedInput(final String message) {
+    private static CallToolResult errorResult(final String message) {
         return CallToolResult.builder()
                 .addTextContent(message)
+                .isError(true)
+                .build();
+    }
+
+    /// Creates a tool result representing an invalid argument error.
+    ///
+    private static CallToolResult invalidArgument(final String argumentName, final String message) {
+        return CallToolResult.builder()
+                .addTextContent(format("Invalid argument [%s]. %s", argumentName, message))
                 .isError(true)
                 .build();
     }
