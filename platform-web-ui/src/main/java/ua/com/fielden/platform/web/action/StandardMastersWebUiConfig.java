@@ -13,7 +13,6 @@ import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
@@ -194,8 +193,8 @@ public class StandardMastersWebUiConfig {
             @Override
             public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
                 final IDeviceProvider deviceProvider = injector.getInstance(IDeviceProvider.class);
-                // The same condition as in `MenuProducer.provideDefaultValues`, which builds the served menu.
-                final MainMenuBuilder menuBuilder = deviceProvider.getDeviceProfile() == DeviceProfile.DESKTOP ? desktopMenuBuilder  : mobileMenuBuilder;
+                // The same test as in `MenuProducer.provideDefaultValues`, which builds the served menu.
+                final var menuBuilder = deviceProvider.isMobile() ? mobileMenuBuilder : desktopMenuBuilder;
                 return menuBuilder.getActionConfig(actionNumber, actionKind);
             }
         };

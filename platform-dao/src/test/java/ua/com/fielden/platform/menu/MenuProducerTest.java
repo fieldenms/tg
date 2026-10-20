@@ -163,6 +163,32 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void menu_restored_for_unknown_device_profile_is_the_desktop_menu() {
+        final var up = getInstance(IUserProvider.class);
+        final WebMenuItemInvisibilityCo mii = co(WebMenuItemInvisibility.class);
+
+        up.setUser(co(User.class).findByKey("BUSER_1"));
+        save(new_(MenuSaveAction.class).setInvisibleMenuItems(setOf("module1/module1item3")));
+
+        deviceProvider.clearDeviceProfile();
+        final var menuProducer = new MenuProducer(
+            menuRetriever,
+            mii,
+            up,
+            deviceProvider,
+            getInstance(ICompanionObjectFinder.class),
+            getInstance(EntityFactory.class)
+        );
+        menuProducer.setContext(new CentreContext());
+        final var menu = menuProducer.newEntity();
+
+        assertTrue("The menu for an unknown profile should be the desktop one, editable by a base user", menu.getCanEdit());
+        final var module1Items = menu.getMenu().get(0).getMenu();
+        assertEquals("The menu key in module1 is incorrect", "module1item3", module1Items.get(2).getKey());
+        assertFalse("The menu item3 in module1 should be invisible in the desktop menu", module1Items.get(2).isVisible());
+    }
+
+    @Test
     public void menu_restored_with_based_on_user_has_no_invisible_menu_items() {
         final IUserProvider up = getInstance(IUserProvider.class);
         final WebMenuItemInvisibilityCo mii = co(WebMenuItemInvisibility.class);

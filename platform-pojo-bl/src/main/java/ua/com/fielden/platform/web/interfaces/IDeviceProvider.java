@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.interfaces;
 
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
+
 /**
  * Interface interacting with current {@link DeviceProfile}.
  * Used internally in serialisation / criteria entity restoration / server resources logic; distinguishes requests 
@@ -12,6 +14,16 @@ public interface IDeviceProvider {
     
     DeviceProfile getDeviceProfile();
     void setDeviceProfile(final DeviceProfile deviceProfile);
+
+    /// Determines whether the current device profile is [DeviceProfile#MOBILE].
+    ///
+    /// Any other value counts as [DeviceProfile#DESKTOP], including `null`, which means that no request is being served.
+    /// `AbstractWebResource.calculateDeviceProfile` likewise resolves a request without a recognised profile to `DESKTOP`.
+    /// Code choosing between desktop and mobile behaviour should use this method, so that all such code agrees.
+    ///
+    default boolean isMobile() {
+        return getDeviceProfile() == MOBILE;
+    }
 
     /// Clears the device profile from this provider.
     ///
