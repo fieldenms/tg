@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.test.transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionCommitException;
@@ -56,6 +57,18 @@ public class TransactionalTest extends AbstractDaoTestCase {
         final EntityWithMoney two = dao.findByKey("two");
         assertNotNull("It is expected that transaction was committed, saving a new entity.", two);
         assertEquals(new Money("30.00"), two.getMoney());
+    }
+
+    /// A unit of work handles the failure of a nested scope, which failed before executing any statement, as a nested save that fails validation would, and carries on.
+    /// The nested scope closes the session without rolling back, as the session holds no connection, and the unit of work treats its transaction as rolled back, rather than attempt to commit the closed session.
+    /// The work it carries on with finds no session bound to the thread, so it is a unit of work of its own, which commits.
+    ///
+    @Test
+    public void unit_of_work_that_handles_a_nested_failure_before_any_statement_and_carries_on_completes_without_an_error() {
+        logic.handleNestedFailureBeforeAnyStatementAndSave("carried on");
+
+        assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
+        assertNotNull("The work carried on with was committed.", dao.findByKey("carried on"));
     }
 
     @Test
@@ -164,6 +177,101 @@ public class TransactionalTest extends AbstractDaoTestCase {
                      });
 
         assertNull("The flushed INSERT was rolled back with the transaction.", dao.findByKey(key));
+    }
+
+    /// A stream returned by a `SessionRequired` method, which is traversed without a failure, commits the transaction when it is closed.
+    ///
+    @Test
+    public void stream_traversed_without_failure_commits_the_transaction_on_stream_close() {
+        final String key = "streamed";
+        try (final Stream<EntityWithMoney> stream = logic.saveAndStream(key)) {
+            stream.forEach(_ -> {});
+        }
+
+        assertFalse(logic.getSession().isOpen());
+        assertNotNull("The INSERT was committed with the transaction.", dao.findByKey(key));
+    }
+
+    /// A failure that propagates out of the traversal of a stream returned by a `SessionRequired` method is a failure of its unit of work, as it would be without streaming.
+    /// Closing the stream rolls back the transaction, instead of committing it, and reports the rollback, which try-with-resources adds to the failure as a suppressed exception.
+    ///
+    /// The report refers to the failure in its message, rather than as its cause, so that the failure does not refer to itself through it,
+    /// which would break serialising the failure, for example, to JSON in a `Result`.
+    ///
+    @Test
+    public void failure_during_traversal_of_a_stream_rolls_back_the_transaction_on_stream_close() throws Exception {
+        final String key = "streamed";
+        final var exception = new IllegalStateException("Purposeful exception.");
+        final IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
+            try (final Stream<EntityWithMoney> stream = logic.saveAndStream(key)) {
+                stream.forEach(_ -> { throw exception; });
+            }
+        });
+
+        assertSame(exception, thrown);
+        assertEquals(1, thrown.getSuppressed().length);
+        assertTrue(thrown.getSuppressed()[0] instanceof TransactionRollbackDueToThrowable);
+        assertNull(thrown.getSuppressed()[0].getCause());
+        assertTrue(thrown.getSuppressed()[0].getMessage().contains(exception.toString()));
+        new ObjectMapper().writeValueAsString(thrown);
+        assertFalse(logic.getSession().isOpen());
+        assertNull("The flushed INSERT was rolled back with the transaction.", dao.findByKey(key));
+    }
+
+    /// A failure that propagates out of the traversal of a stream rolls back the transaction, even if the consumer catches it, as a failure of a nested scope does.
+    /// Closing the stream then reports the rollback.
+    /// The traversal is short-circuiting, which advances the stream element by element, as opposed to `forEach`, which traverses the remaining elements in bulk.
+    ///
+    @Test
+    public void failure_during_traversal_of_a_stream_caught_by_the_consumer_rolls_back_the_transaction_on_stream_close() {
+        final String key = "streamed";
+        final var exception = new IllegalStateException("Purposeful exception.");
+        final TransactionRollbackDueToThrowable thrown = assertThrows(TransactionRollbackDueToThrowable.class, () -> {
+            try (final Stream<EntityWithMoney> stream = logic.saveAndStream(key)) {
+                try {
+                    stream.anyMatch(_ -> { throw exception; });
+                } catch (final IllegalStateException _) {
+                    // The failure is deliberately ignored, as a consumer might do.
+                }
+            }
+        });
+
+        assertNull(thrown.getCause());
+        assertTrue(thrown.getMessage().contains(exception.toString()));
+        assertFalse(logic.getSession().isOpen());
+        assertNull("The flushed INSERT was rolled back with the transaction.", dao.findByKey(key));
+    }
+
+    /// The traversal of a parallel stream splits it, and the split-off parts are traversed by worker threads.
+    /// A failure in a split-off part is recorded as a failure of the traversal, and closing the stream rolls back the transaction.
+    ///
+    /// The stream is retrieved through the companion, which cannot be split, but it is parallel and sorted, so its elements are buffered into an array, which can.
+    /// An array is split by splitting off its first half and keeping the second, so the first element in sort order is always traversed through a split-off part.
+    /// A failure thrown by a worker thread may be rethrown to the consumer as a new exception of the same type, whose cause is the original one.
+    ///
+    @Test
+    public void failure_during_parallel_traversal_of_a_stream_rolls_back_the_transaction_on_stream_close() {
+        final String[] keys = {"streamed1", "streamed2", "streamed3", "streamed4", "streamed5", "streamed6", "streamed7", "streamed8"};
+        final var exception = new IllegalStateException("Purposeful exception.");
+        final IllegalStateException thrown = assertThrows(IllegalStateException.class, () -> {
+            try (final Stream<EntityWithMoney> stream = logic.saveAndStreamInParallelSortedByKey(keys)) {
+                assertTrue(stream.isParallel());
+                stream.forEach(entity -> {
+                    if (keys[0].equals(entity.getKey())) {
+                        throw exception;
+                    }
+                });
+            }
+        });
+
+        assertTrue(thrown == exception || thrown.getCause() == exception);
+        assertEquals(1, thrown.getSuppressed().length);
+        assertTrue(thrown.getSuppressed()[0] instanceof TransactionRollbackDueToThrowable);
+        assertTrue(thrown.getSuppressed()[0].getMessage().contains(exception.toString()));
+        assertFalse(logic.getSession().isOpen());
+        for (final String key : keys) {
+            assertNull("The flushed INSERT was rolled back with the transaction.", dao.findByKey(key));
+        }
     }
 
     @Test
