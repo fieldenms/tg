@@ -13,27 +13,37 @@ import java.util.Optional;
 
 /// This interface defines how a domain can be enhanced with **calculated properties**.
 ///
-/// A domain consists of a tree of properties, which can be enriched with calculated properties in a particular branch of the hierarchy.
-///
+/// A domain consists of a set of entity types, each of which can be enriched with calculated properties.
 /// Calculated properties can be added / removed / changed through this interface.
-/// Mutated root domain entities meta-information can be obtained via [#getManagedType].
+///
+/// Methods that modify the domain, such as [#addCalculatedProperty], do not take effect immediately.
+/// Their results are stored in memory and must be _applied_ by calling [#apply], for the changes to take effect.
+/// This is true for all methods unless specified otherwise.
+///
+/// Enhanced domain types can be obtained via [#getManagedType].
 ///
 /// @see ICalculatedProperty
 ///
 public interface IDomainTreeEnhancer extends IRootTyped {
 
-    /// Applies (commits) all domain changes.
-    /// The **apply** action is necessary to complete domain enhancements and to load the adjusted domain into memory.
+    /// Applies all domain changes.
     ///
     void apply();
 
-    /// Discards (removes, rollbacks, cancels) all domain changes.
-    /// The **discard** action provides the ability to start enhancements again.
+    /// Discards all unapplied domain changes.
+    /// Enhancements that have already been applied are unaffected.
+    ///
+    /// Calling [#apply] after this method has no effect, as only the changes stored in memory are discarded.
+    /// To also discard changes that have already been applied, use [#restoreAll].
     ///
     void discard();
 
+    /// Restores all domain types to their original forms, removing all previously applied and not yet applied enhancements.
+    /// This method **does not** apply changes.
+    ///
+    void restoreAll();
+
     /// Returns the managed type for `type`.
-    /// The managed type may be enhanced with calculated properties.
     /// Returns the same type when `type` is not a "root" type.
     ///
     Class<?> getManagedType(Class<?> type);

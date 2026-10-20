@@ -234,6 +234,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         }
 
         @Override
+        public void restoreAll() {
+            baseEnhancer.restoreAll();
+        }
+
+        @Override
         public Class<?> getManagedType(final Class<?> type) {
             return baseEnhancer().getManagedType(type);
         }
