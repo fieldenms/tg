@@ -115,9 +115,12 @@ class StepMap {
                 if (simple)
                     return result;
                 let recover = pos == (assoc < 0 ? start : end) ? null : makeRecover(i / 3, pos - start);
-                let del = pos == start ? DEL_AFTER : pos == end ? DEL_BEFORE : DEL_ACROSS;
-                if (assoc < 0 ? pos != start : pos != end)
-                    del |= DEL_SIDE;
+                let del = 0;
+                if (oldSize) {
+                    del |= pos == start ? DEL_AFTER : pos == end ? DEL_BEFORE : DEL_ACROSS;
+                    if (assoc < 0 ? pos != start : pos != end)
+                        del |= DEL_SIDE;
+                }
                 return new MapResult(result, del, recover);
             }
             diff += newSize - oldSize;
@@ -1444,10 +1447,11 @@ class Fitter {
     }
     openMore() {
         let { content, openStart, openEnd } = this.unplaced;
-        let inner = contentAt(content, openStart);
-        if (!inner.childCount || inner.firstChild.isLeaf)
+        if (maxOpen(content, -1) <= openStart)
             return false;
-        this.unplaced = new Slice(content, openStart + 1, Math.max(openEnd, inner.size + openStart >= content.size - openEnd ? openStart + 1 : 0));
+        if (this.unplaced.size > 1 && maxOpen(content, 1) > openEnd)
+            openEnd++;
+        this.unplaced = new Slice(content, openStart + 1, openEnd);
         return true;
     }
     dropNode() {
@@ -1616,6 +1620,14 @@ function invalidMarks(type, fragment, start) {
 }
 function definesContent(type) {
     return type.spec.defining || type.spec.definingForContent;
+}
+function maxOpen(frag, side) {
+    for (let count = 0;; count++) {
+        let ch = side < 0 ? frag.firstChild : frag.lastChild;
+        if (!ch || ch.isAtom)
+            return count;
+        frag = ch.content;
+    }
 }
 function replaceRange(tr, from, to, slice) {
     if (!slice.size)
