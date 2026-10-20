@@ -2166,6 +2166,27 @@
                 assert.equal(typeof metaProp, 'undefined');
                 done();
             });
+
+            test('error details: messages of an exception and its causes are rendered', function (done) {
+                const ex = { message: 'Failure.', cause: { message: 'Cause.', cause: { message: 'Cause of cause.', cause: null, suppressed: [] }, suppressed: [] }, suppressed: [] };
+                assert.strictEqual(reflector.stackTrace(ex), '<b>Failure.</b><br><br>Cause(s):<br><ol><li>Cause.</li><li>Cause of cause.</li></ol></ol>');
+                done();
+            });
+
+            test('error details: only messages, and no stack frames, are logged to the console', function (done) {
+                const frame = { className: 'ua.com.fielden.platform.Example', methodName: 'run', lineNumber: 1 };
+                const ex = { message: 'Failure.', cause: { message: 'Cause.', cause: null, stackTrace: [frame] }, stackTrace: [frame] };
+                const logged = [];
+                const warn = console.warn;
+                console.warn = msg => logged.push(msg);
+                try {
+                    reflector.stackTrace(ex);
+                } finally {
+                    console.warn = warn;
+                }
+                assert.deepEqual(logged, ['Failure.', 'Cause.']);
+                done();
+            });
         });
     </script>
 </body>

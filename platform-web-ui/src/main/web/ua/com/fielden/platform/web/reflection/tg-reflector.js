@@ -1639,14 +1639,15 @@ export const TgReflector = Polymer({
     //////////////////// SERVER EXCEPTIONS UTILS ////////////////////
 
     /**
-     * Returns html representation for the specified exception trace (including 'cause' expanded, if any).
+     * Returns html representation for the specified exception (including 'cause' expanded, if any).
+     * Stack traces are not serialised to the client; they are logged on the server.
      */
     stackTrace: function (ex) {
         // collects error cause by traversing the stack into an ordered list
         const causeCollector = function (ex, causes) {
             if (ex) {
                 causes = causes + "<li>" + resultMessages(ex).extended + "</li>";
-                printStackTrace(ex);
+                printMessage(ex);
                 if (ex.cause !== null) {
                     causes = causeCollector(ex.cause, causes);
                 }
@@ -1654,26 +1655,16 @@ export const TgReflector = Polymer({
             return causes + "</ol>";
         };
 
-        // outputs the exception stack trace into the console as warning
-        const printStackTrace = function (ex) {
-            let msg = "No cause and stack trace.";
-            if (ex) {
-                msg = resultMessages(ex).short + '\n';
-                if (Array.isArray(ex.stackTrace)) {
-                    for (let i = 0; i < ex.stackTrace.length; i += 1) {
-                        const st = ex.stackTrace[i];
-                        msg = msg + st.className + '.java:' + st.lineNumber + ':' + st.methodName + ';\n';
-                    }
-                }
-            }
-            console.warn(msg);
+        // outputs the exception message into the console as warning
+        const printMessage = function (ex) {
+            console.warn(resultMessages(ex).short);
         };
 
         if (ex) {
             let causes = "<b>" + resultMessages(ex).extended + "</b>";
-            printStackTrace(ex);
+            printMessage(ex);
             // Result 'cause' is not serialised and that's why it is 'undefined'.
-            // Allow proper stack traces (empty) for such Results (e.g. see NeedMoreDataException).
+            // Such Results (e.g. NeedMoreDataException) are rendered without causes.
             if (ex.cause) {
                 causes = causeCollector(ex.cause, causes + "<br><br>Cause(s):<br><ol>")
             }
