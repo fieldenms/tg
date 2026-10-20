@@ -10,7 +10,9 @@ package ua.com.fielden.platform.web.interfaces;
 ///
 public enum DeviceProfile {
     /// Desktop device profile for web application.
+    ///
     DESKTOP,
     /// Mobile device profile for web application.
+    ///
     MOBILE
 }
