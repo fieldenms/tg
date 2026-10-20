@@ -54,20 +54,21 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
 
     /// Builds the main menu for the device profile of the current request, as provided by [IDeviceProvider].
     ///
-    /// The condition is the same as in `StandardMastersWebUiConfig.createMenuMaster`, which resolves the actions of the served menu,
-    /// so that the menu and the actions invoked from it are always resolved against the same profile.
+    /// The profile is tested by [IDeviceProvider#isMobile()], as in `StandardMastersWebUiConfig.createMenuMaster`.
+    /// The latter resolves the actions of the served menu.
+    /// This way, the menu and the actions invoked from it are always resolved against the same profile.
     ///
     @Override
     protected Menu provideDefaultValues(final Menu entity) {
         final Menu menu;
-        if (deviceProvider.getDeviceProfile() == DESKTOP) {
-            menu = buildMenuConfiguration();
-        }
-        // Otherwise, the mobile profile.
-        else {
+        if (deviceProvider.isMobile()) {
             // At this stage all items are visible for mobile profile.
-            // In case where invisibility logic should be implemented, there is a need to extend persistent WebMenuItemInvisibility entity.
+            // Invisibility logic for it would require extending the persistent `WebMenuItemInvisibility` entity.
             menu = menuRetriever.getMenuEntity(MOBILE).setUserName(userProvider.getUser().getKey()).setCanEdit(false);
+        }
+        // Otherwise, the desktop profile.
+        else {
+            menu = buildMenuConfiguration();
         }
         return menu.copyTo(entity);
     }
