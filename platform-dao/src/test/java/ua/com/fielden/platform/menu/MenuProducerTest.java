@@ -68,6 +68,11 @@ public class MenuProducerTest extends AbstractDaoTestCase {
         public void setDeviceProfile(final DeviceProfile deviceProfile) {
             this.deviceProfile = deviceProfile;
         }
+
+        @Override
+        public void clearDeviceProfile() {
+            this.deviceProfile = null;
+        }
     };
 
     @Test
