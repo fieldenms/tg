@@ -46,6 +46,7 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingServi
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapValues;
 
 /// A domain manager implementation with all sufficient logic for domain modification / loading.
 ///
@@ -658,14 +659,12 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     //	return originalTypesAndEnhancedArrays(originalAndEnhancedRootTypesAndArrays);
     //    }
 
-    /**
-     * A current snapshot of calculated properties, possibly not applied.
-     *
-     * @return
-     */
     @Override
     public Map<Class<?>, List<CalculatedProperty>> calculatedProperties() {
-        return calculatedProperties;
+        // The lists have to be copied, as operations that mutate them may be called while they are being traversed,
+        // which otherwise causes a ConcurrentModificationException.
+        // E.g., calculatedProperties().forEach((type, props) -> props.forEach(prop -> removeCalculatedProperty(type, prop.pathAndName())))
+        return mapValues(calculatedProperties, (_, props) -> List.copyOf(props));
     }
 
     /// Converts `calculatedProperties` into an ordered format.
@@ -784,6 +783,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 
     @Override
     public Map<Class<?>, List<CustomProperty>> customProperties() {
-        return customProperties;
+        // The lists have to be copied, as operations that mutate them may be called while they are being traversed,
+        // which otherwise causes a ConcurrentModificationException.
+        return mapValues(customProperties, (_, props) -> List.copyOf(props));
     }
+
 }

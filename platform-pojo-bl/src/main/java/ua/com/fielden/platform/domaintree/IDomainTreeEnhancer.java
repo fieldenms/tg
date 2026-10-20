@@ -134,8 +134,12 @@ public interface IDomainTreeEnhancer extends IRootTyped {
         }
     }
 
+    /// Current snapshot of calculated properties.
+    ///
     Map<Class<?>, List<CalculatedProperty>> calculatedProperties();
 
+    /// Current snapshot of custom properties.
+    ///
     Map<Class<?>, List<CustomProperty>> customProperties();
 
     Map<Class<?>, Class<?>> originalAndEnhancedRootTypes();
