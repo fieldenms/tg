@@ -321,11 +321,11 @@ export const containsRestrictedTags = function (htmlText) {
 
 /// Device profiles supported by the application.
 ///
-/// The values must stay equal to the names of `ua.com.fielden.platform.web.interfaces.DeviceProfile` constants:
-/// the server resolves a request's profile by comparing the `Device-Profile` header against them,
-/// so renaming a value here makes every request resolve to `DESKTOP`, with a warning logged by the server.
+/// The values must stay equal to the names of `ua.com.fielden.platform.web.interfaces.DeviceProfile` constants.
+/// The server resolves a request's profile by comparing the `Device-Profile` header against them.
+/// Renaming a value here therefore makes every request resolve to `DESKTOP`, with a warning logged by the server.
 ///
-export const DeviceProfile = Object.freeze({
+const DeviceProfile = Object.freeze({
     MOBILE: 'MOBILE',
     DESKTOP: 'DESKTOP'
 });
