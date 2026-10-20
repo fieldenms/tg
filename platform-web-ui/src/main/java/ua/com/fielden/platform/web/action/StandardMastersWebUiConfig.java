@@ -194,6 +194,7 @@ public class StandardMastersWebUiConfig {
             @Override
             public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
                 final IDeviceProvider deviceProvider = injector.getInstance(IDeviceProvider.class);
+                // The same condition as in `MenuProducer.provideDefaultValues`, which builds the served menu.
                 final MainMenuBuilder menuBuilder = deviceProvider.getDeviceProfile() == DeviceProfile.DESKTOP ? desktopMenuBuilder  : mobileMenuBuilder;
                 return menuBuilder.getActionConfig(actionNumber, actionKind);
             }

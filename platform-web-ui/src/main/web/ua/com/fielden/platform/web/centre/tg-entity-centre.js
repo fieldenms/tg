@@ -15,7 +15,7 @@ import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
 import { SCROLL_THRESHOLD, tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, localStorageKeyForCentre, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/actions/tg-ui-action.js';
 import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
-import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import { _requestHeaders } from '/resources/reflection/tg-request-headers.js';
 import { resetCustomSettings } from '/resources/centre/tg-entity-centre-insertion-point.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 
@@ -390,14 +390,12 @@ Polymer({
         _resetAutocompleterState: Function,
         
         /**
-         * Additional headers for every 'iron-ajax' client-side requests. These only contain 
-         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
-         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
-         * to compute 'Now' moment properly.
+         * Additional headers sent with every 'iron-ajax' client-side request of this element.
+         * Produced by '_requestHeaders', which documents each header and what the server does with it.
          */
         _headers: {
             type: String,
-            value: _timeZoneHeader
+            value: _requestHeaders
         },
         /**
          * Indicates whether some action on centre (run, save, discard, New, Load etc.) is currently in progress.

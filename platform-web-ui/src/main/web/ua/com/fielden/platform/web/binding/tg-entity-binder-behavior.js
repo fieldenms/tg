@@ -1,6 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { processResponseErrorEvent } from '/resources/reflection/tg-ajax-utils.js';
-import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import { _requestHeaders } from '/resources/reflection/tg-request-headers.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 import { checkLinkAndOpen, isSupportedLink } from '/resources/components/tg-link-opener.js';
 
@@ -428,9 +428,9 @@ export const TgEntityBinderBehavior = {
                         const xhr = new XMLHttpRequest();
                         xhr.open("GET", url, true);
                         xhr.responseType = 'blob';
-                        const tzHeader = _timeZoneHeader();
-                        for (const headerName in tzHeader) {
-                            xhr.setRequestHeader(headerName, tzHeader[headerName]);
+                        const headers = _requestHeaders();
+                        for (const headerName in headers) {
+                            xhr.setRequestHeader(headerName, headers[headerName]);
                         }
                         xhr.onload = function (e) {
                             if (xhr.status === 200) {

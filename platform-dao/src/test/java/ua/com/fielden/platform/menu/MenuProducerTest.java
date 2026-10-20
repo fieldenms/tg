@@ -9,12 +9,15 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.utils.CollectionUtil.*;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 
 /// A test case for menu invisibility logic.
 ///
@@ -50,6 +53,28 @@ public class MenuProducerTest extends AbstractDaoTestCase {
         }
     };
 
+    /// Holds the device profile of the current request, as `AbstractWebResource` sets it from the `Device-Profile` header.
+    /// Tests run with the desktop profile, unless they set another one.
+    ///
+    private final IDeviceProvider deviceProvider = new IDeviceProvider() {
+        private DeviceProfile deviceProfile = DESKTOP;
+
+        @Override
+        public DeviceProfile getDeviceProfile() {
+            return deviceProfile;
+        }
+
+        @Override
+        public void setDeviceProfile(final DeviceProfile deviceProfile) {
+            this.deviceProfile = deviceProfile;
+        }
+
+        @Override
+        public void clearDeviceProfile() {
+            this.deviceProfile = null;
+        }
+    };
+
     @Test
     public void menu_restored_with_base_user_has_all_menu_items_with_appropriate_visible_property() {
         final IUserProvider up = getInstance(IUserProvider.class);
@@ -65,9 +90,8 @@ public class MenuProducerTest extends AbstractDaoTestCase {
                         "module2/module2group2/module2group2item2",
                         "module2/module2group2/module2group2item3")));
 
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, deviceProvider, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
-        context.setChosenProperty("desktop");
         menuProducer.setContext(context);
         final Menu menu = menuProducer.newEntity();
 
@@ -118,6 +142,27 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void menu_restored_for_mobile_device_profile_is_not_editable_and_ignores_invisible_menu_items() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        final WebMenuItemInvisibilityCo mii = co(WebMenuItemInvisibility.class);
+
+        up.setUser(co(User.class).findByKey("BUSER_1"));
+        save(new_(MenuSaveAction.class).setInvisibleMenuItems(setOf("module1/module1item3", "module2/module2item2")));
+
+        deviceProvider.setDeviceProfile(MOBILE);
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, deviceProvider, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
+        menuProducer.setContext(new CentreContext());
+        final Menu menu = menuProducer.newEntity();
+
+        assertFalse("The mobile menu should not be editable", menu.getCanEdit());
+        final List<ModuleMenu> modules = menu.getMenu();
+        assertEquals("The menu key in module1 is incorrect", "module1item3", modules.get(0).getMenu().get(2).getKey());
+        assertTrue("The menu item3 in module1 should be visible in the mobile menu", modules.get(0).getMenu().get(2).isVisible());
+        assertEquals("The menu key in module2 is incorrect", "module2item2", modules.get(1).getMenu().get(2).getKey());
+        assertTrue("The menu item2 in module2 should be visible in the mobile menu", modules.get(1).getMenu().get(2).isVisible());
+    }
+
+    @Test
     public void menu_restored_with_based_on_user_has_no_invisible_menu_items() {
         final IUserProvider up = getInstance(IUserProvider.class);
         final WebMenuItemInvisibilityCo mii = co(WebMenuItemInvisibility.class);
@@ -138,9 +183,8 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
     private void checkMenuVisibilityForUser(final String user, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey(user));
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, deviceProvider, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
-        context.setChosenProperty("desktop");
         menuProducer.setContext(context);
         final Menu menu = menuProducer.newEntity();
 
@@ -183,9 +227,8 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         up.setUser(co(User.class).findByKey("USER_2"));
 
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, deviceProvider, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
-        context.setChosenProperty("desktop");
         menuProducer.setContext(context);
         final Menu menu = menuProducer.newEntity();
 
@@ -263,9 +306,8 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
     private void assertMenuInvisibilityForUser(final String userName, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey("USER_1"));
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, deviceProvider, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
-        context.setChosenProperty("desktop");
         menuProducer.setContext(context);
         final Menu menu = menuProducer.newEntity();
 
@@ -298,9 +340,8 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
     private void assertMenuVisibilityForUser(final String userName, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey(userName));
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, deviceProvider, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
-        context.setChosenProperty("desktop");
         menuProducer.setContext(context);
         final Menu menu = menuProducer.newEntity();
 
