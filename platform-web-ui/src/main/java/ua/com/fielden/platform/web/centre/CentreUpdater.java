@@ -323,14 +323,9 @@ public class CentreUpdater {
             final boolean newDashboardable,
             final DashboardRefreshFrequency newDashboardRefreshFrequency,
             final ICompanionObjectFinder companionFinder) {
-        final Function<Optional<String>, Function<String, String>> nameOf = (saveAs) -> (surrogateName) -> saveAsSpecific(
-            surrogateName,
-            saveAs
-        ) + DIFFERENCES_SUFFIX;
-        final Function<String, String> currentNameOf = nameOf.apply(saveAsName);
-        final String currentNameFresh = currentNameOf.apply(FRESH_CENTRE_NAME);
-        final String currentNameSaved = currentNameOf.apply(SAVED_CENTRE_NAME);
-        final String currentNamePreviouslyRun = currentNameOf.apply(PREVIOUSLY_RUN_CENTRE_NAME);
+        final var currentNameFresh = NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName);
+        final var currentNameSaved = NAME_OF.apply(SAVED_CENTRE_NAME).apply(saveAsName);
+        final var currentNamePreviouslyRun = NAME_OF.apply(PREVIOUSLY_RUN_CENTRE_NAME).apply(saveAsName);
         final EntityCentreConfig freshConfig = findConfig(miType, user, currentNameFresh, companionFinder);
         final EntityCentreConfig savedConfig = findConfig(miType, user, currentNameSaved, companionFinder);
         final EntityCentreConfig previouslyRunConfig = findConfig(miType, user, currentNamePreviouslyRun, companionFinder);
@@ -339,10 +334,10 @@ public class CentreUpdater {
         }
         
         // newTitle
-        final Function<String, String> newNameOf = nameOf.apply(of(newTitle));
-        freshConfig.setTitle(newNameOf.apply(FRESH_CENTRE_NAME));
-        savedConfig.setTitle(newNameOf.apply(SAVED_CENTRE_NAME));
-        final String previouslyRunNewTitle = newNameOf.apply(PREVIOUSLY_RUN_CENTRE_NAME);
+        final var newSaveAsName = of(newTitle);
+        freshConfig.setTitle(NAME_OF.apply(FRESH_CENTRE_NAME).apply(newSaveAsName));
+        savedConfig.setTitle(NAME_OF.apply(SAVED_CENTRE_NAME).apply(newSaveAsName));
+        final var previouslyRunNewTitle = NAME_OF.apply(PREVIOUSLY_RUN_CENTRE_NAME).apply(newSaveAsName);
         if (previouslyRunConfig != null) { // previouslyRun centre may not exist
             previouslyRunConfig.setTitle(previouslyRunNewTitle);
         }

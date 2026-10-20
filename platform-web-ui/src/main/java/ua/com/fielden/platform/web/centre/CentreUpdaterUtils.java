@@ -173,7 +173,10 @@ public class CentreUpdaterUtils extends CentreUpdater {
         return differences;
     }
     
-    /// Finds [EntityCentreConfig] instance to be sufficient for changing 'preferred' / 'title' / 'desc' / 'configUuid' properties.
+    /// Finds [EntityCentreConfig] instance, fetched enough to read and change its 'title' and FRESH-only properties.
+    /// Those are 'desc', 'configUuid', 'runAutomatically' and the dashboard properties.
+    ///
+    /// Preferredness is not fetched, as it is read and changed by its own queries in [CentreUpdater].
     ///
     protected static EntityCentreConfig findConfig(
         final Class<?> miType,
@@ -185,7 +188,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
         return co$EntityCentreConfig.getEntity(
             from(modelFor(user, miType.getName(), saveAsSpecificDiffName))
                 .with(fetchWithKeyAndDesc(EntityCentreConfig.class, true)
-                    .with("preferred").with("configUuid")
+                    .with("configUuid")
                     .with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency")
                     .with("runAutomatically")
                     .fetchModel()
