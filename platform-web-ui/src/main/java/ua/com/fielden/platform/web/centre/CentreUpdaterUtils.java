@@ -17,7 +17,6 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
 import java.util.List;
 import java.util.Map;
@@ -174,27 +173,42 @@ public class CentreUpdaterUtils extends CentreUpdater {
         return differences;
     }
     
-    /// Finds [EntityCentreConfig] instance to be sufficient for changing 'preferred' / 'title' / 'desc' / 'configUuid' properties.
+    /// Finds [EntityCentreConfig] instance, fetched enough to read and change its 'title' and FRESH-only properties.
+    /// Those are 'desc', 'configUuid', 'runAutomatically' and the dashboard properties.
     ///
-    protected static EntityCentreConfig findConfig(final Class<?> miType, final User user, final String deviceSpecificDiffName, final ICompanionObjectFinder companionFinder) {
+    /// Preferredness is not fetched, as it is read and changed by its own queries in [CentreUpdater].
+    ///
+    protected static EntityCentreConfig findConfig(
+        final Class<?> miType,
+        final User user,
+        final String saveAsSpecificDiffName,
+        final ICompanionObjectFinder companionFinder
+    ) {
         final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
         return co$EntityCentreConfig.getEntity(
-            from(modelFor(user, miType.getName(), deviceSpecificDiffName)).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency").with("runAutomatically").fetchModel()).model()
+            from(modelFor(user, miType.getName(), saveAsSpecificDiffName))
+                .with(fetchWithKeyAndDesc(EntityCentreConfig.class, true)
+                    .with("configUuid")
+                    .with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency")
+                    .with("runAutomatically")
+                    .fetchModel()
+                )
+                .model()
         );
     }
     
-    /// Finds optional configuration for `user`, `miType` and `deviceSpecificDiffName` with custom `fetch`.
+    /// Finds optional configuration for `user`, `miType` and `saveAsSpecificDiffName` with custom `fetch`.
     ///
     public static Optional<EntityCentreConfig> findConfigOpt(
         final Class<?> miType,
         final User user,
-        final String deviceSpecificDiffName,
+        final String saveAsSpecificDiffName,
         final ICompanionObjectFinder coFinder,
         final fetch<EntityCentreConfig> fetch
     ) {
         final EntityCentreConfigCo coEntityCentreConfig = coFinder.find(EntityCentreConfig.class);
         return coEntityCentreConfig.getEntityOptional(
-            from(modelFor(user, miType.getName(), deviceSpecificDiffName)).with(fetch).model()
+            from(modelFor(user, miType.getName(), saveAsSpecificDiffName)).with(fetch).model()
         );
     }
     
@@ -204,32 +218,32 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final EntityCentreConfigCo coEntityCentreConfig = companionFinder.find(EntityCentreConfig.class, true);
         return coEntityCentreConfig.getEntityOptional(from(model
             .and().prop("configUuid").eq().val(uuid).model()
-        ).with(fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").with("configUuid").with("owner.base").with("configBody").with("runAutomatically").fetchModel()).model());
+        ).with(fetchWithKeyAndDesc(EntityCentreConfig.class).with("configUuid").with("owner.base").with("configBody").with("runAutomatically").fetchModel()).model());
     }
     
-    /// Finds optional configuration for `uuid`, `miType`, `device` and `surrogateName` with predefined fetch model, sufficient for most situations.
+    /// Finds optional configuration for `uuid`, `miType` and `surrogateName` with predefined fetch model.
+    /// It is sufficient for most situations.
     ///
     public static Optional<EntityCentreConfig> findConfigOptByUuid(
         final String uuid,
         final Class<? extends MiWithConfigurationSupport<?>> miType,
-        final DeviceProfile device,
         final String surrogateName,
         final ICompanionObjectFinder companionFinder
     ) {
-        return findConfigOptByUuid(centreConfigQueryFor(miType, device, surrogateName), uuid, companionFinder);
+        return findConfigOptByUuid(centreConfigQueryFor(miType, surrogateName), uuid, companionFinder);
     }
     
-    /// Finds optional configuration for `uuid`, `user`, `miType`, `device` and `surrogateName` with predefined fetch model, sufficient for most situations.
+    /// Finds optional configuration for `uuid`, `user`, `miType` and `surrogateName` with predefined fetch model.
+    /// It is sufficient for most situations.
     ///
     public static Optional<EntityCentreConfig> findConfigOptByUuid(
         final String uuid,
         final User user,
         final Class<? extends MiWithConfigurationSupport<?>> miType,
-        final DeviceProfile device,
         final String surrogateName,
         final ICompanionObjectFinder companionFinder
     ) {
-        return findConfigOptByUuid(centreConfigQueryFor(user, miType, device, surrogateName), uuid, companionFinder);
+        return findConfigOptByUuid(centreConfigQueryFor(user, miType, surrogateName), uuid, companionFinder);
     }
     
     /// Removes centre configurations from persistent storage.
