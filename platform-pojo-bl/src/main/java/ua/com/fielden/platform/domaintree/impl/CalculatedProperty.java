@@ -32,6 +32,7 @@ import ua.com.fielden.platform.utils.ClassComparator;
 import java.lang.reflect.Field;
 import java.util.Map;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.*;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.*;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isCollectionOrInCollectionHierarchy;
@@ -730,7 +731,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
             ast = cp.createAst(newContextualExpression);
         } catch (final Exception ex) {
             throw new IncorrectCalcPropertyException(
-                    "Invalid expression for calculated property [%s] in [%s]: %s".formatted(cp.getCustomPropertyName(), cp.getRoot().getTypeName(), newContextualExpression),
+                    "Invalid expression for calculated property [%s.%s]: %s".formatted(cp.getRoot().getSimpleName(), cp.getCustomPropertyName(), newContextualExpression),
                     ex);
         }
 
@@ -765,16 +766,9 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         }
     }
 
-    /**
-     * Validates the calculated property key (see {@link #validatePropertyKey0(Class, String, Map)}) and checks whether another property with the same name exists (calculated or
-     * not). If exists -- throws {@link IncorrectCalcPropertyException}.
-     *
-     * @param calculatedPropertyToCheck
-     * @param newPathAndName
-     * @param calculatedProperties
-     * @param originalAndEnhancedRootTypes
-     * @return
-     */
+    /// Validates the calculated property key (see [#validatePropertyKey0(Class, String, Map)]) and checks whether another
+    /// property with the same name exists (if it does, throws [IncorrectCalcPropertyException]).
+    ///
     private static void validateCalculatedPropertyKey1(final CalculatedProperty calculatedPropertyToCheck, final String newPathAndName) {
         final Class<?> root = calculatedPropertyToCheck.getRoot();
 
@@ -784,7 +778,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
                 // this is the same property!
             } else {
                 if (calculatedPropertyToCheck.isValidateTitleContextOfExtractedProperties()) {
-                    throw new IncorrectCalcPropertyException("The calculated property with name [" + newPathAndName + "] already exists.");
+                    throw new IncorrectCalcPropertyException(format("Calculated property [%s.%s] already exists.", root.getSimpleName(), newPathAndName));
                 }
             }
         }
@@ -796,8 +790,9 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         } catch (final Exception e) {
             return; // the property with a suggested name does not exist in original domain, which is correct
         }
-        throw new IncorrectCalcPropertyException("The property with the name [" + newPathAndName + "] already exists in original domain (inside " + root.getSimpleName()
-                + " root). Please try another name for calculated property.");
+        throw new IncorrectCalcPropertyException(format(
+                "Property [%s.%s] already exists in the original domain. Please try another name.",
+                root.getSimpleName(), newPathAndName));
     }
 
     protected static void validateAttribute(final CalculatedProperty cp, final CalculatedPropertyAttribute newAttribute) {

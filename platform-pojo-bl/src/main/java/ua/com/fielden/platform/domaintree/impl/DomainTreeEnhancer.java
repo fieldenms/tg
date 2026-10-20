@@ -40,6 +40,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.modifiedClass;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.generateTypeName;
@@ -497,7 +498,12 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     private CalculatedProperty calculatedPropertyWhichShouldExist(final Class<?> root, final String pathAndName) {
         final var calculatedProperty = calculatedProperty(root, pathAndName);
         if (calculatedProperty == null) {
-            throw new IncorrectCalcPropertyException("The calculated property with path & name [" + pathAndName + "] does not exist in type [" + root + "].");
+            if (findFieldByNameOptionally(root, pathAndName).isPresent()) {
+                throw new IncorrectCalcPropertyException(format("Property [%s.%s] is part of the original domain and cannot be modified.", root.getSimpleName(), pathAndName));
+            }
+            else {
+                throw new IncorrectCalcPropertyException(format("Calculated property [%s.%s] does not exist.", root.getSimpleName(), pathAndName));
+            }
         }
         return calculatedProperty;
     }
