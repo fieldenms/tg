@@ -23,6 +23,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
+import ua.com.fielden.platform.web.resources.exceptions.InvalidRequestBodyException;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 import java.io.ByteArrayInputStream;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
 import static org.restlet.data.MediaType.APPLICATION_JSON;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -45,6 +47,7 @@ import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSO
 public class RestServerUtil {
     private static final String HEADERS_KEY = "org.restlet.http.headers";
     private static final String ERR_COULD_NOT_FIND_ENTITY = "Could not find entity.";
+    public static final String ERR_INVALID_REQUEST_BODY = "The request could not be processed, as its content is invalid.";
 
     private final ISerialiser serialiser;
     private final Logger logger = LogManager.getLogger(RestServerUtil.class);
@@ -316,7 +319,7 @@ public class RestServerUtil {
      * @return
      */
     public Result restoreJsonResult(final Representation representation) {
-        return serialiser.deserialise(getStream(representation), Result.class, SerialiserEngines.JACKSON);
+        return restoreRequestBody(representation, stream -> serialiser.deserialise(stream, Result.class, SerialiserEngines.JACKSON));
     }
 
     /**
@@ -342,7 +345,7 @@ public class RestServerUtil {
      * @return
      */
     public <T extends AbstractEntity<?>> T restoreJsonEntity(final Representation representation, final Class<T> type) {
-        return serialiser.deserialise(getStream(representation), type, SerialiserEngines.JACKSON);
+        return restoreRequestBody(representation, stream -> serialiser.deserialise(stream, type, SerialiserEngines.JACKSON));
     }
 
     /**
@@ -352,7 +355,7 @@ public class RestServerUtil {
      * @return
      */
     public Map<?, ?> restoreMap(final Representation representation) {
-        return serialiser.deserialise(getStream(representation), Map.class);
+        return restoreRequestBody(representation, stream -> serialiser.deserialise(stream, Map.class));
     }
 
     /**
@@ -362,7 +365,21 @@ public class RestServerUtil {
      * @return
      */
     public Map<?, ?> restoreJsonMap(final Representation representation) {
-        return serialiser.deserialise(getStream(representation), Map.class, SerialiserEngines.JACKSON);
+        return restoreRequestBody(representation, stream -> serialiser.deserialise(stream, Map.class, SerialiserEngines.JACKSON));
+    }
+
+    /// Deserialises the body of a request with `deserialiser`.
+    ///
+    /// If the body cannot be deserialised, the failure is logged, and [InvalidRequestBodyException] with a generic message is thrown.
+    /// The details of the failure, such as the types and properties involved, stay on the server, as the exception is serialised to the client.
+    ///
+    private <T> T restoreRequestBody(final Representation representation, final Function<InputStream, T> deserialiser) {
+        try {
+            return deserialiser.apply(getStream(representation));
+        } catch (final RuntimeException ex) {
+            logger.warn("The request body could not be deserialised.", ex);
+            throw new InvalidRequestBodyException(ERR_INVALID_REQUEST_BODY);
+        }
     }
 
     private final static InputStream getStream(final Representation representation) {
