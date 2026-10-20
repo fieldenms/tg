@@ -82,7 +82,8 @@ UPDATE ENTITY_CENTRE_CONFIG
 -- Steps 4 and 5.
 -- Rename MOBILE configurations into the joint namespace, and give migrated defaults a `configUuid`.
 
-DROP TABLE IF EXISTS MOBILE_CONFIG;
+-- Qualified, so that a permanent table of that name is never dropped when no temp table exists.
+DROP TABLE IF EXISTS pg_temp.MOBILE_CONFIG;
 
 -- `CORE` drops the `MOBILE` prefix and the `__________DIFFERENCES` suffix, leaving `<surrogate>[<save-as name>]`.
 -- `SAVE_AS_PART` is `[<save-as name>]` for a named configuration, and an empty string for a default one.
@@ -167,6 +168,8 @@ BEGIN
         BEGIN
             -- A group is migrated only when every one of its new titles is free and fits into `TITLE VARCHAR(255)`.
             -- Rows renamed by earlier iterations are already visible here, so MOBILE-to-MOBILE clashes are caught too.
+            -- Titles are compared case-insensitively, as on SQL Server by default.
+            -- This way, both scripts skip the same groups.
             IF EXISTS (SELECT 1
                          FROM MOBILE_CONFIG m
                         WHERE m.OWNER_ID = grp.OWNER_ID
@@ -177,7 +180,7 @@ BEGIN
                                             FROM ENTITY_CENTRE_CONFIG e
                                            WHERE e.ID_CRAFT = m.OWNER_ID
                                              AND e.ID_MAIN_MENU = m.MENU_ID
-                                             AND e.TITLE = m.NEW_TITLE)))
+                                             AND lower(e.TITLE) = lower(m.NEW_TITLE))))
             THEN
                 skipped_conflict := skipped_conflict + 1;
             ELSE
@@ -188,7 +191,6 @@ BEGIN
                    AND m.OWNER_ID = grp.OWNER_ID
                    AND m.MENU_ID = grp.MENU_ID
                    AND m.SAVE_AS_PART = grp.SAVE_AS_PART;
-                migrated := migrated + 1;
 
                 -- Step 5, applied only to a group that has just been migrated, and only to a default one.
                 -- A default carries no `configUuid`, since only save-as, link and inherited configurations get one.
@@ -207,6 +209,12 @@ BEGIN
                        AND m.MENU_ID = grp.MENU_ID
                        AND m.SAVE_AS_PART = grp.SAVE_AS_PART
                        AND m.SURROGATE IN ('__________FRESH', '__________SAVED');
+                END IF;
+
+                -- A failure rolls back the changes of this block, but not these variables.
+                -- They are therefore updated last, once nothing can fail any more.
+                migrated := migrated + 1;
+                IF grp.SAVE_AS_PART = '' THEN
                     uuids_assigned := uuids_assigned + 1;
                 END IF;
             END IF;
@@ -328,4 +336,4 @@ UPDATE ENTITY_CENTRE_CONFIG e
                       AND p.PREFERREDONMOBILE_ = 'Y'
                       AND left(p.TITLE, 6) <> 'MOBILE');
 
-DROP TABLE MOBILE_CONFIG;
+DROP TABLE pg_temp.MOBILE_CONFIG;

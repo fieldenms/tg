@@ -52,8 +52,9 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 /// - `SHARER`, another base user, saves "Shared Config" on a phone.
 /// - `USER`, derived from `BASE`, customises the default on a phone, and inherits "Base Config" there.
 ///   On the phone, they also load "Shared Config", and open a link.
-///   Then they save "Clash" and "Mine" there, the latter becoming preferred.
-///   On a desktop, they inherit "Base Config", and save "Clash (mobile)" and then "Desk", which becomes preferred.
+///   Then they save "Clash", "Case Clash" and "Mine" there, the last one becoming preferred.
+///   On a desktop, they inherit "Base Config", and save "Clash (mobile)", "case clash (MOBILE)" and "Desk".
+///   "Desk" becomes preferred there.
 /// - `DESK_USER`, also derived from `BASE`, uses only a desktop.
 /// - `LONER`, derived from a base user who never used a phone, customises the default on a phone and saves nothing.
 ///   Their default on the phone ends up without a SAVED centre.
@@ -238,15 +239,21 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
 
     @Test
     public void a_phone_configuration_whose_mobile_name_is_taken_is_left_in_the_mobile_namespace() {
-        final var rowsAfter = rows().stream().collect(toMap(Row::id, identity()));
-        final var clashBefore = rowsBefore.stream().filter(row -> row.isLegacyMobile() && row.title().contains("[Clash]")).toList();
-        assertFalse(clashBefore.isEmpty());
-        clashBefore.forEach(row -> assertEquals(row, rowsAfter.get(row.id())));
+        assertLeftInTheMobileNamespace("Clash");
         // Nothing else is left behind in the MOBILE namespace, apart from the defaults of base users.
+        final var clashingBefore = rowsBefore.stream().filter(row -> isLegacyGroup(row, "Clash") || isLegacyGroup(row, "Case Clash"));
         assertEquals(
-            clashBefore.stream().map(Row::id).collect(toSet()),
-            rowsAfter.values().stream().filter(row -> row.isLegacyMobile() && !isLegacyDefaultOfBaseUser(row)).map(Row::id).collect(toSet())
+            clashingBefore.map(Row::id).collect(toSet()),
+            rows().stream().filter(row -> row.isLegacyMobile() && !isLegacyDefaultOfBaseUser(row)).map(Row::id).collect(toSet())
         );
+    }
+
+    @Test
+    public void a_phone_configuration_whose_mobile_name_is_taken_in_another_letter_case_is_left_in_the_mobile_namespace() {
+        assertLeftInTheMobileNamespace("Case Clash");
+        final var userConfigs = loadable(user);
+        assertOwn(userConfigs, "case clash (MOBILE)");
+        assertFalse(userConfigs.containsKey("Case Clash (mobile)"));
     }
 
     @Test
@@ -276,6 +283,7 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
             openByUuid(user, uuidOf(sharer, "Shared Config"));
             linkUuid = openLink(user);
             saveAs(userDefault, "Clash");
+            saveAs(userDefault, "Case Clash");
             // Save As makes a configuration preferred, so the last one saved is the user's preferred one on a phone.
             saveAs(userDefault, "Mine");
 
@@ -290,6 +298,7 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
         final var userDefault = open(user, empty());
         openByUuid(user, uuidOf(base, "Base Config"));
         saveAs(userDefault, "Clash (mobile)");
+        saveAs(userDefault, "case clash (MOBILE)");
         saveAs(userDefault, "Desk");
         open(deskUser, empty());
         open(loner, empty());
@@ -352,6 +361,21 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
     }
 
     //////////////////////////////////// Inspection ////////////////////////////////////
+
+    /// Asserts that the rows of the `saveAsName`d configuration of `USER` on a phone are left as they were.
+    ///
+    private void assertLeftInTheMobileNamespace(final String saveAsName) {
+        final var rowsAfter = rows().stream().collect(toMap(Row::id, identity()));
+        final var groupBefore = rowsBefore.stream().filter(row -> isLegacyGroup(row, saveAsName)).toList();
+        assertFalse(groupBefore.isEmpty());
+        groupBefore.forEach(row -> assertEquals(row, rowsAfter.get(row.id())));
+    }
+
+    /// Whether `row` belongs to the `saveAsName`d configuration of `USER` on a phone, as persisted before #2795.
+    ///
+    private boolean isLegacyGroup(final Row row, final String saveAsName) {
+        return row.isLegacyMobile() && row.owner().equals(user.getId()) && row.title().contains("[" + saveAsName + "]");
+    }
 
     /// Whether `row` belongs to the default configuration of a base user on a phone, as persisted before #2795.
     ///
