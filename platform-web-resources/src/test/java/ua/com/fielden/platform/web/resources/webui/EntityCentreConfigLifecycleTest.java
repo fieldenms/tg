@@ -173,6 +173,21 @@ public class EntityCentreConfigLifecycleTest extends AbstractEntityCentreConfigT
     }
 
     @Test
+    public void discarding_a_configuration_inherited_from_base_does_not_change_which_configuration_is_preferred() {
+        on(DESKTOP);
+        saveAs(open(base, empty()), "Base Config");
+        openByUuid(user, uuidOf(base, "Base Config"));
+        open(user, of("Base Config")).adjustCentre(withPageCapacity(25));
+        // Another configuration becomes preferred meanwhile, for example in another browser tab.
+        saveAs(open(user, empty()), "Other");
+
+        discard(user, of("Base Config"));
+
+        assertEquals(of("Other"), preferred(user));
+        assertOpensUnchanged(user, "Base Config");
+    }
+
+    @Test
     public void a_configuration_inherited_from_base_is_orphaned_once_the_base_user_deletes_it_on_another_device() {
         on(DESKTOP);
         saveAs(open(base, empty()), "Base Config");

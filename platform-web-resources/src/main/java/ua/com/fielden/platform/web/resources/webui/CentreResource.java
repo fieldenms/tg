@@ -153,10 +153,8 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             if (inheritedFromBase(loadableConfig).isPresent()) {
                 // Inherited from base.
                 // Discarding renews FRESH too, so that the changes of the base user are loaded.
+                // Its preferredness is restored as it was, so Discard never changes which configuration is preferred.
                 newFreshCentre = renewInheritedFromBase(user, miType, saveAsName, false, webUiConfig, companionFinder);
-                // Must leave current configuration preferred after deletion.
-                // This applies only to named configs, which inherited ones always are.
-                makePreferred(user, miType, saveAsName, companionFinder, webUiConfig);
                 actualSaveAsName = saveAsName;
             } else {
                 // Inherited from shared.

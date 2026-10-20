@@ -525,9 +525,8 @@ public class CriteriaResource extends AbstractWebResource {
                 if (savedConfigCreator.isBase() && areEqual(savedConfigCreator, user.getBasedOnUser() /*id-only-proxy*/)) {
                     // Inherited from base.
                     // Unsaved changes are kept, in which case only SAVED is renewed.
+                    // Its preferredness is restored as it was, and loading by uuid makes it preferred afterwards.
                     renewInheritedFromBase(user, miType, saveAsName, true, webUiConfig, companionFinder);
-                    // Inherited from base always gets preferred on loading, and must be left preferred after deletion.
-                    makePreferred(user, miType, saveAsName, companionFinder, webUiConfig);
                 } else {
                     if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) {
                         // inherited from shared
