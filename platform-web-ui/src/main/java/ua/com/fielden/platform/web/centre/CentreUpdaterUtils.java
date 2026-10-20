@@ -218,7 +218,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final EntityCentreConfigCo coEntityCentreConfig = companionFinder.find(EntityCentreConfig.class, true);
         return coEntityCentreConfig.getEntityOptional(from(model
             .and().prop("configUuid").eq().val(uuid).model()
-        ).with(fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").with("configUuid").with("owner.base").with("configBody").with("runAutomatically").fetchModel()).model());
+        ).with(fetchWithKeyAndDesc(EntityCentreConfig.class).with("configUuid").with("owner.base").with("configBody").with("runAutomatically").fetchModel()).model());
     }
     
     /// Finds optional configuration for `uuid`, `miType` and `surrogateName` with predefined fetch model.

@@ -165,7 +165,20 @@ public abstract class AbstractEntityCentreConfigTestCase extends AbstractWebReso
     /// Changes the title of the configuration that `criteria` is open with to `newSaveAsName`, as the Edit action does.
     ///
     protected void edit(final EnhancedCentreEntityQueryCriteria<?, ?> criteria, final String newSaveAsName) {
-        withUnchangedCriteria(criteria).editCentre(newSaveAsName, "%s description".formatted(newSaveAsName), false, null);
+        edit(criteria, newSaveAsName, false);
+    }
+
+    /// Changes the title and the dashboard indicator of the configuration that `criteria` is open with.
+    /// This is what the Edit action does.
+    ///
+    protected void edit(final EnhancedCentreEntityQueryCriteria<?, ?> criteria, final String newSaveAsName, final boolean dashboardable) {
+        withUnchangedCriteria(criteria).editCentre(newSaveAsName, "%s description".formatted(newSaveAsName), dashboardable, null);
+    }
+
+    /// Changes whether the configuration that `criteria` is open with runs automatically, as the Configure action does.
+    ///
+    protected void configure(final EnhancedCentreEntityQueryCriteria<?, ?> criteria, final boolean runAutomatically) {
+        withUnchangedCriteria(criteria).configureCentre(runAutomatically);
     }
 
     /// Loads the `saveAsName`d configuration from the Load dialog of the centre that `criteria` is open with.

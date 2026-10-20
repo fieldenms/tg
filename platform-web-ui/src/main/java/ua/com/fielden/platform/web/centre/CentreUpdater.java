@@ -785,11 +785,8 @@ public class CentreUpdater {
                     user,
                     saveAsSpecific(FRESH_CENTRE_NAME, saveAsName) + DIFFERENCES_SUFFIX,
                     companionFinder,
-                    fetchWithKeyAndDesc(EntityCentreConfig.class, true)
-                        .with(preferredPropFor(device)).with("configUuid")
-                        .with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency")
-                        .with("runAutomatically")
-                        .fetchModel()
+                    // Only the preferred flag is changed, and only changed properties are saved.
+                    fetchWithKeyAndDesc(EntityCentreConfig.class, true).with(preferredPropFor(device)).fetchModel()
                 ).ifPresent(ecc ->
                     eccCompanion.saveWithRetry( // not used inside other transaction scopes (e.g. CentreConfigLoadActionDao->makePreferredConfig->makePreferred does not have @SessionRequired) -- saveWithRetry can be used
                         setPreferred(ecc, device, true)

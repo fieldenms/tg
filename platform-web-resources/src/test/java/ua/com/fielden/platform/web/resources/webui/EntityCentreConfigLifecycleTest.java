@@ -103,6 +103,26 @@ public class EntityCentreConfigLifecycleTest extends AbstractEntityCentreConfigT
         assertPreferredOnBothDevices(user, "New");
     }
 
+    @Test
+    public void making_a_configuration_preferred_keeps_its_other_properties() {
+        on(DESKTOP);
+        saveAs(open(user, empty()), "Mine");
+        edit(open(user, of("Mine")), "Mine", true);
+        final var runAutomatically = !config(user, FRESH_CENTRE_NAME, of("Mine")).isRunAutomatically();
+        configure(open(user, of("Mine")), runAutomatically);
+        final var configUuid = uuidOf(user, "Mine");
+        saveAs(open(user, empty()), "Other");
+
+        load(open(user, empty()), "Mine");
+
+        assertEquals(of("Mine"), preferred(user));
+        final var mine = config(user, FRESH_CENTRE_NAME, of("Mine"));
+        assertEquals("Mine description", mine.getDesc());
+        assertEquals(configUuid, mine.getConfigUuid());
+        assertTrue(mine.isDashboardable());
+        assertEquals(runAutomatically, mine.isRunAutomatically());
+    }
+
     //////////////////////////////////// Inherited from base ////////////////////////////////////
 
     @Test
@@ -201,6 +221,54 @@ public class EntityCentreConfigLifecycleTest extends AbstractEntityCentreConfigT
         assertNotNull(orphan);
         assertFalse(orphan.isInherited());
         assertNotNull(orphan.getOrphanedSharingMessage());
+    }
+
+    //////////////////////////////////// Inherited from shared ////////////////////////////////////
+
+    @Test
+    public void discarding_the_changes_of_a_configuration_inherited_from_shared_takes_the_shared_configuration() {
+        on(DESKTOP);
+        final var sharerDefault = open(sharer, empty());
+        sharerDefault.adjustCentre(withPageCapacity(45));
+        saveAs(sharerDefault, "Shared Config");
+        openByUuid(user, uuidOf(sharer, "Shared Config"));
+        open(user, of("Shared Config")).adjustCentre(withPageCapacity(25));
+
+        final var discarded = discard(user, of("Shared Config"));
+
+        assertTrue(discarded.inherited());
+        assertEquals(of("Shared Config"), discarded.saveAsName());
+        assertEquals(45, pageCapacity(user, FRESH_CENTRE_NAME, of("Shared Config")));
+        assertOpensUnchanged(user, "Shared Config");
+    }
+
+    @Test
+    public void loading_a_configuration_inherited_from_shared_updates_it_from_the_shared_configuration() {
+        on(DESKTOP);
+        saveAs(open(sharer, empty()), "Shared Config");
+        openByUuid(user, uuidOf(sharer, "Shared Config"));
+        final var sharedConfig = open(sharer, of("Shared Config"));
+        sharedConfig.adjustCentre(withPageCapacity(45));
+        saveChanges(sharedConfig);
+        assertNotEquals(45, pageCapacity(user, SAVED_CENTRE_NAME, of("Shared Config")));
+
+        assertEquals(of("Shared Config"), load(open(user, empty()), "Shared Config"));
+
+        assertEquals(45, pageCapacity(user, FRESH_CENTRE_NAME, of("Shared Config")));
+        assertEquals(45, pageCapacity(user, SAVED_CENTRE_NAME, of("Shared Config")));
+        // A configuration inherited from shared never becomes preferred.
+        assertEquals(empty(), preferred(user));
+    }
+
+    @Test
+    public void only_own_configurations_can_be_shared() {
+        on(DESKTOP);
+        saveAs(open(user, empty()), "Mine");
+        saveAs(open(sharer, empty()), "Shared Config");
+        openByUuid(user, uuidOf(sharer, "Shared Config"));
+
+        assertEquals(empty(), open(user, of("Mine")).shareError());
+        assertTrue(open(user, of("Shared Config")).shareError().isPresent());
     }
 
     //////////////////////////////////// One namespace ////////////////////////////////////
