@@ -2,9 +2,9 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import org.junit.Before;
 import org.junit.Test;
-import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
+import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
@@ -327,11 +327,21 @@ public class EntityCentreConfigDeviceMigrationTest extends AbstractEntityCentreC
         return getInstance(IDbVersionProvider.class).dbVersion();
     }
 
+    /// Applies the migration script for the database in use, as `sqlcmd` or `psql` would.
+    ///
+    /// The script runs on a connection in auto-commit mode, outside of any transaction of the application.
+    /// This is how the script expects to be run, as it migrates each configuration group in its own transaction.
+    ///
     private void applyMigrationScript() {
         final var isMssql = dbVersion() == MSSQL;
         final var script = readScript(isMssql ? "Mssql" : "Postgres");
         final var batches = isMssql ? GO.splitAsStream(script).filter(batch -> !batch.isBlank()).toList() : List.of(script);
-        getInstance(TransactionalExecution.class).execStrict(conn -> batches.forEach(batch -> execute(conn, batch)));
+        try (final var session = getInstance(HibernateUtil.class).getSessionFactory().openSession()) {
+            session.doWork(conn -> {
+                conn.setAutoCommit(true);
+                batches.forEach(batch -> execute(conn, batch));
+            });
+        }
     }
 
     private static String readScript(final String dialect) {
