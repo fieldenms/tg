@@ -2,6 +2,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgSseBehavior } from '/resources/sse/tg-sse-behavior.js';
 import { eventSource } from '/resources/components/tg-event-source.js';
 import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
+import { _requestHeaders } from '/resources/reflection/tg-request-headers.js';
 
 // Applies `accept` to a file input, treating an unrestricted value as "no filter at all".
 // An explicit accept of any-type is not equivalent to omitting the attribute -- some browsers still present it as a named filter.
@@ -263,6 +264,12 @@ const TgFileProcessingBehaviorImpl = {
             const file = oFiles[0];
             const xhr = new XMLHttpRequest();
             xhr.open('PUT', this.url, true);
+
+            // 'Time-Zone' and 'Device-Profile', which FileProcessingResource reads as an AbstractWebResource
+            const headers = _requestHeaders();
+            for (const headerName in headers) {
+                xhr.setRequestHeader(headerName, headers[headerName]);
+            }
 
             // unique job UUID is required to register a progress update event source
             // which is provided to the server as a header value
