@@ -58,8 +58,16 @@ GO
 -- Step 1.
 -- Add the column of `EntityCentreConfig.preferredOnMobile`.
 -- It is required by the application on every database, including one without any MOBILE configurations.
+--
+-- A NOT NULL column can only be added to a table with rows together with a default, which fills those rows.
+-- The default is dropped right after, so that the column is the same as in a newly generated database.
+-- Nothing relies on it afterwards: the application always writes the column, and so does the insert of step 6.
 IF COL_LENGTH('ENTITY_CENTRE_CONFIG', 'PREFERREDONMOBILE_') IS NULL
-    ALTER TABLE ENTITY_CENTRE_CONFIG ADD PREFERREDONMOBILE_ CHAR(1) NOT NULL DEFAULT 'N';
+BEGIN
+    ALTER TABLE ENTITY_CENTRE_CONFIG ADD PREFERREDONMOBILE_ CHAR(1) NOT NULL
+        CONSTRAINT DF_ENTITY_CENTRE_CONFIG_PREFERREDONMOBILE_ DEFAULT 'N';
+    ALTER TABLE ENTITY_CENTRE_CONFIG DROP CONSTRAINT DF_ENTITY_CENTRE_CONFIG_PREFERREDONMOBILE_;
+END
 GO
 
 PRINT 'Step 1: ensured column PREFERREDONMOBILE_.';
