@@ -61,8 +61,8 @@ public class WebApiDateFieldTest extends AbstractDaoTestCase {
     public void date_prop_returns_with_left_null_argument_literal() {
         createDateEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key dateProp(from:null)}}"));
-        
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity (where: {cond: {dateProp: {ge: null}}}) {key dateProp}}"));
+
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
@@ -77,7 +77,7 @@ public class WebApiDateFieldTest extends AbstractDaoTestCase {
     public void date_prop_returns_with_right_null_argument_literal() {
         createDateEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key dateProp(to:null)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {dateProp: {le: null}}}){key dateProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -93,7 +93,7 @@ public class WebApiDateFieldTest extends AbstractDaoTestCase {
     public void date_prop_returns_with_left_non_empty_argument_literal() {
         createDateEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key dateProp(from:\"2020-02-12\")}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {dateProp: {ge: \"2020-02-12\"}}}){key dateProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -108,7 +108,7 @@ public class WebApiDateFieldTest extends AbstractDaoTestCase {
     public void date_prop_returns_with_right_non_empty_argument_literal() {
         createDateEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key dateProp(to:20200218)}}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {dateProp: {le: 20200218}}}){key dateProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -123,7 +123,7 @@ public class WebApiDateFieldTest extends AbstractDaoTestCase {
     public void date_prop_returns_with_left_argument_variable() {
         createDateEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Date){tgWebApiEntity{key dateProp(from:$val)}}"));
+        final Map<String, Object> result = webApi.execute(input("query($val:Date){tgWebApiEntity(where: {cond: {dateProp: {ge: $val}}}){key dateProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -139,7 +139,7 @@ public class WebApiDateFieldTest extends AbstractDaoTestCase {
     public void date_prop_returns_with_right_argument_variable() {
         createDateEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Date){tgWebApiEntity{key dateProp(to:$val)}}"));
+        final Map<String, Object> result = webApi.execute(input("query($val:Date){tgWebApiEntity(where: {cond: {dateProp: {le: $val}}}){key dateProp}}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -155,7 +155,7 @@ public class WebApiDateFieldTest extends AbstractDaoTestCase {
     public void date_prop_returns_with_left_null_argument_variable() {
         createDateEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Date){tgWebApiEntity{key dateProp(from:$val)}}", linkedMapOf(t2("val", null))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Date){tgWebApiEntity(where: {cond: {dateProp: {ge: $val}}}){key dateProp}}", linkedMapOf(t2("val", null))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -170,16 +170,21 @@ public class WebApiDateFieldTest extends AbstractDaoTestCase {
     @Test
     public void date_prop_returns_with_right_null_argument_variable() {
         createDateEntities();
-        
-        final Map<String, Object> result = webApi.execute(input("query($val:Date){tgWebApiEntity{key dateProp(to:$val)}}", linkedMapOf(t2("val", null))));
-        
+
+        final Map<String, Object> result = webApi.execute(input("""
+            query($val:Date) {
+                tgWebApiEntity (where: {cond: {dateProp: {le: $val}}})
+                {key dateProp}
+            }""",
+            linkedMapOf(t2("val", null))));
+
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
-            t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH1"), t2("dateProp", date1)),
-                linkedMapOf(t2("key", "VEH2"), t2("dateProp", date2)),
-                linkedMapOf(t2("key", "VEH3"), t2("dateProp", date3))
-            ))
+                t2("tgWebApiEntity", listOf(
+                        linkedMapOf(t2("key", "VEH1"), t2("dateProp", date1)),
+                        linkedMapOf(t2("key", "VEH2"), t2("dateProp", date2)),
+                        linkedMapOf(t2("key", "VEH3"), t2("dateProp", date3))
+                ))
         )), result);
     }
     
@@ -187,7 +192,7 @@ public class WebApiDateFieldTest extends AbstractDaoTestCase {
     public void date_prop_returns_with_left_non_empty_argument_variable() {
         createDateEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Date){tgWebApiEntity{key dateProp(from:$val)}}", linkedMapOf(t2("val", "2020-02-12"))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Date){tgWebApiEntity(where: {cond: {dateProp: {ge: $val}}}){key dateProp}}", linkedMapOf(t2("val", "2020-02-12"))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -202,7 +207,7 @@ public class WebApiDateFieldTest extends AbstractDaoTestCase {
     public void date_prop_returns_with_right_non_empty_argument_variable() {
         createDateEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Date){tgWebApiEntity{key dateProp(to:$val)}}", linkedMapOf(t2("val", 20200218))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Date){tgWebApiEntity(where: {cond: {dateProp: {le: $val}}}){key dateProp}}", linkedMapOf(t2("val", 20200218))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(

@@ -74,6 +74,18 @@ public class WebApiUtils {
     public static List<Object> errors(final Map<String, Object> result) {
         return (List<Object>) ofNullable(result.get(ERRORS)).orElse(listOf());
     }
+
+    /// Creates an error object in the Web API representation.
+    ///
+    public static Map<String, Object> mkError(final CharSequence message) {
+        return Map.of("message", message.toString());
+    }
+
+    /// Creates a result object with errors in the Web API representation.
+    ///
+    public static Map<String, Object> mkResultWithErrors(final List<Object> errors) {
+        return Map.of(ERRORS, errors);
+    }
     
     /////////////////////////////////////////////// COMPOSE ///////////////////////////////////////////////
     
