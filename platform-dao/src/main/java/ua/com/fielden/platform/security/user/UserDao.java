@@ -76,6 +76,21 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             .with(ACTIVE_ROLES, fetch(SynUserAndRoleAssociationActive.class))
             .with(INACTIVE_ROLES, fetch(SynUserAndRoleAssociationInactive.class));
 
+    private static final String PARAM_USERNAME = "username";
+
+    /// Queries for the active user identified by parameter [#PARAM_USERNAME] (case-insensitive) who can sign in with a password, in the RSO and SSO authentication modes.
+    ///
+    private static final EntityResultQueryModel<User>
+            QUERY_PASSWORD_LOGIN_RSO = mkPasswordLoginQuery(false),
+            QUERY_PASSWORD_LOGIN_SSO = mkPasswordLoginQuery(true);
+
+    /// A query for the secret of the inactive user identified by parameter [#PARAM_USERNAME] (case-insensitive).
+    ///
+    private static final EntityResultQueryModel<UserSecret> QUERY_INACTIVE_USER_SECRET = select(UserSecret.class).where()
+            .lowerCase().prop("key.key").eq().lowerCase().param(PARAM_USERNAME)
+            .and().prop("key.active").eq().val(false)
+            .model();
+
     private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;
     private final IApplicationSettings appSettings;
@@ -287,19 +302,56 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     }
 
     @Override
-    @SessionRequired(allowNestedScope = false)
+    // @SessionRequired(allowNestedScope = false) -- not here to keep user deactivation and deletion of user secrets in separate transactions.
     @Authorise(AlwaysAccessibleToken.class)
     public void lockoutUser(final String username) {
-        // deactivate user if found
-        final User user = co$(User.class).findByKeyAndFetch(getFetchProvider().fetchModel(), username);
-        if (user != null) {
-            save(user.setActive(false));
+        // Each step runs in its own transaction, which is rolled back if the step fails, so that the other step is still performed.
+        try {
+            deactivateLockoutUser(username);
+        } catch (final Exception ex) {
+            LOGGER.error(() -> "Could not deactivate user [%s].".formatted(username), ex);
         }
+        try {
+            deleteLockoutUserSecrets(username);
+        } catch (final Exception ex) {
+            LOGGER.error(() -> "Could not delete the secrets of user [%s].".formatted(username), ex);
+        }
+    }
 
-        // An attempt to delete user secrets regardless of whether user exists or not.
-        // This is to reduce the difference in the computation time that is required for processing existing and non-existing accounts.
+    @SessionRequired(allowNestedScope = false)
+    protected void deactivateLockoutUser(final String username) {
+        // Deactivate the user if they can sign in with a password; deactivation also removes their secret.
+        final IUser co$User = co$(User.class);
+        co$User.getEntityOptional(from(passwordLoginQuery()).with(getFetchProvider().fetchModel()).with(PARAM_USERNAME, username).model())
+                .ifPresent(user -> save(user.setActive(false)));
+    }
+
+    @SessionRequired(allowNestedScope = false)
+    protected void deleteLockoutUserSecrets(final String username) {
+        // An attempt to delete the secrets of an inactive user regardless of whether an account was locked out.
+        // This is to reduce the difference in the computation time that is required for processing the accounts that are locked out and all other usernames.
         final UserSecretCo coUserSecret = co(UserSecret.class);
-        coUserSecret.batchDelete(select(UserSecret.class).where().prop("key.key").eq().val(username).model());
+        coUserSecret.batchDelete(QUERY_INACTIVE_USER_SECRET, Map.of(PARAM_USERNAME, username));
+    }
+
+    @Override
+    public Optional<User> findUserForPasswordLogin(final String username) {
+        return getEntityOptional(from(passwordLoginQuery()).with(fetchAll(User.class)).with(PARAM_USERNAME, username).model());
+    }
+
+    /// The query for the user who can sign in with a password in the current authentication mode.
+    ///
+    private EntityResultQueryModel<User> passwordLoginQuery() {
+        return ssoMode() ? QUERY_PASSWORD_LOGIN_SSO : QUERY_PASSWORD_LOGIN_RSO;
+    }
+
+    /// Creates a query for the active user identified by parameter [#PARAM_USERNAME] (case-insensitive) who, in the SSO authentication mode, is not restricted to SSO only.
+    ///
+    private static EntityResultQueryModel<User> mkPasswordLoginQuery(final boolean ssoMode) {
+        final ICompoundCondition0<User> condition = select(User.class).where()
+                .prop(ACTIVE).eq().val(true)
+                .and().lowerCase().prop(KEY).eq().lowerCase().param(PARAM_USERNAME);
+        return (ssoMode ? condition.and().prop(User.SSO_ONLY).eq().val(false) : condition).model();
     }
 
     @Override

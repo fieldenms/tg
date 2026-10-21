@@ -647,6 +647,23 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    public void lockout_identifies_the_account_by_username_case_insensitively() {
+        coUser.lockoutUser("user3");
+        assertFalse(coUser.findUser("USER3").isActive());
+    }
+
+    @Test
+    public void active_user_can_be_found_for_password_login_by_username_case_insensitively() {
+        assertEquals("USER3", coUser.findUserForPasswordLogin("user3").orElseThrow().getKey());
+    }
+
+    @Test
+    public void inactive_or_unknown_users_cannot_be_found_for_password_login() {
+        assertTrue(coUser.findUserForPasswordLogin("INACTIVE_USER").isEmpty());
+        assertTrue(coUser.findUserForPasswordLogin("NON-EXISTING-USER").isEmpty());
+    }
+
+    @Test
     public void lockout_of_non_existing_account_does_not_throw_exceptions() {
         final String username = "NON-EXISTING-USER-TO-LOCKOUT";
         assertNull(coUser.findUser(username));

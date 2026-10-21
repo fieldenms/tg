@@ -106,9 +106,18 @@ public interface IUser extends IEntityDao<User>, ISaveWithFetch<User> {
     boolean isPasswordStrong(final String passwd);
 
     /// Locks out the account of `username`, which means making a corresponding [User] inactive and removing the user's `password` and `resetUuid`.
+    /// Only an account that can sign in with a password, as found by [#findUserForPasswordLogin(String)], is locked out.
+    /// Failed password attempts pose no risk to other accounts, such as accounts restricted to SSO in the SSO authentication mode, and do not deactivate them.
     /// The `username` value may belong to a non-existing user, and this function should still perform gracefully.
     ///
     void lockoutUser(final String username);
+
+    /// Finds the user identified by the provided username (case-insensitive) who can sign in with a password.
+    /// Such a user is active and, in the SSO authentication mode, is not restricted to SSO only.
+    ///
+    /// An empty optional value is returned in case where no such user was identified.
+    ///
+    Optional<User> findUserForPasswordLogin(final String username);
 
     /// Returns all available user roles
     ///

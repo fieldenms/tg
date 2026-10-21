@@ -207,9 +207,13 @@ State the fact positively, on the thing that does exist.
 Not "a separate `elementType` is not needed, because `type` already reports the element type", but "for a collectional property, `type` reports the type of its elements".
 The same applies to a `TODO` describing a feature nobody has asked for, and to a comment explaining why a simpler implementation was not chosen.
 
-Two things this does not prohibit, because in both the absent thing has a claim on the reader.
+Three things this does not prohibit, because in each the absent thing has a claim on the reader.
 
 1. Choosing between real alternatives.
    Where a reader would otherwise reach for a named, existing mechanism — a platform facility, a library, a standard — say why the implemented design was preferred to it.
 2. The boundary of a contract.
    What an API deliberately does not expose is part of what it does expose, and belongs in its documentation, particularly where a developer would otherwise reintroduce it.
+3. An annotation that must not be applied.
+   Where adding an annotation would be a natural mistake, it stays in view as a comment followed by `-- not here to` and the reason, so that nobody adds it by accident.
+   E.g., `UserDao.lockoutUser` performs two steps in separate transactions: `// @SessionRequired(allowNestedScope = false) -- not here to keep user deactivation and deletion of user secrets in separate transactions.`
+   Do not flag or remove such comments.
