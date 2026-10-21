@@ -391,6 +391,40 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    public void password_reset_UUID_is_assigned_to_a_user_without_one() {
+        final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        consts.setNow(dateTime("2016-04-05 14:00:00"));
+
+        final User user = coUser.findUserForPasswordReset("USER3").orElseThrow();
+        final UserSecret secret = coUser.findOrAssignPasswordResetUuid(user, consts.now().toDate(), expirationTime());
+        assertTrue(coUser.isPasswordResetUuidValid(secret.getResetUuid(), consts.now().toDate()));
+    }
+
+    @Test
+    public void password_reset_UUID_that_remains_valid_until_the_required_time_is_kept() {
+        final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        consts.setNow(dateTime("2016-04-05 14:00:00"));
+        final User user = coUser.findUserForPasswordReset("USER3").orElseThrow();
+        final String uuid = coUser.assignPasswordResetUuid(user, expirationTime()).getResetUuid();
+
+        final Date validUntil = consts.now().plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES).minusSeconds(1).toDate();
+        assertEquals(uuid, coUser.findOrAssignPasswordResetUuid(user, validUntil, expirationTime()).getResetUuid());
+    }
+
+    @Test
+    public void password_reset_UUID_that_expires_before_the_required_time_is_replaced() {
+        final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        consts.setNow(dateTime("2016-04-05 14:00:00"));
+        final User user = coUser.findUserForPasswordReset("USER3").orElseThrow();
+        final String uuid = coUser.assignPasswordResetUuid(user, expirationTime()).getResetUuid();
+
+        final Date validUntil = consts.now().plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES).toDate();
+        final String newUuid = coUser.findOrAssignPasswordResetUuid(user, validUntil, expirationTime()).getResetUuid();
+        assertNotEquals(uuid, newUuid);
+        assertFalse(coUser.findUserByResetUuid(uuid).isPresent());
+    }
+
+    @Test
     public void password_reset_for_non_existing_user_fails() {
         final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         final String now = "2016-05-19 11:02:00";

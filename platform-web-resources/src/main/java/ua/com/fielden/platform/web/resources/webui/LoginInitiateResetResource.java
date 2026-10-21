@@ -24,23 +24,28 @@ import ua.com.fielden.platform.web.annotations.AppUri;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.restlet.data.MediaType.TEXT_HTML;
-import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MUNUTES;
 import static ua.com.fielden.platform.security.user.UserSecretCo.passwordResetExpirationTime;
+import static ua.com.fielden.platform.security.user.UserSecretCo.resetUuidExpirationTime;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 
-/**
- * A web resource to initiate user login recovery procedure.
- *
- * @author TG Team
- *
- */
+/// A web resource to initiate user login recovery procedure.
+///
+/// A password reset is initiated at most once per user within the cooldown of [PasswordResetCooldown].
+/// A reset link that remains valid for at least [#MIN_REUSED_LINK_VALIDITY_IN_MINUTES] is sent again instead of being replaced,
+/// so that repeated requests do not invalidate a link that the user has received.
+/// Requests for a user in cooldown receive the same response, and the same response-time adjustment, as requests for an unknown user,
+/// so that the response does not disclose whether an account exists.
+///
 public class LoginInitiateResetResource extends AbstractWebResource {
 
     private static final Logger LOGGER = LogManager.getLogger(LoginInitiateResetResource.class);
@@ -50,32 +55,37 @@ public class LoginInitiateResetResource extends AbstractWebResource {
 
     public static final String PARAM_USERNAME_OR_EMAIL = "username_or_email";
 
+    /// The minimum remaining validity of a reset link for it to be sent again instead of being replaced.
+    ///
+    public static final int MIN_REUSED_LINK_VALIDITY_IN_MINUTES = 5;
+
     private final IWebResourceLoader webResourceLoader;
     private final String appUri;
     private final ICompanionObjectFinder coFinder;
     private final IUserProvider up;
     private final IUniversalConstants constants;
+    private final PasswordResetCooldown cooldown;
 
-    /**
-     * Creates {@link LoginInitiateResetResource}.
-     */
     public LoginInitiateResetResource(
             final IWebResourceLoader webResourceLoader,
             @AppUri final String appUri,
             final IUniversalConstants constants,
             final ICompanionObjectFinder coFinder,
             final IUserProvider userProvider,
+            final PasswordResetCooldown cooldown,
             final IDeviceProvider deviceProvider,
             final IDates dates,
-            final Context context, //
-            final Request request, //
-            final Response response) {
+            final Context context,
+            final Request request,
+            final Response response)
+    {
         super(context, request, response, deviceProvider, dates);
         this.webResourceLoader = webResourceLoader;
         this.appUri = appUri;
         this.coFinder = coFinder;
         this.constants = constants;
         this.up = userProvider;
+        this.cooldown = cooldown;
     }
 
     @Override
@@ -105,9 +115,12 @@ public class LoginInitiateResetResource extends AbstractWebResource {
 
             final IUser co$User = coFinder.find(User.class, false);
 
-            final Optional<UserSecret> maybeUserSecret = co$User.assignPasswordResetUuid(usernameOrEmail, passwordResetExpirationTime());
+            // Reset links expire at an instant of the server clock (see passwordResetExpirationTime), against which LoginCompleteResetResource validates them.
+            // IDates.now() is not used, as in the independent time-zone mode it shifts the instant by the offset of the request time-zone.
+            final Date now = new Date();
+            final Optional<UserSecret> maybeUserSecret = findOrAssignPasswordResetUuid(co$User, cooldown, usernameOrEmail, now, passwordResetExpirationTime());
 
-            adjustResponseTime(maybeUserSecret.filter(secret -> !isEmpty(secret.getKey().getEmail())).map(this::reset));
+            adjustResponseTime(maybeUserSecret.filter(secret -> !isEmpty(secret.getKey().getEmail())).map(secret -> reset(secret, now)));
 
             getResponse().setEntity(response);
 
@@ -122,17 +135,34 @@ public class LoginInitiateResetResource extends AbstractWebResource {
         }
     }
 
-    /**
-     * An action to initiate password reset to a valid user, returning the number of milliseconds it took to perform the work.
-     * The result is used to randomise the response time for reducing the risk of timing-based attacks.
-     *
-     * @param secret
-     * @return
-     */
-    private int reset(final UserSecret secret) {
+    /// Returns the secret with a password reset UUID for the user identified by `usernameOrEmail`, unless no such user can reset their password, or the user is in cooldown.
+    /// The UUID already assigned to the user is kept if it remains valid for at least [#MIN_REUSED_LINK_VALIDITY_IN_MINUTES] from `now`;
+    /// otherwise, a new UUID that expires at `expirationTime` is assigned.
+    ///
+    static Optional<UserSecret> findOrAssignPasswordResetUuid(
+            final IUser co$User,
+            final PasswordResetCooldown cooldown,
+            final String usernameOrEmail,
+            final Date now,
+            final Date expirationTime)
+    {
+        final Date validUntil = new Date(now.getTime() + MINUTES.toMillis(MIN_REUSED_LINK_VALIDITY_IN_MINUTES));
+        return co$User.findUserForPasswordReset(usernameOrEmail)
+                .filter(cooldown::tryStart)
+                .map(user -> co$User.findOrAssignPasswordResetUuid(user, validUntil, expirationTime));
+    }
+
+    /// An action to initiate password reset to a valid user, returning the number of milliseconds it took to perform the work.
+    /// The result is used to randomise the response time for reducing the risk of timing-based attacks.
+    ///
+    /// @param secret
+    /// @param now the moment in time of the request, from which the remaining validity of the reset link is stated in the email
+    ///
+    private int reset(final UserSecret secret, final Date now) {
         final long computationStart = System.currentTimeMillis();
         final String emailAddr = secret.getKey().getEmail();
-        final String emailBody = makePasswordRestEmail(constants.appName(), appUri, secret.getResetUuid());
+        final long validityInMinutes = MILLISECONDS.toMinutes(resetUuidExpirationTime(secret.getResetUuid()).orElseThrow().getTime() - now.getTime());
+        final String emailBody = makePasswordRestEmail(constants.appName(), appUri, secret.getResetUuid(), validityInMinutes);
         final SmtpEmailSender sender = new SmtpEmailSender(constants.smtpServer());
         sender.sendPlainMessage(constants.fromEmailAddress(),
                                 emailAddr,
@@ -147,12 +177,8 @@ public class LoginInitiateResetResource extends AbstractWebResource {
     private static final AtomicDouble avgComputeTime = new AtomicDouble(300.00);
     private static final AtomicDouble var2ComputeTime = new AtomicDouble(0);
 
-    /**
-     * Computes the mean and the variance based on the online algorithm outlined in <pre>https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance</pre>.
-     *
-     * @param newReading
-     * @return
-     */
+    /// Computes the mean and the variance based on the online algorithm outlined in [Wikipeida](https://en.wikipedia.org/wiki/Algorithms\_for\_calculating\_variance).
+    ///
     private static void computeStats(final int newReading) {
         synchronized (lockForStats) {
             if (newReading > 0) {
@@ -169,11 +195,8 @@ public class LoginInitiateResetResource extends AbstractWebResource {
         }
     }
 
-    /**
-     * A function to randomly delay the response to reduce the risk of a timing-based attack.
-     *
-     * @param computeTime
-     */
+    /// A function to randomly delay the response to reduce the risk of a timing-based attack.
+    ///
     private void adjustResponseTime(final Optional<Integer> computeTime) {
         computeStats(computeTime.orElse(0));
 
@@ -190,20 +213,19 @@ public class LoginInitiateResetResource extends AbstractWebResource {
         }
     }
 
-    private String makePasswordRestEmail(final String appName, final String appUri, final String resetUuid) {
-        final StringBuilder builder = new StringBuilder();
-        builder.append(format("We heard that you lost your %s password. Sorry about that!", appName));
-        builder.append("\n\n");
-        builder.append(format("But don't worry! You can use the following link within %s minutes to reset your password:", RESET_UUID_EXPIRATION_IN_MUNUTES));
-        builder.append("\n\n");
-        builder.append(format("%sreset_password/%s", appUri, resetUuid));
-        builder.append("\n\n");
-        builder.append(format("If you don't use this link within %s minutes, it will expire. To get a new password reset link, visit %sforgotten", RESET_UUID_EXPIRATION_IN_MUNUTES, appUri));
-        builder.append("\n\n");
-        builder.append("Thanks,\n");
-        builder.append("Your support team");
+    private String makePasswordRestEmail(final String appName, final String appUri, final String resetUuid, final long validityInMinutes) {
+        return """
+                We heard that you lost your %s password. Sorry about that!
 
-        return builder.toString();
+                But don’t worry! You can use the following link within %s minutes to reset your password:
+
+                %sreset_password/%s
+
+                If you don’t use this link within %s minutes, it will expire. To get a new password reset link, visit %sforgotten
+
+                Thanks,
+                Your support team"""
+                .formatted(appName, validityInMinutes, appUri, resetUuid, validityInMinutes, appUri);
     }
 
 }

@@ -18,6 +18,23 @@ public interface UserSecretCo extends IEntityDao<UserSecret>, ISaveWithFetch<Use
         return new DateTime().plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES).toDate();
     }
 
+    /// Returns the expiration time encoded in `resetUuid`, or an empty value if `resetUuid` is empty or malformed.
+    ///
+    static Optional<Date> resetUuidExpirationTime(final String resetUuid) {
+        if (resetUuid == null || resetUuid.isEmpty()) {
+            return Optional.empty();
+        }
+        final String[] uuidParts = resetUuid.split(UserSecret.SECRET_RESET_UUID_SEPERATOR);
+        if (uuidParts.length != 3) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(new Date(Long.parseLong(uuidParts[2])));
+        } catch (final NumberFormatException ex) {
+            return Optional.empty();
+        }
+    }
+
     static Date newUserPasswordRestExpirationTime() {
         // Server-side timezone should always be used for calculating the expiration time.
         // Hence, new DateTime().

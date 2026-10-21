@@ -59,12 +59,39 @@ public interface IUser extends IEntityDao<User>, ISaveWithFetch<User> {
     ///
     /// An empty optional value is returned in case where no user was identified by the given username or email address.
     ///
+    /// Equivalent to [#findUserForPasswordReset(String)] followed by [#assignPasswordResetUuid(User, Date)].
+    ///
     /// @param usernameOrEmail either a username or their email address
     /// @param expirationTime  the moment in time at which generated UUID will become expired;
     ///                        it is expressed as a parameter to support different expiration periods for different circumstances, and to facilitate testing;
     ///                        for example, the expiration period for the initially created user could be 24 hours, but 15 minutes for password resets.
     ///
     Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail, final Date expirationTime);
+
+    /// Finds the user identified by the provided username or email address (case-insensitive) who can reset their password.
+    /// Such a user is active and, in the SSO authentication mode, is not restricted to SSO only.
+    ///
+    /// An empty optional value is returned in case where no such user was identified.
+    ///
+    Optional<User> findUserForPasswordReset(final String usernameOrEmail);
+
+    /// Generates a temporal password reset UUID for `user`, associates it with the user, and returns the updated secret.
+    /// A previously generated UUID of `user` is replaced, and thus can no longer be used.
+    ///
+    /// @param user           a user, such as one found by [#findUserForPasswordReset(String)]
+    /// @param expirationTime the moment in time at which generated UUID will become expired
+    ///
+    UserSecret assignPasswordResetUuid(final User user, final Date expirationTime);
+
+    /// Returns the secret of `user` with a password reset UUID that remains valid at least until `validUntil`.
+    /// The UUID already assigned to `user` is kept if it does not expire before `validUntil`, so that a link sent with it earlier remains usable.
+    /// Otherwise, a new UUID that expires at `expirationTime` is assigned, as by [#assignPasswordResetUuid(User, Date)].
+    ///
+    /// @param user           a user, such as one found by [#findUserForPasswordReset(String)]
+    /// @param validUntil     the moment in time until which an already assigned UUID needs to remain valid to be kept
+    /// @param expirationTime the moment in time at which a newly generated UUID will become expired
+    ///
+    UserSecret findOrAssignPasswordResetUuid(final User user, final Date validUntil, final Date expirationTime);
 
     /// Returns `true` if the provided `uuid` is associated with a user and has not yet expired.
     ///

@@ -55,6 +55,7 @@ import static ua.com.fielden.platform.security.user.User.*;
 import static ua.com.fielden.platform.security.user.UserAndRoleAssociation.USER;
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
 import static ua.com.fielden.platform.security.user.UserSecretCo.newUserPasswordRestExpirationTime;
+import static ua.com.fielden.platform.security.user.UserSecretCo.resetUuidExpirationTime;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
 
@@ -367,6 +368,11 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail, final Date expirationTime) {
+        return findUserForPasswordReset(usernameOrEmail).map(user -> assignPasswordResetUuid(user, expirationTime));
+    }
+
+    @Override
+    public Optional<User> findUserForPasswordReset(final String usernameOrEmail) {
         // Let's try to find a user by username or email.
         // In the SSO authentication mode, it is necessary to exclude those users who are restricted to SSO only.
         final ICompoundCondition0<User> rsoCondition = select(User.class)
@@ -379,20 +385,28 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
                 .end();
         final EntityResultQueryModel<User> query = (ssoMode() ? rsoCondition.and().prop(User.SSO_ONLY).eq().val(false) : rsoCondition).model();
 
-        final User user = getEntity(from(query).with(fetchAll(User.class)).model());
+        return ofNullable(getEntity(from(query).with(fetchAll(User.class)).model()));
+    }
 
-        // if the user was found then a password reset request UUID needs to be generated
-        // and associated wit the identified user
-        if (user != null) {
-            final UserSecretCo co$UserSecret = co$(UserSecret.class);
-            final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
-            final long expirationTimeMillis = expirationTime.getTime();
-            final String uuid = "%s%s%s%s%s".formatted(user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, expirationTimeMillis);
-            final var encodedUuid = UrlEscapers.urlFragmentEscaper().escape(uuid);
-            return of(co$UserSecret.save(secret.setResetUuid(encodedUuid)));
-        }
+    @Override
+    public UserSecret assignPasswordResetUuid(final User user, final Date expirationTime) {
+        final UserSecretCo co$UserSecret = co$(UserSecret.class);
+        return assignPasswordResetUuid(user, findOrCreateNewSecret(user, co$UserSecret), expirationTime, co$UserSecret);
+    }
 
-        return empty();
+    @Override
+    public UserSecret findOrAssignPasswordResetUuid(final User user, final Date validUntil, final Date expirationTime) {
+        final UserSecretCo co$UserSecret = co$(UserSecret.class);
+        final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
+        final boolean keepAssigned = resetUuidExpirationTime(secret.getResetUuid()).filter(validUntil::before).isPresent();
+        return keepAssigned ? secret : assignPasswordResetUuid(user, secret, expirationTime, co$UserSecret);
+    }
+
+    private UserSecret assignPasswordResetUuid(final User user, final UserSecret secret, final Date expirationTime, final UserSecretCo co$UserSecret) {
+        final long expirationTimeMillis = expirationTime.getTime();
+        final String uuid = "%s%s%s%s%s".formatted(user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, expirationTimeMillis);
+        final var encodedUuid = UrlEscapers.urlFragmentEscaper().escape(uuid);
+        return co$UserSecret.save(secret.setResetUuid(encodedUuid));
     }
 
     @Override
@@ -404,10 +418,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             return false;
         } else {
             // If a corresponding user was found, then UUID needs to be checked for expiration.
-            final String[] uuidParts = uuid.split(SECRET_RESET_UUID_SEPERATOR);
-            final long expirationTime = Long.parseLong(uuidParts[2]);
-
-            final boolean expired = now.getTime() >= expirationTime;
+            final boolean expired = resetUuidExpirationTime(uuid).map(expirationTime -> !now.before(expirationTime)).orElse(true);
             if (expired) {
                 // Remove expired UUID.
                 final UserSecretCo co$UserSecret = co$(UserSecret.class);
