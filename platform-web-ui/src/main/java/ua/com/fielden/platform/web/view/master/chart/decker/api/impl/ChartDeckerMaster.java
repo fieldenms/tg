@@ -110,6 +110,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
             chartOptions.add("{\n"
                     + "    mode: d3.barChart.BarMode." + deck.getMode().name() + ",\n"
                     + "    label: '" + deck.getTitle() + "',\n"
+                    + "    margin: " + generateMargin(deck) + ",\n"
                     + "    xAxis: {\n"
                     + "        label: '" + deck.getXAxisTitle() + "',\n"
                     + "        orientation: d3.barChart.LabelOrientation." + deck.getxAxisLabelOrientation().name() + "\n"
@@ -140,6 +141,16 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         return "self.barOptions = [" + join(chartOptions, ",\n") + "];\n"
                 + "self.legendItems =[" + join(legendItems, ",\n") + "];\n"
                 + "self.lineLegendItems =[" + join(lineLegendItems, ",\n") + "];\n";
+    }
+
+    /// Generates the margins of the chart of `deck` that are specified for it, which take the place of the default margins of the chart.
+    /// The other margins keep their defaults, as the chart merges the generated margins into its default margins, so that no margins are generated as `{}`.
+    ///
+    private String generateMargin(final ChartDeck<T> deck) {
+        final List<String> margins = new ArrayList<>();
+        deck.getTopMargin().ifPresent(px -> margins.add("top: " + px));
+        deck.getRightMargin().ifPresent(px -> margins.add("right: " + px));
+        return "{" + join(margins, ", ") + "}";
     }
 
     private String generateLineLegendItem(final ChartLine<T> line) {
