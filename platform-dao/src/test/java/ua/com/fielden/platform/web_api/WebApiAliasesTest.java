@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 
 /// Test for aliases in data queries (root field `e` for each queryable entity type `E`) and aggregation queries (root field `e_agg`).
@@ -118,8 +120,10 @@ public class WebApiAliasesTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void the_same_property_selected_twice_without_aliases_is_an_error() {
-        assertDuplicateFieldError("{ %s { key key } }".formatted(ROOT), "key");
+    public void the_same_property_selected_twice_without_aliases_and_arguments_is_merged_into_one_result_property() {
+        final var rows = rows(query("{ %s { key key } }".formatted(ROOT)));
+        assertThat(rows).extracting(row -> row.get("key"))
+                .containsExactlyInAnyOrder("VEH1", "VEH2", "VEH3", "VEH4");
     }
 
     @Test
@@ -133,21 +137,28 @@ public class WebApiAliasesTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void duplicate_fields_in_a_nested_sub_selection_are_an_error() {
-        assertDuplicateFieldError("{ vehicles: %s { model { make { a: key b: key } } } }".formatted(ROOT), "key");
+    public void duplicate_fields_with_different_aliases_in_a_nested_sub_selection_are_an_error() {
+        assertDuplicateFieldError("{ vehicles: %s { model { make { a: key b: key } } } }".formatted(ROOT), "model.make.key");
     }
 
     @Test
-    public void the_same_property_selected_directly_and_through_a_fragment_is_an_error() {
-        assertDuplicateFieldError("""
-          { %s { key ...F } }
-          fragment F on TgWebApiEntity { key }
-          """.formatted(ROOT), "key");
+    public void the_same_property_selected_without_aliases_and_arguments_both_directly_and_through_a_fragment_is_merged_into_one_result_property() {
+        final var rows = rows(query("""
+              { %s { key ...F } }
+              fragment F on TgWebApiEntity { key }
+              """.formatted(ROOT)));
+        assertThat(rows).extracting(row -> row.get("key"))
+                .containsExactlyInAnyOrder("VEH1", "VEH2", "VEH3", "VEH4");
     }
 
     @Test
-    public void the_same_property_selected_directly_and_through_an_inline_fragment_is_an_error() {
-        assertDuplicateFieldError("{ %s { model { key } ... on TgWebApiEntity { model { desc } } } }".formatted(ROOT), "model");
+    public void the_same_property_selected_without_aliases_and_arguments_both_directly_and_through_an_inline_fragment_is_merged_into_one_result_property() {
+        final var rows = rows(query("{ %s { model { key } ... on TgWebApiEntity { model { desc } } } }".formatted(ROOT)));
+        assertThat(rows).containsExactlyInAnyOrder(
+                Map.of("model", Map.of("key", "316", "desc", "316 desc")),
+                Map.of("model", Map.of("key", "316", "desc", "316 desc")),
+                Map.of("model", Map.of("key", "A4", "desc", "A4 desc")),
+                mapOf(t2("model", null)));
     }
 
     @Test
@@ -265,20 +276,21 @@ public class WebApiAliasesTest extends AbstractDaoTestCase {
 
     @Test
     public void the_same_property_aggregated_twice_under_different_aliases_is_an_error() {
-        assertDuplicateFieldError("{ %s { sum { a: intProp b: intProp } } }".formatted(AGG_ROOT), "intProp");
+        assertDuplicateFieldError("{ %s { sum { a: intProp b: intProp } } }".formatted(AGG_ROOT), "sum.intProp");
     }
 
     @Test
     public void the_same_property_grouped_by_twice_under_different_aliases_is_an_error() {
-        assertDuplicateFieldError("{ %s { groupBy { a: model { key } b: model { desc } } count } }".formatted(AGG_ROOT), "model");
+        assertDuplicateFieldError("{ %s { groupBy { a: model { key } b: model { desc } } count } }".formatted(AGG_ROOT), "groupBy.model");
     }
 
     @Test
-    public void the_same_aggregate_selected_directly_and_through_a_fragment_is_an_error() {
-        assertDuplicateFieldError("""
+    public void the_same_aggregation_field_selected_without_alias_and_arguments_both_directly_and_through_a_fragment_is_merged_into_one_result_field() {
+        final var row = single(query("""
           { stats: %s { count ...F } }
           fragment F on TgWebApiEntity_Agg { count }
-          """.formatted(AGG_ROOT), "count");
+          """.formatted(AGG_ROOT)), "stats");
+        assertThat(row).containsOnly(entry("count", 4));
     }
 
     @Override
@@ -347,6 +359,12 @@ public class WebApiAliasesTest extends AbstractDaoTestCase {
         final var rows = listAt(data, responseKey);
         assertThat(rows).hasSize(1);
         return rows.getFirst();
+    }
+
+    /// All rows under the root field.
+    ///
+    private static List<Map<String, Object>> rows(final Map<String, Object> data) {
+        return listAt(data, ROOT);
     }
 
     /// Follows a dot-notated `path` through nested maps, returning `null` if any value along the path is `null`.

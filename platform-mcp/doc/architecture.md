@@ -254,11 +254,18 @@ It is not consulted for the fields of `Query`, so a root field survives even whe
 ### Duplicate Fields in Sub-Selections
 
 Aliases are meaningful on root fields, where each aliased root field is a query of its own, with its own `where`, ordering and pagination.
-Below root fields, in both data and aggregation queries, a field may be selected at most once per selection set, with or without an alias.
+Below root fields, in both data and aggregation queries, a field may be selected under at most one response key per selection set.
+The response key is the alias, or the field name if there is no alias.
 Fields selected through fragments belong to the selection set that contains the fragment.
-A duplicate field is rejected with an error for the root field that contains it, which fails that root field only.
 
-In data queries, this rule prevents confusion.
+Repeated selections of a field under the same response key are merged into one, as the GraphQL specification requires.
+For example, `{ workOrder { key ...F } } fragment F on WorkOrder { key }` returns `key` once.
+Merging is possible only if the selections have the same arguments.
+graphql-java checks this when it validates the query, so `{ workOrder { key(order: ASC_1) key(order: DESC_1) } }` fails the whole request before any data is fetched.
+
+Selections of a field under different response keys, as in `{ workOrder { a: key b: key } }`, are rejected with an error for the root field that contains them, which fails that root field only.
+
+In data queries, rejecting selections under different response keys prevents confusion.
 A field for an entity property always returns the same value, and its only argument, `order`, does not affect that value but orders the result set.
 A second selection of the same property can therefore differ from the first only in `order`, as in `{ workOrder { a: key(order: ASC_1) b: key(order: DESC_1) } }`.
 The result set has a single order, so such a query cannot be honoured as written, and silently applying one of the orderings could return something other than what was asked for.

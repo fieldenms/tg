@@ -1,14 +1,7 @@
 package ua.com.fielden.platform.web_api;
 
-import graphql.language.*;
-import graphql.schema.GraphQLNamedType;
-import graphql.schema.GraphQLObjectType;
-import graphql.schema.GraphQLSchema;
-import graphql.schema.GraphQLType;
-import jakarta.annotation.Nullable;
+import graphql.schema.*;
 import org.apache.commons.lang3.Strings;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -18,9 +11,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ImmutableListUtils;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -34,11 +26,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
-import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 public class GraphQLCommon {
 
-    private static final Logger LOGGER = LogManager.getLogger();
 
     /// Name of the GraphQL root field for the specified entity type.
     ///
@@ -144,16 +134,6 @@ public class GraphQLCommon {
                 .sorted(comparing(Class::getSimpleName));
     }
 
-    public static Optional<Field> findField(final @Nullable SelectionSet selectionSet, final CharSequence name) {
-        if (selectionSet == null) {
-            return Optional.empty();
-        }
-        return selectionSet.getSelections().stream()
-                .mapMulti(typeFilter(Field.class))
-                .filter(f -> f.getName().contentEquals(name))
-                .findFirst();
-    }
-
     public static boolean containsRootFieldForType(final GraphQLSchema schema, final Class<?> type) {
         return schema.getQueryType().getFieldDefinition(rootFieldName(type)) != null;
     }
@@ -177,29 +157,64 @@ public class GraphQLCommon {
         }
     }
 
-    /// Returns a stream of first-level fields for a selection set, replacing any fragments by their contents.
+    /// Returns all selected fields for the root field in `env`, resolving any fragments that may have been present in the query.
     ///
-    public static Stream<Field> streamFields(final @Nullable SelectionSet selectionSet, final Map<String, FragmentDefinition> fragments) {
-        if (selectionSet == null) {
-            return Stream.of();
-        }
-        return selectionSet.getSelections()
-                .stream()
-                .flatMap(sel -> switch (sel) {
-                    case Field field -> Stream.of(field);
-                    case FragmentSpread frag -> {
-                        final var def = fragments.get(frag.getName());
-                        if (def == null) {
-                            throw new WebApiException("Unknown fragment [%s].".formatted(frag.getName()));
-                        }
-                        yield streamFields(def.getSelectionSet(), fragments);
-                    }
-                    case InlineFragment frag -> streamFields(frag.getSelectionSet(), fragments);
-                    default -> {
-                        LOGGER.warn(() -> "Ignoring unknown selection [%s].".formatted(Objects.toString(sel)));
-                        yield Stream.of();
-                    }
-                });
+    /// ```
+    /// {
+    ///   workOrder {
+    ///     key
+    ///     status { key }
+    ///     d1: repairStart
+    ///     d2: repairStart
+    ///   }
+    /// }
+    /// =>
+    /// [key, status, status.key, repairStart(alias: "d1"), repairStart(alias: "d2")]
+    /// ```
+    ///
+    /// ### Duplicate fields
+    ///
+    /// Duplicate fields are processed by the GraphQL SDK according to the GraphQL specification.
+    /// Therefore, after [DataFetchingEnvironment] is constructed, the SDK must have already validated the query.
+    /// For posterity, the rule is documented below.
+    ///
+    /// Two fields with the same response key (the alias, or the field name if there is no alias) must have the same
+    /// name and the same arguments.
+    /// Otherwise there would be one key in the response with two possible values, which the spec forbids.
+    /// For example, `key(order: DESC_2)` and `key(order: DESC_3)` will be rejected.
+    ///
+    public static Collection<SelectedField> allSelectedFields(final DataFetchingEnvironment env) {
+        // NOTE This simple implementation suffices as long as interface and union types are not used.
+        return env.getSelectionSet().getFields();
+    }
+
+    public static String toPropertyPath(final SelectedField field) {
+        return propertyPathFromSelectedFieldName(field.getQualifiedName());
+    }
+
+    public static String propertyPathFromSelectedFieldName(final CharSequence name) {
+        return name.toString().replace('/', '.');
+    }
+
+    /// Returns all _terminal_ fields from a selection set.
+    /// A field is terminal if none of its sub-fields were selected.
+    /// Each returned field's qualified name is fully qualified with respect to `selectionSet`.
+    ///
+    /// For example, assuming this method is called for the selection set of `workOrder`:
+    ///
+    /// ```
+    /// {
+    ///   workOrder {
+    ///     key
+    ///     status { key }
+    ///   }
+    /// }
+    /// ==>
+    /// ["key", "status/key"]
+    /// ```
+    ///
+    public static List<SelectedField> terminalFields(final DataFetchingFieldSelectionSet selectionSet) {
+        return selectionSet.getFields().stream().filter(fld -> fld.getSelectionSet().getImmediateFields().isEmpty()).toList();
     }
 
     /// Returns an object type whose name is `typeName`.
