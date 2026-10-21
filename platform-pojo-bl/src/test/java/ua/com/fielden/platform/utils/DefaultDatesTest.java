@@ -12,6 +12,7 @@ import static java.lang.Math.abs;
 import static org.joda.time.DateTimeZone.forID;
 import static org.joda.time.DateTimeZone.getDefault;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 
 public class DefaultDatesTest {
     private final Date date = new Date(0L);
@@ -373,6 +374,8 @@ public class DefaultDatesTest {
         assertEquals(getDefault(), serverNow.getZone());
         assertTrue(abs(new DateTime().getMillis() - serverNow.getMillis()) < MILLIS_DIFF_THRESHOLD);
         // `now()` is a different moment -- the wall-clock time in the request time zone, relabelled as the default time zone.
+        assumeFalse("The default time zone has the same offset as the request time zone, so relabelling does not change the moment.",
+                    getDefault().getOffset(serverNow) == dates.requestTimeZone().get().getOffset(serverNow));
         assertTrue(abs(dates.now().getMillis() - serverNow.getMillis()) > MILLIS_DIFF_THRESHOLD);
     }
 
