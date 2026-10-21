@@ -10,12 +10,8 @@ import org.joda.time.DateTimeZone;
 
 import ua.com.fielden.platform.utils.IDates;
 
-/**
- * A convenient implementation of the {@link IDates} contract for benchmarking purposes.
- *
- * @author TG Team
- * 
- */
+/// A convenient implementation of the [IDates] contract for benchmarking purposes.
+///
 @Singleton
 class DatesForBenchmarking implements IDates {
     private DateTime now;
@@ -23,6 +19,11 @@ class DatesForBenchmarking implements IDates {
 
     @Override
     public DateTime now() {
+        return getNow();
+    }
+
+    @Override
+    public DateTime serverNow() {
         return getNow();
     }
 
@@ -41,30 +42,27 @@ class DatesForBenchmarking implements IDates {
         this.now = now;
     }
 
-    /**
-     * A convenient way to specify the model time as a function.
-     * If time supplier is not specified, value <code>now</code> is used.
-     * This provides a way to alternate between constant and changing model time.
-     * <p>
-     * Possible implementation could use {@link AtomicReference} to emulate a ticking time like this.
-     * <pre>
-         final AtomicReference<DateTime> atomicNow = new AtomicReference<>(constants.getNow());
-         constants.setTimeSupplier(() -> atomicNow.updateAndGet(time -> time.plusMillis(10)));
-     * </pre>
-     * @param timeSupplier
-     */
+    /// A convenient way to specify the model time as a function.
+    /// If time supplier is not specified, value `now` is used.
+    /// A `null` value removes a time supplier, the same as [#removeTimeSupplier()].
+    /// This provides a way to alternate between constant and changing model time.
+    ///
+    /// Possible implementation could use [AtomicReference] to emulate a ticking time like this.
+    ///
+    /// ```java
+    /// final AtomicReference<DateTime> atomicNow = new AtomicReference<>(constants.getNow());
+    /// constants.setTimeSupplier(() -> atomicNow.updateAndGet(time -> time.plusMillis(10)));
+    /// ```
+    ///
     public DatesForBenchmarking setTimeSupplier(final Supplier<DateTime> timeSupplier) {
         this.timeSupplier = timeSupplier;
         return this;
     }
 
-    /**
-     * A more explicit API for removing a time supplier if it was provided.
-     *
-     * @return
-     */
+    /// A more explicit API for removing a time supplier if it was provided.
+    ///
     public DatesForBenchmarking removeTimeSupplier() {
-        setTimeSupplier(null);
+        this.timeSupplier = null;
         return this;
     }
 

@@ -364,6 +364,40 @@ public class DefaultDatesTest {
     }
 
     @Test
+    public void serverNow_is_the_current_moment_in_default_time_zone_in_independent_mode_if_request_time_zone_is_not_empty() {
+        final DefaultDates dates = getDefaultDates(true);
+        dates.setRequestTimeZone("Pacific/Kiritimati");
+        assertTrue(dates.requestTimeZone().isPresent());
+
+        final DateTime serverNow = dates.serverNow();
+        assertEquals(getDefault(), serverNow.getZone());
+        assertTrue(abs(new DateTime().getMillis() - serverNow.getMillis()) < MILLIS_DIFF_THRESHOLD);
+        // `now()` is a different moment -- the wall-clock time in the request time zone, relabelled as the default time zone.
+        assertTrue(abs(dates.now().getMillis() - serverNow.getMillis()) > MILLIS_DIFF_THRESHOLD);
+    }
+
+    @Test
+    public void serverNow_is_the_current_moment_in_default_time_zone_in_dependent_mode_if_request_time_zone_is_not_empty() {
+        final DefaultDates dates = getDefaultDates(false);
+        dates.setRequestTimeZone("Pacific/Kiritimati");
+        assertTrue(dates.requestTimeZone().isPresent());
+
+        final DateTime serverNow = dates.serverNow();
+        assertEquals(getDefault(), serverNow.getZone());
+        assertTrue(abs(new DateTime().getMillis() - serverNow.getMillis()) < MILLIS_DIFF_THRESHOLD);
+    }
+
+    @Test
+    public void serverNow_is_the_same_moment_as_now_with_empty_request_time_zone() {
+        final DefaultDates dates = getDefaultDates(true);
+        assertFalse(dates.requestTimeZone().isPresent());
+
+        final DateTime serverNow = dates.serverNow();
+        assertEquals(getDefault(), serverNow.getZone());
+        assertTrue(abs(dates.now().getMillis() - serverNow.getMillis()) < MILLIS_DIFF_THRESHOLD);
+    }
+
+    @Test
     public void validation_during_default_dates_instantiation_prevents_invalid_weekStart() {
         assertThrows(ApplicationConfigurationException.class, () -> new DefaultDates(false, 0, 1, 7));
         assertThrows(ApplicationConfigurationException.class, () -> new DefaultDates(false, 8, 1, 7));
