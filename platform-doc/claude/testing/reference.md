@@ -121,6 +121,37 @@ When you introduce a new constant for a reference table — typically a hand-cur
 If only the production migration is updated, tests run against a database where `findByKey(...)` returns `null` for the new constant.
 Most code happily accepts that, persists `null` to dependent columns, and the symptom surfaces much later as a `NullPointerException` in an unrelated assertion or downstream query — far from the actual omission.
 
+### Test configurations
+
+A test case runs with a test configuration — the injector with all bindings — created from the DB connectivity properties that its runner produces with `mkDbProps(String)` (see `AbstractDomainDrivenTestCaseRunner`).
+Configurations are created once per JVM for each runner type, as their creation is computationally intensive; test cases with the same runner share one.
+
+A test case that depends on a different configuration, such as another authentication mode, uses a runner that adjusts the properties:
+```java
+public class SsoAuthModeContextSelector extends H2OrPostgreSqlOrSqlServerContextSelector {
+
+    public SsoAuthModeContextSelector(final Class<?> klass) throws Exception {
+        super(klass);
+    }
+
+    @Override
+    protected Properties mkDbProps(final String dbUri) {
+        final Properties props = super.mkDbProps(dbUri);
+        props.setProperty("auth.mode", AuthMode.SSO.name());
+        return props;
+    }
+}
+```
+```java
+@RunWith(SsoAuthModeContextSelector.class)
+public class UserInSsoModeTestCase extends AbstractDaoTestCase { ... }
+```
+Such test cases run in the normal build, alongside all others.
+
+- All configurations in a JVM share the test database and its schema, which is created once; the properties may adjust the configuration (e.g., `auth.mode`, or `config.domain` for a configuration class with other bindings), but not the domain entity types.
+- Each configuration keeps its injector and connection pool for the rest of the JVM, so a runner type is introduced only where a test case depends on a separate configuration.
+- The static state of `AbstractDomainDrivenTestCase`, through which `co(...)`, `new_(...)` and `getInstance(...)` work, refers to the configuration of the running test case: a runner assigns it when created and again before its test case runs.
+
 ### Test clock control
 
 Tests take the current time from `UniversalConstantsForTesting`, the test binding of `IUniversalConstants`, rather than from `new Date()` or `System.currentTimeMillis()`.
