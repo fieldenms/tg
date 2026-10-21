@@ -67,7 +67,7 @@ public class WebUiResources extends AbstractWebUiResources {
                 f -> f.newEntity(AttachmentUploader.class),
                 deviceProvider,
                 dates,
-                20 * 1024 * 1024, // Kilobytes
+                20 * 1024, // Kilobytes
                 // image/png,image/jpeg,
                 // .csv,.txt,text/plain,text/csv,
                 // application/pdf,application/zip,
