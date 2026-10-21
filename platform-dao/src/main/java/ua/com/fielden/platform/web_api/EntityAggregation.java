@@ -2,8 +2,6 @@ package ua.com.fielden.platform.web_api;
 
 import com.google.inject.name.Named;
 import graphql.Scalars;
-import graphql.language.Field;
-import graphql.language.FragmentDefinition;
 import graphql.schema.*;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -22,14 +20,12 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.utils.CharSequenceEnum;
-import ua.com.fielden.platform.utils.ImmutableListUtils;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
+import static com.google.common.collect.Streams.stream;
 import static graphql.schema.FieldCoordinates.coordinates;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLNonNull.nonNull;
@@ -176,7 +172,7 @@ public class EntityAggregation {
         @Override
         public List<EntityAggregates> get(final DataFetchingEnvironment environment) {
             authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
-            validateDuplicateFields(environment.getField().getSelectionSet(), environment.getFragmentsByName());
+            validateDuplicateFields(allSelectedFields(environment));
             // This typecast is safe in practice as all enhanced types extend their originals.
             final var managedEntityType = (Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType);
             final var query = buildQuery(managedEntityType, environment);
@@ -187,44 +183,46 @@ public class EntityAggregation {
                 final Class<? extends AbstractEntity<?>> entityType,
                 final DataFetchingEnvironment environment)
         {
-            final var fields = streamFields(environment.getField().getSelectionSet(), environment.getFragmentsByName()).toList();
-            return addYields(addGroupBy(select(entityType).where().condition(EntityCondToEqlCompiler.compile(environment)),
-                                        fields, environment),
-                             fields, environment)
+            return addYields(addGroupBy(select(entityType).where().condition(EntityCondToEqlCompiler.compile(environment)), environment),
+                             environment)
                     .modelAsAggregate();
         }
 
         /// Enhances `query` with yields for the fields that were selected.
         ///
         /// @param query  [ICompleted] or [ISubsequentCompletedAndYielded]
-        /// @param fields  selection set of the root field, with fragments expanded
         /// @param environment  contains selected fields
         ///
         private <T extends AbstractEntity<?>> ICompletedCommon<T> addYields(
                 final ICompletedCommon<T> query,
-                final List<Field> fields,
                 final DataFetchingEnvironment environment)
         {
             interface F<U extends AbstractEntity<?>> extends Function<ICompletedCommon<U>, ICompletedCommon<U>> {}
 
-            final F<T> fCount = q -> findField(fields, Fields.count)
+            final var immediateFields = environment.getSelectionSet().getImmediateFields();
+
+            final F<T> fCount = q -> findField(immediateFields, Fields.count)
                     .map(_ -> addYield(q, expr().ifNull().expr(expr().countAll().model()).then().val(0).model(), Fields.count))
                     .orElse(q);
-            final F<T> fAvg = q -> findField(fields, Fields.avg)
-                    .map(avg -> addYieldsForField(q, avg, path -> expr().avgOf().prop(toQualifiedName(tail(path))).model(),
-                                                  environment))
+            final F<T> fAvg = q -> findField(immediateFields, Fields.avg)
+                    .map(avg -> addYieldsForField(q, avg,
+                                                  fld -> expr().avgOf().prop(toPropertyPath(fld)).model(),
+                                                  fld -> Fields.avg + "." + toPropertyPath(fld)))
                     .orElse(q);
-            final F<T> fSum = q -> findField(fields, Fields.sum)
-                    .map(sum -> addYieldsForField(q, sum, path -> expr().sumOf().prop(toQualifiedName(tail(path))).model(),
-                                                  environment))
+            final F<T> fSum = q -> findField(immediateFields, Fields.sum)
+                    .map(sum -> addYieldsForField(q, sum,
+                                                  fld -> expr().sumOf().prop(toPropertyPath(fld)).model(),
+                                                  fld -> Fields.sum + "." + toPropertyPath(fld)))
                     .orElse(q);
-            final F<T> fMin = q -> findField(fields, Fields.min)
-                    .map(min -> addYieldsForField(q, min, path -> expr().minOf().prop(toQualifiedName(tail(path))).model(),
-                                                  environment))
+            final F<T> fMin = q -> findField(immediateFields, Fields.min)
+                    .map(min -> addYieldsForField(q, min,
+                                                  fld -> expr().minOf().prop(toPropertyPath(fld)).model(),
+                                                  fld -> Fields.min + "." + toPropertyPath(fld)))
                     .orElse(q);
-            final F<T> fMax = q -> findField(fields, Fields.max)
-                    .map(max -> addYieldsForField(q, max, path -> expr().maxOf().prop(toQualifiedName(tail(path))).model(),
-                                                  environment))
+            final F<T> fMax = q -> findField(immediateFields, Fields.max)
+                    .map(max -> addYieldsForField(q, max,
+                                                  fld -> expr().maxOf().prop(toPropertyPath(fld)).model(),
+                                                  fld -> Fields.max + "." + toPropertyPath(fld)))
                     .orElse(q);
 
             return fCount
@@ -237,22 +235,22 @@ public class EntityAggregation {
 
         private <T extends AbstractEntity<?>> ICompletedCommon<T> addGroupBy(
                 final ICompleted<T> query,
-                final List<Field> fields,
                 final DataFetchingEnvironment environment)
         {
-            final var maybeGroupBy = findField(fields, Fields.groupBy);
+            final var maybeGroupBy = findField(environment.getSelectionSet().getImmediateFields(), Fields.groupBy);
             if (maybeGroupBy.isEmpty()) {
                 return query;
             }
             final var groupBy = maybeGroupBy.get();
-            final var paths = paths(groupBy, environment.getFragmentsByName());
-            if (paths.isEmpty()) {
+            final var subFields = terminalFields(groupBy.getSelectionSet());
+            if (subFields.isEmpty()) {
                 return query;
             }
             else {
-                final var grouped = foldLeft(paths, query, (acc, path) -> acc.groupBy().prop(toQualifiedName(tail(path))));
-                return addYieldsForField(grouped, groupBy, path -> expr().prop(toQualifiedName(tail(path))).model(),
-                                         environment);
+                final var grouped = foldLeft(subFields, query, (acc, fld) -> acc.groupBy().prop(toPropertyPath(fld)));
+                return addYieldsForField(grouped, groupBy,
+                                         fld -> expr().prop(toPropertyPath(fld)).model(),
+                                         fld -> Fields.groupBy + "." + toPropertyPath(fld));
             }
         }
 
@@ -270,41 +268,19 @@ public class EntityAggregation {
 
         private <T extends AbstractEntity<?>> ICompletedCommon<T> addYieldsForField(
                 final ICompletedCommon<T> query,
-                final Field field,
-                final Function<List<Field>, ExpressionModel> mkExpr,
-                final DataFetchingEnvironment environment)
+                final SelectedField field,
+                final Function<SelectedField, ExpressionModel> mkExpr,
+                final Function<SelectedField, CharSequence> mkAlias)
         {
-            final var paths = paths(field, environment.getFragmentsByName());
-            if (paths.isEmpty()) {
+            final var subFields = terminalFields(field.getSelectionSet());
+            if (subFields.isEmpty()) {
                 return query;
             }
-            return foldLeft(paths, query, (acc, path) -> addYield(acc, mkExpr.apply(path), toQualifiedName(path)));
+            return foldLeft(subFields, query, (acc, fld) -> addYield(acc, mkExpr.apply(fld), mkAlias.apply(fld)));
         }
 
-        private static <X> List<X> tail(final List<X> xs) {
-            return xs.isEmpty() ? xs : xs.subList(1, xs.size());
-        }
-
-        private static String toQualifiedName(final List<Field> path) {
-            return path.stream().map(Field::getName).collect(Collectors.joining("."));
-        }
-
-        /// Returns all root-to-leaf paths, where the root is given by `field`.
-        ///
-        private static List<List<Field>> paths(final Field field, final Map<String, FragmentDefinition> fragments) {
-            final var ss = field.getSelectionSet();
-            if (ss == null) {
-                return List.of(List.of(field));
-            }
-
-            final var result = streamFields(ss, fragments)
-                    .flatMap(f -> paths(f, fragments).stream().map(p -> ImmutableListUtils.prepend(field, p)))
-                    .toList();
-            return result.isEmpty() ? List.of(List.of(field)) : result;
-        }
-
-        private static Optional<Field> findField(final List<Field> fields, final CharSequence name) {
-            return fields.stream().filter(f -> f.getName().contentEquals(name)).findFirst();
+        private static Optional<SelectedField> findField(final Iterable<SelectedField> fields, final CharSequence name) {
+            return stream(fields).filter(f -> f.getName().contentEquals(name)).findFirst();
         }
 
     }
