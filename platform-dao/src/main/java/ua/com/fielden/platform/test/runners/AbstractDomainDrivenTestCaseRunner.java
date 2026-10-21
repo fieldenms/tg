@@ -34,6 +34,11 @@ import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
 ///
 /// * Supports [RequireTimeZone].
 ///
+/// * Runs test cases with a test configuration created from the DB connectivity properties of the runner (see [#mkDbProps(String)]).
+///   Configurations are created once per JVM for each runner type, so a runner that adjusts the properties (e.g., to set the SSO authentication mode)
+///   gives its test cases a configuration of their own, while the test cases of each other runner share theirs.
+///   All configurations in a JVM share the test database and its schema, which is created once.
+///
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
     private static final String
@@ -46,14 +51,15 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
 
     public final Logger logger = getLogger(getClass());
 
-    // The following two fields are initialised only once when the test configuration is created.
-    // This avoids the memory- and CPU-intensive cost of repeating the initialisation.
-
-    /// Properties for the establishment of a database connection via Hibernate.
-    /// Required to instantiate [DbCreator].
+    /// Test configurations, created once per JVM for each runner type, as their creation is computationally intensive.
+    /// The runner type determines the DB connectivity properties of a configuration, as [#mkDbProps(String)] is invoked during construction of the runner, with the database URI of the JVM.
+    /// This approach is safe for single-threaded test execution; parallelisation should be achieved by forking JVM processes.
     ///
-    private static Properties dbProps;
-    private static IDomainDrivenTestCaseConfiguration config;
+    private static final Map<Class<? extends AbstractDomainDrivenTestCaseRunner>, TestConfig> testConfigs = new HashMap<>();
+
+    /// A test configuration together with the DB connectivity properties it was created with.
+    ///
+    private record TestConfig(Properties dbProps, IDomainDrivenTestCaseConfiguration config, IDbVersionProvider dbVersionProvider) {}
 
     /// A single DDL script is needed for all instances of all test cases.
     /// The intent is to create and cache it as a static variable upon instantiation of the first runner instance.
@@ -65,7 +71,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     public final String databaseUri;
     
     private final DbCreator dbCreator;
-    private static IDbVersionProvider dbVersionProvider;
+    private final TestConfig testConfig;
 
     public AbstractDomainDrivenTestCaseRunner(
             final Class<?> klass, 
@@ -114,21 +120,14 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
 
         logger.info(() -> "Running [%s] with loadDdlScriptFromFile = [%s], saveScriptsToFile = [%s], loadDataScriptFromFile = [%s] and  databaseUri = [%s]".formatted(klass, loadDdlScriptFromFile, saveScriptsToFile, loadDataScriptFromFile, databaseUri));
 
-        // let's construct and assign test configuration
-        // this should occur only once per JVM instance as this is a computationally intensive operation
-        // hence, caching of the produced value in the static variable
-        // in the essence this is like a static initialization block that occurs during instantiation of the first test runner 
-        if (config == null) {
-            dbProps = mkDbProps(databaseUri);
-            config = testConfig.orElseGet(() -> createConfig(dbProps));
-            dbVersionProvider = config.getInstance(IDbVersionProvider.class);
-            final Function<Class<?>, Object> instFun = type -> config.getInstance(type);
-            assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("instantiator"), instFun);
-            assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("coFinder"),
-                         config.getInstance(ICompanionObjectFinder.class));
-            assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("factory"),
-                         config.getInstance(EntityFactory.class));
-        }
+        // Obtain the test configuration for the type of this runner, creating it if this is the first runner of that type.
+        this.testConfig = testConfigs.computeIfAbsent(getClass(), _ -> {
+            final Properties dbProps = mkDbProps(databaseUri);
+            final var config = testConfig.orElseGet(() -> createConfig(dbProps));
+            return new TestConfig(dbProps, config, config.getInstance(IDbVersionProvider.class));
+        });
+        // Test cases can be instantiated directly after the runner is created (e.g., for data population), hence the static state is assigned right away.
+        useTestConfig(this.testConfig);
 
         // try loading the DDL script if applicable
         final boolean execDdlScripts = ddlScript.isEmpty();
@@ -140,7 +139,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
 
         // get constructor for instantiation of DB creator and instantiate it 
         final Constructor<? extends DbCreator> constructor = dbCreatorType.getConstructor(klass.getClass(), Properties.class, IDomainDrivenTestCaseConfiguration.class, List.class, boolean.class);
-        this.dbCreator = constructor.newInstance(klass, dbProps, config, ddlScript, execDdlScripts);
+        this.dbCreator = constructor.newInstance(klass, this.testConfig.dbProps(), this.testConfig.config(), ddlScript, execDdlScripts);
 
         if (saveScriptsToFile) {
             saveDdlScript();
@@ -167,7 +166,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     @Override
     public Object createTest() {
         final Class<?> testCaseType = getTestClass().getJavaClass();
-        final AbstractDomainDrivenTestCase testCase = (AbstractDomainDrivenTestCase) config.getInstance(testCaseType);
+        final AbstractDomainDrivenTestCase testCase = (AbstractDomainDrivenTestCase) testConfig.config().getInstance(testCaseType);
         return testCase.setDbCreator(dbCreator);
     }
 
@@ -187,6 +186,8 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                // The static state of test cases needs to correspond to the configuration of this runner, as runners with other configurations may have run before.
+                useTestConfig(testConfig);
                 // Execute the default work, which includes running all the tests.
                 defaultSt.evaluate();
                 
@@ -233,20 +234,16 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         }
 
         final var atWithDbVersion = child.getAnnotation(WithDbVersion.class);
-        final var dbVersionMatches = atWithDbVersion == null || ArrayUtils.contains(atWithDbVersion.value(), dbVersionProvider.dbVersion());
+        final var dbVersionMatches = atWithDbVersion == null || ArrayUtils.contains(atWithDbVersion.value(), testConfig.dbVersionProvider().dbVersion());
         if (!dbVersionMatches) {
             logger.info(() -> INFO_TEST_IGNORED_DUE_TO_DB_VERSION.formatted(
                               methodId(child),
                               Arrays.toString(atWithDbVersion.value()),
-                              dbVersionProvider.dbVersion()));
+                              testConfig.dbVersionProvider().dbVersion()));
             return true;
         }
 
-        if (!hasRequiredTimeZone(child)) {
-            return true;
-        }
-
-        return false;
+        return !hasRequiredTimeZone(child);
     }
 
     private boolean hasRequiredTimeZone(final FrameworkMethod child) {
@@ -301,6 +298,16 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         } catch (final Exception ex) {
             throw new DomainDrivenTestException(ERR_FAILED_TO_CREATE_TEST_CONFIGURATION, ex);
         }
+    }
+
+    /// Assigns the static state of [AbstractDomainDrivenTestCase], through which test cases access `testConfig`.
+    ///
+    private static void useTestConfig(final TestConfig testConfig) throws ReflectiveOperationException {
+        final IDomainDrivenTestCaseConfiguration config = testConfig.config();
+        final Function<Class<?>, Object> instFun = config::getInstance;
+        assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("instantiator"), instFun);
+        assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("coFinder"), config.getInstance(ICompanionObjectFinder.class));
+        assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("factory"), config.getInstance(EntityFactory.class));
     }
 
 }
