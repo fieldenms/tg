@@ -647,6 +647,18 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    public void lockout_of_inactive_user_removes_their_secret() {
+        // A password can be set for an inactive user, who then has a secret.
+        coUser.resetPasswd(coUser.findUser("INACTIVE_USER"), "a strong password for INACTIVE_USER");
+        final User inactiveUser = coUser.findUser("INACTIVE_USER");
+        assertTrue("Invalid initial conditions for this test.", coUserSecret.findByIdOptional(inactiveUser.getId()).isPresent());
+
+        coUser.lockoutUser("INACTIVE_USER");
+        assertFalse(coUser.findUser("INACTIVE_USER").isActive());
+        assertFalse(coUserSecret.findByIdOptional(inactiveUser.getId()).isPresent());
+    }
+
+    @Test
     public void lockout_identifies_the_account_by_username_case_insensitively() {
         coUser.lockoutUser("user3");
         assertFalse(coUser.findUser("USER3").isActive());
