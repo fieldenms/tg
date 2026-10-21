@@ -24,6 +24,8 @@ import ua.com.fielden.platform.mcp.web.McpResource;
 import ua.com.fielden.platform.mcp.web.McpResourceFactory;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.either.Left;
+import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 import java.io.IOException;
@@ -34,6 +36,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.utils.MiscUtilities.readResource;
 import static ua.com.fielden.platform.web_api.IWebApi.WEB_API_DOMAIN_TREE_ENHANCER;
 
@@ -310,28 +313,47 @@ public class TgMcpServer {
                         null,
                         null);
                 domainTreeEnhancer.apply();
-                // Managed type must be accessed only after the calculated property is added.
-                final var managedType = (Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType);
+            } catch (final Exception ex) {
+                final var msg = """
+                                Error adding calculated property [%s.%s] with expression:
+                                %s
+                                """.formatted(type, name, expression);
+                LOGGER.error(() -> msg, ex);
+                return errorResult(msg + "\n" + ex.getMessage());
+            }
+
+            final var managedType = (Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType);
+
+            // Exceptions thrown by this call have to processed separately from the domain enhancer calls above,
+            // because a rollback (removing the calculated property from the enhancer) is necessary only if Web API fails.
+            // The domain enhancer calls above may fail for a legitimate reason that doesn't require a rollback.
+            // E.g., the calculated property being added already exists.
+            try {
                 webApi.propertiesAdded(managedType, Set.of(name));
-            } catch (final Exception e) {
-                try {
-                    domainTreeEnhancer.findCalculatedProperty(entityType, name)
-                            .ifPresent(_ -> domainTreeEnhancer.removeCalculatedProperty(entityType, name));
-                    final var managedType = (Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType);
+            } catch (final Throwable ex) {
+                LOGGER.error(() -> format("Web API failed while adding calculated property [%s.%s].", entityType.getSimpleName(), name), ex);
+                switch (Try(() -> {
+                    domainTreeEnhancer.findCalculatedProperty(entityType, name).ifPresent(_ -> domainTreeEnhancer.removeCalculatedProperty(entityType, name));
                     webApi.propertiesRemoved(managedType, Set.of(name));
-                } catch (final Exception cleanupEx) {
-                    LOGGER.error(() -> format("Failed to undo the effect of adding calculated property [%s.%s]. This failure will be suppressed.",
-                                              entityType.getSimpleName(), name),
-                                 cleanupEx);
-                    e.addSuppressed(cleanupEx);
+                    return true;
+                })) {
+                    case Right _ -> LOGGER.info(() -> format("Rollback successful: removed calculated property [%s.%s] from the Web API.",
+                                                             entityType.getSimpleName(), name));
+                    case Left (var cleanupEx) -> {
+                        LOGGER.error(() -> format("""
+                                                  Failed to remove calculated property [%s.%s] from the Web API.
+                                                  This failure will be suppressed.""",
+                                                  entityType.getSimpleName(), name),
+                                     cleanupEx);
+                        ex.addSuppressed(cleanupEx);
+                    }
                 }
 
                 final var msg = """
                                 Error adding calculated property [%s.%s] with expression:
                                 %s
                                 """.formatted(type, name, expression);
-                LOGGER.error(() -> msg, e);
-                return errorResult(msg + "\n" + e.getMessage());
+                return errorResult(msg + "\n" + ex.getMessage());
             }
 
             return CallToolResult.builder()
