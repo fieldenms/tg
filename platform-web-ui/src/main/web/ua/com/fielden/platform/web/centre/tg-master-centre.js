@@ -1,6 +1,7 @@
 import '/resources/element_loader/tg-element-loader.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import { TgMasterComponentBehavior } from '/resources/master/tg-master-component-behavior.js';
 import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 
@@ -69,13 +70,15 @@ const template = html`
  * The component fills the height of its layout cell, so that it grows with the master in a flexible row of the master layout, such as 'FLEXIBLE_ROW' of 'LayoutComposer'.
  * Its height is not less than 'min-height', which is also its height in a row laid out to the heights of its content.
  * With a height declared with 'withHeight' in the Entity Master DSL, the component has that height instead, and is resizable by the user, as described in 'TgMasterComponentBehavior'.
+ * The embedded centre follows every change of size of the component, including one by the user: the component notifies it with 'IronResizableBehavior',
+ * so that its views, such as a chart in an alternative view, fit the new size.
  */
 Polymer({
     _template: template,
 
     is: 'tg-master-centre',
 
-    behaviors: [TgMasterComponentBehavior],
+    behaviors: [TgMasterComponentBehavior, IronResizableBehavior],
 
     properties: {
 
@@ -124,6 +127,26 @@ Polymer({
 
     ready: function () {
         this._hasPropertyActions = this._propertyActions.length > 0;
+    },
+
+    attached: function () {
+        this._resizeObserver = new ResizeObserver(() => this._sizeChangedAsync());
+        this._resizeObserver.observe(this.$.loader);
+    },
+
+    detached: function () {
+        this._resizeObserver.disconnect();
+        this._resizeObserver = null;
+        cancelAnimationFrame(this._sizeChangedFrame);
+    },
+
+    /**
+     * Notifies the embedded centre of a change of size of the area under the caption in the next animation frame, as the centre and its views change the DOM to fit the new size,
+     * which must not happen in a 'ResizeObserver' callback to avoid error 'ResizeObserver loop completed with undelivered notifications'.
+     */
+    _sizeChangedAsync: function () {
+        cancelAnimationFrame(this._sizeChangedFrame);
+        this._sizeChangedFrame = requestAnimationFrame(() => this.notifyResize());
     },
 
     _hasCaption: function (propTitle, _hasPropertyActions) {
