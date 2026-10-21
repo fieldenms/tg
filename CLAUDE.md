@@ -85,7 +85,11 @@ Topic-specific gotchas live in each directory's `quick-reference.md`.
 9. **`try-with-resources` with `stream()`**: Entity streams hold database resources that must be closed.
    Reserve `co.stream(qem)` for large or unbounded results; for small, bounded ones (e.g. a selection by IDs) use `co.getAllEntities(qem)` — nothing to close, no `try` block.
 10. **Fetch model instrumentation precedence**: If a fetch model is instrumented, entities *are* instrumented even if `QueryExecutionModel` is lightweight.
-11. **GraphQL API**: Read-only queries only.
+11. **`IDates.now()` is business time, not a reliable instant.**
+    In the independent time-zone mode, it returns the wall time of the request time-zone — taken from the client's `Time-Zone` header — with the server time-zone, which shifts the instant by their offset; `IUniversalConstants.now()` delegates to it.
+    Compare with stored instants (e.g., expiry times encoded as epoch milliseconds) using the server clock (`new Date()`), and measure durations (e.g., for throttling) with a monotonic clock (a Guava `Ticker`, `System.nanoTime()`), as a client can otherwise shift the time.
+    Code that reads either clock takes the time, or the `Ticker`, as a parameter where tests need to control it (see `testing/quick-reference.md`).
+12. **GraphQL API**: Read-only queries only.
     Fields are uncapitalized entity names.
     Token: `GraphiQL_CanExecute_Token`.
 
