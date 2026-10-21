@@ -57,12 +57,24 @@ public interface IDates {
      */
     int startOfWeek();
 
-    /**
-     * Returns a value indicating the current date/time in user's time-zone.
-     *
-     * @return
-     */
+    /// Returns the current date/time in the user's time zone.
+    ///
+    /// During a web request, this is the time in the request time zone (see [#requestTimeZone()]).
+    /// With `independent.time.zone` enabled, it is the user's wall-clock time relabelled as the server's time zone, which is a different moment from the actual current time.
+    /// Outside of web requests (e.g., on scheduler threads), it is the current time in the server's time zone.
+    ///
+    /// This is the intended behaviour for data entered by users.
+    /// Logic that must operate in server time, such as computing when a scheduled job is next executed, should use [#serverNow()].
+    ///
     default DateTime now() {
+        return new DateTime();
+    }
+
+    /// Returns the current date/time in the server's time zone, regardless of any request time zone.
+    ///
+    /// Outside of web requests, it is the same moment as [#now()].
+    ///
+    default DateTime serverNow() {
         return new DateTime();
     }
 

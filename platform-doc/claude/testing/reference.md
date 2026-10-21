@@ -215,9 +215,28 @@ Some applications expose a base-class helper like `resetNowAndStartTimeTicking(c
 
 Why `@Before` (and `@After`) and not just `populateDomain()`:
 - `UniversalConstantsForTesting` is mutable and shared across tests within a JVM fork — a previous test may have set a different time, or left a ticker installed.
+- `populateDomain()` runs only for the first test of a test case — the others restore the recorded data population script.
 - `populateDomain()` early-returns when `useSavedDataPopulationScript()` is `true`, so any clock setup done there is skipped in the fast-iteration path.
 
 If `populateDomain()` itself runs save logic that needs a particular time or distinct timestamps, set the clock inside it as well (after the `useSavedDataPopulationScript()` early-return guard), removing a ticker once the data is saved.
+
+#### Modelling a request time zone
+
+`IDates.now()` / `IUniversalConstants.now()` return the current time in the user's time zone during a web request — with `independent.time.zone` enabled, the user's wall-clock time relabelled as the server's time zone.
+`serverNow()` returns the current time in the server's time zone on any thread; logic that must operate in server time (e.g., computing when a scheduled job is next executed) uses it.
+
+Without a modelled request time zone, `now()` and `serverNow()` both return the modelled time.
+To test that such logic uses `serverNow()`, model a request time zone:
+```java
+constants.setRequestTimeZone(DateTimeZone.forID("Pacific/Kiritimati"));
+```
+After that:
+- `serverNow()` returns the modelled time;
+- `now()` returns the modelled time as `DefaultDates.now()` returns it during a request from that time zone with `independent.time.zone` enabled;
+- `IDates.requestTimeZone()` returns that time zone, while `IDates.timeZone()` and `IDates.zoned(Date)` stay in the server's time zone, as in independent mode.
+
+Unlike a real request time zone, which is thread-local, the modelled one is shared by all threads, and stays in effect until `removeRequestTimeZone()` is invoked.
+`AbstractDaoTestCase.populateDomain()` removes it, but, as for the clock, this does not reset it between tests — remove it in `@After` (or in the `@Before` reset).
 
 ### Web Resource Testing
 

@@ -71,4 +71,9 @@ public class DefaultUniversalConstants implements IUniversalConstants {
         return dates.now();
     }
 
+    @Override
+    public DateTime serverNow() {
+        return dates.serverNow();
+    }
+
 }

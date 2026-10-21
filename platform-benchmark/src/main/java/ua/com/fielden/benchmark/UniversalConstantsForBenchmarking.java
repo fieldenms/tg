@@ -13,12 +13,8 @@ import com.google.inject.name.Named;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
-/**
- * A convenient implementation of the {@link IUniversalConstants} contract to provide flexible notion of the <code>now</code> for unit tests.
- *
- * @author TG Team
- *
- */
+/// A convenient implementation of the [IUniversalConstants] contract to provide flexible notion of the `now` for benchmarking.
+///
 @Singleton
 class UniversalConstantsForBenchmarking implements IUniversalConstants {
 
@@ -46,6 +42,11 @@ class UniversalConstantsForBenchmarking implements IUniversalConstants {
     }
 
     @Override
+    public DateTime serverNow() {
+        return getNow();
+    }
+
+    @Override
     public Locale locale() {
         return Locale.getDefault();
     }
@@ -58,33 +59,30 @@ class UniversalConstantsForBenchmarking implements IUniversalConstants {
         dates.setNow(now);
     }
 
-    /**
-     * A convenient way to specify the model time as a function.
-     * If time supplier is not specified, value <code>now</code> is used.
-     * This provides a way to alternate between constant and changing model time.
-     * <p>
-     * Possible implementation could use {@link AtomicReference} to emulate a ticking time like this.
-     * <pre>
-         final AtomicReference<DateTime> atomicNow = new AtomicReference<>(constants.getNow());
-         constants.setTimeSupplier(() -> atomicNow.updateAndGet(time -> time.plusMillis(10)));
-     * </pre>
-     * @param timeSupplier
-     */
+    /// A convenient way to specify the model time as a function.
+    /// If time supplier is not specified, value `now` is used.
+    /// A `null` value removes a time supplier, the same as [#removeTimeSupplier()].
+    /// This provides a way to alternate between constant and changing model time.
+    ///
+    /// Possible implementation could use [AtomicReference] to emulate a ticking time like this.
+    ///
+    /// ```java
+    /// final AtomicReference<DateTime> atomicNow = new AtomicReference<>(constants.getNow());
+    /// constants.setTimeSupplier(() -> atomicNow.updateAndGet(time -> time.plusMillis(10)));
+    /// ```
+    ///
     public UniversalConstantsForBenchmarking setTimeSupplier(final Supplier<DateTime> timeSupplier) {
         dates.setTimeSupplier(timeSupplier);
         return this;
     }
-    
-    /**
-     * A more explicit API for removing a time supplier if it was provided.
-     * 
-     * @return
-     */
+
+    /// A more explicit API for removing a time supplier if it was provided.
+    ///
     public UniversalConstantsForBenchmarking removeTimeSupplier() {
         dates.removeTimeSupplier();
         return this;
     }
-    
+
     @Override
     public String appName() {
         return appName;
