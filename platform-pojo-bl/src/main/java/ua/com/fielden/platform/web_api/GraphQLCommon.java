@@ -29,6 +29,10 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 public class GraphQLCommon {
 
+    /// Name of the built-in data introspection field present on every object type in GraphQL.
+    public static final String __TYPENAME = "__typename";
+    /// Name of the query type in every GraphQL schema in TG.
+    public static final String QUERY_TYPE_NAME = "Query";
 
     /// Name of the GraphQL root field for the specified entity type.
     ///

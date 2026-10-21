@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web_api;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.SelectedField;
 import jakarta.annotation.Nullable;
-import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -28,7 +27,6 @@ import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.*;
-import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -41,24 +39,11 @@ import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 import static ua.com.fielden.platform.web_api.FieldSchema.ORDER;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
 
-/**
- * Contains querying utility methods for root fields in GraphQL query / mutation schemas.
- *
- * @author TG Team
- *
- */
+/// Utilities for querying root fields in GraphQL.
+///
 public class RootEntityUtils {
 
-    /**
-     * The name for built-in data introspection field returning the name of actual data object type in runtime.<br>
-     * This is a part of GraphQL spec.
-     */
-    private static final String __TYPENAME = "__typename";
-    static final String QUERY_TYPE_NAME = "Query";
-
     public static final String WARN_ORDER_PRIORITIES_ARE_NOT_DISTINCT = "Order priorities are not distinct.";
-
-    private static final Logger LOGGER = getLogger(RootEntityUtils.class);
 
     /// Creates an EQL model for retrieving the root field of `environment` and its selection set, together with an optional warning about ordering.
     ///
