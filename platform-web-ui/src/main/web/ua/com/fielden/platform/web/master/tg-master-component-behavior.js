@@ -74,11 +74,15 @@ const componentStyles = `
  * Changes that are not yet saved are those committed to the master, indicated by `entityModified`, and edits in progress, indicated by `entityEdited`.
  * `blockWhenUnsaved` may change at run time.
  *
- * Without a declared `height`, the component has no height of its own, so that it can fill the height of its layout cell.
- * With `height` declared, as a CSS length, the component is resizable, as a rich text editor with a declared height: the user drags the resizer at its bottom right corner to change the height,
- * and double taps the resizer to restore the declared height.
+ * The component has no height of its own, so that it fills the height of its layout cell, and its least height is `minHeight`, which a component may give a default value by declaring the property with that value.
+ * With `height` declared, as a CSS length, the component is resizable, as a rich text editor with a declared height: the user drags the resizer at its bottom right corner to change the height
+ * that the component keeps at least, which is the declared height until then, and double taps the resizer to restore the declared height.
+ * So, in a flexible row of the master layout, the component grows with the master, and shrinks with the master down to the height set by the user,
+ * while in a row laid out to the heights of its content, the component has the height set by the user.
+ * The height set by the user is never less than the visible height of the component, so that every change is seen as it is made:
+ * the resizer shrinks a component in a flexible row only until the component fits the row, and a smaller height can be set once the master is made smaller.
  * The height set by the user is remembered in the browser under the user, `entityType` and the element id, and takes the place of the declared height.
- * The height is never less than `minHeight`, which a component may give a default value by declaring the property with that value.
+ * It is never less than `minHeight`.
  * The component cannot be resized while it is blocked.
  *
  * The component receives the context of the master through `createContextHolder`, and `masterEntityContext()` provides the master entity, including its unsaved changes,
@@ -129,14 +133,14 @@ export const TgMasterComponentBehavior = {
         },
 
         /**
-         * The declared height of the component, as a CSS length, which makes the component resizable; the component fills its layout cell without it.
+         * The declared height of the component, as a CSS length, which makes the component resizable, and which the component keeps at least until the user resizes it.
          */
         height: {
             type: String
         },
 
         /**
-         * The least height of the component, as a CSS length.
+         * The least height of the component, as a CSS length, below which the user cannot resize it.
          * It has no observer of its own, so that a component can declare the property with its default value, which replaces this declaration.
          */
         minHeight: {
@@ -252,11 +256,18 @@ export const TgMasterComponentBehavior = {
     },
 
     /**
-     * Applies the least height, and the height of a resizable component: the height set by the user, if any, or otherwise the declared height.
+     * Applies the least height of the component: `minHeight`, and, for a resizable component, the height set by the user, if any, or otherwise the declared height.
      */
     _updateHeight: function (height, minHeight, entityType) {
-        this.style.minHeight = minHeight || '';
-        this.style.height = this._isResizable(height) ? (localStorage.getItem(this._heightKey()) || height) : '';
+        this._applyLeastHeight(this._isResizable(height) ? (localStorage.getItem(this._heightKey()) || height) : null);
+    },
+
+    /**
+     * Makes `leastHeight`, a CSS length, the least height of the component, which is never less than `minHeight`; without `leastHeight`, it is just `minHeight`.
+     * The component has no height of its own, so that it fills its layout cell above its least height, such as a flexible row of the master layout.
+     */
+    _applyLeastHeight: function (leastHeight) {
+        this.style.minHeight = leastHeight && this.minHeight ? `max(${this.minHeight}, ${leastHeight})` : (leastHeight || this.minHeight || '');
     },
 
     _isResizable: function (height) {
@@ -289,14 +300,15 @@ export const TgMasterComponentBehavior = {
     },
 
     /**
-     * Changes the height of the component by the vertical movement of the resizer, and remembers the height once the resizer is released.
+     * Changes the height that the component keeps at least by the vertical movement of the resizer, and remembers it once the resizer is released.
+     * The component grows or shrinks from its visible height, and its least height is never less than its visible height, so that every change of the least height is seen as it is made:
+     * while the component fills a flexible row, which is higher than the least height, the resizer stops shrinking the component once it fits the row exactly.
      * The component grows or shrinks further while the resizer is beyond the bottom or the top of the scrolling container, which is scrolled to follow the resizer.
      */
     _resize: function (event) {
         tearDownEvent(event);
         if (event.detail.state === 'track') {
-            const style = getComputedStyle(this);
-            const prevHeight = parseFloat(style.height);
+            const prevHeight = parseFloat(getComputedStyle(this).height);
             let newHeight = prevHeight + event.detail.ddy;
             const scrollContainer = this._scrollingParent();
             const mousePos = scrollContainer && getRelativePos(event.detail.x, event.detail.y, scrollContainer);
@@ -304,23 +316,29 @@ export const TgMasterComponentBehavior = {
             if (beyondScrollContainer) {
                 newHeight += mousePos.y > 0 ? mousePos.y - scrollContainer.offsetHeight : mousePos.y;
             }
-            // the resizer stays within the component, so that the component can be resized again
-            newHeight = Math.max(newHeight, parseFloat(style.minHeight) || 0, this._resizer.offsetHeight);
-            this.style.height = `${newHeight}px`;
+            // the resizer stays within the component, so that the component can be resized again; the least height is never less than `minHeight`
+            this._applyLeastHeight(`${Math.max(newHeight, this._resizer.offsetHeight)}px`);
+            // a component that its layout cell keeps higher than the new least height keeps its visible height as the least height
+            const style = getComputedStyle(this);
+            const height = parseFloat(style.height);
+            if (height > parseFloat(style.minHeight)) {
+                this._applyLeastHeight(`${height}px`);
+            }
             if (beyondScrollContainer) {
-                scrollContainer.scrollTop += newHeight - prevHeight;
+                scrollContainer.scrollTop += height - prevHeight;
             }
         } else if (event.detail.state === 'end') {
-            localStorage.setItem(this._heightKey(), this.style.height);
+            // the least height as applied, which is not less than `minHeight`
+            localStorage.setItem(this._heightKey(), getComputedStyle(this).minHeight);
         }
     },
 
     /**
-     * Restores the declared height, forgetting the height set by the user.
+     * Restores the declared height as the least height of the component, forgetting the height set by the user.
      */
     _resetHeight: function () {
         localStorage.removeItem(this._heightKey());
-        this.style.height = this.height;
+        this._applyLeastHeight(this.height);
     },
 
     /**

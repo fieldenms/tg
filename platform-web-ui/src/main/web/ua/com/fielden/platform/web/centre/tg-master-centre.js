@@ -69,7 +69,7 @@ const template = html`
  * The centre has its own uuid, so that its actions do not refresh the master.
  * The component fills the height of its layout cell, so that it grows with the master in a flexible row of the master layout, such as 'FLEXIBLE_ROW' of 'LayoutComposer'.
  * Its height is not less than 'min-height', which is also its height in a row laid out to the heights of its content.
- * With a height declared with 'withHeight' in the Entity Master DSL, the component has that height instead, and is resizable by the user, as described in 'TgMasterComponentBehavior'.
+ * With a height declared with 'withHeight' in the Entity Master DSL, the component is resizable by the user, and keeps that height, or the height set by the user, at least, as described in 'TgMasterComponentBehavior'.
  * The embedded centre follows every change of size of the component, including one by the user: the component notifies it with 'IronResizableBehavior',
  * so that its views, such as a chart in an alternative view, fit the new size.
  */
