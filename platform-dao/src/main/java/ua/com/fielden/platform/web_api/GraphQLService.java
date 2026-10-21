@@ -45,7 +45,6 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.*;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
 import static ua.com.fielden.platform.web_api.GraphQLPropertyDataFetcher.fetching;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 
 /// GraphQL-based implementation of the TG Web API using [graphql-java](https://github.com/graphql-java/graphql-java).

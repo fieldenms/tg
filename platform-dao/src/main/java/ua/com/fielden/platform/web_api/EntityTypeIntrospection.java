@@ -45,7 +45,7 @@ import static ua.com.fielden.platform.web_api.FieldSchema.bold;
 import static ua.com.fielden.platform.web_api.FieldVisibility.isModelReadable;
 import static ua.com.fielden.platform.web_api.FluentConditions.isFilterable;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.streamVisibleTypes;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
+import static ua.com.fielden.platform.web_api.GraphQLCommon.QUERY_TYPE_NAME;
 
 /// GraphQL definitions that describe the domain model.
 ///

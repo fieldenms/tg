@@ -37,7 +37,6 @@ import static ua.com.fielden.platform.security.tokens.Template.READ;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
 import static ua.com.fielden.platform.web_api.IWebApi.WEB_API_DOMAIN_TREE_ENHANCER;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.validateDuplicateFields;
 
