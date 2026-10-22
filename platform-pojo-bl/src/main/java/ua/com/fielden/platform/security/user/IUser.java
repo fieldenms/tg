@@ -110,6 +110,10 @@ public interface IUser extends IEntityDao<User>, ISaveWithFetch<User> {
     /// Failed password attempts pose no risk to other accounts, such as accounts restricted to SSO in the SSO authentication mode, and do not deactivate them.
     /// The `username` value may belong to a non-existing user, and this function should still perform gracefully.
     ///
+    /// Deactivation saves the user, which requires a current user.
+    /// A caller acting on behalf of an unauthenticated request, such as a login attempt, sets [User.system_users#SU] as the current user.
+    /// The account's secret is removed even if its deactivation fails, so that the account can no longer sign in with a password.
+    ///
     void lockoutUser(final String username);
 
     /// Finds the user identified by the provided username (case-insensitive) who can sign in with a password.

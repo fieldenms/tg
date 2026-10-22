@@ -169,7 +169,7 @@ public class LoginResource extends AbstractWebResource {
                 }
                 case LOCKOUT -> {
                     LOGGER.warn(() -> "Lockout after [%s] unsuccessful login attempts for user [%s].".formatted(LOCKOUT_THRESHOLD, credo.username));
-                    coUser.lockoutUser(credo.username);
+                    lockoutUser(up, coUser, credo.username);
                     respondAccessDenied();
                 }
             }
@@ -179,6 +179,21 @@ public class LoginResource extends AbstractWebResource {
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         } finally {
             LOGGER.debug(() -> "LOGIN ATTEMPT RESPONSE TIME: %s%n".formatted(TimeUnit.MILLISECONDS.convert(System.nanoTime() - nanoStart, TimeUnit.NANOSECONDS)));
+        }
+    }
+
+    /// Locks out the account of `username` (see [IUser#lockoutUser(String)]).
+    ///
+    /// The user making a login attempt is not logged in, and lockout saves the user.
+    /// Therefore, SU is used as the current user, also for auditing purposes.
+    /// The current user is cleared afterwards, as this resource is attached at the component level and is not covered by the application-level cleanup filter.
+    ///
+    static void lockoutUser(final IUserProvider up, final IUser coUser, final String username) {
+        up.setUsername(User.system_users.SU.name(), coUser);
+        try {
+            coUser.lockoutUser(username);
+        } finally {
+            up.clearUser();
         }
     }
 

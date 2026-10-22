@@ -108,6 +108,29 @@ Web API resources authenticated by headers (e.g. API keys) and attached to the `
 `AbstractWebUiResources` wires the filter in front of the resource guard, so every resource registered in `registerDomainWebResources` is covered.
 Resources that an application attaches elsewhere — e.g. to the `Component` default host, as with the login, logout and password reset resources — are outside this filter.
 
+## Login Lockout and Password Reset Cooldown
+
+Both are held in memory by `@Singleton` services in `platform-web-resources` (package `web.resources.webui`): they apply per application server and start afresh when it restarts.
+Both measure time with a Guava `Ticker`, which tests replace with a manual one (see `testing/quick-reference.md`).
+
+**Login attempts** — `LoginResource` passes each attempt through `LoginAttemptTracker`, keyed by username (case-insensitive):
+- the first `FAILED_ATTEMPTS_BEFORE_BLOCK` (2) failed attempts are denied (`400`);
+- each further failed attempt blocks the username for `BLOCK_TIME_SECONDS` (15), and an attempt within that time is blocked (`412`) without authentication and is not counted;
+- the `LOCKOUT_THRESHOLD`-th (6th) counted failed attempt locks the account out; a successful attempt resets the count.
+
+Attempts with every username are tracked and blocked alike, so that the outcomes do not disclose which usernames identify accounts.
+
+**Lockout** — `IUser.lockoutUser` deactivates the account and removes its secret, but only for an account that can sign in with a password (`IUser.findUserForPasswordLogin`); accounts restricted to SSO in the SSO authentication mode are not affected.
+Deactivation saves the user, which requires a current user: `LoginResource.lockoutUser` sets `SU` as the current user for the lockout and clears it afterwards.
+The secret is removed in a separate transaction, so that the account can no longer sign in with a password even if its deactivation fails.
+A locked-out user regains access when an administrator activates the account again, which starts the password reset procedure.
+
+**Password reset** — `LoginInitiateResetResource` initiates a reset at most once per user within `PasswordResetCooldown.COOLDOWN_IN_MINUTES` (5), keyed by user ID, so the cooldown applies whether the user is identified by username or email.
+A reset link remains valid for `UserSecretCo.RESET_UUID_EXPIRATION_IN_MINUTES` (15).
+A link that remains valid for at least `LoginInitiateResetResource.MIN_REUSED_LINK_VALIDITY_IN_MINUTES` (5) is sent again instead of being replaced, so that repeated requests do not invalidate a link the user has received; its expiry is not extended.
+Requests for a user in cooldown and for an unknown user receive the same response and the same response-time adjustment, so that the response does not disclose whether an account exists.
+Expiry of reset links and user sessions is computed with `serverNow()`, not `now()` (see gotcha 11 in `CLAUDE.md`).
+
 ## Topic-Specific Gotcha
 
 **Audit security tokens are runtime-generated — do not hand-write them.**

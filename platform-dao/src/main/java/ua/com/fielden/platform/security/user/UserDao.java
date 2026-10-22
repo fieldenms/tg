@@ -84,12 +84,11 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             QUERY_PASSWORD_LOGIN_RSO = mkPasswordLoginQuery(false),
             QUERY_PASSWORD_LOGIN_SSO = mkPasswordLoginQuery(true);
 
-    /// A query for the secret of the inactive user identified by parameter [#PARAM_USERNAME] (case-insensitive).
+    /// Queries for the secret of the user identified by parameter [#PARAM_USERNAME] (case-insensitive) who is inactive or can sign in with a password, in the RSO and SSO authentication modes.
     ///
-    private static final EntityResultQueryModel<UserSecret> QUERY_INACTIVE_USER_SECRET = select(UserSecret.class).where()
-            .lowerCase().prop("key.key").eq().lowerCase().param(PARAM_USERNAME)
-            .and().prop("key.active").eq().val(false)
-            .model();
+    private static final EntityResultQueryModel<UserSecret>
+            QUERY_LOCKOUT_USER_SECRET_RSO = mkLockoutUserSecretQuery(false),
+            QUERY_LOCKOUT_USER_SECRET_SSO = mkLockoutUserSecretQuery(true);
 
     private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;
@@ -308,6 +307,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     @Authorise(AlwaysAccessibleToken.class)
     public void lockoutUser(final String username) {
         // Each step runs in its own transaction, which is rolled back if the step fails, so that the other step is still performed.
+        // Deletion of the secret makes the lockout effective even if deactivation fails, as the user can no longer sign in with a password.
         try {
             deactivateLockoutUser(username);
         } catch (final Exception ex) {
@@ -330,10 +330,11 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @SessionRequired(allowNestedScope = false)
     protected void deleteLockoutUserSecrets(final String username) {
-        // An attempt to delete the secrets of an inactive user regardless of whether an account was locked out.
+        // Delete the secret of the user who can sign in with a password, in case their deactivation failed, or who is inactive.
+        // The deletion is attempted regardless of whether an account was locked out.
         // This is to reduce the difference in the computation time that is required for processing the accounts that are locked out and all other usernames.
         final UserSecretCo coUserSecret = co(UserSecret.class);
-        coUserSecret.batchDelete(QUERY_INACTIVE_USER_SECRET, Map.of(PARAM_USERNAME, username));
+        coUserSecret.batchDelete(ssoMode() ? QUERY_LOCKOUT_USER_SECRET_SSO : QUERY_LOCKOUT_USER_SECRET_RSO, Map.of(PARAM_USERNAME, username));
     }
 
     @Override
@@ -354,6 +355,18 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
                 .prop(ACTIVE).eq().val(true)
                 .and().lowerCase().prop(KEY).eq().lowerCase().param(PARAM_USERNAME);
         return (ssoMode ? condition.and().prop(User.SSO_ONLY).eq().val(false) : condition).model();
+    }
+
+    /// Creates a query for the secret of the user identified by parameter [#PARAM_USERNAME] (case-insensitive) who is inactive or, as determined by [#mkPasswordLoginQuery(boolean)], can sign in with a password.
+    ///
+    private static EntityResultQueryModel<UserSecret> mkLockoutUserSecretQuery(final boolean ssoMode) {
+        return select(UserSecret.class).where()
+                .lowerCase().prop("key.key").eq().lowerCase().param(PARAM_USERNAME)
+                .and().begin()
+                    .prop("key.active").eq().val(false)
+                    .or().prop(KEY).in().model(mkPasswordLoginQuery(ssoMode))
+                .end()
+                .model();
     }
 
     @Override

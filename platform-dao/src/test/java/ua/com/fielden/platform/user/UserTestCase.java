@@ -33,6 +33,7 @@ import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.security.user.User.*;
 import static ua.com.fielden.platform.security.user.UserDao.ERR_SELF_EDITING;
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
@@ -697,6 +698,26 @@ public class UserTestCase extends AbstractDaoTestCase {
         final String username = "NON-EXISTING-USER-TO-LOCKOUT";
         assertNull(coUser.findUser(username));
         coUser.lockoutUser(username);
+    }
+
+    @Test
+    public void lockout_with_no_current_user_fails_to_deactivate_the_user_but_still_removes_their_secret() {
+        final User user = coUser.findUser("USER3");
+        assertTrue("Invalid pre-conditions: some user secrets should exist.",
+                   coUserSecret.exists(select(UserSecret.class).where().prop("key").eq().val(user).model()));
+
+        // Deactivation saves the user, which requires a current user.
+        final IUserProvider up = getInstance(IUserProvider.class);
+        final User currUser = up.getUser();
+        up.clearUser();
+        try {
+            coUser.lockoutUser("USER3");
+        } finally {
+            up.setUser(currUser);
+        }
+
+        assertTrue(coUser.findUser("USER3").isActive());
+        assertFalse(coUserSecret.findByIdOptional(user.getId()).isPresent());
     }
 
     @Test
