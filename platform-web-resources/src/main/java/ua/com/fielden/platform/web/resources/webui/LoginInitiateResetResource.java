@@ -35,7 +35,7 @@ import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.restlet.data.MediaType.TEXT_HTML;
-import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MUNUTES;
+import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MINUTES;
 import static ua.com.fielden.platform.security.user.UserSecretCo.resetUuidExpirationTime;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 
@@ -139,7 +139,7 @@ public class LoginInitiateResetResource extends AbstractWebResource {
 
     /// Returns a password reset link for the user identified by `usernameOrEmail`, unless no such user can reset their password, or the user is in cooldown.
     /// The UUID already assigned to the user is kept if it remains valid for at least [#MIN_REUSED_LINK_VALIDITY_IN_MINUTES];
-    /// otherwise, a new UUID that is valid for [UserSecretCo#RESET_UUID_EXPIRATION_IN_MUNUTES] is assigned.
+    /// otherwise, a new UUID that is valid for [UserSecretCo#RESET_UUID_EXPIRATION_IN_MINUTES] is assigned.
     ///
     /// The time of the request is taken from the server clock, `constants.serverNow()`, against which [LoginCompleteResetResource] validates reset links.
     /// [IUniversalConstants#now()] is not used, as in the independent time-zone mode it shifts the instant by the offset of the request time-zone.
@@ -152,7 +152,7 @@ public class LoginInitiateResetResource extends AbstractWebResource {
     {
         final DateTime now = constants.serverNow();
         final Date validUntil = now.plusMinutes(MIN_REUSED_LINK_VALIDITY_IN_MINUTES).toDate();
-        final Date expirationTime = now.plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES).toDate();
+        final Date expirationTime = now.plusMinutes(RESET_UUID_EXPIRATION_IN_MINUTES).toDate();
         return co$User.findUserForPasswordReset(usernameOrEmail)
                 .filter(cooldown::tryStart)
                 .map(user -> co$User.findOrAssignPasswordResetUuid(user, validUntil, expirationTime))

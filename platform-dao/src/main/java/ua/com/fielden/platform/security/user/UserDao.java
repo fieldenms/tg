@@ -54,7 +54,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.security.user.User.*;
 import static ua.com.fielden.platform.security.user.UserAndRoleAssociation.USER;
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
-import static ua.com.fielden.platform.security.user.UserSecretCo.newUserPasswordRestExpirationTime;
+import static ua.com.fielden.platform.security.user.UserSecretCo.INITIAL_USER_UUID_EXPIRATION_IN_MINUTES;
 import static ua.com.fielden.platform.security.user.UserSecretCo.resetUuidExpirationTime;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
@@ -172,7 +172,9 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             ( user.isPersisted() && user.isActive() && notRestrictedToSsoOnly(user) && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
             savedUser = super.save(user, Optional.of(reconstruct(user).unionWith(maybeFetch)));
             final Function<Long, EntityCompanionException> error = (Long id) -> new EntityCompanionException(ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE.formatted(id, user));
-            newUserNotifier.notify(assignPasswordResetUuid(savedUser.orElseThrow(error).getKey(), newUserPasswordRestExpirationTime()).orElseThrow(() -> new SecurityException(ERR_INITIATING_PASSWORD_RESET)));
+            // The activation link expires by the server clock, against which reset links are validated.
+            final Date expirationTime = serverNow().plusMinutes(INITIAL_USER_UUID_EXPIRATION_IN_MINUTES).toDate();
+            newUserNotifier.notify(assignPasswordResetUuid(savedUser.orElseThrow(error).getKey(), expirationTime).orElseThrow(() -> new SecurityException(ERR_INITIATING_PASSWORD_RESET)));
         } else {
             savedUser = super.save(user, maybeFetch);
         }

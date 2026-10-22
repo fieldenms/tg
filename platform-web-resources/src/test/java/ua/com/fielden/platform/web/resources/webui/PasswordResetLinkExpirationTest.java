@@ -20,7 +20,7 @@ import java.util.Optional;
 import static java.util.concurrent.TimeUnit.HOURS;
 import static org.joda.time.DateTimeZone.getDefault;
 import static org.junit.Assert.*;
-import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MUNUTES;
+import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MINUTES;
 import static ua.com.fielden.platform.web.resources.webui.LoginCompleteResetResource.isResetUuidValid;
 import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.MIN_REUSED_LINK_VALIDITY_IN_MINUTES;
 import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.findOrAssignPasswordResetUuid;
@@ -28,7 +28,7 @@ import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetReso
 /// Tests for the expiration of password reset links, which [LoginInitiateResetResource] assigns and [LoginCompleteResetResource] validates, in the independent time-zone mode.
 ///
 /// The independent time-zone mode is modelled with a request time zone ahead of, or behind, the server time zone, which shifts `now()`, but not `serverNow()`.
-/// Reset links expire by the server clock, so that they remain valid for [UserSecretCo#RESET_UUID_EXPIRATION_IN_MUNUTES] regardless of the request time zone.
+/// Reset links expire by the server clock, so that they remain valid for [UserSecretCo#RESET_UUID_EXPIRATION_IN_MINUTES] regardless of the request time zone.
 ///
 public class PasswordResetLinkExpirationTest extends AbstractWebResourceWithDaoTestCase {
 
@@ -73,7 +73,7 @@ public class PasswordResetLinkExpirationTest extends AbstractWebResourceWithDaoT
         assertEquals(MIN_REUSED_LINK_VALIDITY_IN_MINUTES, link.validityInMinutes());
     }
 
-    /// Requests a reset link from `requestTimeZone`, and asserts that it is valid for [UserSecretCo#RESET_UUID_EXPIRATION_IN_MUNUTES] by the server clock, and expires after that.
+    /// Requests a reset link from `requestTimeZone`, and asserts that it is valid for [UserSecretCo#RESET_UUID_EXPIRATION_IN_MINUTES] by the server clock, and expires after that.
     ///
     private void assertResetLinkIsValidForTheFullPeriod(final DateTimeZone requestTimeZone) {
         final DateTime serverTimeOfRequest = constants.serverNow();
@@ -81,12 +81,12 @@ public class PasswordResetLinkExpirationTest extends AbstractWebResourceWithDaoT
         assertRequestTimeZoneShiftsNow();
 
         final PasswordResetLink link = reset("USER1").orElseThrow();
-        assertEquals(RESET_UUID_EXPIRATION_IN_MUNUTES, link.validityInMinutes());
+        assertEquals(RESET_UUID_EXPIRATION_IN_MINUTES, link.validityInMinutes());
 
         final String resetUuid = link.secret().getResetUuid();
-        constants.setNow(serverTimeOfRequest.plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES).minusSeconds(1));
+        constants.setNow(serverTimeOfRequest.plusMinutes(RESET_UUID_EXPIRATION_IN_MINUTES).minusSeconds(1));
         assertTrue(isResetUuidValid(co$User(), resetUuid, dates));
-        constants.setNow(serverTimeOfRequest.plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES));
+        constants.setNow(serverTimeOfRequest.plusMinutes(RESET_UUID_EXPIRATION_IN_MINUTES));
         assertFalse(isResetUuidValid(co$User(), resetUuid, dates));
     }
 

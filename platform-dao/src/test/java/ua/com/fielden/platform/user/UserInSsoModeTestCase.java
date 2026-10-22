@@ -17,7 +17,7 @@ import java.util.Date;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
-import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MUNUTES;
+import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MINUTES;
 
 /// A test case to cover users in the SSO authentication mode.
 ///
@@ -90,7 +90,7 @@ public class UserInSsoModeTestCase extends AbstractDaoTestCase {
 
     private Date expirationTime() {
         final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
-        return consts.now().plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES).toDate();
+        return consts.now().plusMinutes(RESET_UUID_EXPIRATION_IN_MINUTES).toDate();
     }
 
     @Override
