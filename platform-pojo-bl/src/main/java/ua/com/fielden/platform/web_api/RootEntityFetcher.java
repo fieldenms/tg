@@ -20,8 +20,8 @@ import java.util.Optional;
 import static graphql.GraphqlErrorBuilder.newError;
 import static ua.com.fielden.platform.security.tokens.Template.READ;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.web_api.FieldSchema.*;
+import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_NUMBER;
+import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_NUMBER;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.generateQueryModelFrom;
 
 /// A [DataFetcher] implementation responsible for resolving root `Query` fields that correspond to main entity trees.
@@ -29,13 +29,10 @@ import static ua.com.fielden.platform.web_api.RootEntityUtils.generateQueryModel
 ///
 public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetcher<DataFetcherResult<List<T>>> {
 
-    public static final String ERR_PAGE_CAPACITY_TOO_LARGE = "Requested page capacity of %s was capped to the limit of %s.";
-
     private final Class<T> entityType;
     private final ICompanionObjectFinder coFinder;
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
-    private final int maxPageCapacity;
     private final IDomainTreeEnhancer domainTreeEnhancer;
     private final GraphQLCommon common;
 
@@ -44,7 +41,6 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
             final ICompanionObjectFinder coFinder,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
-            final int maxPageCapacity,
             final IDomainTreeEnhancer domainTreeEnhancer,
             final GraphQLCommon common)
     {
@@ -52,7 +48,6 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
         this.coFinder = coFinder;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
-        this.maxPageCapacity = maxPageCapacity;
         this.domainTreeEnhancer = domainTreeEnhancer;
         this.common = common;
     }
@@ -69,7 +64,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
         final var managedEntityType = (Class<T>) domainTreeEnhancer.getManagedType(entityType);
         final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(environment, managedEntityType, common);
 
-        final var _pageCapacity = getPageCapacity(environment);
+        final var _pageCapacity = common.getPageCapacityArgument(environment);
         final var pageCapacity = _pageCapacity._1;
         final var maybePageCapacityError = _pageCapacity._2;
 
@@ -83,18 +78,6 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
         warningAndModel._1.ifPresent(warning -> result.error(newError(environment).message(warning).build()));
         maybePageCapacityError.ifPresent(it -> result.error(newError(environment).message(it).build()));
         return result.build();
-    }
-
-    private T2<Integer, Optional<String>> getPageCapacity(final DataFetchingEnvironment environment) {
-        final var inPageCapacity = Optional.ofNullable(environment.getArgument(PAGE_CAPACITY))
-                .map(x -> (int) x)
-                .filter(x -> x >= 1)
-                .orElse(DEFAULT_PAGE_CAPACITY);
-        final var pageCapacity = Math.min(maxPageCapacity, inPageCapacity);
-        final Optional<String> maybePageCapacityError = inPageCapacity > maxPageCapacity
-                ? Optional.of(ERR_PAGE_CAPACITY_TOO_LARGE.formatted(inPageCapacity, maxPageCapacity))
-                : Optional.empty();
-        return t2(pageCapacity, maybePageCapacityError);
     }
 
 }

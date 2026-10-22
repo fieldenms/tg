@@ -78,19 +78,15 @@ public class GraphQLService implements IWebApi {
             WARN_INSUFFICIENT_MAX_QUERY_DEPTH = "Web API maximum query depth [%s] is insufficient for GraphiQL editor. Minimum value [" + DEFAULT_MAX_QUERY_DEPTH + "] was used.";
 
     private final AtomicReference<GraphQLSchema> schemaRef;
-    private final Integer maxQueryDepth;
     private final FluentConditions fluentConditions;
     private final GraphQLCommon common;
 
     /// Creates a GraphQLService instance based on `applicationDomainProvider` which contains all entity types.
     ///
-    /// @param maxQueryDepth  the maximum depth of GraphQL query that are permitted to be executed.
     /// @param authorisationModel  an auth model to authorise running of Web API queries and their [FieldVisibility]
     ///
     @Inject
-    public GraphQLService(
-            final @Named("web.api.maxQueryDepth") Integer maxQueryDepth,
-            final @Named("web.api.maxPageCapacity") Integer maxPageCapacity,
+    protected GraphQLService(
             final IApplicationDomainProvider applicationDomainProvider,
             final ICompanionObjectFinder coFinder,
             final IAuthorisationModel authorisationModel,
@@ -103,17 +99,9 @@ public class GraphQLService implements IWebApi {
     {
         try {
             LOGGER.info("GraphQL Web API...");
-            if (maxQueryDepth == null || maxQueryDepth.compareTo(0) < 0) {
-                throw new WebApiException("GraphQL max query depth must be specified and cannot be negative.");
-            }
-            if (maxPageCapacity == null || maxPageCapacity.compareTo(0) < 0) {
-                throw new WebApiException("GraphQL max page capacity must be specified and cannot be negative.");
-            }
-            this.maxQueryDepth = maxQueryDepth;
             this.fluentConditions = fluentConditions;
             this.common = common;
 
-            LOGGER.info("\tmaxQueryDepth = {}", maxQueryDepth);
             final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
 
             LOGGER.info("\tBuilding dictionary...");
@@ -127,7 +115,6 @@ public class GraphQLService implements IWebApi {
                                                   codeRegistryBuilder,
                                                   authorisationModel,
                                                   securityTokenProvider,
-                                                  maxPageCapacity,
                                                   domainTreeEnhancer);
 
             LOGGER.info("\tBuilding field visibility...");
@@ -156,7 +143,7 @@ public class GraphQLService implements IWebApi {
         try {
             final var graphQL = newGraphQL(schemaRef.get())
                     .queryExecutionStrategy(new GraphQLAsyncExecutionStrategy(new GraphQLSimpleDataFetcherExceptionHandler()))
-                    .instrumentation(new MaxQueryDepthInstrumentation(maxQueryDepth))
+                    .instrumentation(new MaxQueryDepthInstrumentation(common.maxQueryDepth()))
                     .build();
             // Some errors are thrown rather than captured in a result object, hence the try/catch.
             // E.g., OneOfTooManyKeysException.
@@ -173,7 +160,7 @@ public class GraphQLService implements IWebApi {
                                         .graphQLContext(ctx -> ctx.put(
                                                 QueryComplexityLimits.KEY,
                                                 QueryComplexityLimits.newLimits()
-                                                        .maxDepth(maxQueryDepth)
+                                                        .maxDepth(common.maxQueryDepth())
                                                         .maxFieldsCount(QueryComplexityLimits.DEFAULT_MAX_FIELDS_COUNT)
                                                         .build())))
                         .toSpecification();
@@ -322,7 +309,6 @@ public class GraphQLService implements IWebApi {
             final GraphQLCodeRegistry.Builder codeRegistryBuilder,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
-            final int maxPageCapacity,
             final IDomainTreeEnhancer domainTreeEnhancer)
     {
         final Builder queryTypeBuilder = newObject().name(QUERY_TYPE_NAME).description("Query following **entities** represented as GraphQL root fields:");
@@ -341,7 +327,6 @@ public class GraphQLService implements IWebApi {
                                                                     coFinder,
                                                                     authorisationModel,
                                                                     securityTokenProvider,
-                                                                    maxPageCapacity,
                                                                     domainTreeEnhancer,
                                                                     common));
         });

@@ -39,8 +39,6 @@ public class WebApiMaxQueryDepthTest extends AbstractDaoTestCase {
     ///
     private IWebApi webApiWithMaxQueryDepth(final int maxQueryDepth) {
         return new GraphQLService(
-            maxQueryDepth,
-            DEFAULT_MAX_PAGE_CAPACITY,
             getInstance(IApplicationDomainProvider.class),
             getInstance(ICompanionObjectFinder.class),
             getInstance(IAuthorisationModel.class),
@@ -49,7 +47,7 @@ public class WebApiMaxQueryDepthTest extends AbstractDaoTestCase {
             getInstance(EntityAggregation.class),
             getInstance(FluentConditions.class),
             domainTreeEnhancer,
-            getInstance(GraphQLCommon.class));
+            new GraphQLCommon(maxQueryDepth, DEFAULT_MAX_PAGE_CAPACITY));
     }
 
     @Test

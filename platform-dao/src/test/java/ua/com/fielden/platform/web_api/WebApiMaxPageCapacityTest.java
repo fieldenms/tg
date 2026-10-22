@@ -11,9 +11,9 @@ import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static ua.com.fielden.platform.web_api.GraphQLCommon.ERR_PAGE_CAPACITY_TOO_LARGE;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
 import static ua.com.fielden.platform.web_api.IWebApi.WEB_API_DOMAIN_TREE_ENHANCER;
-import static ua.com.fielden.platform.web_api.RootEntityFetcher.ERR_PAGE_CAPACITY_TOO_LARGE;
 import static ua.com.fielden.platform.web_api.WebApiUtils.errors;
 import static ua.com.fielden.platform.web_api.WebApiUtils.input;
 
@@ -28,8 +28,6 @@ public class WebApiMaxPageCapacityTest extends AbstractDaoTestCase {
     ///
     private IWebApi webApi(final int maxPageCapacity) {
         return new GraphQLService(
-                DEFAULT_MAX_QUERY_DEPTH,
-                maxPageCapacity,
                 getInstance(IApplicationDomainProvider.class),
                 getInstance(ICompanionObjectFinder.class),
                 getInstance(IAuthorisationModel.class),
@@ -38,7 +36,7 @@ public class WebApiMaxPageCapacityTest extends AbstractDaoTestCase {
                 getInstance(EntityAggregation.class),
                 getInstance(FluentConditions.class),
                 domainTreeEnhancer,
-                getInstance(GraphQLCommon.class));
+                new GraphQLCommon(DEFAULT_MAX_QUERY_DEPTH, maxPageCapacity));
     }
 
     @Test

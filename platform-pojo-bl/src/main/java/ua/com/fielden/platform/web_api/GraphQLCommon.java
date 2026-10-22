@@ -1,13 +1,18 @@
 package ua.com.fielden.platform.web_api;
 
 import graphql.schema.*;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.apache.commons.lang3.Strings;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.ImmutableListUtils;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
@@ -26,7 +31,10 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresen
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_CAPACITY;
+import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_CAPACITY;
 
 @Singleton
 public class GraphQLCommon {
@@ -35,6 +43,38 @@ public class GraphQLCommon {
     public static final String __TYPENAME = "__typename";
     /// Name of the query type in every GraphQL schema in TG.
     public static final String QUERY_TYPE_NAME = "Query";
+
+    public static final String ERR_PAGE_CAPACITY_TOO_LARGE = "Requested page capacity of %s was capped to the limit of %s.";
+
+    private static final Logger LOGGER = LogManager.getLogger(GraphQLCommon.class);
+
+    private final int maxPageCapacity;
+    private final int maxQueryDepth;
+
+    @Inject
+    public GraphQLCommon(
+            final @Named("web.api.maxQueryDepth") Integer maxQueryDepth,
+            final @Named("web.api.maxPageCapacity") Integer maxPageCapacity)
+    {
+        if (maxQueryDepth == null || maxQueryDepth.compareTo(0) < 0) {
+            throw new WebApiException("GraphQL max query depth must be specified and cannot be negative.");
+        }
+        if (maxPageCapacity == null || maxPageCapacity.compareTo(0) < 0) {
+            throw new WebApiException("GraphQL max page capacity must be specified and cannot be negative.");
+        }
+        this.maxQueryDepth = maxQueryDepth;
+        LOGGER.info("maxQueryDepth = {}", maxQueryDepth);
+        this.maxPageCapacity = maxPageCapacity;
+        LOGGER.info("maxPageCapacity = {}", maxPageCapacity);
+    }
+
+    public int maxPageCapacity() {
+        return maxPageCapacity;
+    }
+
+    public int maxQueryDepth() {
+        return maxQueryDepth;
+    }
 
     /// Name of the GraphQL root field for the specified entity type.
     ///
@@ -298,5 +338,18 @@ public class GraphQLCommon {
             return Optional.empty();
         }
     }
+
+    public T2<Integer, Optional<String>> getPageCapacityArgument(final DataFetchingEnvironment environment) {
+        final var inPageCapacity = Optional.ofNullable(environment.getArgument(PAGE_CAPACITY))
+                .map(x -> (int) x)
+                .filter(x -> x >= 1)
+                .orElse(DEFAULT_PAGE_CAPACITY);
+        final var pageCapacity = Math.min(maxPageCapacity, inPageCapacity);
+        final Optional<String> maybePageCapacityError = inPageCapacity > maxPageCapacity
+                ? Optional.of(ERR_PAGE_CAPACITY_TOO_LARGE.formatted(inPageCapacity, maxPageCapacity))
+                : Optional.empty();
+        return t2(pageCapacity, maybePageCapacityError);
+    }
+
 
 }
