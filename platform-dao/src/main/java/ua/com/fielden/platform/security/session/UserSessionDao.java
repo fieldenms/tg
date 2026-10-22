@@ -26,8 +26,9 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import java.security.SignatureException;
 import java.sql.PreparedStatement;
 import java.util.Date;
-import java.util.Map.Entry;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -85,22 +86,20 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     @Override
     @SessionRequired
     public void clearSession(final UserSession session) {
-        cache.invalidate(findAuthenticator(session));
+        invalidateCache(Set.of(session.getId()));
         defaultDelete(session);
     }
     
     @Override
     @SessionRequired
     public int clearAll(final User user) {
-        final EntityResultQueryModel<UserSession> q = select(UserSession.class).where().prop("user").eq().val(user).model();
+        final EntityResultQueryModel<UserSession> query = select(UserSession.class).where().prop("user").eq().val(user).model();
 
-        final int count = count(q);
+        final int count = count(query);
         if (count > 0) {
             logger.info(() -> "Removing [%s] sessions for user [%s].".formatted(count, user.getKey()));
-            
-            invalidateCache(q);
-            
-            defaultBatchDelete(q);
+            invalidateCache(query);
+            defaultBatchDelete(query);
         }
         return count;
     }
@@ -221,8 +220,26 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     /// @param q  a query for retrieving user session to be removed from cache.
     ///
     private void invalidateCache(final EntityResultQueryModel<UserSession> q) {
-        stream(from(q).with(fetchAll(UserSession.class)).model())
-        .forEach(session -> cache.invalidate(findAuthenticator(session)));
+        // Without cached sessions, there is nothing to remove, and the query is not needed.
+        if (cache.size() == 0) {
+            return;
+        }
+        // Lightweight instances keep the memory footprint small, as the query may match many sessions (e.g., when clearing expired sessions of all users).
+        final var qem = from(q).with(fetchIdOnly(UserSession.class)).lightweight().model();
+        final Set<Long> ids = new HashSet<>();
+        try (final var stream = stream(qem, 100)) {
+            stream.map(UserSession::getId).forEach(ids::add);
+        }
+        invalidateCache(ids);
+    }
+
+    /// Removes the sessions with `sessionIds` from cache under every authenticator they are cached for.
+    /// A session that replaces another one is cached for the authenticators of both (see [#newSessionToReplaceOld(User, boolean, Optional, String)]).
+    ///
+    private void invalidateCache(final Set<Long> sessionIds) {
+        if (!sessionIds.isEmpty()) {
+            cache.invalidateAll(Maps.filterValues(cache.asMap(), session -> sessionIds.contains(session.getId())).keySet());
+        }
     }
 
     /// Removes all sessions that are associated with users that have been associated with the provided series ID. There should at most be only one such user (but potentially
@@ -390,6 +407,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             // In this case, we may need to implement a re-try...
             // But let's first see if that is a problem by logging warning to this effect.
             final UserSession newSession = newSessionToReplaceOld(user, session.isTrusted(), of(authenticator), session.getSid());
+            // The replaced session remains valid for the untrusted duration, so that requests with its authenticator that miss the cache (e.g., on another node or after eviction) are accepted,
+            // instead of being treated as authenticator theft.
             try {
                 forceUpdateExpiryTimeForSession(session.getId(), user, constants.serverNow().plusMinutes(untrustedDurationMins));
             } catch (final Exception ex) {
@@ -502,17 +521,6 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             logger.error(msg, ex);
             throw new SecurityException(msg, ex);
         }
-    }
-
-    /// A convenient method to find an authenticator key in cache by user session.
-    ///
-    private String findAuthenticator(final UserSession session) {
-        for (final Entry<String, UserSession> value : cache.asMap().entrySet()) {
-            if (value.getValue().equals(session)) {
-                return value.getKey();
-            }
-        }
-        return "";
     }
 
     /// Calculates a session expiry time based on the notion of trusted and untrusted devices.
