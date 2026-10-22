@@ -113,6 +113,9 @@ public class EntityAggregation {
                                    .name(common.rootFieldNameForAggEntity(ty))
                                    .description("Aggregation over %s.".formatted(getEntityTitle(ty)))
                                    .type(new GraphQLList(new GraphQLTypeReference(common.graphQlTypeNameForAggEntity(ty))))
+                                   // TODO Once paging is supported in the fetcher.
+                                   //        .argument(PAGE_NUMBER_ARGUMENT)
+                                   //        .argument(PAGE_CAPACITY_ARGUMENT)
                                    .build()));
         });
     }
@@ -179,7 +182,28 @@ public class EntityAggregation {
             // This typecast is safe in practice as all enhanced types extend their originals.
             final var managedEntityType = (Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType);
             final var query = buildQuery(managedEntityType, environment);
-            return coFinder.find(EntityAggregates.class, true).getAllEntities(from(query).model());
+            final var qem = from(query).model();
+            final var co = coFinder.find(EntityAggregates.class, true);
+            return co.getAllEntities(qem);
+
+            // TODO Supporting paging requires supporting dot-notated yield aliases in source queries whose result type
+            // is `EntityAggregates`.
+            // See the TODO and exception path in `QuerySourceInfoProvider.produceQuerySourceInfoForEntityType`.
+            /*
+            final var _pageCapacity = common.getPageCapacityArgument(environment);
+            final var pageCapacity = _pageCapacity._1;
+            final var maybePageCapacityError = _pageCapacity._2;
+
+            final var pageNo = Optional.ofNullable(environment.getArgument(PAGE_NUMBER))
+                    .map(x -> (int) x)
+                    .filter(n -> n >= 0)
+                    .orElse(DEFAULT_PAGE_NUMBER);
+
+            final var result = DataFetcherResult.<List<EntityAggregates>>newResult()
+                    .data(co.getPage(qem, pageNo, pageCapacity).data());
+            maybePageCapacityError.ifPresent(it -> result.error(newError(environment).message(it).build()));
+            return result.build();
+            */
         }
 
         private AggregatedResultQueryModel buildQuery(
