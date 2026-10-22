@@ -19,10 +19,14 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.tokens.persistent.TgVehicle_CanRead_model_Token;
+import ua.com.fielden.platform.security.tokens.persistent.TgVehicle_CanRead_price_Token;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.web.test.TestWebApplication;
 import ua.com.fielden.platform.web_api.IWebApi;
 
@@ -368,6 +372,60 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
                Invalid expression for calculated property [TgVehicle.myNumber]: 2*a""");
     }
 
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Authorisation of property access in expressions of calculated properties
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    @Test
+    public void tool_add_calculated_property_returns_an_error_if_the_expression_performs_unathorised_access() {
+        interface Test {
+            void run(final Class<?> type,
+                     final String propName,
+                     final String expression,
+                     final Iterable<? extends Class<? extends ISecurityToken>> restrictedTokens,
+                     final List<? extends CharSequence> unathorisedProps);
+        }
+        final Test test = (type, propName, expression, restrictedTokens, unathorisedProps) -> {
+            runWithoutTokens(restrictedTokens, () -> {
+                final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
+                        TOOL_ADD_CALCULATED_PROPERTY,
+                        Map.of("type", type.getSimpleName(),
+                               "name", propName,
+                               "expression", expression)));
+                assertTrue(result.isError());
+                assertThat(result.content()).hasSize(1);
+                assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("""
+               Error adding calculated property [%s.%s] with expression:
+               %s
+               Reason: Unauthorised access to the following properties: [%s]."""
+               .formatted(type.getSimpleName(), propName, expression, CollectionUtil.toString(unathorisedProps, ", ")));
+            });
+
+            assertThat(domainTreeEnhancer.findCalculatedProperty(type, propName)).isEmpty();
+            assertGraphQlTypeHasNoField(webApi, type.getSimpleName(), propName);
+        };
+
+        test.run(TgVehicle.class, "myProp", "2 * price", List.of(TgVehicle_CanRead_price_Token.class), List.of("price"));
+        test.run(TgVehicle.class, "myProp", "2 * replacedBy.price",
+                 List.of(TgVehicle_CanRead_price_Token.class),
+                 List.of("replacedBy.price"));
+        test.run(TgVehicle.class, "myProp", "2 * replacedBy.price + price",
+                 List.of(TgVehicle_CanRead_price_Token.class),
+                 List.of("price", "replacedBy.price"));
+        test.run(TgVehicle.class, "myProp", "model", List.of(TgVehicle_CanRead_model_Token.class), List.of("model"));
+        test.run(TgVehicle.class, "myProp", "model.make", List.of(TgVehicle_CanRead_model_Token.class), List.of("model"));
+        test.run(TgVehicle.class, "myProp", "replacedBy.model.make",
+                 List.of(TgVehicle_CanRead_model_Token.class),
+                 List.of("replacedBy.model"));
+        test.run(TgVehicle.class, "myProp", "model.makeModelsCount + price",
+                 List.of(TgVehicle_CanRead_model_Token.class, TgVehicle_CanRead_price_Token.class),
+                 List.of("model", "price"));
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Invalid requests
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
     @Test
     public void non_existing_resource() {
         assertThatThrownBy(() -> mcpClient.readResource(new McpSchema.ReadResourceRequest("tg://abcd")))
@@ -429,6 +487,31 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     private void setUser(final String username) {
         final IUser coUser = co(User.class);
         getInstance(IUserProvider.class).setUsername(username, coUser);
+    }
+
+    private void assertGraphQlTypeHasField(final IWebApi webApi, final CharSequence typeName, final CharSequence fieldName) {
+        assertThat(graphQlTypeFields(webApi, typeName)).contains(fieldName.toString());
+    }
+
+    private void assertGraphQlTypeHasNoField(final IWebApi webApi, final CharSequence typeName, final CharSequence fieldName) {
+        assertThat(graphQlTypeFields(webApi, typeName)).doesNotContain(fieldName.toString());
+    }
+
+    private List<String> graphQlTypeFields(final IWebApi webApi, final CharSequence typeName) {
+        final var query = """
+                          query {
+                              __type(name: "%s") { fields { name } }
+                          }
+                          """.formatted(typeName);
+        final var result = webApi.execute(Map.of("query", query));
+        assertThat(result).doesNotContainKey("error");
+        assertThat(result).containsKey("data");
+        final Map<String, Object> data = assertInstanceOf(Map.class, result.get("data"));
+        assertThat(data).containsKey("__type");
+        final Map<String, Object> __type = assertInstanceOf(Map.class, data.get("__type"));
+        assertThat(__type).containsKey("fields");
+        final List<Map<String, Object>> fields = assertInstanceOf(List.class, __type.get("fields"));
+        return fields.stream().map(fld -> (String) fld.get("name")).toList();
     }
 
 }

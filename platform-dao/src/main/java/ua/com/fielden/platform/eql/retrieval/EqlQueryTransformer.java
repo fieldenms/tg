@@ -14,10 +14,10 @@ import ua.com.fielden.platform.eql.retrieval.records.YieldedColumn;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
+import ua.com.fielden.platform.eql.stage2.IPropPathResolver;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
-import ua.com.fielden.platform.eql.stage2.IPropPathResolver;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
@@ -87,40 +87,65 @@ public final class EqlQueryTransformer {
         this.propPathResolver = propPathResolver;
     }
 
+    /// Transformation stage.
+    ///
+    /// @param <T>  result type for the transform operation
+    ///
+    public sealed interface Stage<T> {
+        Stage<ResultQuery1> stage1 = new StageImpl<>();
+        Stage<ResultQuery2> stage2 = new StageImpl<>();
+        Stage<TransformationResultFromStage2To3<ResultQuery3>> stage3 = new StageImpl<>();
+    }
+
     public <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform(
             final QueryProcessingModel<E, ?> qpm,
             final Optional<String> username)
     {
-        final var result = transform_(qpm, username);
+        final var result = transformToStage(qpm, username, Stage.stage3);
 
         if (isForeignIdOnlyQuery(result.item)) {
             final var idOnlyQuery = select((Class<E>) result.item.resultType)
                     .where().prop(ID).in().model((SingleResultQueryModel<?>) qpm.queryModel)
                     .model();
             final var idOnlyQpm = new QueryProcessingModel<>(idOnlyQuery, qpm.orderModel, qpm.fetchModel, qpm.getParamValues(), qpm.lightweight);
-            return transform_(idOnlyQpm, username);
+            return transformToStage(idOnlyQpm, username, Stage.stage3);
         }
         else {
             return result;
         }
     }
 
-    private <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform_(
-            final QueryProcessingModel<E, ?> qem,
-            final Optional<String> username)
+    public <R> R transformToStage(
+            final QueryProcessingModel<? extends AbstractEntity<?>, ?> qpm,
+            final Optional<String> username,
+            final Stage<R> stage)
     {
-        final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
-        final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
+        return transformToStage_(qpm, username, stage);
+    }
 
-        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata);
+    private <R, E extends AbstractEntity<?>> R transformToStage_(
+            final QueryProcessingModel<E, ?> qpm,
+            final Optional<String> username,
+            final Stage<R> stage)
+    {
+        final var gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qpm.getParamValues());
+        final ResultQuery1 query1 = gen.generateAsResultQuery(qpm.queryModel, qpm.orderModel, qpm.fetchModel);
+        if (Stage.stage1.equals(stage)) {
+            return (R) query1;
+        }
+
+        final var context1 = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata);
         final ResultQuery2 query2 = query1.transform(context1);
+        if (Stage.stage2.equals(stage)) {
+            return (R) query2;
+        }
 
         final var context2 = new TransformationContextFromStage2To3(
                 propPathResolver.resolve(query2.collectProps(), gen),
                 eqlTables,
                 dbVersionProvider.dbVersion(),
                 domainMetadata);
-        return query2.transform(context2);
+        return (R) query2.transform(context2);
     }
 
     public <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(
@@ -150,6 +175,15 @@ public final class EqlQueryTransformer {
                // If it is an entity type, this is a foreign id-only query (a whole entity is being yielded).
                // Otherwise, ID is yielded as a number (a local id-only query).
                && isEntityType(yield.type().javaType());
+    }
+
+    private record StageImpl<T>() implements Stage<T> {
+
+        @Override
+        public boolean equals(final Object obj) {
+            return this == obj;
+        }
+
     }
 
 }

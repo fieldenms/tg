@@ -1,40 +1,35 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import ua.com.fielden.platform.audit.annotations.Audited;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.tokens.persistent.TgVehicle_CanRead_model_Token;
+import ua.com.fielden.platform.security.tokens.persistent.TgVehicle_CanRead_price_Token;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Ignore;
-
-import ua.com.fielden.platform.audit.annotations.Audited;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.PersistentType;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.sample.domain.TgVehicle.DESC_TITLE;
+import static ua.com.fielden.platform.sample.domain.TgVehicle.ENTITY_TITLE;
 
 @KeyType(String.class)
 @MapEntityTo
-@DescTitle("Description")
+@EntityTitle(ENTITY_TITLE)
+@DescTitle(DESC_TITLE)
 @CompanionObject(ITgVehicle.class)
 @Audited
 public class TgVehicle extends AbstractEntity<String> {
+
+    public static final String ENTITY_TITLE = "Vehicle", DESC_TITLE = "Description";
 
     @IsProperty
     @MapTo
@@ -52,12 +47,14 @@ public class TgVehicle extends AbstractEntity<String> {
     @MapTo
     @Required
     @Title("Model")
+    @Authorise(TgVehicle_CanRead_model_Token.class)
     private TgVehicleModel model;
 
     @IsProperty
     @MapTo
     @Title("Price")
     @PersistentType(userType = ISimpleMoneyType.class)
+    @Authorise(TgVehicle_CanRead_price_Token.class)
     private Money price;
 
     @IsProperty
