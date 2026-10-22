@@ -11,7 +11,6 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.mcp.McpConfig;
 import ua.com.fielden.platform.mcp.ioc.McpIocModule;
-import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
@@ -21,10 +20,10 @@ import java.util.List;
 import java.util.Properties;
 
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
+import static ua.com.fielden.platform.test_config.AbstractDaoTestCase.UNIT_TEST_USER;
 
 public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
 
-    public static final String USER_MCP_TEST = "MCP_TEST";
     public static final String PATH_MCP = "/mcp";
     public static final String TEST_WEB_API_KEY_MCP = "secret";
 
@@ -70,7 +69,7 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
         // MCP
         props.setProperty(McpConfig.MCP_RESOURCE_PATH, PATH_MCP);
         props.setProperty(McpConfig.WEB_API_KEY_MCP, TEST_WEB_API_KEY_MCP);
-        props.setProperty(McpConfig.MCP_USER, USER_MCP_TEST);
+        props.setProperty(McpConfig.MCP_USER, UNIT_TEST_USER);
         return props;
     }
 
@@ -100,7 +99,6 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
                     // Use SharedUserProvider so that the user set in test methods is visible to all threads (Restlet,
                     // Reactor, etc.).
                     bind(IUserProvider.class).to(SharedUserProvider.class);
-                    bind(IAuthorisationModel.class).to(AuthorisationModelForTests.class);
                 }
             };
         }

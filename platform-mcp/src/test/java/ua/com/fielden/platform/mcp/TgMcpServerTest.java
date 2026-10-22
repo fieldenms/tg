@@ -76,7 +76,6 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     @Before
     public void startWebApp() {
         webApplication.attachWebApplication(PREFIX, webApp);
-        setUser(TgMcpServerTestCaseConfiguration.USER_MCP_TEST);
     }
 
     @After
