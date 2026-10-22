@@ -52,10 +52,14 @@ public class UniversalConstantsForTesting implements IUniversalConstants {
         return Locale.getDefault();
     }
 
+    /// Returns the modelled time, which is the current time of the server, as [DatesForTesting#getNow()].
+    ///
     public DateTime getNow() {
         return dates.getNow();
     }
 
+    /// Sets the modelled time, which is the current time of the server, as [DatesForTesting#setNow(DateTime)].
+    ///
     public void setNow(final DateTime now) {
         dates.setNow(now);
     }

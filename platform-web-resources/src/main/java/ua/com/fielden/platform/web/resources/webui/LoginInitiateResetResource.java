@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.resources.webui;
 import com.google.common.util.concurrent.AtomicDouble;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.joda.time.DateTime;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
+import ua.com.fielden.platform.security.user.UserSecretCo;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
@@ -31,10 +33,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.restlet.data.MediaType.TEXT_HTML;
-import static ua.com.fielden.platform.security.user.UserSecretCo.passwordResetExpirationTime;
+import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MUNUTES;
 import static ua.com.fielden.platform.security.user.UserSecretCo.resetUuidExpirationTime;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 
@@ -115,12 +116,9 @@ public class LoginInitiateResetResource extends AbstractWebResource {
 
             final IUser co$User = coFinder.find(User.class, false);
 
-            // Reset links expire at an instant of the server clock (see passwordResetExpirationTime), against which LoginCompleteResetResource validates them.
-            // IDates.now() is not used, as in the independent time-zone mode it shifts the instant by the offset of the request time-zone.
-            final Date now = new Date();
-            final Optional<UserSecret> maybeUserSecret = findOrAssignPasswordResetUuid(co$User, cooldown, usernameOrEmail, now, passwordResetExpirationTime());
+            final Optional<PasswordResetLink> maybeLink = findOrAssignPasswordResetUuid(co$User, cooldown, usernameOrEmail, constants);
 
-            adjustResponseTime(maybeUserSecret.filter(secret -> !isEmpty(secret.getKey().getEmail())).map(secret -> reset(secret, now)));
+            adjustResponseTime(maybeLink.filter(link -> !isEmpty(link.secret().getKey().getEmail())).map(this::reset));
 
             getResponse().setEntity(response);
 
@@ -135,34 +133,42 @@ public class LoginInitiateResetResource extends AbstractWebResource {
         }
     }
 
-    /// Returns the secret with a password reset UUID for the user identified by `usernameOrEmail`, unless no such user can reset their password, or the user is in cooldown.
-    /// The UUID already assigned to the user is kept if it remains valid for at least [#MIN_REUSED_LINK_VALIDITY_IN_MINUTES] from `now`;
-    /// otherwise, a new UUID that expires at `expirationTime` is assigned.
+    /// A password reset link, identified by the reset UUID of `secret`, which remains valid for `validityInMinutes` (in whole minutes) from the time of the request by the server clock.
     ///
-    static Optional<UserSecret> findOrAssignPasswordResetUuid(
+    record PasswordResetLink(UserSecret secret, long validityInMinutes) {}
+
+    /// Returns a password reset link for the user identified by `usernameOrEmail`, unless no such user can reset their password, or the user is in cooldown.
+    /// The UUID already assigned to the user is kept if it remains valid for at least [#MIN_REUSED_LINK_VALIDITY_IN_MINUTES];
+    /// otherwise, a new UUID that is valid for [UserSecretCo#RESET_UUID_EXPIRATION_IN_MUNUTES] is assigned.
+    ///
+    /// The time of the request is taken from the server clock, `constants.serverNow()`, against which [LoginCompleteResetResource] validates reset links.
+    /// [IUniversalConstants#now()] is not used, as in the independent time-zone mode it shifts the instant by the offset of the request time-zone.
+    ///
+    static Optional<PasswordResetLink> findOrAssignPasswordResetUuid(
             final IUser co$User,
             final PasswordResetCooldown cooldown,
             final String usernameOrEmail,
-            final Date now,
-            final Date expirationTime)
+            final IUniversalConstants constants)
     {
-        final Date validUntil = new Date(now.getTime() + MINUTES.toMillis(MIN_REUSED_LINK_VALIDITY_IN_MINUTES));
+        final DateTime now = constants.serverNow();
+        final Date validUntil = now.plusMinutes(MIN_REUSED_LINK_VALIDITY_IN_MINUTES).toDate();
+        final Date expirationTime = now.plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES).toDate();
         return co$User.findUserForPasswordReset(usernameOrEmail)
                 .filter(cooldown::tryStart)
-                .map(user -> co$User.findOrAssignPasswordResetUuid(user, validUntil, expirationTime));
+                .map(user -> co$User.findOrAssignPasswordResetUuid(user, validUntil, expirationTime))
+                .map(secret -> new PasswordResetLink(
+                        secret,
+                        MILLISECONDS.toMinutes(resetUuidExpirationTime(secret.getResetUuid()).orElseThrow().getTime() - now.getMillis())));
     }
 
-    /// An action to initiate password reset to a valid user, returning the number of milliseconds it took to perform the work.
+    /// An action to email password reset `link` to a valid user, returning the number of milliseconds it took to perform the work.
     /// The result is used to randomise the response time for reducing the risk of timing-based attacks.
     ///
-    /// @param secret
-    /// @param now the moment in time of the request, from which the remaining validity of the reset link is stated in the email
-    ///
-    private int reset(final UserSecret secret, final Date now) {
+    private int reset(final PasswordResetLink link) {
         final long computationStart = System.currentTimeMillis();
+        final UserSecret secret = link.secret();
         final String emailAddr = secret.getKey().getEmail();
-        final long validityInMinutes = MILLISECONDS.toMinutes(resetUuidExpirationTime(secret.getResetUuid()).orElseThrow().getTime() - now.getTime());
-        final String emailBody = makePasswordRestEmail(constants.appName(), appUri, secret.getResetUuid(), validityInMinutes);
+        final String emailBody = makePasswordRestEmail(constants.appName(), appUri, secret.getResetUuid(), link.validityInMinutes());
         final SmtpEmailSender sender = new SmtpEmailSender(constants.smtpServer());
         sender.sendPlainMessage(constants.fromEmailAddress(),
                                 emailAddr,

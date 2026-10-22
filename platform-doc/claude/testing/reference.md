@@ -183,8 +183,8 @@ public void setNow() {
 A fixed time makes every run assert the same instants, and lets boundary cases be written as concrete times — e.g., `PasswordResetCooldownTest` checks a reset link issued at 10:00 and expiring at 10:15 at 10:09:59 and at 10:10.
 Code under test that takes the time as a parameter is passed `constants.now()` (`constants.now().toDate()` for a `Date`), and the test moves the time with further `setNow(...)` calls.
 
-Production code that has to read the system clock directly — e.g., to compare with instants stored as epoch milliseconds, where `IDates.now()` would shift the instant in the independent time-zone mode — cannot be controlled by the test clock.
-Such code takes the time as a parameter, and only its caller reads the clock, so that tests pass a fixed time — e.g., `LoginInitiateResetResource.findOrAssignPasswordResetUuid`.
+Production code that operates in server time — e.g., compares with instants stored as epoch milliseconds, where `IDates.now()` would shift the instant in the independent time-zone mode — uses `serverNow()`, which returns the time set by the test as well (see Modelling a request time zone).
+Production code that reads a clock directly cannot be controlled by the test clock, and takes the clock as a parameter instead, so that tests control it — e.g., `LoginAttemptTracker` measures time with a `Ticker` passed to its constructor, which tests advance explicitly.
 
 #### Ticking time
 

@@ -50,7 +50,8 @@ See `reference.md`, Assertions, for the worked example.
 
 Take the current time from `UniversalConstantsForTesting` (the test binding of `IUniversalConstants`), fixed with `setNow(...)` in a `@Before` method, rather than from `new Date()` or `System.currentTimeMillis()`.
 It shares its time with the test binding of `IDates`, so code under test that reads the time through either sees the test's time; code that takes the time as a parameter is passed `constants.now()`.
-Production code that has to read the system clock directly takes the time as a parameter instead, so that tests can pass a fixed time.
+Production code that operates in server time uses `serverNow()`, which returns the test's time as well; to test that it does, model a request time zone (see `reference.md`, Modelling a request time zone).
+Production code that reads a clock directly (e.g., a `Ticker`) takes the time, or the clock, as a parameter instead, so that tests can control it.
 A fixed time makes every run assert the same instants, and lets boundary cases be written as concrete times.
 Where successive operations need distinct times (e.g., ordering by `createdDate`, audit records of successive saves), install a ticker after `setNow` — `constants.setTimeSupplier(constants.mkMillisTicker(stepInMillis))` — which advances the time on every call of `now()`, and remove it in an `@After` method with `constants.removeTimeSupplier()`; `setNow` itself removes any ticker.
 Use the system clock only where a test depends on real elapsed time.

@@ -10,6 +10,7 @@ import ua.com.fielden.platform.security.user.UserSecretCo;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.resources.test.AbstractWebResourceWithDaoTestCase;
+import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.PasswordResetLink;
 
 import java.time.Duration;
 import java.util.List;
@@ -17,7 +18,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.*;
-import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MUNUTES;
 import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.findOrAssignPasswordResetUuid;
 import static ua.com.fielden.platform.web.resources.webui.PasswordResetCooldown.COOLDOWN_IN_MINUTES;
 
@@ -94,11 +94,10 @@ public class PasswordResetCooldownTest extends AbstractWebResourceWithDaoTestCas
         assertTrue(reset("UNKNOWN").isEmpty());
     }
 
-    /// Requests a password reset at the current time of [#constants], with a reset link that is valid for [RESET_UUID_EXPIRATION_IN_MUNUTES], if a new one is assigned.
+    /// Requests a password reset at the current time of [#constants], returning the secret with the reset link.
     ///
     private Optional<UserSecret> reset(final String usernameOrEmail) {
-        final var now = constants.now();
-        return findOrAssignPasswordResetUuid(co$User(), cooldown, usernameOrEmail, now.toDate(), now.plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES).toDate());
+        return findOrAssignPasswordResetUuid(co$User(), cooldown, usernameOrEmail, constants).map(PasswordResetLink::secret);
     }
 
     private IUser co$User() {
