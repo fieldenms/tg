@@ -107,7 +107,7 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
             }
 
             // the provided authenticator was valid and a new cookie should be sent back to the client
-            assignAuthenticatingCookie(session.get().getUser(), constants.now(), session.get().getAuthenticator().get(), domainName, path, request, response);
+            assignAuthenticatingCookie(session.get().getUser(), constants.serverNow(), session.get().getAuthenticator().get(), domainName, path, request, response);
 
         } catch (final Exception ex) {
             // in case of any internal exception forbid the request
@@ -160,6 +160,7 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
     /**
      * A convenient method that creates an authenticating cookie based on the provided authenticator and associates it with the specified HTTP response.
      *
+     * @param now the current time of the server clock (`IUniversalConstants.serverNow()`), by which the authenticator expires
      * @param authenticator
      * @param response
      */

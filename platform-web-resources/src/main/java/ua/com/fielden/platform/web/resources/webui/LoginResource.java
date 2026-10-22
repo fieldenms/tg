@@ -113,7 +113,7 @@ public class LoginResource extends AbstractWebResource {
                 // if authenticated session could be obtained, then we simply redirect request to "/"
                 if (session.isPresent()) {
                     // response needs to be provided with an authenticating cookie
-                    assignAuthenticatingCookie(session.get().getUser(), constants.now(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
+                    assignAuthenticatingCookie(session.get().getUser(), constants.serverNow(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
                     // response needs to provide redirection instructions
                     getResponse().redirectSeeOther("/");
                     return new EmptyRepresentation();
@@ -188,7 +188,7 @@ public class LoginResource extends AbstractWebResource {
         // let's use this opportunity to clear expired sessions for the user
         coUserSession.clearExpired(user);
         final UserSession session = coUserSession.newSession(user, trustedDevice, null);
-        assignAuthenticatingCookie(user, constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
+        assignAuthenticatingCookie(user, constants.serverNow(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
         getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
     }
 
