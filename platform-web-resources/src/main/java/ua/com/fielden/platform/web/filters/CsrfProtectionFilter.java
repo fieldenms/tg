@@ -35,6 +35,8 @@ import java.util.Optional;
 ///    Non-browser clients authenticating with the session cookie need to send `Origin` matching the host of the application.
 ///
 /// This filter is wired by [ua.com.fielden.platform.web.application.AbstractWebUiResources] in front of the resource guard, so that rejected requests do not reach authentication.
+/// The login and password reset resources, which applications attach outside of this filter, apply the same check in their factories with [#rejectIfForged(Request, Response)].
+/// This protects against login CSRF, where another site signs the victim in to the account of an attacker.
 ///
 public class CsrfProtectionFilter extends Filter {
     private static final Logger LOGGER = LogManager.getLogger(CsrfProtectionFilter.class);
@@ -54,8 +56,16 @@ public class CsrfProtectionFilter extends Filter {
 
     @Override
     protected int beforeHandle(final Request request, final Response response) {
+        return rejectIfForged(request, response) ? STOP : CONTINUE;
+    }
+
+    /// Rejects `request` with status `403 Forbidden` if it has an unsafe method and does not originate from the same origin as the application, as described in [CsrfProtectionFilter].
+    ///
+    /// @return `true` if `request` was rejected, in which case it should not be handled further
+    ///
+    public static boolean rejectIfForged(final Request request, final Response response) {
         if (request.getMethod().isSafe() || isSameOriginRequest(request)) {
-            return CONTINUE;
+            return false;
         }
 
         LOGGER.warn(() -> "Rejected a potentially forged cross-site request [%s %s] from [%s] (%s: [%s], %s: [%s]).".formatted(
@@ -63,7 +73,7 @@ public class CsrfProtectionFilter extends Filter {
                 HEADER_SEC_FETCH_SITE, request.getHeaders().getFirstValue(HEADER_SEC_FETCH_SITE, true),
                 HEADER_ORIGIN, request.getHeaders().getFirstValue(HEADER_ORIGIN, true)));
         response.setStatus(Status.CLIENT_ERROR_FORBIDDEN);
-        return STOP;
+        return true;
     }
 
     /// Determines whether `request` originates from the same origin as the application, as described in [CsrfProtectionFilter].

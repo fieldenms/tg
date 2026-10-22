@@ -107,6 +107,8 @@ Web API resources authenticated by headers (e.g. API keys) and attached to the `
 
 `AbstractWebUiResources` wires the filter in front of the resource guard, so every resource registered in `registerDomainWebResources` is covered.
 Resources that an application attaches elsewhere — e.g. to the `Component` default host, as with the login, logout and password reset resources — are outside this filter.
+The factories of the login and password reset resources (`LoginResourceFactory`, `LoginInitiateResetResourceFactory`, `LoginCompleteResetResourceFactory`) apply the same check with `CsrfProtectionFilter.rejectIfForged`, which protects against login CSRF, where another site signs the victim in to the account of an attacker.
+`LogoutResourceFactory` does not apply the check: `LogoutResource` handles `GET` only, as identity providers call it cross-site for front-channel logout.
 
 ## Login Lockout and Password Reset Cooldown
 
