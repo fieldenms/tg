@@ -4,9 +4,11 @@ import graphql.Scalars;
 import graphql.schema.*;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.NoKey;
@@ -45,6 +47,7 @@ import static ua.com.fielden.platform.web_api.FieldSchema.bold;
 import static ua.com.fielden.platform.web_api.FieldVisibility.isModelReadable;
 import static ua.com.fielden.platform.web_api.FluentConditions.isFilterable;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.QUERY_TYPE_NAME;
+import static ua.com.fielden.platform.web_api.IWebApi.WEB_API_DOMAIN_TREE_ENHANCER;
 
 /// GraphQL definitions that describe the domain model.
 ///
@@ -118,6 +121,8 @@ public class EntityTypeIntrospection {
     /// @param keySeparator  Separator used to concatenate composite key members, or `null` for other key shapes.
     /// @param hasDesc       Whether `desc` may be selected on this type.
     /// @param type          Invisible to GraphQL, exists to provide information to properties fetcher.
+    ///                      This is a canonical entity type, so callers should obtain a corresponding managed type from
+    ///                      [IDomainTreeEnhancer] where necessary.
     ///
     public record EntityType (
             String name,
@@ -157,6 +162,7 @@ public class EntityTypeIntrospection {
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
     private final GraphQLCommon common;
+    private final IDomainTreeEnhancer domainTreeEnhancer;
 
     @Inject
     protected EntityTypeIntrospection(
@@ -164,13 +170,15 @@ public class EntityTypeIntrospection {
             final IDomainMetadata domainMetadata,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
-            final GraphQLCommon common)
+            final GraphQLCommon common,
+            final @Named(WEB_API_DOMAIN_TREE_ENHANCER) IDomainTreeEnhancer domainTreeEnhancer)
     {
         this.appDomainProvider = appDomainProvider;
         this.domainMetadata = domainMetadata;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
         this.common = common;
+        this.domainTreeEnhancer = domainTreeEnhancer;
     }
 
     public GraphQLSchema enhanceSchema(final GraphQLSchema schema) {
@@ -186,7 +194,9 @@ public class EntityTypeIntrospection {
                 .query(enhanceQueryType(queryType)));
     }
 
-    private GraphQLCodeRegistry enhanceCodeRegistry(final GraphQLCodeRegistry codeReg) {
+    private GraphQLCodeRegistry enhanceCodeRegistry(
+            final GraphQLCodeRegistry codeReg)
+    {
         return codeReg.transform(builder -> builder
                 .dataFetcher(coordinates(QUERY_TYPE_NAME, ENTITY_TYPE_ROOT_FIELD_NAME), entityTypeFetcher())
                 .dataFetcher(coordinates(ENTITY_TYPE_GRAPHQL_TYPE_NAME, "properties"), propertiesFetcher()));
@@ -551,9 +561,11 @@ public class EntityTypeIntrospection {
                 if (environment.getSource() instanceof EntityType entityType) {
                     final var schema = environment.getGraphQLSchema();
                     if (schema.getType(entityType.name()) instanceof GraphQLObjectType objectType) {
+                        @SuppressWarnings("unchecked") // This typecast is safe in practice as all enhanced types extend their originals.
+                        final var managedEntityType = (Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType.type());
                         return schema.getCodeRegistry().getFieldVisibility().getFieldDefinitions(objectType)
                                 .stream()
-                                .map(field -> mkProperty(entityType.type(), field))
+                                .map(field -> mkProperty(managedEntityType, field))
                                 .toList();
                     }
                 }
