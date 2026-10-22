@@ -37,6 +37,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     private final ISecurityTokenProvider securityTokenProvider;
     private final int maxPageCapacity;
     private final IDomainTreeEnhancer domainTreeEnhancer;
+    private final GraphQLCommon common;
 
     public RootEntityFetcher(
             final Class<T> entityType,
@@ -44,7 +45,8 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
             final int maxPageCapacity,
-            final IDomainTreeEnhancer domainTreeEnhancer)
+            final IDomainTreeEnhancer domainTreeEnhancer,
+            final GraphQLCommon common)
     {
         this.entityType = entityType;
         this.coFinder = coFinder;
@@ -52,6 +54,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
         this.securityTokenProvider = securityTokenProvider;
         this.maxPageCapacity = maxPageCapacity;
         this.domainTreeEnhancer = domainTreeEnhancer;
+        this.common = common;
     }
 
     /// Verifies whether  [#entityType] can be retrieved by the current user and returns an error if access is denied.
@@ -64,7 +67,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
         authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);// reading of entities should be authorised when running GraphQL query
         // This typecast is safe in practice as all enhanced types extend their originals.
         final var managedEntityType = (Class<T>) domainTreeEnhancer.getManagedType(entityType);
-        final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(environment, managedEntityType);
+        final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(environment, managedEntityType, common);
 
         final var _pageCapacity = getPageCapacity(environment);
         final var pageCapacity = _pageCapacity._1;

@@ -15,7 +15,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.web_api.FluentConditions.*;
-import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 
 /// Test for the condition types that [FluentConditions] adds to the schema, and for the `where` argument of root fields that refers to them.
@@ -31,6 +30,7 @@ public class WebApiFluentConditionsTest extends AbstractDaoTestCase {
 
     private final IWebApi webApi = getInstance(IWebApi.class);
     private final IApplicationDomainProvider appDomainProvider = getInstance(IApplicationDomainProvider.class);
+    private final GraphQLCommon common = getInstance(GraphQLCommon.class);
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Entity condition types
@@ -40,35 +40,35 @@ public class WebApiFluentConditionsTest extends AbstractDaoTestCase {
     public void condition_types_are_created_for_all_entity_types_that_have_a_GraphQL_type() {
         final var schemaTypeNames = querySchemaTypeNames();
 
-        final var entityTypeNamesWithGraphQlType = streamVisibleTypes(appDomainProvider)
-                .map(GraphQLCommon::graphQlTypeNameForEntity)
+        final var entityTypeNamesWithGraphQlType = common.streamVisibleTypes(appDomainProvider)
+                .map(common::graphQlTypeNameForEntity)
                 .filter(schemaTypeNames::contains)
                 .collect(toSet());
         assertThat(entityTypeNamesWithGraphQlType)
                 .as("Queryable and union types are expected to have GraphQL types.")
-                .contains(graphQlTypeNameForEntity(TgWebApiEntity.class), graphQlTypeNameForEntity(TgUnion.class));
+                .contains(common.graphQlTypeNameForEntity(TgWebApiEntity.class), common.graphQlTypeNameForEntity(TgUnion.class));
 
         final var entityTypeNamesWithCondType = schemaTypeNames.stream()
                 .filter(name -> !VALUE_COND_TYPES.contains(name))
-                .flatMap(graphQlTypeName -> entityTypeNameFromGraphQlCondEntityType(graphQlTypeName).stream())
+                .flatMap(graphQlTypeName -> common.entityTypeNameFromGraphQlCondEntityType(graphQlTypeName).stream())
                 .collect(toSet());
         assertThat(entityTypeNamesWithCondType).isEqualTo(entityTypeNamesWithGraphQlType);
 
         final var entityTypeNamesWithCondCondType = schemaTypeNames.stream()
-                .flatMap(graphQlTypeName -> entityTypeNameFromGraphQlCondEntityCondType(graphQlTypeName).stream())
+                .flatMap(graphQlTypeName -> common.entityTypeNameFromGraphQlCondEntityCondType(graphQlTypeName).stream())
                 .collect(toSet());
         assertThat(entityTypeNamesWithCondCondType).isEqualTo(entityTypeNamesWithGraphQlType);
     }
 
     @Test
     public void entity_condition_type_is_a_oneOf_input_object_type_with_cond_and_or_not_isNull() {
-        final var condType = queryType(graphQlTypeNameForCondEntity(TgWebApiEntity.class));
+        final var condType = queryType(common.graphQlTypeNameForCondEntity(TgWebApiEntity.class));
         assertThat(condType.get("kind")).isEqualTo("INPUT_OBJECT");
         assertThat(condType.get("isOneOf")).isEqualTo(true);
 
-        final var condTypeName = graphQlTypeNameForCondEntity(TgWebApiEntity.class);
+        final var condTypeName = common.graphQlTypeNameForCondEntity(TgWebApiEntity.class);
         assertThat(inputFieldTypes(condType)).isEqualTo(Map.of(
-                COND, graphQlTypeNameForCondEntityCond(TgWebApiEntity.class),
+                COND, common.graphQlTypeNameForCondEntityCond(TgWebApiEntity.class),
                 AND, "[%s]".formatted(condTypeName),
                 OR, "[%s]".formatted(condTypeName),
                 NOT, condTypeName,
@@ -77,7 +77,7 @@ public class WebApiFluentConditionsTest extends AbstractDaoTestCase {
 
     @Test
     public void property_condition_type_constrains_each_property_by_the_condition_type_of_its_type() {
-        final var condCondType = queryType(graphQlTypeNameForCondEntityCond(TgWebApiEntity.class));
+        final var condCondType = queryType(common.graphQlTypeNameForCondEntityCond(TgWebApiEntity.class));
         assertThat(condCondType.get("kind")).isEqualTo("INPUT_OBJECT");
         assertThat(condCondType.get("isOneOf")).isEqualTo(false);
 
@@ -92,13 +92,13 @@ public class WebApiFluentConditionsTest extends AbstractDaoTestCase {
                 t2("dateProp", DATE_COND),
                 t2("hyperlinkProp", HYPERLINK_COND),
                 t2("colourProp", COLOUR_COND),
-                t2("model", graphQlTypeNameForCondEntity(TgVehicleModel.class))));
+                t2("model", common.graphQlTypeNameForCondEntity(TgVehicleModel.class))));
     }
 
     @Test
     public void property_condition_type_has_fields_only_for_fields_of_the_GraphQL_type() {
-        final var objectFieldNames = namesOf(queryType(graphQlTypeNameForEntity(TgWebApiEntity.class)), "fields");
-        final var condFieldNames = namesOf(queryType(graphQlTypeNameForCondEntityCond(TgWebApiEntity.class)), "inputFields");
+        final var objectFieldNames = namesOf(queryType(common.graphQlTypeNameForEntity(TgWebApiEntity.class)), "fields");
+        final var condFieldNames = namesOf(queryType(common.graphQlTypeNameForCondEntityCond(TgWebApiEntity.class)), "inputFields");
 
         assertThat(condFieldNames).isNotEmpty();
         assertThat(objectFieldNames).containsExactlyInAnyOrderElementsOf(condFieldNames);
@@ -109,8 +109,8 @@ public class WebApiFluentConditionsTest extends AbstractDaoTestCase {
         Map.of(TgWebApiEntitySyntheticSingle.class, "date",
                TgWebApiEntitySyntheticMulti.class, "datePeriod")
            .forEach((entityType, critOnlyProp) -> {
-               final var objectFieldNames = namesOf(queryType(graphQlTypeNameForEntity(entityType)), "fields");
-               final var condFieldNames = namesOf(queryType(graphQlTypeNameForCondEntityCond(entityType)), "inputFields");
+               final var objectFieldNames = namesOf(queryType(common.graphQlTypeNameForEntity(entityType)), "fields");
+               final var condFieldNames = namesOf(queryType(common.graphQlTypeNameForCondEntityCond(entityType)), "inputFields");
 
                assertThat(objectFieldNames).as("Fields of [%s].", entityType.getSimpleName()).contains(critOnlyProp);
                assertThat(condFieldNames).as("Input fields of the property condition type of [%s].", entityType.getSimpleName())
@@ -175,11 +175,11 @@ public class WebApiFluentConditionsTest extends AbstractDaoTestCase {
         final var argsByRootField = ((List<Map<String, Object>>) ((Map<String, Object>) rootFields).get("fields")).stream()
                 .collect(toMap(f -> (String) f.get("name"), f -> inputFieldTypes(f, "args")));
 
-        final var queryableTypes = streamQueryableTypes(appDomainProvider).toList();
+        final var queryableTypes = common.streamQueryableTypes(appDomainProvider).toList();
         assertThat(queryableTypes).isNotEmpty();
-        queryableTypes.forEach(ty -> assertThat(argsByRootField.get(rootFieldName(ty)))
-                .as("Arguments of root field [%s].", rootFieldName(ty))
-                .containsEntry(WHERE, graphQlTypeNameForCondEntity(ty)));
+        queryableTypes.forEach(ty -> assertThat(argsByRootField.get(common.rootFieldName(ty)))
+                .as("Arguments of root field [%s].", common.rootFieldName(ty))
+                .containsEntry(WHERE, common.graphQlTypeNameForCondEntity(ty)));
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

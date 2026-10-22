@@ -43,7 +43,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.*;
-import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
+import static ua.com.fielden.platform.web_api.GraphQLCommon.QUERY_TYPE_NAME;
 import static ua.com.fielden.platform.web_api.GraphQLPropertyDataFetcher.fetching;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 
@@ -80,6 +80,7 @@ public class GraphQLService implements IWebApi {
     private final AtomicReference<GraphQLSchema> schemaRef;
     private final Integer maxQueryDepth;
     private final FluentConditions fluentConditions;
+    private final GraphQLCommon common;
 
     /// Creates a GraphQLService instance based on `applicationDomainProvider` which contains all entity types.
     ///
@@ -97,7 +98,8 @@ public class GraphQLService implements IWebApi {
             final EntityTypeIntrospection entityTypeIntrospection,
             final EntityAggregation entityAggregation,
             final FluentConditions fluentConditions,
-            final @Named(WEB_API_DOMAIN_TREE_ENHANCER) IDomainTreeEnhancer domainTreeEnhancer)
+            final @Named(WEB_API_DOMAIN_TREE_ENHANCER) IDomainTreeEnhancer domainTreeEnhancer,
+            final GraphQLCommon common)
     {
         try {
             LOGGER.info("GraphQL Web API...");
@@ -109,14 +111,15 @@ public class GraphQLService implements IWebApi {
             }
             this.maxQueryDepth = maxQueryDepth;
             this.fluentConditions = fluentConditions;
+            this.common = common;
 
             LOGGER.info("\tmaxQueryDepth = {}", maxQueryDepth);
             final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
 
             LOGGER.info("\tBuilding dictionary...");
-            final var queryableTypes = streamQueryableTypes(applicationDomainProvider).collect(toCollection(LinkedHashSet::new));
+            final var queryableTypes = common.streamQueryableTypes(applicationDomainProvider).collect(toCollection(LinkedHashSet::new));
             // The dictionary must list all referenced types.
-            final var dictionary = createDictionary(streamVisibleTypes(applicationDomainProvider).collect(toCollection(LinkedHashSet::new)));
+            final var dictionary = createDictionary(common.streamVisibleTypes(applicationDomainProvider).collect(toCollection(LinkedHashSet::new)));
 
             LOGGER.info("\tBuilding query type...");
             final var queryType = createQueryType(queryableTypes,
@@ -198,8 +201,8 @@ public class GraphQLService implements IWebApi {
         final var baseEntityType = PropertyTypeDeterminator.baseEntityType(entityType);
 
         schemaRef.updateAndGet(oldSchema -> {
-            final var oldGraphQlEntityType = getGraphQlEntityType(oldSchema, baseEntityType.getSimpleName());
-            final var oldGraphQlEntityCondCondType = getCoercedType(oldSchema, graphQlTypeNameForCondEntityCond(baseEntityType), GraphQLInputObjectType.class);
+            final var oldGraphQlEntityType = common.getGraphQlEntityType(oldSchema, baseEntityType.getSimpleName());
+            final var oldGraphQlEntityCondCondType = common.getCoercedType(oldSchema, common.graphQlTypeNameForCondEntityCond(baseEntityType), GraphQLInputObjectType.class);
             return transformSchema(oldSchema, new GraphQLTypeVisitorStub() {
                 @Override
                 public TraversalControl visitGraphQLObjectType(
@@ -254,8 +257,8 @@ public class GraphQLService implements IWebApi {
         final var baseEntityType = PropertyTypeDeterminator.baseEntityType(entityType);
 
         schemaRef.updateAndGet(oldSchema -> {
-            final var oldGraphQlEntityType = getGraphQlEntityType(oldSchema, baseEntityType.getSimpleName());
-            final var oldGraphQlEntityCondCondType = getCoercedType(oldSchema, graphQlTypeNameForCondEntityCond(baseEntityType), GraphQLInputObjectType.class);
+            final var oldGraphQlEntityType = common.getGraphQlEntityType(oldSchema, baseEntityType.getSimpleName());
+            final var oldGraphQlEntityCondCondType = common.getCoercedType(oldSchema, common.graphQlTypeNameForCondEntityCond(baseEntityType), GraphQLInputObjectType.class);
             return transformSchema(oldSchema, new GraphQLTypeVisitorStub() {
                 @Override
                 public TraversalControl visitGraphQLObjectType(
@@ -298,9 +301,9 @@ public class GraphQLService implements IWebApi {
     /// The set of resultant types can be smaller than the specified one.
     /// See [#createGraphQLTypeFor(Class)] for more details.
     ///
-    private static Map<Class<? extends AbstractEntity<?>>, GraphQLNamedType> createDictionary(final Set<Class<? extends AbstractEntity<?>>> entityTypes) {
+    private Map<Class<? extends AbstractEntity<?>>, GraphQLNamedType> createDictionary(final Set<Class<? extends AbstractEntity<?>>> entityTypes) {
         return entityTypes.stream()
-            .map(GraphQLService::createGraphQLTypeFor)
+            .map(this::createGraphQLTypeFor)
             .flatMap(optType -> optType.map(Stream::of).orElseGet(Stream::empty))
             .sorted((pair1, pair2) -> pair1.getKey().getSimpleName().compareTo(pair2.getKey().getSimpleName()))
             .collect(toLinkedHashMap(Pair::getKey, Pair::getValue));
@@ -313,7 +316,7 @@ public class GraphQLService implements IWebApi {
     /// @param entityTypes         entity types to register as root fields
     /// @param codeRegistryBuilder a place to register root data fetchers
     ///
-    private static GraphQLObjectType createQueryType(
+    private GraphQLObjectType createQueryType(
             final Set<Class<? extends AbstractEntity<?>>> entityTypes,
             final ICompanionObjectFinder coFinder,
             final GraphQLCodeRegistry.Builder codeRegistryBuilder,
@@ -325,7 +328,7 @@ public class GraphQLService implements IWebApi {
         final Builder queryTypeBuilder = newObject().name(QUERY_TYPE_NAME).description("Query following **entities** represented as GraphQL root fields:");
         entityTypes.forEach(entityType -> {
             final String simpleTypeName = entityType.getSimpleName();
-            final String fieldName = rootFieldName(entityType);
+            final String fieldName = common.rootFieldName(entityType);
             queryTypeBuilder.field(newFieldDefinition()
                 .name(fieldName)
                 .description(format("Query %s.", bold(getEntityTitleAndDesc(entityType).getKey())))
@@ -339,7 +342,8 @@ public class GraphQLService implements IWebApi {
                                                                     authorisationModel,
                                                                     securityTokenProvider,
                                                                     maxPageCapacity,
-                                                                    domainTreeEnhancer));
+                                                                    domainTreeEnhancer,
+                                                                    common));
         });
         return queryTypeBuilder.build();
     }
@@ -347,12 +351,12 @@ public class GraphQLService implements IWebApi {
     /// Creates a GraphQL object type for querying `entityType`.
     /// The result is an empty optional if `entityType` has no suitable fields for querying.
     ///
-    private static Optional<Pair<Class<? extends AbstractEntity<?>>, GraphQLObjectType>> createGraphQLTypeFor(final Class<? extends AbstractEntity<?>> entityType) {
+    private Optional<Pair<Class<? extends AbstractEntity<?>>, GraphQLObjectType>> createGraphQLTypeFor(final Class<? extends AbstractEntity<?>> entityType) {
          // Generic type exclusion logic for root types (exclude abstract entity types, types without KeyType annotation, etc.).
         if (isExcluded(entityType, "")) {
             return empty();
         }
-        final var graphQLFieldDefinitions = propertiesForGraphQlFields(entityType).stream()
+        final var graphQLFieldDefinitions = common.propertiesForGraphQlFields(entityType).stream()
             .filter(field -> !isExcluded(entityType, reflectionProperty(field.getName())))
             .map(field -> createGraphQLFieldDefinition(entityType, field.getName()))
             .flatMap(optField -> optField.map(Stream::of).orElseGet(Stream::empty))

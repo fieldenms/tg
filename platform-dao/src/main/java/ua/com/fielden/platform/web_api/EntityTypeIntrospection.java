@@ -44,7 +44,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.web_api.FieldSchema.bold;
 import static ua.com.fielden.platform.web_api.FieldVisibility.isModelReadable;
 import static ua.com.fielden.platform.web_api.FluentConditions.isFilterable;
-import static ua.com.fielden.platform.web_api.GraphQLCommon.streamVisibleTypes;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.QUERY_TYPE_NAME;
 
 /// GraphQL definitions that describe the domain model.
@@ -157,18 +156,21 @@ public class EntityTypeIntrospection {
     private final IDomainMetadata domainMetadata;
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
+    private final GraphQLCommon common;
 
     @Inject
     protected EntityTypeIntrospection(
             final IApplicationDomainProvider appDomainProvider,
             final IDomainMetadata domainMetadata,
             final IAuthorisationModel authorisationModel,
-            final ISecurityTokenProvider securityTokenProvider)
+            final ISecurityTokenProvider securityTokenProvider,
+            final GraphQLCommon common)
     {
         this.appDomainProvider = appDomainProvider;
         this.domainMetadata = domainMetadata;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
+        this.common = common;
     }
 
     public GraphQLSchema enhanceSchema(final GraphQLSchema schema) {
@@ -481,7 +483,7 @@ public class EntityTypeIntrospection {
             public List<EntityType> get(final DataFetchingEnvironment environment) {
                 final var schema = environment.getGraphQLSchema();
                 final var rootFields = rootFieldsByTypeName(schema);
-                return streamVisibleTypes(appDomainProvider)
+                return common.streamVisibleTypes(appDomainProvider)
                         .filter(namePredicate(environment.getArgument(EQ), environment.getArgument(LIKE)))
                         .filter(ty -> schema.getType(ty.getSimpleName()) instanceof GraphQLObjectType)
                         .filter(ty -> isModelReadable(ty, authorisationModel, securityTokenProvider))

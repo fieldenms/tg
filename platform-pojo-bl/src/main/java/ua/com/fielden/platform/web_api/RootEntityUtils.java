@@ -37,7 +37,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 import static ua.com.fielden.platform.web_api.FieldSchema.ORDER;
-import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
+import static ua.com.fielden.platform.web_api.GraphQLCommon.__TYPENAME;
 
 /// Utilities for querying root fields in GraphQL.
 ///
@@ -49,13 +49,14 @@ public class RootEntityUtils {
     ///
     public static <T extends AbstractEntity<?>> T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> generateQueryModelFrom(
             final DataFetchingEnvironment environment,
-            final Class<T> entityType)
+            final Class<T> entityType,
+            final GraphQLCommon common)
     {
-        final var selectedFields = allSelectedFields(environment);
-        validateDuplicateFields(selectedFields);
+        final var selectedFields = common.allSelectedFields(environment);
+        validateDuplicateFields(selectedFields, common);
         final var selectedOrders = Stream.concat(
                         Stream.of(createSelectedOrder("", environment.getArguments())),
-                        selectedFields.stream().map(RootEntityUtils::createSelectedOrder))
+                        selectedFields.stream().map(field -> createSelectedOrder(field, common)))
                 .flatMap(Optional::stream)
                 .toList();
         final Optional<String> optionalWarning = selectedOrders.stream().mapToInt(SelectedOrder::priority).distinct().count() < selectedOrders.size()
@@ -63,7 +64,7 @@ public class RootEntityUtils {
                 : empty();
         final var orders = selectedOrders.isEmpty() ? List.of(new SelectedOrder("", ASCENDING, 1)) : selectedOrders;
         final var qem = from(createJoinCondition(entityType).where()
-                                     .condition(EntityCondToEqlCompiler.compile(environment))
+                                     .condition(EntityCondToEqlCompiler.compile(environment, common))
                                      .model()
                                      .setFilterable(true)) // filterable to support IFilter part of the model
                 // KEY_AND_DESC strategy for root entities is required for loading collectional associations
@@ -72,7 +73,7 @@ public class RootEntityUtils {
                       .with(selectedFields.stream()
                                     // Exclude built-in data introspection.
                                     .filter(fld -> !fld.getName().equals(__TYPENAME))
-                                    .map(GraphQLCommon::toPropertyPath)
+                                    .map(common::toPropertyPath)
                                     .collect(toSet()))
                       .fetchModel())
                 .with(mkOrderingModel(orders, entityType))
@@ -85,7 +86,7 @@ public class RootEntityUtils {
     ///
     /// @throws WebApiException  if validation is unsuccessful
     ///
-    public static void validateDuplicateFields(final Iterable<SelectedField> fields) {
+    public static void validateDuplicateFields(final Iterable<SelectedField> fields, final GraphQLCommon common) {
         stream(fields)
         .collect(groupingBy(SelectedField::getQualifiedName, LinkedHashMap::new, toList()))
         .entrySet()
@@ -94,7 +95,7 @@ public class RootEntityUtils {
         .findFirst()
         .ifPresent(entry -> {
             throw new WebApiException("Selected non-root fields must be unique. Duplicate field [%s] under aliases: %s.".formatted(
-                    propertyPathFromSelectedFieldName(entry.getKey()),
+                    common.propertyPathFromSelectedFieldName(entry.getKey()),
                     entry.getValue().stream().map(field -> requireNonNullElse(field.getAlias(), "<none>")).collect(joining(", "))));
         });
     }
@@ -146,8 +147,8 @@ public class RootEntityUtils {
 
     /// Creates [SelectedOrder] for a selected field.
     ///
-    private static Optional<SelectedOrder> createSelectedOrder(final SelectedField field) {
-        return createSelectedOrder(GraphQLCommon.toPropertyPath(field), field.getArguments());
+    private static Optional<SelectedOrder> createSelectedOrder(final SelectedField field, final GraphQLCommon common) {
+        return createSelectedOrder(common.toPropertyPath(field), field.getArguments());
     }
 
     private record SelectedOrder (String property, Ordering ordering, int priority) {}

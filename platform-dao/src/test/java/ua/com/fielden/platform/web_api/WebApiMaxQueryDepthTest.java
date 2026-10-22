@@ -48,7 +48,8 @@ public class WebApiMaxQueryDepthTest extends AbstractDaoTestCase {
             getInstance(EntityTypeIntrospection.class),
             getInstance(EntityAggregation.class),
             getInstance(FluentConditions.class),
-            domainTreeEnhancer);
+            domainTreeEnhancer,
+            getInstance(GraphQLCommon.class));
     }
 
     @Test

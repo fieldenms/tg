@@ -36,7 +36,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
 import static ua.com.fielden.platform.security.tokens.Template.READ;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
-import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
+import static ua.com.fielden.platform.web_api.GraphQLCommon.QUERY_TYPE_NAME;
 import static ua.com.fielden.platform.web_api.IWebApi.WEB_API_DOMAIN_TREE_ENHANCER;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.validateDuplicateFields;
 
@@ -62,6 +62,7 @@ public class EntityAggregation {
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
     private final IDomainTreeEnhancer domainTreeEnhancer;
+    private final GraphQLCommon common;
 
     @Inject
     protected EntityAggregation(
@@ -69,18 +70,20 @@ public class EntityAggregation {
             final ICompanionObjectFinder coFinder,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
-            final @Named(WEB_API_DOMAIN_TREE_ENHANCER) IDomainTreeEnhancer domainTreeEnhancer)
+            final @Named(WEB_API_DOMAIN_TREE_ENHANCER) IDomainTreeEnhancer domainTreeEnhancer,
+            final GraphQLCommon common)
     {
         this.appDomainProvider = appDomainProvider;
         this.coFinder = coFinder;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
         this.domainTreeEnhancer = domainTreeEnhancer;
+        this.common = common;
     }
 
     public GraphQLSchema enhanceSchema(final GraphQLSchema schema) {
-        final var entityTypes = streamVisibleTypes(appDomainProvider)
-                .filter(ty -> containsRootFieldForType(schema, ty))
+        final var entityTypes = common.streamVisibleTypes(appDomainProvider)
+                .filter(ty -> common.containsRootFieldForType(schema, ty))
                 .toList();
 
         final var queryType = schema.getQueryType();
@@ -96,7 +99,7 @@ public class EntityAggregation {
             final List<Class<? extends AbstractEntity<?>>> entityTypes)
     {
         return codeReg.transform(builder -> {
-            entityTypes.forEach(ty -> builder.dataFetcher(coordinates(QUERY_TYPE_NAME, rootFieldNameForAggEntity(ty)), aggEntityFetcher(ty)));
+            entityTypes.forEach(ty -> builder.dataFetcher(coordinates(QUERY_TYPE_NAME, common.rootFieldNameForAggEntity(ty)), aggEntityFetcher(ty)));
         });
     }
 
@@ -107,15 +110,15 @@ public class EntityAggregation {
         return queryType.transform(builder -> {
             entityTypes.forEach(ty -> builder
                     .field(newFieldDefinition()
-                                   .name(rootFieldNameForAggEntity(ty))
+                                   .name(common.rootFieldNameForAggEntity(ty))
                                    .description("Aggregation over %s.".formatted(getEntityTitle(ty)))
-                                   .type(new GraphQLList(new GraphQLTypeReference(graphQlTypeNameForAggEntity(ty))))
+                                   .type(new GraphQLList(new GraphQLTypeReference(common.graphQlTypeNameForAggEntity(ty))))
                                    .build()));
         });
     }
 
     private GraphQLObjectType mkGraphQlAggEntityType(final Class<? extends AbstractEntity<?>> entityType) {
-        final var graphQlEntityTypeRef = new GraphQLTypeReference(graphQlTypeNameForEntity(entityType));
+        final var graphQlEntityTypeRef = new GraphQLTypeReference(common.graphQlTypeNameForEntity(entityType));
         final var fields = List.of(
                 newFieldDefinition()
                         .name(Fields.groupBy.name())
@@ -149,14 +152,14 @@ public class EntityAggregation {
                         .build()
         );
         return newObject()
-                .name(graphQlTypeNameForAggEntity(entityType))
+                .name(common.graphQlTypeNameForAggEntity(entityType))
                 .description("Aggregation over %s.".formatted(getEntityTitle(entityType)))
                 .fields(fields)
                 .build();
     }
 
     private DataFetcher<?> aggEntityFetcher(final Class<? extends AbstractEntity<?>> type) {
-        return new AggEntityFetcher(type, coFinder, authorisationModel, securityTokenProvider, domainTreeEnhancer);
+        return new AggEntityFetcher(type, coFinder, authorisationModel, securityTokenProvider, domainTreeEnhancer, common);
     }
 
     private record AggEntityFetcher(
@@ -164,14 +167,15 @@ public class EntityAggregation {
             ICompanionObjectFinder coFinder,
             IAuthorisationModel authorisationModel,
             ISecurityTokenProvider securityTokenProvider,
-            IDomainTreeEnhancer domainTreeEnhancer)
+            IDomainTreeEnhancer domainTreeEnhancer,
+            GraphQLCommon common)
             implements DataFetcher<List<EntityAggregates>>
     {
 
         @Override
         public List<EntityAggregates> get(final DataFetchingEnvironment environment) {
             authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
-            validateDuplicateFields(allSelectedFields(environment));
+            validateDuplicateFields(common.allSelectedFields(environment), common);
             // This typecast is safe in practice as all enhanced types extend their originals.
             final var managedEntityType = (Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType);
             final var query = buildQuery(managedEntityType, environment);
@@ -182,7 +186,7 @@ public class EntityAggregation {
                 final Class<? extends AbstractEntity<?>> entityType,
                 final DataFetchingEnvironment environment)
         {
-            return addYields(addGroupBy(select(entityType).where().condition(EntityCondToEqlCompiler.compile(environment)), environment),
+            return addYields(addGroupBy(select(entityType).where().condition(EntityCondToEqlCompiler.compile(environment, common)), environment),
                              environment)
                     .modelAsAggregate();
         }
@@ -205,23 +209,23 @@ public class EntityAggregation {
                     .orElse(q);
             final F<T> fAvg = q -> findField(immediateFields, Fields.avg)
                     .map(avg -> addYieldsForField(q, avg,
-                                                  fld -> expr().avgOf().prop(toPropertyPath(fld)).model(),
-                                                  fld -> Fields.avg + "." + toPropertyPath(fld)))
+                                                  fld -> expr().avgOf().prop(common.toPropertyPath(fld)).model(),
+                                                  fld -> Fields.avg + "." + common.toPropertyPath(fld)))
                     .orElse(q);
             final F<T> fSum = q -> findField(immediateFields, Fields.sum)
                     .map(sum -> addYieldsForField(q, sum,
-                                                  fld -> expr().sumOf().prop(toPropertyPath(fld)).model(),
-                                                  fld -> Fields.sum + "." + toPropertyPath(fld)))
+                                                  fld -> expr().sumOf().prop(common.toPropertyPath(fld)).model(),
+                                                  fld -> Fields.sum + "." + common.toPropertyPath(fld)))
                     .orElse(q);
             final F<T> fMin = q -> findField(immediateFields, Fields.min)
                     .map(min -> addYieldsForField(q, min,
-                                                  fld -> expr().minOf().prop(toPropertyPath(fld)).model(),
-                                                  fld -> Fields.min + "." + toPropertyPath(fld)))
+                                                  fld -> expr().minOf().prop(common.toPropertyPath(fld)).model(),
+                                                  fld -> Fields.min + "." + common.toPropertyPath(fld)))
                     .orElse(q);
             final F<T> fMax = q -> findField(immediateFields, Fields.max)
                     .map(max -> addYieldsForField(q, max,
-                                                  fld -> expr().maxOf().prop(toPropertyPath(fld)).model(),
-                                                  fld -> Fields.max + "." + toPropertyPath(fld)))
+                                                  fld -> expr().maxOf().prop(common.toPropertyPath(fld)).model(),
+                                                  fld -> Fields.max + "." + common.toPropertyPath(fld)))
                     .orElse(q);
 
             return fCount
@@ -241,15 +245,15 @@ public class EntityAggregation {
                 return query;
             }
             final var groupBy = maybeGroupBy.get();
-            final var subFields = terminalFields(groupBy.getSelectionSet());
+            final var subFields = common.terminalFields(groupBy.getSelectionSet());
             if (subFields.isEmpty()) {
                 return query;
             }
             else {
-                final var grouped = foldLeft(subFields, query, (acc, fld) -> acc.groupBy().prop(toPropertyPath(fld)));
+                final var grouped = foldLeft(subFields, query, (acc, fld) -> acc.groupBy().prop(common.toPropertyPath(fld)));
                 return addYieldsForField(grouped, groupBy,
-                                         fld -> expr().prop(toPropertyPath(fld)).model(),
-                                         fld -> Fields.groupBy + "." + toPropertyPath(fld));
+                                         fld -> expr().prop(common.toPropertyPath(fld)).model(),
+                                         fld -> Fields.groupBy + "." + common.toPropertyPath(fld));
             }
         }
 
@@ -271,7 +275,7 @@ public class EntityAggregation {
                 final Function<SelectedField, ExpressionModel> mkExpr,
                 final Function<SelectedField, CharSequence> mkAlias)
         {
-            final var subFields = terminalFields(field.getSelectionSet());
+            final var subFields = common.terminalFields(field.getSelectionSet());
             if (subFields.isEmpty()) {
                 return query;
             }

@@ -25,7 +25,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
-import static ua.com.fielden.platform.web_api.GraphQLCommon.*;
 import static ua.com.fielden.platform.web_api.GraphQLScalars.createDateRepr;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 
@@ -50,6 +49,7 @@ public class WebApiAggregationTest extends AbstractDaoTestCase {
             DATE_3 = new DateTime(2025, 3, 10, 0, 0).toDate();
 
     private final IWebApi webApi = getInstance(IWebApi.class);
+    private final GraphQLCommon common = getInstance(GraphQLCommon.class);
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Schema
@@ -57,8 +57,8 @@ public class WebApiAggregationTest extends AbstractDaoTestCase {
 
     @Test
     public void aggregation_root_field_and_type_are_named_after_the_entity_type() {
-        assertThat(rootFieldNameForAggEntity(TgWebApiEntity.class)).isEqualTo(ROOT);
-        assertThat(graphQlTypeNameForAggEntity(TgWebApiEntity.class)).isEqualTo("TgWebApiEntity_Agg");
+        assertThat(common.rootFieldNameForAggEntity(TgWebApiEntity.class)).isEqualTo(ROOT);
+        assertThat(common.graphQlTypeNameForAggEntity(TgWebApiEntity.class)).isEqualTo("TgWebApiEntity_Agg");
         assertThat(queryRootFieldNames()).contains("tgWebApiEntity", ROOT);
     }
 
@@ -81,9 +81,9 @@ public class WebApiAggregationTest extends AbstractDaoTestCase {
 
     @Test
     public void union_types_have_no_aggregation_root_field() {
-        assertThat(rootFieldName(TgUnion.class)).isEqualTo("tgUnion");
-        assertThat(rootFieldNameForAggEntity(TgUnion.class)).isEqualTo("tgUnion_agg");
-        assertThat(queryRootFieldNames()).doesNotContain(rootFieldName(TgUnion.class), rootFieldNameForAggEntity(TgUnion.class));
+        assertThat(common.rootFieldName(TgUnion.class)).isEqualTo("tgUnion");
+        assertThat(common.rootFieldNameForAggEntity(TgUnion.class)).isEqualTo("tgUnion_agg");
+        assertThat(queryRootFieldNames()).doesNotContain(common.rootFieldName(TgUnion.class), common.rootFieldNameForAggEntity(TgUnion.class));
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web_api;
 
 import graphql.schema.*;
+import jakarta.inject.Singleton;
 import org.apache.commons.lang3.Strings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
@@ -27,6 +28,7 @@ import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
+@Singleton
 public class GraphQLCommon {
 
     /// Name of the built-in data introspection field present on every object type in GraphQL.
@@ -36,69 +38,69 @@ public class GraphQLCommon {
 
     /// Name of the GraphQL root field for the specified entity type.
     ///
-    public static String rootFieldName(final Class<?> entityType) {
+    public String rootFieldName(final Class<?> entityType) {
         return uncapitalize(entityType.getSimpleName());
     }
 
     /// Name of the GraphQL root field for an aggregation entity type.
     ///
-    public static String rootFieldNameForAggEntity(final Class<? extends AbstractEntity<?>> entityType) {
+    public String rootFieldNameForAggEntity(final Class<? extends AbstractEntity<?>> entityType) {
         return "%s_agg".formatted(rootFieldName(entityType));
     }
 
     /// Name of the GraphQL type for the specified entity type.
     ///
-    public static String graphQlTypeNameForEntity(final Class<? extends AbstractEntity<?>> entityType) {
+    public String graphQlTypeNameForEntity(final Class<? extends AbstractEntity<?>> entityType) {
         return entityType.getSimpleName();
     }
 
     /// Name of the GraphQL type for an aggregation entity type.
     ///
-    public static String graphQlTypeNameForAggEntity(final Class<? extends AbstractEntity<?>> entityType) {
+    public String graphQlTypeNameForAggEntity(final Class<? extends AbstractEntity<?>> entityType) {
         return "%s_Agg".formatted(graphQlTypeNameForEntity(entityType));
     }
 
     /// Name of the GraphQL type for a condition entity type.
     ///
-    public static String graphQlTypeNameForCondEntity(final Class<? extends AbstractEntity<?>> entityType) {
+    public String graphQlTypeNameForCondEntity(final Class<? extends AbstractEntity<?>> entityType) {
         return "%s_Cond".formatted(graphQlTypeNameForEntity(entityType));
     }
 
     /// True if the specified GraphQL type name represents the type of a condition entity type.
     ///
-    public static boolean isCondEntityType(final CharSequence graphQlTypeName) {
+    public boolean isCondEntityType(final CharSequence graphQlTypeName) {
         return Strings.CS.endsWith(graphQlTypeName, "_Cond");
     }
 
     /// Infers the simple name of an entity type associated with the specified GraphQL type name representing a condition entity type.
     ///
-    public static Optional<String> entityTypeNameFromGraphQlCondEntityType(final CharSequence graphQlTypeName) {
+    public Optional<String> entityTypeNameFromGraphQlCondEntityType(final CharSequence graphQlTypeName) {
         final var i = Strings.CS.lastIndexOf(graphQlTypeName, "_Cond");
         return i == -1 ? Optional.empty() : Optional.of(graphQlTypeName.subSequence(0, i).toString());
     }
 
     /// Name of the GraphQL type for a condition entity type's `cond` field.
     ///
-    public static String graphQlTypeNameForCondEntityCond(final Class<? extends AbstractEntity<?>> entityType) {
+    public String graphQlTypeNameForCondEntityCond(final Class<? extends AbstractEntity<?>> entityType) {
         return "%s_Cond_cond".formatted(graphQlTypeNameForEntity(entityType));
     }
 
     /// True if the specified GraphQL type name represents the type of a condition entity type's `cond` field.
     ///
-    public static boolean isCondEntityCondType(final CharSequence graphQlTypeName) {
+    public boolean isCondEntityCondType(final CharSequence graphQlTypeName) {
         return Strings.CS.endsWith(graphQlTypeName, "_Cond_cond");
     }
 
     /// True if the specified GraphQL type represents the type of a condition entity type's `cond` field.
     ///
-    public static boolean isCondEntityCondType(final GraphQLType graphQlType) {
+    public boolean isCondEntityCondType(final GraphQLType graphQlType) {
         return graphQlType instanceof GraphQLNamedType it && isCondEntityCondType(it.getName());
     }
 
     /// Infers the simple name of an entity type associated with the specified GraphQL type name representing the type
     /// of a condition entity type's `cond` field.
     ///
-    public static Optional<String> entityTypeNameFromGraphQlCondEntityCondType(final CharSequence graphQlTypeName) {
+    public Optional<String> entityTypeNameFromGraphQlCondEntityCondType(final CharSequence graphQlTypeName) {
         final var i = Strings.CS.lastIndexOf(graphQlTypeName, "_Cond_cond");
         return i == -1 ? Optional.empty() : Optional.of(graphQlTypeName.subSequence(0, i).toString());
     }
@@ -108,7 +110,7 @@ public class GraphQLCommon {
     /// These are synthetic and persistent types without [ua.com.fielden.platform.entity.annotation.DenyIntrospection].
     /// Union, functional and other entity types are not included.
     ///
-    public static Stream<Class<? extends AbstractEntity<?>>> streamQueryableTypes(final IApplicationDomainProvider appDomainProvider) {
+    public Stream<Class<? extends AbstractEntity<?>>> streamQueryableTypes(final IApplicationDomainProvider appDomainProvider) {
         return streamQueryableTypes_(appDomainProvider, EntityUtils::isIntrospectionAllowed);
     }
 
@@ -116,7 +118,7 @@ public class GraphQLCommon {
     ///
     /// This is [#streamQueryableTypes] together with union types, which are reachable as property types but are not root fields.
     ///
-    public static Stream<Class<? extends AbstractEntity<?>>> streamVisibleTypes(final IApplicationDomainProvider appDomainProvider) {
+    public Stream<Class<? extends AbstractEntity<?>>> streamVisibleTypes(final IApplicationDomainProvider appDomainProvider) {
         return concat(streamQueryableTypes(appDomainProvider),
                       streamQueryableTypes_(appDomainProvider, EntityUtils::isUnionEntityType));
     }
@@ -124,11 +126,11 @@ public class GraphQLCommon {
     /// Whether the specified type is exposed as a GraphQL root field.
     /// Types that are visible but not queryable, such as unions, can only be reached as property types.
     ///
-    public static boolean isQueryableType(final Class<? extends AbstractEntity<?>> entityType) {
+    public boolean isQueryableType(final Class<? extends AbstractEntity<?>> entityType) {
         return isIntrospectionAllowed(entityType);
     }
 
-    private static Stream<Class<? extends AbstractEntity<?>>> streamQueryableTypes_(
+    private Stream<Class<? extends AbstractEntity<?>>> streamQueryableTypes_(
             final IApplicationDomainProvider applicationDomainProvider,
             final Predicate<Class<? extends AbstractEntity<?>>> pred)
     {
@@ -138,7 +140,7 @@ public class GraphQLCommon {
                 .sorted(comparing(Class::getSimpleName));
     }
 
-    public static boolean containsRootFieldForType(final GraphQLSchema schema, final Class<?> type) {
+    public boolean containsRootFieldForType(final GraphQLSchema schema, final Class<?> type) {
         return schema.getQueryType().getFieldDefinition(rootFieldName(type)) != null;
     }
 
@@ -149,7 +151,7 @@ public class GraphQLCommon {
     /// It goes first to preserve the ordering that [AbstractDomainTreeRepresentation#constructKeysAndProperties] establishes, where a key precedes everything else.
     ///
     @SuppressWarnings("unchecked")
-    public static List<java.lang.reflect.Field> propertiesForGraphQlFields(final Class<? extends AbstractEntity<?>> entityType) {
+    public List<java.lang.reflect.Field> propertiesForGraphQlFields(final Class<? extends AbstractEntity<?>> entityType) {
         if (isUnionEntityType(entityType)) {
             return unionProperties((Class<? extends AbstractUnionEntity>) entityType);
         }
@@ -187,16 +189,16 @@ public class GraphQLCommon {
     /// Otherwise there would be one key in the response with two possible values, which the spec forbids.
     /// For example, `key(order: DESC_2)` and `key(order: DESC_3)` will be rejected.
     ///
-    public static Collection<SelectedField> allSelectedFields(final DataFetchingEnvironment env) {
+    public Collection<SelectedField> allSelectedFields(final DataFetchingEnvironment env) {
         // NOTE This simple implementation suffices as long as interface and union types are not used.
         return env.getSelectionSet().getFields();
     }
 
-    public static String toPropertyPath(final SelectedField field) {
+    public String toPropertyPath(final SelectedField field) {
         return propertyPathFromSelectedFieldName(field.getQualifiedName());
     }
 
-    public static String propertyPathFromSelectedFieldName(final CharSequence name) {
+    public String propertyPathFromSelectedFieldName(final CharSequence name) {
         return name.toString().replace('/', '.');
     }
 
@@ -217,7 +219,7 @@ public class GraphQLCommon {
     /// ["key", "status/key"]
     /// ```
     ///
-    public static List<SelectedField> terminalFields(final DataFetchingFieldSelectionSet selectionSet) {
+    public List<SelectedField> terminalFields(final DataFetchingFieldSelectionSet selectionSet) {
         return selectionSet.getFields().stream().filter(fld -> fld.getSelectionSet().getImmediateFields().isEmpty()).toList();
     }
 
@@ -231,7 +233,7 @@ public class GraphQLCommon {
     ///
     /// @throws WebApiException  if there is no such object type
     ///
-    public static GraphQLObjectType getGraphQlEntityType(final GraphQLSchema schema, final String typeName) {
+    public GraphQLObjectType getGraphQlEntityType(final GraphQLSchema schema, final String typeName) {
         return findGraphQlEntityType(schema, typeName).orElseThrow(() -> new WebApiException("No such GraphQL type: %s".formatted(typeName)));
     }
 
@@ -241,7 +243,7 @@ public class GraphQLCommon {
     /// If `typeName` names an enhanced entity type that does not exist in the schema (and enhanced types never do),
     /// the original entity type is returned instead.
     ///
-    public static Optional<GraphQLObjectType> findGraphQlEntityType(final GraphQLSchema schema, final String typeName) {
+    public Optional<GraphQLObjectType> findGraphQlEntityType(final GraphQLSchema schema, final String typeName) {
         final var type = schema.getObjectType(typeName);
         if (type != null) {
             return Optional.of(type);
@@ -260,7 +262,7 @@ public class GraphQLCommon {
     /// @throws WebApiException  if the requested type does not exist or is not an instance of `expectedType`
     ///
     @SuppressWarnings("unchecked")
-    public static <T extends GraphQLType> T getCoercedType(
+    public <T extends GraphQLType> T getCoercedType(
             final GraphQLSchema schema,
             final String typeName,
             final Class<T> expectedType)
@@ -283,7 +285,7 @@ public class GraphQLCommon {
     /// An alternative that throws is [#getCoercedType].
     ///
     @SuppressWarnings("unchecked")
-    public static <T extends GraphQLType> Optional<T> findCoercedType(
+    public <T extends GraphQLType> Optional<T> findCoercedType(
             final GraphQLSchema schema,
             final String typeName,
             final Class<T> expectedType)

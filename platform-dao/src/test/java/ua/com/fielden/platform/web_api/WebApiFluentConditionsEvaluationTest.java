@@ -24,8 +24,6 @@ import java.util.function.Consumer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static ua.com.fielden.platform.web_api.EntityCondToEqlCompiler.*;
-import static ua.com.fielden.platform.web_api.GraphQLCommon.rootFieldName;
-import static ua.com.fielden.platform.web_api.GraphQLCommon.rootFieldNameForAggEntity;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 
 /// Test for the operational semantics of conditions given through argument `where` of root fields:
@@ -51,11 +49,6 @@ import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 ///
 public class WebApiFluentConditionsEvaluationTest extends AbstractDaoTestCase {
 
-    private static final String
-            ROOT = rootFieldName(TgWebApiEntity.class),
-            AGG_ROOT = rootFieldNameForAggEntity(TgWebApiEntity.class),
-            UNION_ROOT = rootFieldName(UnionOwner.class);
-
     private static final String VEH1 = "VEH1", VEH2 = "VEH2", VEH3 = "VEH3", VEH4 = "VEH4", VEH5 = "VEH_5";
     private static final List<String> ALL = List.of(VEH1, VEH2, VEH3, VEH4, VEH5);
 
@@ -65,6 +58,12 @@ public class WebApiFluentConditionsEvaluationTest extends AbstractDaoTestCase {
             DATE_3 = new DateTime(2025, 3, 10, 0, 0).toDate();
 
     private final IWebApi webApi = getInstance(IWebApi.class);
+    private final GraphQLCommon common = getInstance(GraphQLCommon.class);
+
+    private final String
+            root = common.rootFieldName(TgWebApiEntity.class),
+            aggRoot = common.rootFieldNameForAggEntity(TgWebApiEntity.class),
+            unionRoot = common.rootFieldName(UnionOwner.class);
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Absence of conditions
@@ -72,9 +71,9 @@ public class WebApiFluentConditionsEvaluationTest extends AbstractDaoTestCase {
 
     @Test
     public void omitted_where_imposes_no_condition() {
-        final var result = webApi.execute(input("{%s{key}}".formatted(ROOT)));
+        final var result = webApi.execute(input("{%s{key}}".formatted(root)));
         assertNoErrors(result);
-        assertThat(keysOf(result, ROOT)).containsExactlyInAnyOrderElementsOf(ALL);
+        assertThat(keysOf(result, root)).containsExactlyInAnyOrderElementsOf(ALL);
     }
 
     @Test
@@ -123,10 +122,10 @@ public class WebApiFluentConditionsEvaluationTest extends AbstractDaoTestCase {
     @Test
     public void where_can_be_given_as_a_variable() {
         final var result = webApi.execute(input(
-                "query($w: TgWebApiEntity_Cond) {%s(where: $w){key}}".formatted(ROOT),
+                "query($w: TgWebApiEntity_Cond) {%s(where: $w){key}}".formatted(root),
                 Map.of("w", Map.of("cond", Map.of("key", Map.of("eq", VEH2))))));
         assertNoErrors(result);
-        assertThat(keysOf(result, ROOT)).containsExactly(VEH2);
+        assertThat(keysOf(result, root)).containsExactly(VEH2);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -605,10 +604,10 @@ public class WebApiFluentConditionsEvaluationTest extends AbstractDaoTestCase {
     @Test
     public void where_on_an_aggregation_root_field_can_be_given_as_a_variable_of_the_same_condition_type_as_for_the_data_root_field() {
         final var result = webApi.execute(input(
-                "query($w: TgWebApiEntity_Cond) {%s(where: $w){count}}".formatted(AGG_ROOT),
+                "query($w: TgWebApiEntity_Cond) {%s(where: $w){count}}".formatted(aggRoot),
                 Map.of("w", Map.of("cond", Map.of("key", Map.of("in", List.of(VEH1, VEH2)))))));
         assertNoErrors(result);
-        assertThat(listAt(data(result), AGG_ROOT)).containsExactly(Map.of("count", 2));
+        assertThat(listAt(data(result), aggRoot)).containsExactly(Map.of("count", 2));
     }
 
     @Test
@@ -669,19 +668,19 @@ public class WebApiFluentConditionsEvaluationTest extends AbstractDaoTestCase {
     private List<String> keys(final String where) {
         final var result = query(where);
         assertNoErrors(result);
-        return keysOf(result, ROOT);
+        return keysOf(result, root);
     }
 
     /// Keys of the instances of [UnionOwner] that satisfy `where`, given as a GraphQL literal.
     ///
     private List<String> unionOwnerKeys(final String where) {
-        final var result = webApi.execute(input("{%s(where: %s){key}}".formatted(UNION_ROOT, where)));
+        final var result = webApi.execute(input("{%s(where: %s){key}}".formatted(unionRoot, where)));
         assertNoErrors(result);
-        return keysOf(result, UNION_ROOT);
+        return keysOf(result, unionRoot);
     }
 
     private Map<String, Object> query(final String where) {
-        return webApi.execute(input("{%s(where: %s){key}}".formatted(ROOT, where)));
+        return webApi.execute(input("{%s(where: %s){key}}".formatted(root, where)));
     }
 
     /// Rows of an aggregation query over [TgWebApiEntity] with `where`, given as a GraphQL literal, and the specified selection.
@@ -689,11 +688,11 @@ public class WebApiFluentConditionsEvaluationTest extends AbstractDaoTestCase {
     private List<Map<String, Object>> aggRows(final String where, final String selection) {
         final var result = aggQuery(where, selection);
         assertNoErrors(result);
-        return listAt(data(result), AGG_ROOT);
+        return listAt(data(result), aggRoot);
     }
 
     private Map<String, Object> aggQuery(final String where, final String selection) {
-        return webApi.execute(input("{%s(where: %s){%s}}".formatted(AGG_ROOT, where, selection)));
+        return webApi.execute(input("{%s(where: %s){%s}}".formatted(aggRoot, where, selection)));
     }
 
     /// Maps the value at `path` in each of `rows`, which must be unique across `rows`, to the value at `rowPath`.

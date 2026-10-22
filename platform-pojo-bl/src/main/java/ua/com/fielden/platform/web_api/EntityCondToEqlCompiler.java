@@ -34,15 +34,15 @@ class EntityCondToEqlCompiler extends AbstractEntityCondVisitor<Optional<Conditi
     /// @param env  environment associated with a root entity field that has argument [FluentConditions#WHERE]
     ///             whose value is the condition object to be compiled
     ///
-    public static ConditionModel compile(final DataFetchingEnvironment env) {
+    public static ConditionModel compile(final DataFetchingEnvironment env, final GraphQLCommon common) {
         return ofNullable(env.<Map<String, Object>>getArgument(WHERE))
-                .flatMap(object -> new EntityCondToEqlCompiler((GraphQLInputObjectType) env.getFieldDefinition().getArgument(WHERE).getType())
+                .flatMap(object -> new EntityCondToEqlCompiler((GraphQLInputObjectType) env.getFieldDefinition().getArgument(WHERE).getType(), common)
                                     .rootEntityCond(object))
                 .orElseGet(EntityQueryUtils::emptyCondition);
     }
 
-    protected EntityCondToEqlCompiler(final GraphQLInputObjectType rootCondType) {
-        super(rootCondType);
+    protected EntityCondToEqlCompiler(final GraphQLInputObjectType rootCondType, final GraphQLCommon common) {
+        super(rootCondType, common);
     }
 
     @Override
