@@ -331,8 +331,6 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     @SessionRequired(allowNestedScope = false)
     protected void deleteLockoutUserSecrets(final String username) {
         // Delete the secret of the user who can sign in with a password, in case their deactivation failed, or who is inactive.
-        // The deletion is attempted regardless of whether an account was locked out.
-        // This is to reduce the difference in the computation time that is required for processing the accounts that are locked out and all other usernames.
         final UserSecretCo coUserSecret = co(UserSecret.class);
         coUserSecret.batchDelete(ssoMode() ? QUERY_LOCKOUT_USER_SECRET_SSO : QUERY_LOCKOUT_USER_SECRET_RSO, Map.of(PARAM_USERNAME, username));
     }

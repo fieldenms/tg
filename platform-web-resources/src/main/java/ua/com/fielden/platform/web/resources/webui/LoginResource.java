@@ -31,7 +31,7 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker.Outcome;
+import ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker.AttemptResult;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
@@ -41,12 +41,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker.BLOCK_TIME_SECONDS;
 import static ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker.LOCKOUT_THRESHOLD;
+import static ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker.LOCKOUT_WINDOW_HOURS;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.assignAuthenticatingCookie;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.extractAuthenticator;
 
 /// A web resource handling explicit user logins.
 ///
-/// Login attempts are tracked by [LoginAttemptTracker], which blocks repeated failed attempts and determines when an account is to be locked out (see [IUser#lockoutUser(String)]).
+/// Login attempts are tracked by [LoginAttemptTracker], which blocks repeated failed attempts and determines when an account is to be locked out.
+/// Lockouts are performed by [AccountLockout].
 ///
 public class LoginResource extends AbstractWebResource {
     
@@ -63,6 +65,7 @@ public class LoginResource extends AbstractWebResource {
     private final RestServerUtil restUtil;
     private final IUniversalConstants constants;
     private final LoginAttemptTracker attemptTracker;
+    private final AccountLockout accountLockout;
     
     private final byte[] loginPage;
     private final byte[] loginPageForMixedMode;
@@ -79,6 +82,7 @@ public class LoginResource extends AbstractWebResource {
             final IUserSession coUserSession,
             final RestServerUtil restUtil,
             final LoginAttemptTracker attemptTracker,
+            final AccountLockout accountLockout,
             final IDeviceProvider deviceProvider,
             final IDates dates,
             final Context context,
@@ -95,6 +99,7 @@ public class LoginResource extends AbstractWebResource {
         this.coUserSession = coUserSession;
         this.restUtil = restUtil;
         this.attemptTracker = attemptTracker;
+        this.accountLockout = accountLockout;
         this.loginPage = loginPage;
         this.loginPageForMixedMode = loginPageForMixedMode;
     }
@@ -153,11 +158,17 @@ public class LoginResource extends AbstractWebResource {
             // Attempts with all usernames are tracked and blocked in the same way, but only accounts that can sign in with a password are locked out (see IUser.lockoutUser).
             final boolean passwordAccount = coUser.findUserForPasswordLogin(credo.username).isPresent();
             final var authResult = new AtomicReference<Result>();
-            final Outcome outcome = attemptTracker.attempt(credo.username, passwordAccount, () -> {
+            final AttemptResult attemptResult = attemptTracker.attempt(credo.username, passwordAccount, () -> {
                 authResult.set(authenticationModel.authenticate(credo.username, credo.passwd));
                 return authResult.get().isSuccessful();
             });
-            switch (outcome) {
+            // A lockout is not reflected in the response, which is determined by the outcome alone.
+            // It is performed asynchronously, so that the response time does not depend on it either.
+            if (attemptResult.lockout()) {
+                LOGGER.warn(() -> "Lockout after [%s] unsuccessful login attempts within [%s] hours for user [%s].".formatted(LOCKOUT_THRESHOLD, LOCKOUT_WINDOW_HOURS, credo.username));
+                accountLockout.lockoutAsync(credo.username);
+            }
+            switch (attemptResult.outcome()) {
                 case AUTHENTICATED -> startSession((User) authResult.get().getInstance(), credo.trustedDevice);
                 case DENIED -> {
                     LOGGER.warn(() -> "Unsuccessful login request for user [%s].".formatted(credo.username));
@@ -167,11 +178,6 @@ public class LoginResource extends AbstractWebResource {
                     LOGGER.warn(() -> "Repeated login attempt for user [%s], blocked for [%s] seconds.".formatted(credo.username, BLOCK_TIME_SECONDS));
                     respondUserIsBlocked(BLOCK_TIME_SECONDS);
                 }
-                case LOCKOUT -> {
-                    LOGGER.warn(() -> "Lockout after [%s] unsuccessful login attempts for user [%s].".formatted(LOCKOUT_THRESHOLD, credo.username));
-                    lockoutUser(up, coUser, credo.username);
-                    respondAccessDenied();
-                }
             }
         } catch (final Exception ex) {
             LOGGER.fatal(ex.getMessage(), ex);
@@ -179,21 +185,6 @@ public class LoginResource extends AbstractWebResource {
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         } finally {
             LOGGER.debug(() -> "LOGIN ATTEMPT RESPONSE TIME: %s%n".formatted(TimeUnit.MILLISECONDS.convert(System.nanoTime() - nanoStart, TimeUnit.NANOSECONDS)));
-        }
-    }
-
-    /// Locks out the account of `username` (see [IUser#lockoutUser(String)]).
-    ///
-    /// The user making a login attempt is not logged in, and lockout saves the user.
-    /// Therefore, SU is used as the current user, also for auditing purposes.
-    /// The current user is cleared afterwards, as this resource is attached at the component level and is not covered by the application-level cleanup filter.
-    ///
-    static void lockoutUser(final IUserProvider up, final IUser coUser, final String username) {
-        up.setUsername(User.system_users.SU.name(), coUser);
-        try {
-            coUser.lockoutUser(username);
-        } finally {
-            up.clearUser();
         }
     }
 

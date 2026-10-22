@@ -27,6 +27,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.AccountLockout;
 import ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker;
 import ua.com.fielden.platform.web.resources.webui.LoginResource;
 
@@ -119,6 +120,7 @@ public class LoginResourceFactory extends Restlet {
                     injector.getInstance(IUserSession.class),
                     util,
                     injector.getInstance(LoginAttemptTracker.class),
+                    injector.getInstance(AccountLockout.class),
                     injector.getInstance(IDeviceProvider.class),
                     injector.getInstance(IDates.class),
                     getContext(),

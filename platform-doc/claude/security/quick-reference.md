@@ -113,15 +113,20 @@ Resources that an application attaches elsewhere — e.g. to the `Component` def
 Both are held in memory by `@Singleton` services in `platform-web-resources` (package `web.resources.webui`): they apply per application server and start afresh when it restarts.
 Both measure time with a Guava `Ticker`, which tests replace with a manual one (see `testing/quick-reference.md`).
 
-**Login attempts** — `LoginResource` passes each attempt through `LoginAttemptTracker`, keyed by username (case-insensitive):
+**Login attempts** — `LoginResource` passes each attempt through `LoginAttemptTracker`, keyed by username (case-insensitive), which determines the response:
 - the first `FAILED_ATTEMPTS_BEFORE_BLOCK` (2) failed attempts are denied (`400`);
-- each further failed attempt blocks the username for `BLOCK_TIME_SECONDS` (15), and an attempt within that time is blocked (`412`) without authentication and is not counted;
-- the `LOCKOUT_THRESHOLD`-th (6th) counted failed attempt locks the account out; a successful attempt resets the count.
+- each further failed attempt blocks the username for `BLOCK_TIME_SECONDS` (15), and an attempt within that time is blocked (`412`) without authentication, is not counted, and restarts the block time;
+- the `LOCKOUT_THRESHOLD`-th (6th) counted failed attempt is denied (`400`), and counting starts afresh; a successful attempt resets the count.
 
-Attempts with every username are tracked and blocked alike, so that the outcomes do not disclose which usernames identify accounts.
+Attempts with every username are tracked alike, in one cache bounded by `MAX_TRACKED_USERNAMES`, so that neither the responses nor eviction from the cache disclose which usernames identify accounts.
+Lockout is decided separately and is not reflected in the response: for an account that can sign in with a password, the `LOCKOUT_THRESHOLD`-th failed authentication within `LOCKOUT_WINDOW_HOURS` (24) locks the account out.
+These counts are kept only for such accounts and are not evicted, so that a flood of attempts with other usernames cannot reset them.
 
 **Lockout** — `IUser.lockoutUser` deactivates the account and removes its secret, but only for an account that can sign in with a password (`IUser.findUserForPasswordLogin`); accounts restricted to SSO in the SSO authentication mode are not affected.
-Deactivation saves the user, which requires a current user: `LoginResource.lockoutUser` sets `SU` as the current user for the lockout and clears it afterwards.
+`LoginResource` requests the lockout from `AccountLockout`, which performs it asynchronously on a thread of its own, so that the response time of the attempt does not disclose that the username identifies an account.
+Deactivation saves the user, which requires a current user: `AccountLockout` sets `SU` as the current user for the lockout and clears it afterwards.
+Lockouts are queued in memory and performed one at a time; a lockout requested for a username while one is queued or in progress for it is not queued again, so at most one lockout per account is queued or in progress.
+Until a lockout is performed, typically within milliseconds, further attempts with the username are tracked as usual, and are authenticated unless the username is blocked.
 The secret is removed in a separate transaction, so that the account can no longer sign in with a password even if its deactivation fails.
 A locked-out user regains access when an administrator activates the account again, which starts the password reset procedure.
 
