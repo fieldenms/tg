@@ -115,7 +115,8 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
         return true;
     }
 
-    /// Redirects HTTP GET requests to the login resource. Forbids all other requests.
+    /// Redirects HTTP `GET` requests to the login resource, except requests from a Service Worker (those with `?checksum=true` or `?resources=true`), which are forbidden.
+    /// Forbids all other requests.
     ///
     protected void redirectGetToLoginOrForbid(final Request request, final Response response) {
         // GET requests can be redirected to the login resource, which takes care of both RSO and SSO workflows.
@@ -144,9 +145,9 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
 
     /// A convenient method that creates an authenticating cookie based on the provided authenticator and associates it with the specified HTTP response.
     ///
-    /// @param now the current time of the server clock (`IUniversalConstants.serverNow()`), by which the authenticator expires
-    /// @param authenticator
-    /// @param response
+    /// @param now           the current time of the server clock (`IUniversalConstants.serverNow()`), by which the authenticator expires
+    /// @param authenticator the authenticator carried by the cookie, whose expiry time determines the max age of the cookie
+    /// @param response      the response to carry the cookie, which replaces any cookies already set on it
     ///
     public static void assignAuthenticatingCookie(final User user, final DateTime now, final Authenticator authenticator, final String domainName, final String path, final Request request, final Response response) {
         // Create a cookie that carries the updated authenticator back to the client.

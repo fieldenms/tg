@@ -46,7 +46,8 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
     /// Writes `result`, sharing the scope of written throwables with [ThrowableJsonSerialiser] (see [ThrowableJsonSerialiser.Scope]).
     ///
     /// A [Result] serialised on its own opens the scope for writing its exception.
-    /// A [Result] that is a cause or a suppressed throwable of another throwable is written in the scope of that throwable, and is written as `null` if it has been written already.
+    /// A [Result] that is a cause or a suppressed throwable of another throwable is written in the scope of that throwable.
+    /// If it has been written already, it is written as `null` as a cause, and is omitted by [ThrowableJsonSerialiser] as a suppressed throwable.
     ///
     @Override
     public void serialize(final Result result, final JsonGenerator generator, final SerializerProvider provider) throws IOException {

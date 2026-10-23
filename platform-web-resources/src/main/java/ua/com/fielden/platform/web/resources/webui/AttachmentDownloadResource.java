@@ -41,6 +41,10 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 /// - `Content-Security-Policy: default-src 'none'; frame-ancestors 'self'; sandbox` disallows loading resources and running scripts,
 ///   places the content in an opaque origin, and permits framing only by the application, as the PDF preview does.
 ///
+/// The policy governs content that the browser renders as a document, such as HTML or SVG.
+/// JavaScript embedded in a PDF is run by the PDF viewer of the browser in an environment of its own, which the policy does not govern,
+/// and which does not give that JavaScript access to the origin of the application.
+///
 public class AttachmentDownloadResource extends AbstractWebResource {
     private static final Logger LOGGER = LogManager.getLogger(AttachmentDownloadResource.class);
 
