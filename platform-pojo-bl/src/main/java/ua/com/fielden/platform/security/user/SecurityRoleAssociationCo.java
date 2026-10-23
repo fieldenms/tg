@@ -48,7 +48,11 @@ public interface SecurityRoleAssociationCo extends IEntityDao<SecurityRoleAssoci
     /// Selects all active [SecurityRoleAssociation] records for all active roles of `user` associated with any of `tokens`.
     ///
     EntityResultQueryModel<SecurityRoleAssociation> selectActiveAssociations(final User user, final Class<? extends ISecurityToken>... tokens);
-    
+
+    /// Selects all active [SecurityRoleAssociation] records for all active roles of `user` associated with any of `tokens`.
+    ///
+    EntityResultQueryModel<SecurityRoleAssociation> selectActiveAssociations(final User user, final Iterable<? extends Class<? extends ISecurityToken>> tokens);
+
     /// Removes the specified associations.
     ///
     /// @param associations  instrumented instances, which may be modified and saved by this method

@@ -419,26 +419,6 @@ public class WebApiAggregationTest extends AbstractDaoTestCase {
         assertThat(errors).as(errors.toString()).isEmpty();
     }
 
-    /// Withdraws `token` from the role of the current user.
-    ///
-    private void runWithoutToken(final Class<? extends ISecurityToken> token, final Runnable runnable) {
-        final SecurityRoleAssociationCo co$ = co$(SecurityRoleAssociation.class);
-        final var assocs = co$.getAllEntities(from(co$.selectActiveAssociations(getUser(), token)).model());
-        if (!assocs.isEmpty()) {
-            co$.removeAssociations(assocs);
-            try {
-                runnable.run();
-            } finally {
-                co$.addAssociations(assocs.stream()
-                                           .map(assoc -> new_(SecurityRoleAssociation.class).setRole(assoc.getRole()).setSecurityToken(assoc.getSecurityToken()))
-                                           .toList());
-            }
-        }
-        else {
-            runnable.run();
-        }
-    }
-
     private void assertHasToken(final Class<? extends ISecurityToken> tokenType) {
         final SecurityRoleAssociationCo coSecurityRoleAssociation = co(SecurityRoleAssociation.class);
         assertThat(coSecurityRoleAssociation.countActiveAssociations(getUser(), tokenType))

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
+import com.google.common.collect.Streams;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -14,7 +15,6 @@ import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.*;
-import java.util.stream.Stream;
 
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.partitioningBy;
@@ -98,6 +98,14 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 
     @Override
     public EntityResultQueryModel<SecurityRoleAssociation> selectActiveAssociations(final User user, final Class<? extends ISecurityToken>... tokens) {
+        return selectActiveAssociations(user, Arrays.asList(tokens));
+    }
+
+    @Override
+    public EntityResultQueryModel<SecurityRoleAssociation> selectActiveAssociations(
+            final User user,
+            final Iterable<? extends Class<? extends ISecurityToken>> tokens)
+    {
         final var subModel = select(UserAndRoleAssociation.class)
                 .where()
                 .prop(ACTIVE).eq().val(true).and()
@@ -106,7 +114,7 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
                 .and().prop("userRole.id").eq().prop("sra.role.id").model();
         return select(SecurityRoleAssociation.class).as("sra")
                 .where()
-                .prop("sra.securityToken").in().values(Stream.of(tokens).map(Class::getName).toList())
+                .prop("sra.securityToken").in().values(Streams.stream(tokens).map(Class::getName).toList())
                 .and().prop("sra.active").eq().val(true)
                 .and().exists(subModel).model();
     }

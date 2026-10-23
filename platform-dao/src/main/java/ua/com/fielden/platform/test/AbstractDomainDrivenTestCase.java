@@ -19,7 +19,10 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.exceptions.DomainDrivenTestException;
 import ua.com.fielden.platform.types.either.Either;
@@ -35,6 +38,7 @@ import java.util.function.Function;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
 /// This is a base class for all test cases in TG-based applications.
 ///
@@ -274,6 +278,36 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     public User getUser() {
         final IUserProvider up = getInstance(IUserProvider.class);
         return up.getUser();
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Other utilities
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    /// Runs `runnable` in a scope where `token` is removed from the current user's role.
+    ///
+    protected void runWithoutToken(final Class<? extends ISecurityToken> token, final Runnable runnable) {
+        runWithoutTokens(List.of(token), runnable);
+    }
+
+    /// Runs `runnable` in a scope where `token` is removed from the current user's role.
+    ///
+    protected void runWithoutTokens(final Iterable<? extends Class<? extends ISecurityToken>> tokens, final Runnable runnable) {
+        final SecurityRoleAssociationCo co$ = co$(SecurityRoleAssociation.class);
+        final var assocs = co$.getAllEntities(from(co$.selectActiveAssociations(getUser(), tokens)).model());
+        if (!assocs.isEmpty()) {
+            co$.removeAssociations(assocs);
+            try {
+                runnable.run();
+            } finally {
+                co$.addAssociations(assocs.stream()
+                                           .map(assoc -> new_(SecurityRoleAssociation.class).setRole(assoc.getRole()).setSecurityToken(assoc.getSecurityToken()))
+                                           .toList());
+            }
+        }
+        else {
+            runnable.run();
+        }
     }
 
 }

@@ -3,13 +3,9 @@ package ua.com.fielden.platform.web_api;
 import org.junit.Test;
 import ua.com.fielden.platform.domain.metadata.DomainPropertyHolder;
 import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
-import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.tokens.persistent.TgVehicleModel_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgVehicleModel_CanRead_make_Token;
 import ua.com.fielden.platform.security.tokens.persistent._CanReadModel_Token;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
-import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import java.util.List;
@@ -20,7 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.web_api.EntityTypeIntrospection.*;
 import static ua.com.fielden.platform.web_api.FieldSchema.ORDER;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
@@ -468,10 +463,10 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
         assertThat(namesOfFilterableProperties(getType(queryAllTypes(), "TgVehicleModel"))).contains("make");
         assertThat(querySchemaInputFieldsByType().get("TgVehicleModel_Cond_cond")).contains("make");
 
-        removeAccessTo(TgVehicleModel_CanRead_make_Token.class);
-
-        assertThat(queryPropertyNames("TgVehicleModel")).doesNotContain("make");
-        assertThat(querySchemaInputFieldsByType().get("TgVehicleModel_Cond_cond")).doesNotContain("make");
+        runWithoutToken(TgVehicleModel_CanRead_make_Token.class, () -> {
+            assertThat(queryPropertyNames("TgVehicleModel")).doesNotContain("make");
+            assertThat(querySchemaInputFieldsByType().get("TgVehicleModel_Cond_cond")).doesNotContain("make");
+        });
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -521,13 +516,13 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
 
     @Test
     public void a_type_is_not_described_when_reading_its_model_is_prohibited() {
-        removeAccessTo(TgVehicleModel_CanReadModel_Token.class);
-
-        assertThat(queryTypeNames("""
-          { _entityType(eq: "TgVehicleModel") { name } }
-          """))
-                .isEmpty();
-        assertThat(queryAllTypeNames()).doesNotContain("TgVehicleModel");
+        runWithoutToken(TgVehicleModel_CanReadModel_Token.class, () -> {
+            assertThat(queryTypeNames("""
+              { _entityType(eq: "TgVehicleModel") { name } }
+              """))
+                    .isEmpty();
+            assertThat(queryAllTypeNames()).doesNotContain("TgVehicleModel");
+        });
     }
 
     /// The meta-schema and the schema part ways here.
@@ -536,10 +531,10 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
     ///
     @Test
     public void a_type_withheld_from_the_meta_schema_remains_in_the_schema_with_id_alone() {
-        removeAccessTo(TgVehicleModel_CanReadModel_Token.class);
-
-        assertThat(queryAllTypeNames()).doesNotContain("TgVehicleModel");
-        assertThat(querySchemaFieldNames("TgVehicleModel")).containsExactly(ID);
+        runWithoutToken(TgVehicleModel_CanReadModel_Token.class, () -> {
+            assertThat(queryAllTypeNames()).doesNotContain("TgVehicleModel");
+            assertThat(querySchemaFieldNames("TgVehicleModel")).containsExactly(ID);
+        });
     }
 
     /// A type without a token of its own, such as a union, answers to the default token.
@@ -550,11 +545,11 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
         assertThat(queryAllTypeNames()).contains(unionType);
         final var schemaFields = querySchemaFieldNames(unionType);
 
-        removeAccessTo(_CanReadModel_Token.class);
-
-        assertThat(queryAllTypeNames()).doesNotContain(unionType);
-        // Union types are exempt from field visibility in the schema, as `FieldVisibility.getFieldDefinitions` only considers queryable types.
-        assertThat(querySchemaFieldNames(unionType)).isEqualTo(schemaFields);
+        runWithoutToken(_CanReadModel_Token.class, () -> {
+            assertThat(queryAllTypeNames()).doesNotContain(unionType);
+            // Union types are exempt from field visibility in the schema, as `FieldVisibility.getFieldDefinitions` only considers queryable types.
+            assertThat(querySchemaFieldNames(unionType)).isEqualTo(schemaFields);
+        });
     }
 
     /// Authorisation is decided per type.
@@ -565,9 +560,9 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
         final var expected = queryPropertyNames("TgWebApiEntity");
         assertThat(expected).contains("model");
 
-        removeAccessTo(TgVehicleModel_CanReadModel_Token.class);
-
-        assertThat(queryPropertyNames("TgWebApiEntity")).isEqualTo(expected);
+        runWithoutToken(TgVehicleModel_CanReadModel_Token.class, () -> {
+            assertThat(queryPropertyNames("TgWebApiEntity")).isEqualTo(expected);
+        });
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -586,11 +581,11 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
     ///
     @Test
     public void a_property_is_not_described_when_reading_it_is_prohibited() {
-        removeAccessTo(TgVehicleModel_CanRead_make_Token.class);
-
-        assertThat(queryPropertyNames("TgVehicleModel"))
-                .doesNotContain("make")
-                .contains(ID, "key");
+        runWithoutToken(TgVehicleModel_CanRead_make_Token.class, () -> {
+            assertThat(queryPropertyNames("TgVehicleModel"))
+                    .doesNotContain("make")
+                    .contains(ID, "key");
+        });
     }
 
     /// The meta-schema and the schema must agree on which properties are visible, which is why both consult [FieldVisibility].
@@ -600,10 +595,10 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
         assertThat(queryPropertyNames("TgVehicleModel")).contains("make");
         assertThat(querySchemaFieldNames("TgVehicleModel")).contains("make");
 
-        removeAccessTo(TgVehicleModel_CanRead_make_Token.class);
-
-        assertThat(queryPropertyNames("TgVehicleModel")).doesNotContain("make");
-        assertThat(querySchemaFieldNames("TgVehicleModel")).doesNotContain("make");
+        runWithoutToken(TgVehicleModel_CanRead_make_Token.class, () -> {
+            assertThat(queryPropertyNames("TgVehicleModel")).doesNotContain("make");
+            assertThat(querySchemaFieldNames("TgVehicleModel")).doesNotContain("make");
+        });
     }
 
     /// The properties of a union are its members, and `id` is not among them, so a union whose properties were all withheld would be described with none at all.
@@ -702,17 +697,6 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
                 .filter(prop -> Boolean.TRUE.equals(prop.get("filterable")))
                 .map(prop -> (String) prop.get("name"))
                 .toList();
-    }
-
-    /// Withdraws `token` from the role of the current user.
-    ///
-    private void removeAccessTo(final Class<? extends ISecurityToken> token) {
-        final SecurityRoleAssociationCo co$ = co$(SecurityRoleAssociation.class);
-        co$.removeAssociations(setOf(
-                co$.new_()
-                        .setRole(co(UserRole.class).findByKey(UNIT_TEST_ROLE))
-                        .setSecurityToken(token)
-        ));
     }
 
     private void assertSingleError(final String query, final String expectedError) {

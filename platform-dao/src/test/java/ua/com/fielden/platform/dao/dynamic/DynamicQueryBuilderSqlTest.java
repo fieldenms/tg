@@ -31,11 +31,7 @@ import ua.com.fielden.platform.meta.DomainMetadataUtils;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.*;
-import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.interception.MasterEntity_CanRead_unauthorisedProp_Token;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
-import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -53,7 +49,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.*;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createCompletedQuery;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 /// A test for [DynamicQueryBuilder].
 ///
@@ -1438,37 +1433,25 @@ public class DynamicQueryBuilderSqlTest extends AbstractDaoTestCase {
 
     @Test
     public void unauthorised_prop_throws_authorisation_exception() {
-        removeAccessTo(MasterEntity_CanRead_unauthorisedProp_Token.class);
+        runWithoutToken(MasterEntity_CanRead_unauthorisedProp_Token.class, () -> {
+            final QueryProperty property = queryProperties.get("unauthorisedProp");
+            property.setValue(3);
+            property.setValue2(7);
 
-        final QueryProperty property = queryProperties.get("unauthorisedProp");
-        property.setValue(3);
-        property.setValue2(7);
-
-        assertThatCode(() -> createCompletedQuery(MasterEntity.class, (Class<MasterEntity>) masterKlass, new ArrayList<>(queryProperties.values()), empty(), empty(), empty(), dates))
-                .hasMessage("Permission denied due to token [Master Entity Can Read property [unauthorisedProp]] restriction.");
+            assertThatCode(() -> createCompletedQuery(MasterEntity.class, (Class<MasterEntity>) masterKlass, new ArrayList<>(queryProperties.values()), empty(), empty(), empty(), dates))
+                    .hasMessage("Permission denied due to token [Master Entity Can Read property [unauthorisedProp]] restriction.");
+        });
     }
 
     @Test
     public void unauthorised_prop_initiated_with_mnemonics_throws_authorisation_exception() {
-        removeAccessTo(MasterEntity_CanRead_unauthorisedProp_Token.class);
+        runWithoutToken(MasterEntity_CanRead_unauthorisedProp_Token.class, () -> {
+            final QueryProperty property = queryProperties.get("unauthorisedProp");
+            property.setOrNull(true);
 
-        final QueryProperty property = queryProperties.get("unauthorisedProp");
-        property.setOrNull(true);
-
-        assertThatCode(() -> createCompletedQuery(MasterEntity.class, (Class<MasterEntity>) masterKlass, new ArrayList<>(queryProperties.values()), empty(), empty(), empty(), dates))
-                .hasMessage("Permission denied due to token [Master Entity Can Read property [unauthorisedProp]] restriction.");
-
-    }
-
-    /// This is more like just in case `token` would get associated with `UNIT_TEST_ROLE` by the base test class logic.
-    ///
-    private void removeAccessTo(final Class<? extends ISecurityToken> token) {
-        final SecurityRoleAssociationCo co = co(SecurityRoleAssociation.class);
-        co.removeAssociations(setOf(
-                co.new_()
-                        .setRole(co(UserRole.class).findByKey(UNIT_TEST_ROLE))
-                        .setSecurityToken(token)
-        ));
+            assertThatCode(() -> createCompletedQuery(MasterEntity.class, (Class<MasterEntity>) masterKlass, new ArrayList<>(queryProperties.values()), empty(), empty(), empty(), dates))
+                    .hasMessage("Permission denied due to token [Master Entity Can Read property [unauthorisedProp]] restriction.");
+        });
     }
 
 }
