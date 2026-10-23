@@ -4,10 +4,10 @@ import graphql.Scalars;
 import graphql.schema.*;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domaintree.IDomainManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -17,6 +17,7 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.lang.reflect.Field;
@@ -47,7 +48,6 @@ import static ua.com.fielden.platform.web_api.FieldSchema.bold;
 import static ua.com.fielden.platform.web_api.FieldVisibility.isModelReadable;
 import static ua.com.fielden.platform.web_api.FluentConditions.isFilterable;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.QUERY_TYPE_NAME;
-import static ua.com.fielden.platform.web_api.IWebApi.WEB_API_DOMAIN_TREE_ENHANCER;
 
 /// GraphQL definitions that describe the domain model.
 ///
@@ -162,7 +162,8 @@ public class EntityTypeIntrospection {
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
     private final GraphQLCommon common;
-    private final IDomainTreeEnhancer domainTreeEnhancer;
+    private final IDomainManager domainManager;
+    private final IUserProvider userProvider;
 
     @Inject
     protected EntityTypeIntrospection(
@@ -171,14 +172,16 @@ public class EntityTypeIntrospection {
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
             final GraphQLCommon common,
-            final @Named(WEB_API_DOMAIN_TREE_ENHANCER) IDomainTreeEnhancer domainTreeEnhancer)
+            final IDomainManager domainManager,
+            final IUserProvider userProvider)
     {
         this.appDomainProvider = appDomainProvider;
         this.domainMetadata = domainMetadata;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
         this.common = common;
-        this.domainTreeEnhancer = domainTreeEnhancer;
+        this.domainManager = domainManager;
+        this.userProvider = userProvider;
     }
 
     public GraphQLSchema enhanceSchema(final GraphQLSchema schema) {
@@ -562,7 +565,7 @@ public class EntityTypeIntrospection {
                     final var schema = environment.getGraphQLSchema();
                     if (schema.getType(entityType.name()) instanceof GraphQLObjectType objectType) {
                         @SuppressWarnings("unchecked") // This typecast is safe in practice as all enhanced types extend their originals.
-                        final var managedEntityType = (Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType.type());
+                        final var managedEntityType = (Class<? extends AbstractEntity<?>>) domainManager.domainTreeEnhancer(userProvider.getUser()).getManagedType(entityType.type());
                         return schema.getCodeRegistry().getFieldVisibility().getFieldDefinitions(objectType)
                                 .stream()
                                 .map(field -> mkProperty(managedEntityType, field))

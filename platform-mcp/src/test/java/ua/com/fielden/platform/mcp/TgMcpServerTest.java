@@ -9,6 +9,7 @@ import io.modelcontextprotocol.spec.McpSchema;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.junit.*;
+import ua.com.fielden.platform.domaintree.IDomainManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -73,9 +74,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
 
     private final IDomainMetadata domainMetadata = getInstance(IDomainMetadata.class);
     private final IWebApi webApi = getInstance(IWebApi.class);
-    @Inject
-    @Named(WEB_API_DOMAIN_TREE_ENHANCER)
-    private IDomainTreeEnhancer domainTreeEnhancer;
+    private final IDomainManager domainManager = getInstance(IDomainManager.class);
 
     @Before
     public void startWebApp() {
@@ -89,6 +88,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
 
     @After
     public void restoreDomain() {
+        final var domainTreeEnhancer = domainManager.domainTreeEnhancer(getUser());
         domainTreeEnhancer.calculatedProperties().forEach((type, props) -> {
             webApi.propertiesRemoved((Class<? extends AbstractEntity<?>>) type, props.stream().map(CalculatedProperty::pathAndName).collect(toSet()));
         });
@@ -401,7 +401,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
                .formatted(type.getSimpleName(), propName, expression, CollectionUtil.toString(unathorisedProps, ", ")));
             });
 
-            assertThat(domainTreeEnhancer.findCalculatedProperty(type, propName)).isEmpty();
+            assertThat(domainManager.domainTreeEnhancer(getUser()).findCalculatedProperty(type, propName)).isEmpty();
             assertGraphQlTypeHasNoField(webApi, type.getSimpleName(), propName);
         };
 

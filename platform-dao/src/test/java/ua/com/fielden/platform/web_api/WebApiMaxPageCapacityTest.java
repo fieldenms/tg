@@ -4,10 +4,12 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.junit.Test;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domaintree.IDomainManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,8 +37,9 @@ public class WebApiMaxPageCapacityTest extends AbstractDaoTestCase {
                 getInstance(EntityTypeIntrospection.class),
                 getInstance(EntityAggregation.class),
                 getInstance(FluentConditions.class),
-                domainTreeEnhancer,
-                new GraphQLCommon(DEFAULT_MAX_QUERY_DEPTH, maxPageCapacity));
+                new GraphQLCommon(DEFAULT_MAX_QUERY_DEPTH, maxPageCapacity),
+                getInstance(IDomainManager.class),
+                getInstance(IUserProvider.class));
     }
 
     @Test

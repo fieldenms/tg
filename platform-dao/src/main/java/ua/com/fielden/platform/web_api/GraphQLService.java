@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web_api;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import graphql.ExecutionInput;
 import graphql.analysis.MaxQueryDepthInstrumentation;
 import graphql.schema.*;
@@ -12,12 +11,14 @@ import graphql.util.TraverserContext;
 import graphql.validation.QueryComplexityLimits;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domaintree.IDomainManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
@@ -94,8 +95,9 @@ public class GraphQLService implements IWebApi {
             final EntityTypeIntrospection entityTypeIntrospection,
             final EntityAggregation entityAggregation,
             final FluentConditions fluentConditions,
-            final @Named(WEB_API_DOMAIN_TREE_ENHANCER) IDomainTreeEnhancer domainTreeEnhancer,
-            final GraphQLCommon common)
+            final GraphQLCommon common,
+            final IDomainManager domainManager,
+            final IUserProvider userProvider)
     {
         try {
             LOGGER.info("GraphQL Web API...");
@@ -115,7 +117,8 @@ public class GraphQLService implements IWebApi {
                                                   codeRegistryBuilder,
                                                   authorisationModel,
                                                   securityTokenProvider,
-                                                  domainTreeEnhancer);
+                                                  domainManager,
+                                                  userProvider);
 
             LOGGER.info("\tBuilding field visibility...");
             codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisationModel, queryableTypes, securityTokenProvider));
@@ -309,7 +312,8 @@ public class GraphQLService implements IWebApi {
             final GraphQLCodeRegistry.Builder codeRegistryBuilder,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
-            final IDomainTreeEnhancer domainTreeEnhancer)
+            final IDomainManager domainManager,
+            final IUserProvider userProvider)
     {
         final Builder queryTypeBuilder = newObject().name(QUERY_TYPE_NAME).description("Query following **entities** represented as GraphQL root fields:");
         entityTypes.forEach(entityType -> {
@@ -327,8 +331,9 @@ public class GraphQLService implements IWebApi {
                                                                     coFinder,
                                                                     authorisationModel,
                                                                     securityTokenProvider,
-                                                                    domainTreeEnhancer,
-                                                                    common));
+                                                                    common,
+                                                                    domainManager,
+                                                                    userProvider));
         });
         return queryTypeBuilder.build();
     }

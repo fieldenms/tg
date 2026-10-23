@@ -14,11 +14,11 @@ import io.modelcontextprotocol.spec.McpSchema.ReadResourceResult;
 import io.modelcontextprotocol.spec.McpSchema.TextResourceContents;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.IDomainManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
@@ -53,7 +53,6 @@ import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authorisePropertyReading;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.utils.MiscUtilities.readResource;
-import static ua.com.fielden.platform.web_api.IWebApi.WEB_API_DOMAIN_TREE_ENHANCER;
 
 /// MCP server that exposes a TG system to 3rd-party AI systems.
 ///
@@ -124,7 +123,7 @@ public class TgMcpServer {
             final McpResourceFactory mcpResourceFactory,
             final IUserProvider userProvider,
             final IApplicationDomainProvider appDomainProvider,
-            final @Named(WEB_API_DOMAIN_TREE_ENHANCER) IDomainTreeEnhancer domainTreeEnhancer,
+            final IDomainManager domainManager,
             final EqlQueryTransformer eqlTransformer,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
@@ -145,8 +144,8 @@ public class TgMcpServer {
                                       .build())
                 .resources(queryGuideResource())
                 .toolCall(executeQueryTool(), this::handleExecuteQuery)
-                .toolCall(addCalculatedPropertyTool(), new AddCalculatedProperty(appDomainProvider, domainTreeEnhancer, eqlTransformer, userProvider, authorisationModel, securityTokenProvider, domainMetadata))
-                .toolCall(removeCalculatedPropertyTool(), new RemoveCalculatedProperty(appDomainProvider, domainTreeEnhancer))
+                .toolCall(addCalculatedPropertyTool(), new AddCalculatedProperty(appDomainProvider, domainManager, eqlTransformer, userProvider, authorisationModel, securityTokenProvider, domainMetadata))
+                .toolCall(removeCalculatedPropertyTool(), new RemoveCalculatedProperty(appDomainProvider, domainManager))
                 .build();
         // After the builder is finished, the server will start.
     }
@@ -241,10 +240,14 @@ public class TgMcpServer {
                 .build();
     }
 
+    private @Nullable User getUser(final McpTransportContext context) {
+        return (User) context.get(McpResource.USER_KEY);
+    }
+
     /// Sets the current user on this thread from [McpTransportContext].
     ///
     private void setCurrentUser(final McpTransportContext context) {
-        final var user = (User) context.get(McpResource.USER_KEY);
+        final var user = getUser(context);
         if (user != null) {
             userProvider.setUser(user);
         }
@@ -290,7 +293,7 @@ public class TgMcpServer {
     class AddCalculatedProperty implements BiFunction<McpTransportContext, CallToolRequest, CallToolResult> {
 
         private final IApplicationDomainProvider appDomainProvider;
-        private final IDomainTreeEnhancer domainTreeEnhancer;
+        private final IDomainManager domainManager;
         private final EqlQueryTransformer eqlTransformer;
         private final IUserProvider userProvider;
         private final IAuthorisationModel authorisationModel;
@@ -299,7 +302,7 @@ public class TgMcpServer {
 
         AddCalculatedProperty(
                 final IApplicationDomainProvider appDomainProvider,
-                final IDomainTreeEnhancer domainTreeEnhancer,
+                final IDomainManager domainManager,
                 final EqlQueryTransformer eqlTransformer,
                 final IUserProvider userProvider,
                 final IAuthorisationModel authorisationModel,
@@ -307,7 +310,7 @@ public class TgMcpServer {
                 final IDomainMetadata domainMetadata)
         {
             this.appDomainProvider = appDomainProvider;
-            this.domainTreeEnhancer = domainTreeEnhancer;
+            this.domainManager = domainManager;
             this.eqlTransformer = eqlTransformer;
             this.userProvider = userProvider;
             this.authorisationModel = authorisationModel;
@@ -329,6 +332,13 @@ public class TgMcpServer {
             }
 
             setCurrentUser(context);
+
+            final var user = getUser(context);
+            if (user == null) {
+                LOGGER.error("Current user is missing.");
+                return errorResult("Current user is missing.");
+            }
+            final var domainTreeEnhancer = domainManager.domainTreeEnhancer(user);
 
             final var maybeEntityType = appDomainProvider.entityTypes().stream()
                     .filter(ty -> ty.getSimpleName().equals(type))
@@ -370,7 +380,7 @@ public class TgMcpServer {
                 validationResult = validateExpression(managedType, name);
             } catch (final Throwable ex) {
                 LOGGER.error(() -> format("Expression validation failed while adding calculated property [%s.%s].", entityType.getSimpleName(), name), ex);
-                removeAddedProperty(entityType, managedType, name).ifPresent(ex::addSuppressed);
+                removeAddedProperty(domainTreeEnhancer, entityType, managedType, name).ifPresent(ex::addSuppressed);
                 final var msg = """
                                 Error adding calculated property [%s.%s] with expression:
                                 %s
@@ -379,7 +389,7 @@ public class TgMcpServer {
             }
 
             if (!validationResult.isSuccessful()) {
-                removeAddedProperty(entityType, managedType, name);
+                removeAddedProperty(domainTreeEnhancer, entityType, managedType, name);
                 return errorResult("""
                                    Error adding calculated property [%s.%s] with expression:
                                    %s
@@ -391,7 +401,7 @@ public class TgMcpServer {
                 webApi.propertiesAdded(managedType, Set.of(name));
             } catch (final Throwable ex) {
                 LOGGER.error(() -> format("Web API failed while adding calculated property [%s.%s].", entityType.getSimpleName(), name), ex);
-                removeAddedProperty(entityType, managedType, name).ifPresentOrElse(
+                removeAddedProperty(domainTreeEnhancer, entityType, managedType, name).ifPresentOrElse(
                         ex::addSuppressed,
                         () -> LOGGER.info(() -> format("Rollback successful: removed calculated property [%s.%s] from the Web API.", entityType.getSimpleName(), name)));
                 final var msg = """
@@ -407,6 +417,7 @@ public class TgMcpServer {
         }
 
         private Optional<Exception> removeAddedProperty(
+                final IDomainTreeEnhancer domainTreeEnhancer,
                 final Class<? extends AbstractEntity<?>> entityType,
                 final Class<? extends AbstractEntity<?>> managedType,
                 final CharSequence property)
@@ -478,14 +489,14 @@ public class TgMcpServer {
     class RemoveCalculatedProperty implements BiFunction<McpTransportContext, CallToolRequest, CallToolResult> {
 
         private final IApplicationDomainProvider appDomainProvider;
-        private final IDomainTreeEnhancer domainTreeEnhancer;
+        private final IDomainManager domainManager;
 
         RemoveCalculatedProperty(
                 final IApplicationDomainProvider appDomainProvider,
-                final IDomainTreeEnhancer domainTreeEnhancer)
+                final IDomainManager domainManager)
         {
             this.appDomainProvider = appDomainProvider;
-            this.domainTreeEnhancer = domainTreeEnhancer;
+            this.domainManager = domainManager;
         }
 
         @Override
@@ -499,6 +510,13 @@ public class TgMcpServer {
             }
 
             setCurrentUser(context);
+
+            final var user = getUser(context);
+            if (user == null) {
+                LOGGER.error("Current user is missing.");
+                return errorResult("Current user is missing.");
+            }
+            final var domainTreeEnhancer = domainManager.domainTreeEnhancer(user);
 
             final var maybeEntityType = appDomainProvider.entityTypes().stream()
                     .filter(ty -> ty.getSimpleName().equals(type))
