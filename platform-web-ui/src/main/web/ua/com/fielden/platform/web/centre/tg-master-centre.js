@@ -63,7 +63,9 @@ const template = html`
  *
  * The centre is that of menu item type 'mi-type', registered in the application, which is loaded from '/centre_ui/<mi-type>' as element 'tg-<simple name of mi-type>-centre'.
  * Its context includes the master entity, with the changes that are not yet saved, so that its query enhancer with 'context().withMasterEntity()' can restrict the query by the master entity.
- * The centre runs once the master entity is available, and runs again each time the master entity changes, such as after a change of a property, which is validated by the master.
+ * The centre runs whenever the master asks the component to refresh, as described in 'TgMasterComponentBehavior':
+ * when the master retrieves the entity, as when it is opened or its changes are cancelled, when it saves the entity,
+ * and after each validation for which the refresh condition declared with 'refreshWhen' in the Entity Master DSL holds.
  * It does not run while the component is blocked.
  *
  * The centre has its own uuid, so that its actions do not refresh the master.
@@ -99,7 +101,7 @@ Polymer({
 
         /**
          * The function that provides the master entity as the context of the embedded centre, which the centre calls when it runs.
-         * A new function is assigned for every change of the master entity, which makes the centre run again.
+         * A new function is assigned for every refresh, which loads the centre the first time and runs it again afterwards.
          */
         _getMasterEntity: {
             type: Function
@@ -120,10 +122,6 @@ Polymer({
             value: false
         }
     },
-
-    observers: [
-        '_contextChanged(entity, createContextHolder, blocked)'
-    ],
 
     ready: function () {
         this._hasPropertyActions = this._propertyActions.length > 0;
@@ -164,9 +162,7 @@ Polymer({
     /**
      * Provides the current master entity as the context of the centre, which loads the centre the first time and runs it again afterwards.
      */
-    _contextChanged: function (entity, createContextHolder, blocked) {
-        if (entity && createContextHolder && !blocked) {
-            this._getMasterEntity = () => this.masterEntityContext();
-        }
+    refresh: function () {
+        this._getMasterEntity = () => this.masterEntityContext();
     }
 });

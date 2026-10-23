@@ -143,6 +143,13 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
+         * The modified properties holder of the entity as it was last received, which tells the properties that the user changed since then.
+         */
+        _receivedModifiedPropertiesHolder: {
+            type: Object
+        },
+
+        /**
          * Returns true in case where binding entity has modified properties, false otherwise.
          *
          * Please, note that this property recomputes and caches manually strictly when _currBindingEntity and _originalBindingEntity changes (_postEntityReceived method).
@@ -725,6 +732,7 @@ export const TgEntityBinderBehavior = {
                 this._continuations = {};
             }
             const newBindingEntity = this._postEntityReceived(validatedEntity, false, customObject);
+            this._postValidatedDefaultForDescendants(validatedEntity, newBindingEntity, customObject);
             // custom external action
             if (this.postValidated) {
                 this.postValidated(validatedEntity, newBindingEntity, customObject);
@@ -902,6 +910,12 @@ export const TgEntityBinderBehavior = {
     _postRetrievedDefaultForDescendants: function (entity, newBindingEntity, customObject) { },
 
     //////////////////////////////////////// VALIDATION ////////////////////////////////////////
+    /**
+     * This callback is intended to be invoked just before the custom 'postValidated' callback.
+     * Override it in descendants to provide some custom behaviour.
+     */
+    _postValidatedDefaultForDescendants: function (entity, newBindingEntity, customObject) { },
+
     _reset: function (modifiedPropertiesHolder) {
         delete modifiedPropertiesHolder['@modified']; // remove it not to serialise this purely technical property
         return modifiedPropertiesHolder;
@@ -1044,7 +1058,8 @@ export const TgEntityBinderBehavior = {
         self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder, self._currBindingEntity);
         self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity, isEntityStale ? self._originalBindingEntity : null);
 
-        self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
+        self._receivedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+        self._bindingEntityModified = self._hasModified(self._receivedModifiedPropertiesHolder);
         // console.debug('_bindingEntityModified = ', self._bindingEntityModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
         self._bindingEntityNotPersistentOrNotPersistedOrModified = !self._currBindingEntity.type().isPersistent() ||
             !self._currBindingEntity.isPersisted() ||

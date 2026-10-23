@@ -412,6 +412,19 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
+         * The numbers of times the master has asked its components to refresh, from which the 'refresh-count' of each component is calculated by '_componentRefreshCount':
+         * 'all' for all components, which are asked whenever the entity is retrieved or saved, and 'byKey' for the components whose refresh conditions held after a validation,
+         * keyed as the property action indices are.
+         * A new object is assigned on every change, so that the bindings of the components are updated.
+         */
+        _componentRefreshes: {
+            type: Object,
+            value: function () {
+                return { all: 0, byKey: {} };
+            }
+        },
+
+        /**
          * A dialog instance that is used for displaying entity (functional and not) masters as part of master actions logic.
          * This dialog is of type tg-custom-action-dialog and gets created on demand when needed i.e. on first _showDialog invocation.
          * It is appended to document.body just before dialog opening and is removed just after dialog closing.
@@ -679,6 +692,7 @@ const TgEntityMasterBehaviorImpl = {
                 } else { // non-persistent entity has been saved -- _originallyProducedEntity should be updated by newly returned instance
                     this._originallyProducedEntity = potentiallySavedOrNewEntity;
                 }
+                this._refreshAllComponents();
             }
 
             // custom external action
@@ -1469,14 +1483,60 @@ const TgEntityMasterBehaviorImpl = {
 
     //////////////////////////////////////// VALIDATION ////////////////////////////////////////
     /**
-     * Overridden in tg-entity-master to use originallyProducedEntity which is not applicable in centre's selection criteria.
+     * Overridden in tg-entity-master to use originallyProducedEntity which is not applicable in centre's selection criteria,
+     * and to provide the properties changed by the user as '@@changedProps', for the refresh conditions of components.
      */
     _validateForDescendants: function (preparedModifHolder) {
+        preparedModifHolder['@@changedProps'] = this._changedProps(preparedModifHolder);
         return this._validator().validate(this._originallyProducedEntity, preparedModifHolder);
     },
 
     /**
-     * Overridden to populate '_originallyProducedEntity' in case where 'new' entity arrives.
+     * Returns the names of the properties whose values in 'modifHolder' differ from those of the entity as it was last received, which are the properties changed by the user since then.
+     * The server evaluates the refresh conditions of components with them, as it does not keep the state of the entity between validations.
+     */
+    _changedProps: function (modifHolder) {
+        const received = this._receivedModifiedPropertiesHolder;
+        const differ = (curr, prev) => ['val', 'valId', 'activeProperty'].some(key => !this._reflector().equalsEx(curr[key], prev[key]));
+        return Object.keys(modifHolder).filter(name => !name.startsWith('@') && name !== 'id' && name !== 'version' && differ(modifHolder[name], received[name] || {}));
+    },
+
+    /**
+     * Overridden to refresh the components whose refresh conditions held for the validated entity, whose keys the server returns as 'refreshedComponents'.
+     */
+    _postValidatedDefaultForDescendants: function (entity, bindingEntity, customObject) {
+        TgEntityBinderBehavior._postValidatedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
+        this._refreshComponents(customObject.refreshedComponents || []);
+    },
+
+    /**
+     * Asks all components to refresh, as when the entity is retrieved or saved.
+     */
+    _refreshAllComponents: function () {
+        this._componentRefreshes = { all: this._componentRefreshes.all + 1, byKey: this._componentRefreshes.byKey };
+    },
+
+    /**
+     * Asks the components with 'keys' to refresh.
+     */
+    _refreshComponents: function (keys) {
+        if (keys.length > 0) {
+            const byKey = { ...this._componentRefreshes.byKey };
+            keys.forEach(key => byKey[key] = (byKey[key] || 0) + 1);
+            this._componentRefreshes = { all: this._componentRefreshes.all, byKey };
+        }
+    },
+
+    /**
+     * Returns the number of times the master has asked the component with 'key' to refresh, which changes every time the master asks again.
+     * The key is looked up as a whole, as for '_propertyActionIndex'.
+     */
+    _componentRefreshCount: function (componentRefreshes, key) {
+        return componentRefreshes.all + (componentRefreshes.byKey[key] || 0);
+    },
+
+    /**
+     * Overridden to populate '_originallyProducedEntity' in case where 'new' entity arrives, and to refresh all components.
      */
     _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
         TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
@@ -1486,6 +1546,7 @@ const TgEntityMasterBehaviorImpl = {
         } else {
             this._originallyProducedEntity = null;
         }
+        this._refreshAllComponents();
     },
 
     //////////////////////////////////////// SAVING ////////////////////////////////////////

@@ -88,6 +88,12 @@ const componentStyles = `
  * The component receives the context of the master through `createContextHolder`, and `masterEntityContext()` provides the master entity, including its unsaved changes,
  * as the context of what the component runs, such as `getMasterEntity` of an embedded centre.
  *
+ * `entity` follows every change of the master entity, including each validation of a change made by the user, which suits a component that only displays values of the entity.
+ * A component that runs something for the master entity, such as an embedded centre, does so in `refresh()`, which the master asks for through `refreshCount`:
+ * whenever the master retrieves the entity, as when it is opened or its changes are cancelled, whenever it saves the entity,
+ * and after each validation for which the refresh condition declared for the component with `refreshWhen` in the Entity Master DSL holds.
+ * A refresh asked for while the component is blocked takes place once it is unblocked, and refreshes asked for at once, such as when a save also unblocks the component, take place once.
+ *
  * The behaviour is used with `behaviors: [...]` for an element declared with `Polymer({...})`, or with `mixinBehaviors([...], PolymerElement)` for a class-based element.
  */
 export const TgMasterComponentBehavior = {
@@ -160,6 +166,13 @@ export const TgMasterComponentBehavior = {
         },
 
         /**
+         * The number of times the master has asked the component to refresh, which changes every time the master asks again.
+         */
+        refreshCount: {
+            type: Number
+        },
+
+        /**
          * Indicates whether the component is blocked while the entity is unsaved.
          */
         blockWhenUnsaved: {
@@ -205,6 +218,7 @@ export const TgMasterComponentBehavior = {
 
     observers: [
         '_updateBlocking(blockWhenUnsaved, entity, entityModified, entityEdited)',
+        '_refreshRequested(refreshCount, blocked)',
         '_updateHeight(height, minHeight, entityType)'
     ],
 
@@ -231,6 +245,28 @@ export const TgMasterComponentBehavior = {
      */
     masterEntityContext: function () {
         return this.createContextHolder(null, null, 'true', null, null)['masterEntity'];
+    },
+
+    /**
+     * Refreshes the component for the master entity, as the master asks; does nothing by default.
+     * A component that runs something for the master entity, such as an embedded centre, implements it.
+     */
+    refresh: function () {
+    },
+
+    /**
+     * Refreshes the component when the master asks for a refresh that has not taken place yet, unless the component is blocked, which defers the refresh until it is unblocked.
+     * The refresh takes place at microtask timing, so that refreshes asked for at once take place once.
+     */
+    _refreshRequested: function (refreshCount, blocked) {
+        if (refreshCount && !blocked && refreshCount !== this._refreshedCount) {
+            this.debounce('tg-master-component-refresh', () => {
+                if (!this.blocked) {
+                    this._refreshedCount = this.refreshCount;
+                    this.refresh();
+                }
+            });
+        }
     },
 
     /**
