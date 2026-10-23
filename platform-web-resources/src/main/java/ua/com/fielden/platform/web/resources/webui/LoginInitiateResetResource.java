@@ -42,8 +42,9 @@ import static ua.com.fielden.platform.web.resources.webui.FileResource.createRep
 /// A web resource to initiate user login recovery procedure.
 ///
 /// A password reset is initiated at most once per user within the cooldown of [PasswordResetCooldown].
-/// A reset link that remains valid for at least [#MIN_REUSED_LINK_VALIDITY_IN_MINUTES] is sent again instead of being replaced,
+/// A reset link that remains valid for at least [#MIN_REUSED_LINK_VALIDITY_IN_MINUTES], and no longer than a new link would be, is sent again instead of being replaced,
 /// so that repeated requests do not invalidate a link that the user has received.
+/// A link with a longer validity, such as the activation link for a new user, is replaced.
 /// Requests for a user in cooldown receive the same response, and the same response-time adjustment, as requests for an unknown user,
 /// so that the response does not disclose whether an account exists.
 ///
@@ -138,7 +139,7 @@ public class LoginInitiateResetResource extends AbstractWebResource {
     record PasswordResetLink(UserSecret secret, long validityInMinutes) {}
 
     /// Returns a password reset link for the user identified by `usernameOrEmail`, unless no such user can reset their password, or the user is in cooldown.
-    /// The UUID already assigned to the user is kept if it remains valid for at least [#MIN_REUSED_LINK_VALIDITY_IN_MINUTES];
+    /// The UUID already assigned to the user is kept if it remains valid for at least [#MIN_REUSED_LINK_VALIDITY_IN_MINUTES], and for no longer than [UserSecretCo#RESET_UUID_EXPIRATION_IN_MINUTES];
     /// otherwise, a new UUID that is valid for [UserSecretCo#RESET_UUID_EXPIRATION_IN_MINUTES] is assigned.
     ///
     /// The time of the request is taken from the server clock, `constants.serverNow()`, against which [LoginCompleteResetResource] validates reset links.

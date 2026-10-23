@@ -73,6 +73,18 @@ public class PasswordResetLinkExpirationTest extends AbstractWebResourceWithDaoT
         assertEquals(MIN_REUSED_LINK_VALIDITY_IN_MINUTES, link.validityInMinutes());
     }
 
+    @Test
+    public void reset_link_requested_by_a_new_user_replaces_their_activation_link_with_one_valid_for_the_reset_period() {
+        final UserSecretCo coUserSecret = co$(UserSecret.class);
+        final String activationUuid = coUserSecret.findByUsername("NEW_USER").orElseThrow().getResetUuid();
+        assertNotNull("Invalid initial conditions: a new user should have an activation link.", activationUuid);
+
+        final PasswordResetLink link = reset("NEW_USER").orElseThrow();
+        assertNotEquals("The activation link should not be sent again.", activationUuid, link.secret().getResetUuid());
+        assertEquals(RESET_UUID_EXPIRATION_IN_MINUTES, link.validityInMinutes());
+        assertFalse(isResetUuidValid(co$User(), activationUuid, dates));
+    }
+
     /// Requests a reset link from `requestTimeZone`, and asserts that it is valid for [UserSecretCo#RESET_UUID_EXPIRATION_IN_MINUTES] by the server clock, and expires after that.
     ///
     private void assertResetLinkIsValidForTheFullPeriod(final DateTimeZone requestTimeZone) {
@@ -132,6 +144,9 @@ public class PasswordResetLinkExpirationTest extends AbstractWebResourceWithDaoT
         // Saving a new user assigns a reset UUID for the initial password, which this user is assumed to have used.
         final UserSecretCo coUserSecret = co$(UserSecret.class);
         coUserSecret.save(coUserSecret.findByUsername("USER1").orElseThrow().setResetUuid(null));
+
+        // A new user, who has not used their activation link, which remains valid for 24 hours.
+        co$User().save(new_(User.class, "NEW_USER").setBase(true).setEmail("NEW_USER@company.com").setActive(true));
     }
 
 }

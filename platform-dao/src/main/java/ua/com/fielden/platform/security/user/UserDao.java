@@ -463,7 +463,9 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public UserSecret findOrAssignPasswordResetUuid(final User user, final Date validUntil, final Date expirationTime) {
         final UserSecretCo co$UserSecret = co$(UserSecret.class);
         final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
-        final boolean keepAssigned = resetUuidExpirationTime(secret.getResetUuid()).filter(validUntil::before).isPresent();
+        final boolean keepAssigned = resetUuidExpirationTime(secret.getResetUuid())
+                .filter(assignedExpirationTime -> validUntil.before(assignedExpirationTime) && !assignedExpirationTime.after(expirationTime))
+                .isPresent();
         return keepAssigned ? secret : assignPasswordResetUuid(user, secret, expirationTime, co$UserSecret);
     }
 

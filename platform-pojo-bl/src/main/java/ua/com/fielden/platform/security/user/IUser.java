@@ -84,12 +84,13 @@ public interface IUser extends IEntityDao<User>, ISaveWithFetch<User> {
     UserSecret assignPasswordResetUuid(final User user, final Date expirationTime);
 
     /// Returns the secret of `user` with a password reset UUID that remains valid at least until `validUntil`.
-    /// The UUID already assigned to `user` is kept if it does not expire before `validUntil`, so that a link sent with it earlier remains usable.
+    /// The UUID already assigned to `user` is kept if it does not expire before `validUntil`, so that a link sent with it earlier remains usable,
+    /// and if it does not expire after `expirationTime`, so that a UUID with a longer validity, such as that of the activation link for a new user, is not sent again.
     /// Otherwise, a new UUID that expires at `expirationTime` is assigned, as by [#assignPasswordResetUuid(User, Date)].
     ///
     /// @param user           a user, such as one found by [#findUserForPasswordReset(String)]
     /// @param validUntil     the moment in time until which an already assigned UUID needs to remain valid to be kept
-    /// @param expirationTime the moment in time at which a newly generated UUID will become expired
+    /// @param expirationTime the moment in time at which a newly generated UUID will become expired, and after which an already assigned UUID must not expire to be kept
     ///
     UserSecret findOrAssignPasswordResetUuid(final User user, final Date validUntil, final Date expirationTime);
 

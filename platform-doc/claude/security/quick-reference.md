@@ -135,7 +135,8 @@ A locked-out user regains access when an administrator activates the account aga
 
 **Password reset** — `LoginInitiateResetResource` initiates a reset at most once per user within `PasswordResetCooldown.COOLDOWN_IN_MINUTES` (5), keyed by user ID, so the cooldown applies whether the user is identified by username or email.
 A reset link remains valid for `UserSecretCo.RESET_UUID_EXPIRATION_IN_MINUTES` (15).
-A link that remains valid for at least `LoginInitiateResetResource.MIN_REUSED_LINK_VALIDITY_IN_MINUTES` (5) is sent again instead of being replaced, so that repeated requests do not invalidate a link the user has received; its expiry is not extended.
+A link that remains valid for at least `LoginInitiateResetResource.MIN_REUSED_LINK_VALIDITY_IN_MINUTES` (5), and no longer than a new link would be, is sent again instead of being replaced, so that repeated requests do not invalidate a link the user has received; its expiry is not extended.
+A link with a longer validity, such as the 24-hour activation link for a new user, is replaced with a new reset link, rather than sent again in reply to a reset request.
 Requests for a user in cooldown and for an unknown user receive the same response and the same response-time adjustment, so that the response does not disclose whether an account exists.
 Expiry of reset links and user sessions is computed with `serverNow()`, not `now()` (see gotcha 11 in `CLAUDE.md`).
 

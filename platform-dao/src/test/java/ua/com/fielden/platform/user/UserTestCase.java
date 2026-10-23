@@ -443,6 +443,20 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    public void password_reset_UUID_that_expires_after_the_expiration_time_of_a_new_one_is_replaced() {
+        final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        consts.setNow(dateTime("2016-04-05 14:00:00"));
+        final User user = coUser.findUserForPasswordReset("USER3").orElseThrow();
+        // Such as the UUID of the activation link for a new user, which is valid for 24 hours.
+        final String uuid = coUser.assignPasswordResetUuid(user, consts.now().plusHours(24).toDate()).getResetUuid();
+
+        final String newUuid = coUser.findOrAssignPasswordResetUuid(user, consts.now().toDate(), expirationTime()).getResetUuid();
+        assertNotEquals(uuid, newUuid);
+        assertFalse(coUser.findUserByResetUuid(uuid).isPresent());
+        assertEquals(expirationTime(), resetUuidExpirationTime(newUuid).orElseThrow());
+    }
+
+    @Test
     public void password_reset_for_non_existing_user_fails() {
         final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         final String now = "2016-05-19 11:02:00";
