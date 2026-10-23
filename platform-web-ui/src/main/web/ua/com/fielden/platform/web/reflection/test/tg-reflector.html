@@ -2169,7 +2169,18 @@
 
             test('error details: messages of an exception and its causes are rendered', function (done) {
                 const ex = { message: 'Failure.', cause: { message: 'Cause.', cause: { message: 'Cause of cause.', cause: null, suppressed: [] }, suppressed: [] }, suppressed: [] };
-                assert.strictEqual(reflector.stackTrace(ex), '<b>Failure.</b><br><br>Cause(s):<br><ol><li>Cause.</li><li>Cause of cause.</li></ol></ol>');
+                assert.strictEqual(reflector.stackTrace(ex), '<b>Failure.</b><br><br>Cause(s):<br><ol><li>Cause.</li><li>Cause of cause.</li></ol>');
+                done();
+            });
+
+            test('error details: a cause without a serialised cause of its own, such as a Result, ends the list of causes', function (done) {
+                const ex = { message: 'Failure.', cause: { message: 'Result as cause.' }, suppressed: [] };
+                assert.strictEqual(reflector.stackTrace(ex), '<b>Failure.</b><br><br>Cause(s):<br><ol><li>Result as cause.</li></ol>');
+                done();
+            });
+
+            test('error details: an exception without causes is rendered without a list of causes', function (done) {
+                assert.strictEqual(reflector.stackTrace({ message: 'Failure.', cause: null, suppressed: [] }), '<b>Failure.</b>');
                 done();
             });
 

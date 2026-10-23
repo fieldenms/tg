@@ -1643,16 +1643,16 @@ export const TgReflector = Polymer({
      * Stack traces are not serialised to the client; they are logged on the server.
      */
     stackTrace: function (ex) {
-        // collects error cause by traversing the stack into an ordered list
+        // collects the items of an ordered list of error causes by traversing the chain of causes; the caller opens and closes the list
         const causeCollector = function (ex, causes) {
             if (ex) {
                 causes = causes + "<li>" + resultMessages(ex).extended + "</li>";
                 printMessage(ex);
-                if (ex.cause !== null) {
+                if (ex.cause) {
                     causes = causeCollector(ex.cause, causes);
                 }
             }
-            return causes + "</ol>";
+            return causes;
         };
 
         // outputs the exception message into the console as warning
@@ -1666,7 +1666,7 @@ export const TgReflector = Polymer({
             // Result 'cause' is not serialised and that's why it is 'undefined'.
             // Such Results (e.g. NeedMoreDataException) are rendered without causes.
             if (ex.cause) {
-                causes = causeCollector(ex.cause, causes + "<br><br>Cause(s):<br><ol>")
+                causes = causeCollector(ex.cause, causes + "<br><br>Cause(s):<br><ol>") + "</ol>";
             }
             return causes;
         }
