@@ -43,17 +43,43 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
         this.tgJackson = tgJackson;
     }
 
+    /// Writes `result`, sharing the scope of written throwables with [ThrowableJsonSerialiser] (see [ThrowableJsonSerialiser.Scope]).
+    ///
+    /// A [Result] serialised on its own opens the scope for writing its exception.
+    /// A [Result] that is a cause or a suppressed throwable of another throwable is written in the scope of that throwable.
+    /// If it has been written already, it is written as `null` as a cause, and is omitted by [ThrowableJsonSerialiser] as a suppressed throwable.
+    ///
     @Override
     public void serialize(final Result result, final JsonGenerator generator, final SerializerProvider provider) throws IOException {
+        final var scope = ThrowableJsonSerialiser.Scope.of(provider);
+        if (scope.isOpen()) {
+            if (scope.register(result)) {
+                writeResult(result, generator, provider);
+            } else {
+                generator.writeNull();
+            }
+        } else {
+            scope.open(result);
+            try {
+                writeResult(result, generator, provider);
+            } finally {
+                scope.close();
+            }
+        }
+    }
+
+    private void writeResult(final Result result, final JsonGenerator generator, final SerializerProvider provider) throws IOException {
         generator.writeStartObject();
-        writeResultData(result, generator);
+        writeResultData(result, generator, provider);
         generator.writeEndObject();
     }
 
     /// Writes a [Result] data into already started object (see `generator.writeStartObject()`).
     /// Override this method to serialise [Result] type descendants with additional data.
     ///
-    protected void writeResultData(final Result result, final JsonGenerator generator) throws IOException {
+    /// The exception of `result` is written with `provider`, which carries the scope of written throwables.
+    ///
+    protected void writeResultData(final Result result, final JsonGenerator generator, final SerializerProvider provider) throws IOException {
         generator.writeFieldName("@resultType");
         generator.writeObject(result.getClass().getName());
         generator.writeFieldName(Result.MESSAGE);
@@ -119,12 +145,13 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
             }
 
             generator.writeFieldName(Result.INSTANCE);
+            // Written with a provider of its own, so that the instance is outside the scope of written throwables (see ThrowableJsonSerialiser.Scope).
             generator.writeObject(result.getInstance());
         }
 
         if (result.getEx() != null) {
             generator.writeFieldName(Result.EX);
-            generator.writeObject(result.getEx());
+            provider.defaultSerializeValue(result.getEx(), generator);
         }
     }
     

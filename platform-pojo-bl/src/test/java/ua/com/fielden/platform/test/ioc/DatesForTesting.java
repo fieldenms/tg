@@ -42,6 +42,9 @@ public class DatesForTesting implements IDates {
         return getNow();
     }
 
+    /// Returns the modelled time, which is the current time of the server: the value of a time supplier, if one is provided, otherwise the time set by [#setNow(DateTime)], otherwise the system time.
+    /// [#serverNow()] returns it as is, while [#now()] derives from it, taking a modelled request time zone into account.
+    ///
     public DateTime getNow() {
         if (timeSupplier != null) {
             return timeSupplier.get();
@@ -52,6 +55,9 @@ public class DatesForTesting implements IDates {
         return new DateTime();
     }
 
+    /// Sets the modelled time, which is the current time of the server (see [#getNow()]), and removes a time supplier, if one is provided.
+    /// A modelled request time zone remains in effect.
+    ///
     public void setNow(final DateTime now) {
         this.timeSupplier = null;
         this.now = now;

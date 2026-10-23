@@ -26,8 +26,9 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import java.security.SignatureException;
 import java.sql.PreparedStatement;
 import java.util.Date;
-import java.util.Map.Entry;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -38,6 +39,10 @@ import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import static ua.com.fielden.platform.security.session.Authenticator.mkToken;
 
 /// DAO implementation for companion object {@link IUserSession}.
+///
+/// Session times — the expiry time and the time of last access — are instants of the server clock, `IUniversalConstants.serverNow()`.
+/// `IUniversalConstants.now()` is not used, as in the independent time-zone mode it shifts the instant by the offset of the request time-zone,
+/// whereas sessions are established, validated and cleared during requests from different time-zones, and outside of requests.
 ///
 @EntityType(UserSession.class)
 public class UserSessionDao extends CommonEntityDao<UserSession> implements IUserSession {
@@ -81,22 +86,20 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     @Override
     @SessionRequired
     public void clearSession(final UserSession session) {
-        cache.invalidate(findAuthenticator(session));
+        invalidateCache(Set.of(session.getId()));
         defaultDelete(session);
     }
     
     @Override
     @SessionRequired
     public int clearAll(final User user) {
-        final EntityResultQueryModel<UserSession> q = select(UserSession.class).where().prop("user").eq().val(user).model();
+        final EntityResultQueryModel<UserSession> query = select(UserSession.class).where().prop("user").eq().val(user).model();
 
-        final int count = count(q);
+        final int count = count(query);
         if (count > 0) {
             logger.info(() -> "Removing [%s] sessions for user [%s].".formatted(count, user.getKey()));
-            
-            invalidateCache(q);
-            
-            defaultBatchDelete(q);
+            invalidateCache(query);
+            defaultBatchDelete(query);
         }
         return count;
     }
@@ -145,7 +148,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                     select(UserSession.class)
                             .where()
                             .prop("user").eq().val(user)
-                            .and().prop("expiryTime").lt().now()
+                            .and().prop("expiryTime").lt().val(constants.serverNow().toDate())
                             .model();
             
             invalidateCache(query);
@@ -162,7 +165,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         final EntityResultQueryModel<UserSession> query =
                 select(UserSession.class)
                         .where()
-                        .prop("expiryTime").lt().now()
+                        .prop("expiryTime").lt().val(constants.serverNow().toDate())
                         .model();
         
         invalidateCache(query);
@@ -217,8 +220,26 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     /// @param q  a query for retrieving user session to be removed from cache.
     ///
     private void invalidateCache(final EntityResultQueryModel<UserSession> q) {
-        stream(from(q).with(fetchAll(UserSession.class)).model())
-        .forEach(session -> cache.invalidate(findAuthenticator(session)));
+        // Without cached sessions, there is nothing to remove, and the query is not needed.
+        if (cache.size() == 0) {
+            return;
+        }
+        // Lightweight instances keep the memory footprint small, as the query may match many sessions (e.g., when clearing expired sessions of all users).
+        final var qem = from(q).with(fetchIdOnly(UserSession.class)).lightweight().model();
+        final Set<Long> ids = new HashSet<>();
+        try (final var stream = stream(qem, 100)) {
+            stream.map(UserSession::getId).forEach(ids::add);
+        }
+        invalidateCache(ids);
+    }
+
+    /// Removes the sessions with `sessionIds` from cache under every authenticator they are cached for.
+    /// A session that replaces another one is cached for the authenticators of both (see [#newSessionToReplaceOld(User, boolean, Optional, String)]).
+    ///
+    private void invalidateCache(final Set<Long> sessionIds) {
+        if (!sessionIds.isEmpty()) {
+            cache.invalidateAll(Maps.filterValues(cache.asMap(), session -> sessionIds.contains(session.getId())).keySet());
+        }
     }
 
     /// Removes all sessions that are associated with users that have been associated with the provided series ID. There should at most be only one such user (but potentially
@@ -362,7 +383,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         // The time from the retrieved session should be used.
         // In the case of RSO, expired sessions should be invalidated, and the request denied.
         // In the case of SSO (SID is present), expired sessions can still be re-validated by attempting to refresh the SSO session via the silent flow.
-        final boolean sessionExpired = session.getExpiryTime().before(now().toDate());
+        final boolean sessionExpired = session.getExpiryTime().before(constants.serverNow().toDate());
         final boolean sessionRso = session.getSid() == null;
         if (sessionExpired && sessionRso) {
             logger.warn(() -> "Session for user [%s] has expired at [%s], access denied (skip regeneration == %s).".formatted(user, formatter.print(session.getExpiryTime().getTime()), skipRegeneration));
@@ -386,8 +407,10 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             // In this case, we may need to implement a re-try...
             // But let's first see if that is a problem by logging warning to this effect.
             final UserSession newSession = newSessionToReplaceOld(user, session.isTrusted(), of(authenticator), session.getSid());
+            // The replaced session remains valid for the untrusted duration, so that requests with its authenticator that miss the cache (e.g., on another node or after eviction) are accepted,
+            // instead of being treated as authenticator theft.
             try {
-                forceUpdateExpiryTimeForSession(session.getId(), user, now().plusMinutes(untrustedDurationMins));
+                forceUpdateExpiryTimeForSession(session.getId(), user, constants.serverNow().plusMinutes(untrustedDurationMins));
             } catch (final Exception ex) {
                 logger.info(() -> "Old session for user [%s] was not prolonged due to [%s].".formatted(user, ex.getMessage()));
             }
@@ -455,7 +478,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         session.setTrusted(isDeviceTrusted);
         final Date expiryTime = calcExpiryTime(isDeviceTrusted);
         session.setExpiryTime(expiryTime);
-        session.setLastAccess(constants.now().toDate());
+        session.setLastAccess(constants.serverNow().toDate());
 
         // Authenticator needs to be computed and assigned after the session has been persisted.
         // Assign authenticator in the way as not to disturb the entity meta-state.
@@ -500,21 +523,10 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         }
     }
 
-    /// A convenient method to find an authenticator key in cache by user session.
-    ///
-    private String findAuthenticator(final UserSession session) {
-        for (final Entry<String, UserSession> value : cache.asMap().entrySet()) {
-            if (value.getValue().equals(session)) {
-                return value.getKey();
-            }
-        }
-        return "";
-    }
-
     /// Calculates a session expiry time based on the notion of trusted and untrusted devices.
     ///
     private Date calcExpiryTime(final boolean isDeviceTrusted) {
-        return (isDeviceTrusted ? constants.now().plusMinutes(trustedDurationMins) : constants.now().plusMinutes(untrustedDurationMins)).toDate();
+        return constants.serverNow().plusMinutes(isDeviceTrusted ? trustedDurationMins : untrustedDurationMins).toDate();
     }
 
     public Cache<String, UserSession> getCache() {

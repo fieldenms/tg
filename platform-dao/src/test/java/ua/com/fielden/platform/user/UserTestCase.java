@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.user;
 
+import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Test;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -23,18 +24,20 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
-
+import static java.util.concurrent.TimeUnit.HOURS;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.joda.time.DateTimeZone.getDefault;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.security.user.User.*;
 import static ua.com.fielden.platform.security.user.UserDao.ERR_SELF_EDITING;
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
-import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MUNUTES;
+import static ua.com.fielden.platform.security.user.UserSecretCo.*;
 
 /// A test case to cover basic user validations.
 ///
@@ -42,11 +45,26 @@ public class UserTestCase extends AbstractDaoTestCase {
 
     private final IUser coUser = co$(User.class);
     private final UserSecretCo coUserSecret = co$(UserSecret.class);
+    private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
 
     @After
     public void tearDown() {
         final ApplicationSettingsForTesting settings = (ApplicationSettingsForTesting) getInstance(IApplicationSettings.class);
         settings.setUsersSelfEdit(true);
+        constants.removeRequestTimeZone();
+    }
+
+    @Test
+    public void new_active_user_created_during_a_request_from_a_time_zone_ahead_of_the_server_is_assigned_an_activation_link_that_expires_by_the_server_clock() {
+        constants.setNow(dateTime("2016-04-05 14:00:00"));
+        // A request time zone 5 hours ahead of the server, in the independent time-zone mode.
+        constants.setRequestTimeZone(DateTimeZone.forOffsetMillis(getDefault().getOffset(constants.serverNow()) + (int) HOURS.toMillis(5)));
+        assertNotEquals("Invalid initial conditions: the request time zone should shift 'now()'.", constants.serverNow().getMillis(), constants.now().getMillis());
+
+        final User user = coUser.save(new_(User.class, "USER_TO_ACTIVATE").setBase(true).setEmail("USER_TO_ACTIVATE@company.com").setActive(true));
+
+        final String resetUuid = coUserSecret.findByUsername(user.getKey()).orElseThrow().getResetUuid();
+        assertEquals(Optional.of(constants.serverNow().plusMinutes(INITIAL_USER_UUID_EXPIRATION_IN_MINUTES).toDate()), resetUuidExpirationTime(resetUuid));
     }
 
     @Test
@@ -329,7 +347,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         final String[] uuidParts = secret.get().getResetUuid().split(SECRET_RESET_UUID_SEPERATOR);
         assertEquals(3, uuidParts.length);
         assertEquals(secret.get().getKey().getKey(), uuidParts[0]);
-        assertEquals(consts.now().plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES).getMillis(), Long.valueOf(uuidParts[2]).longValue());
+        assertEquals(consts.now().plusMinutes(RESET_UUID_EXPIRATION_IN_MINUTES).getMillis(), Long.valueOf(uuidParts[2]).longValue());
     }
 
     @Test
@@ -388,6 +406,54 @@ public class UserTestCase extends AbstractDaoTestCase {
         final Optional<User> foundUser = coUser.findUserByResetUuid(uuid);
         assertFalse(foundUser.isPresent());
         assertFalse(coUser.isPasswordResetUuidValid(uuid, consts.now().toDate()));
+    }
+
+    @Test
+    public void password_reset_UUID_is_assigned_to_a_user_without_one() {
+        final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        consts.setNow(dateTime("2016-04-05 14:00:00"));
+
+        final User user = coUser.findUserForPasswordReset("USER3").orElseThrow();
+        final UserSecret secret = coUser.findOrAssignPasswordResetUuid(user, consts.now().toDate(), expirationTime());
+        assertTrue(coUser.isPasswordResetUuidValid(secret.getResetUuid(), consts.now().toDate()));
+    }
+
+    @Test
+    public void password_reset_UUID_that_remains_valid_until_the_required_time_is_kept() {
+        final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        consts.setNow(dateTime("2016-04-05 14:00:00"));
+        final User user = coUser.findUserForPasswordReset("USER3").orElseThrow();
+        final String uuid = coUser.assignPasswordResetUuid(user, expirationTime()).getResetUuid();
+
+        final Date validUntil = consts.now().plusMinutes(RESET_UUID_EXPIRATION_IN_MINUTES).minusSeconds(1).toDate();
+        assertEquals(uuid, coUser.findOrAssignPasswordResetUuid(user, validUntil, expirationTime()).getResetUuid());
+    }
+
+    @Test
+    public void password_reset_UUID_that_expires_before_the_required_time_is_replaced() {
+        final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        consts.setNow(dateTime("2016-04-05 14:00:00"));
+        final User user = coUser.findUserForPasswordReset("USER3").orElseThrow();
+        final String uuid = coUser.assignPasswordResetUuid(user, expirationTime()).getResetUuid();
+
+        final Date validUntil = consts.now().plusMinutes(RESET_UUID_EXPIRATION_IN_MINUTES).toDate();
+        final String newUuid = coUser.findOrAssignPasswordResetUuid(user, validUntil, expirationTime()).getResetUuid();
+        assertNotEquals(uuid, newUuid);
+        assertFalse(coUser.findUserByResetUuid(uuid).isPresent());
+    }
+
+    @Test
+    public void password_reset_UUID_that_expires_after_the_expiration_time_of_a_new_one_is_replaced() {
+        final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        consts.setNow(dateTime("2016-04-05 14:00:00"));
+        final User user = coUser.findUserForPasswordReset("USER3").orElseThrow();
+        // Such as the UUID of the activation link for a new user, which is valid for 24 hours.
+        final String uuid = coUser.assignPasswordResetUuid(user, consts.now().plusHours(24).toDate()).getResetUuid();
+
+        final String newUuid = coUser.findOrAssignPasswordResetUuid(user, consts.now().toDate(), expirationTime()).getResetUuid();
+        assertNotEquals(uuid, newUuid);
+        assertFalse(coUser.findUserByResetUuid(uuid).isPresent());
+        assertEquals(expirationTime(), resetUuidExpirationTime(newUuid).orElseThrow());
     }
 
     @Test
@@ -613,10 +679,59 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
+    public void lockout_of_inactive_user_removes_their_secret() {
+        // A password can be set for an inactive user, who then has a secret.
+        coUser.resetPasswd(coUser.findUser("INACTIVE_USER"), "a strong password for INACTIVE_USER");
+        final User inactiveUser = coUser.findUser("INACTIVE_USER");
+        assertTrue("Invalid initial conditions for this test.", coUserSecret.findByIdOptional(inactiveUser.getId()).isPresent());
+
+        coUser.lockoutUser("INACTIVE_USER");
+        assertFalse(coUser.findUser("INACTIVE_USER").isActive());
+        assertFalse(coUserSecret.findByIdOptional(inactiveUser.getId()).isPresent());
+    }
+
+    @Test
+    public void lockout_identifies_the_account_by_username_case_insensitively() {
+        coUser.lockoutUser("user3");
+        assertFalse(coUser.findUser("USER3").isActive());
+    }
+
+    @Test
+    public void active_user_can_sign_in_with_password_by_username_case_insensitively() {
+        assertTrue(coUser.canSignInWithPassword("user3"));
+    }
+
+    @Test
+    public void inactive_or_unknown_users_cannot_sign_in_with_password() {
+        assertFalse(coUser.canSignInWithPassword("INACTIVE_USER"));
+        assertFalse(coUser.canSignInWithPassword("NON-EXISTING-USER"));
+    }
+
+    @Test
     public void lockout_of_non_existing_account_does_not_throw_exceptions() {
         final String username = "NON-EXISTING-USER-TO-LOCKOUT";
         assertNull(coUser.findUser(username));
         coUser.lockoutUser(username);
+    }
+
+    @Test
+    public void lockout_with_no_current_user_fails_to_deactivate_the_user_but_still_removes_their_secret() {
+        final User user = coUser.findUser("USER3");
+        assertTrue("Invalid pre-conditions: some user secrets should exist.",
+                   coUserSecret.exists(select(UserSecret.class).where().prop("key").eq().val(user).model()));
+
+        // Deactivation saves the user, which requires a current user.
+        final IUserProvider up = getInstance(IUserProvider.class);
+        final User currUser = up.getUser();
+        up.clearUser();
+        try {
+            coUser.lockoutUser("USER3");
+        } finally {
+            up.setUser(currUser);
+        }
+
+        assertTrue(coUser.findUser("USER3").isActive());
+        assertFalse(coUserSecret.findByIdOptional(user.getId()).isPresent());
     }
 
     @Test
@@ -670,7 +785,7 @@ public class UserTestCase extends AbstractDaoTestCase {
 
     private Date expirationTime() {
         final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
-        return consts.now().plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES).toDate();
+        return consts.now().plusMinutes(RESET_UUID_EXPIRATION_IN_MINUTES).toDate();
     }
 
     @Override

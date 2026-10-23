@@ -71,8 +71,8 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.serialisationTypeEncoder = serialisationTypeEncoder.setTgJackson(this);
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
 
-        // Gracefully serialise getters with self-references.
-        // This allows Result.ex serialisation with different types of causes potentially coming from external libs.
+        // Gracefully serialise getters with self-references in beans without serialisers of their own.
+        // Throwables, including the exceptions of Result instances, are serialised by ThrowableJsonSerialiser, which cuts cycles of any length.
         disable(SerializationFeature.FAIL_ON_SELF_REFERENCES);
         enable(SerializationFeature.WRITE_SELF_REFERENCES_AS_NULL);
 
@@ -97,6 +97,8 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.module.addSerializer(RichText.class, new RichTextJsonSerialiser());
         this.module.addDeserializer(RichText.class, new RichTextJsonDeserialiser(this));
 
+        // Applies to throwables other than Result and its subtypes, which have serialisers of their own.
+        this.module.addSerializer(Throwable.class, new ThrowableJsonSerialiser());
         this.module.addSerializer(Result.class, new ResultJsonSerialiser(this));
         this.module.addSerializer(NeedMoreDataException.class, new NeedMoreDataExceptionJsonSerialiser(this));
         this.module.addDeserializer(Result.class, new ResultJsonDeserialiser(this));

@@ -121,36 +121,105 @@ When you introduce a new constant for a reference table — typically a hand-cur
 If only the production migration is updated, tests run against a database where `findByKey(...)` returns `null` for the new constant.
 Most code happily accepts that, persists `null` to dependent columns, and the symptom surfaces much later as a `NullPointerException` in an unrelated assertion or downstream query — far from the actual omission.
 
+### Test configurations
+
+A test case runs with a test configuration — the injector with all bindings — created from the DB connectivity properties that its runner produces with `mkDbProps(String)` (see `AbstractDomainDrivenTestCaseRunner`).
+Configurations are created once per JVM for each runner type, as their creation is computationally intensive; test cases with the same runner share one.
+
+A test case that depends on a different configuration, such as another authentication mode, uses a runner that adjusts the properties:
+```java
+public class SsoAuthModeContextSelector extends H2OrPostgreSqlOrSqlServerContextSelector {
+
+    public SsoAuthModeContextSelector(final Class<?> klass) throws Exception {
+        super(klass);
+    }
+
+    @Override
+    protected Properties mkDbProps(final String dbUri) {
+        final Properties props = super.mkDbProps(dbUri);
+        props.setProperty("auth.mode", AuthMode.SSO.name());
+        return props;
+    }
+}
+```
+```java
+@RunWith(SsoAuthModeContextSelector.class)
+public class UserInSsoModeTestCase extends AbstractDaoTestCase { ... }
+```
+Such test cases run in the normal build, alongside all others.
+
+- All configurations in a JVM share the test database and its schema, which is created once; the properties may adjust the configuration (e.g., `auth.mode`, or `config.domain` for a configuration class with other bindings), but not the domain entity types.
+- Each configuration keeps its injector and connection pool for the rest of the JVM, so a runner type is introduced only where a test case depends on a separate configuration.
+- The static state of `AbstractDomainDrivenTestCase`, through which `co(...)`, `new_(...)` and `getInstance(...)` work, refers to the configuration of the running test case: a runner assigns it when created and again before its test case runs.
+- Fields injected statically by Guice (`requestStaticInjection`, e.g., `EntityUtils.dates` and `GraphQLScalars.dates`) refer to the configuration created last, whichever test case is running; code that a test case relies on to see the bindings of its own configuration obtains them from its injector instead.
+
 ### Test clock control
 
-When a test relies on `createdDate` / `lastUpdatedDate` ordering — e.g., a calculated property or query filters by `createdDate.lt(...)`, or assertions sort entities by their version timestamps — install the millisecond ticker so that consecutive saves get distinct timestamps.
-Without it, fast successive saves can share the same millisecond, silently breaking ordering filters (the predicate is `false` instead of `true`, so rows drop out of subqueries with no error).
+Tests take the current time from `UniversalConstantsForTesting`, the test binding of `IUniversalConstants`, rather than from `new Date()` or `System.currentTimeMillis()`.
+It delegates to `DatesForTesting`, the test binding of `IDates`, so code under test that reads the time through either sees the time set by the test.
+The system clock is used only where a test depends on real elapsed time.
 
-The pattern is two pieces:
+How `now()` is determined:
+- `setNow(dateTime)` fixes the time, and removes any time supplier.
+- `setTimeSupplier(supplier)` makes every call of `now()` return the next value of `supplier`, which takes precedence over the fixed time.
+- `removeTimeSupplier()` returns to the time fixed by `setNow`.
+- With neither set, `now()` falls back to the system clock — another reason to fix the time in every test.
 
-1. **Field** — obtain the mutable test constants from the injector:
-   ```java
-   private final UniversalConstantsForTesting constants =
-           (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
-   ```
-2. **`@Before` reset** — re-install the ticker before every test method:
-   ```java
-   @Before
-   public void reset() {
-       constants.setNow(<chosen-start-time>);
-       // setNow clears the supplier — install the ticker again.
-       constants.setTimeSupplier(constants.mkMillisTicker(1000));
-   }
-   ```
-   `<chosen-start-time>` is a `DateTime` of the test's choosing.
-   Some applications expose a base-class helper like `resetNowAndStartTimeTicking(constants, dateTime)` (which wraps the two calls above) and a `prePopulatedNow` constant for the populate baseline — use them if available, otherwise inline the two calls.
+The field that gives access to the test clock:
+```java
+private final UniversalConstantsForTesting constants =
+        (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+```
 
-Why `@Before` and not just `populateDomain()`:
-- `UniversalConstantsForTesting` is mutable and shared across tests within a JVM fork — a previous test may have advanced or removed the supplier.
+#### Fixed time
+
+Fix the time in a `@Before` method:
+```java
+@Before
+public void setNow() {
+    constants.setNow(dateTime("2026-10-21 10:00:00"));
+}
+```
+`dateTime(...)` and `date(...)` of the test base class parse `yyyy-MM-dd`, optionally followed by `HH:mm`, `HH:mm:ss` or `HH:mm:ss.SSS`.
+A fixed time makes every run assert the same instants, and lets boundary cases be written as concrete times — e.g., `PasswordResetCooldownTest` checks a reset link issued at 10:00 and expiring at 10:15 at 10:09:59 and at 10:10.
+Code under test that takes the time as a parameter is passed `constants.now()` (`constants.now().toDate()` for a `Date`), and the test moves the time with further `setNow(...)` calls.
+
+Production code that operates in server time — e.g., compares with instants stored as epoch milliseconds, where `IDates.now()` would shift the instant in the independent time-zone mode — uses `serverNow()`, which returns the time set by the test as well (see Modelling a request time zone).
+Production code that reads a clock directly cannot be controlled by the test clock, and takes the clock as a parameter instead, so that tests control it — e.g., `LoginAttemptTracker` measures time with a `Ticker` passed to its constructor, which tests advance explicitly.
+
+#### Ticking time
+
+Where successive operations need distinct times, install a ticker that advances the time on every call of `now()`.
+Typical cases: ordering by `createdDate` / `lastUpdatedDate` — e.g., a calculated property or query filters by `createdDate.lt(...)`, or assertions sort entities by their version timestamps — and audit records of successive saves, which applications keep apart this way.
+Without a ticker, fast successive saves can share the same millisecond, silently breaking ordering filters (the predicate is `false` instead of `true`, so rows drop out of subqueries with no error).
+
+```java
+@Before
+public void setNow() {
+    constants.setNow(<chosen-start-time>);
+    // setNow removes the time supplier, so the ticker is installed after it.
+    constants.setTimeSupplier(constants.mkMillisTicker(1000));
+}
+
+@After
+public void removeTicker() {
+    constants.removeTimeSupplier();
+}
+```
+`mkMillisTicker(step)` starts from the current `getNow()` — hence it is created after `setNow` — and advances by `step` milliseconds on every call, so the first call already returns the start time plus `step`.
+Choose `step` to suit the domain, e.g., a minute (`60000`) where times are compared with one-minute precision.
+Every call of `now()` advances the time, including calls made by the code under test, so tests assert the order of times rather than exact values; to assert exact values, capture `constants.now()` once, or remove the ticker for that part of the test.
+A test can also tick only for a part of its work, calling `setTimeSupplier(...)` before and `removeTimeSupplier()` after it — e.g., data population scripts tick while saving and then remove the ticker.
+Some applications expose a base-class helper like `resetNowAndStartTimeTicking(constants, dateTime)` (which wraps `setNow` and `setTimeSupplier`) and a `prePopulatedNow` constant for the populate baseline — use them if available, otherwise inline the two calls.
+
+#### Where to set the clock
+
+Why `@Before` (and `@After`) and not just `populateDomain()`:
+- `UniversalConstantsForTesting` is mutable and shared by all tests that run with the same test configuration (see *Test configurations*) — a previous test may have set a different time, or left a ticker installed.
 - `populateDomain()` runs only for the first test of a test case — the others restore the recorded data population script.
 - `populateDomain()` early-returns when `useSavedDataPopulationScript()` is `true`, so any clock setup done there is skipped in the fast-iteration path.
 
-If `populateDomain()` itself runs save logic that needs distinct timestamps, mirror the same `setNow` + `setTimeSupplier` pair inside it (after the `useSavedDataPopulationScript()` early-return guard).
+If `populateDomain()` itself runs save logic that needs a particular time or distinct timestamps, set the clock inside it as well (after the `useSavedDataPopulationScript()` early-return guard), removing a ticker once the data is saved.
 
 #### Modelling a request time zone
 
