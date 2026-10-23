@@ -6,6 +6,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentRefreshCondition;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,6 +51,14 @@ public interface IMaster<T extends AbstractEntity<?>> {
     /// Returns the map between property names and action selector for properties those have associated action.
     ///
     default Map<String, Class<? extends IEntityMultiActionSelector>> propertyActionSelectors() {
+        return new HashMap<>();
+    }
+
+    /// Returns the declared conditions for refreshing components after a validation of the entity, keyed as [#propertyActionSelectors()] is:
+    /// by the property name of a component in place of an editor, and by the component key of a component bound to the entity.
+    /// Components without a declared condition are not included.
+    ///
+    default Map<String, Class<? extends IComponentRefreshCondition<T>>> componentRefreshConditions() {
         return new HashMap<>();
     }
 

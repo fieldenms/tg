@@ -32,7 +32,10 @@ import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IEntityComponentConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentRefreshCondition;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.AbstractComponentWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.EntityComponentWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.EntityComponentConfig;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
@@ -447,11 +450,27 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
         @Override
         public Map<String, Class<? extends IEntityMultiActionSelector>> propertyActionSelectors() {
-            return widgets.stream().filter(widget -> widget.widget().action().isPresent()).map(widget -> {
-                // a component bound to the entity has its action index under its own key, as it has no property
-                final String key = widget.widget() instanceof EntityComponentWidget component ? component.componentKey() : widget.widget().propertyName();
-                return t2(key, widget.widget().action().get().actionSelectorClass());
-            }).collect(toMap(tt -> tt._1, tt -> tt._2));
+            return widgets.stream().filter(widget -> widget.widget().action().isPresent())
+                    .map(widget -> t2(keyOf(widget.widget()), widget.widget().action().get().actionSelectorClass()))
+                    .collect(toMap(tt -> tt._1, tt -> tt._2));
+        }
+
+        /// The conditions are declared typed by the entity type of the master, which the widgets do not know.
+        ///
+        @Override
+        @SuppressWarnings("unchecked")
+        public Map<String, Class<? extends IComponentRefreshCondition<T>>> componentRefreshConditions() {
+            return widgets.stream()
+                    .map(WidgetSelector::widget)
+                    .<AbstractComponentWidget>mapMulti(typeFilter(AbstractComponentWidget.class))
+                    .flatMap(component -> component.refreshCondition().map(condition -> t2(keyOf(component), (Class<? extends IComponentRefreshCondition<T>>) condition)).stream())
+                    .collect(toMap(tt -> tt._1, tt -> tt._2));
+        }
+
+        /// The key of `widget` in the master, which is its property name, or the component key of a component bound to the entity, as it has no property.
+        ///
+        private static String keyOf(final AbstractWidget widget) {
+            return widget instanceof EntityComponentWidget component ? component.componentKey() : widget.propertyName();
         }
     }
 

@@ -6,12 +6,14 @@ import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionCon
 import ua.com.fielden.platform.web.view.master.api.helpers.IAlso;
 import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IEntityComponentConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentRefreshCondition;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IEntityComponentConfig0;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IEntityComponentConfig1;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IEntityComponentConfig2;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IEntityComponentConfig3;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IEntityComponentConfig4;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IEntityComponentConfig5;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IEntityComponentConfig6;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.EntityComponentWidget;
 
 import java.util.Objects;
@@ -73,6 +75,12 @@ public class EntityComponentConfig<T extends AbstractEntity<?>> implements IEnti
     @Override
     public IEntityComponentConfig5<T> skipBlockingWhenUnsaved() {
         widget.skipBlockingWhenUnsaved();
+        return this;
+    }
+
+    @Override
+    public IEntityComponentConfig6<T> refreshWhen(final Class<? extends IComponentRefreshCondition<T>> condition) {
+        widget.refreshWhen(condition);
         return this;
     }
 

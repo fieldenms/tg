@@ -12,6 +12,8 @@ import ua.com.fielden.platform.web.centre.api.impl.helpers.FunctionalEntity;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.ComponentRefreshContext;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentRefreshCondition;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
 import java.util.List;
@@ -48,6 +50,22 @@ public class SimpleMasterBuilderComponentTest {
         @Override
         public int getActionFor(final AbstractEntity<?> entity) {
             return 1;
+        }
+    }
+
+    public static class FirstRefreshCondition implements IComponentRefreshCondition<TgPersistentEntityWithProperties> {
+        @Override
+        public boolean shouldRefresh(final ComponentRefreshContext<TgPersistentEntityWithProperties> context) {
+            return true;
+        }
+    }
+
+    /// A condition distinct from [FirstRefreshCondition], to tell the conditions of different components apart.
+    ///
+    public static class SecondRefreshCondition implements IComponentRefreshCondition<TgPersistentEntityWithProperties> {
+        @Override
+        public boolean shouldRefresh(final ComponentRefreshContext<TgPersistentEntityWithProperties> context) {
+            return false;
         }
     }
 
@@ -287,6 +305,17 @@ public class SimpleMasterBuilderComponentTest {
         assertEquals(Map.of("integerProp", SingleActionSelector.class, "component-1", SecondActionSelector.class), master.propertyActionSelectors());
     }
 
+    @Test
+    public void refresh_conditions_are_keyed_by_property_names_and_by_component_keys_of_entity_components_with_declared_conditions() {
+        final IMaster<TgPersistentEntityWithProperties> master = done(master()
+                .addProp("integerProp").asComponent(PROPERTY_COMPONENT).withAttr("mode", "compact").refreshWhen(FirstRefreshCondition.class).withAction(mkAction("propAction")).also()
+                .addProp("bigDecimalProp").asComponent("components/tg-cost-chart").also()
+                .addComponent(ENTITY_COMPONENT).also()
+                .addComponent("components/tg-vehicle-chart").skipBlockingWhenUnsaved().refreshWhen(SecondRefreshCondition.class).also());
+
+        assertEquals(Map.of("integerProp", FirstRefreshCondition.class, "component-1", SecondRefreshCondition.class), master.componentRefreshConditions());
+    }
+
     ////////////////////////////////////////////////////////////////////////
     // Validation
     ////////////////////////////////////////////////////////////////////////
@@ -457,6 +486,12 @@ public class SimpleMasterBuilderComponentTest {
         final String out = render(master().addComponent(ENTITY_COMPONENT).withHeight(200).withMinHeight(200).also());
 
         assertTrue(out.contains(" height='200px' min-height='200px' "));
+    }
+
+    @Test
+    public void refresh_condition_is_required_if_declared() {
+        assertConfigurationError(ERR_NULL_REFRESH_CONDITION.formatted(PROPERTY_COMPONENT_DESC),
+                () -> master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).refreshWhen(null));
     }
 
     @Test

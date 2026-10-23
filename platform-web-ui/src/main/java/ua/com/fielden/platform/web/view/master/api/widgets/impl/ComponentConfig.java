@@ -12,6 +12,8 @@ import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentC
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig3;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig4;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig5;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig6;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentRefreshCondition;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.ComponentWidget;
 
 import java.util.Objects;
@@ -73,6 +75,12 @@ public class ComponentConfig<T extends AbstractEntity<?>> implements IComponentC
     @Override
     public IComponentConfig5<T> skipBlockingWhenUnsaved() {
         widget.skipBlockingWhenUnsaved();
+        return this;
+    }
+
+    @Override
+    public IComponentConfig6<T> refreshWhen(final Class<? extends IComponentRefreshCondition<T>> condition) {
+        widget.refreshWhen(condition);
         return this;
     }
 

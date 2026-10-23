@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.view.master.api.widgets.component.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentRefreshCondition;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
@@ -20,7 +21,8 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 /// The base widget for both ways of adding an application-provided web component to a master:
 /// in place of an editor, with [ComponentWidget], or bound to the entity rather than to a property, with [EntityComponentWidget].
 ///
-/// It records the title and description, the element name, the height and minimum height, the attributes, and whether the component is blocked while the master entity is unsaved.
+/// It records the title and description, the element name, the height and minimum height, the attributes, whether the component is blocked while the master entity is unsaved,
+/// and the condition for refreshing the component after a validation of the master entity.
 /// The title and description default to those of the property, which a component bound to the entity does not have.
 /// The element name defaults to the last segment of the import path.
 /// A declared height makes the component resizable, and is rendered as `height` together with `entity-type`, the entity type of the master,
@@ -33,6 +35,8 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 /// The modification state of the master is rendered regardless of the flag, so that it is available to the component also when blocking changes at run time:
 /// `entity-modified` for committed changes, and `entity-edited` for edits in progress.
 /// The client-side component contract combines these with the persistence of the bound entity to block interaction.
+///
+/// The condition for refreshing the component is not rendered: the master collects it under the key of the component, as it collects the selector of the action of the component.
 ///
 /// The configuration is validated as it is declared, and errors are reported with [EntityMasterConfigurationException].
 /// Attributes and texts are rendered into a single-quoted attribute of the master template, which is a JavaScript template literal,
@@ -49,6 +53,7 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
         ERR_ATTR_FOR_MISSING_PROPERTY = "Attribute [%s] of %s cannot be bound to property [%s.%s], which does not exist.",
         ERR_INVALID_HEIGHT = "Invalid %s [%s] of %s: it should be a positive number of pixels.",
         ERR_HEIGHT_LESS_THAN_MIN_HEIGHT = "The height [%s] of %s is less than its minimum height [%s].",
+        ERR_NULL_REFRESH_CONDITION = "The refresh condition of %s is null.",
         ERR_NULL_TEXT = "The %s of %s is null.",
         ERR_UNRENDERABLE_TEXT = "The %s of %s contains a straight single quote, a backtick or ${, which cannot be rendered: [%s].";
 
@@ -71,6 +76,7 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
     private Optional<Integer> minHeight = empty();
     private final Map<String, String> attrs = new LinkedHashMap<>();
     private boolean blockWhenUnsaved = true;
+    private Optional<Class<? extends IComponentRefreshCondition<?>>> refreshCondition = empty();
 
     /// Creates a widget for the component at `importPath`, which is resolved as `/resources/<importPath>.js`, in a master for `entityType`.
     ///
@@ -157,6 +163,21 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
     ///
     public void skipBlockingWhenUnsaved() {
         this.blockWhenUnsaved = false;
+    }
+
+    /// Declares the condition for refreshing the component after a validation of the master entity.
+    ///
+    public void refreshWhen(final Class<? extends IComponentRefreshCondition<?>> condition) {
+        if (condition == null) {
+            throw new EntityMasterConfigurationException(ERR_NULL_REFRESH_CONDITION.formatted(description()));
+        }
+        this.refreshCondition = of(condition);
+    }
+
+    /// The declared condition for refreshing the component after a validation of the master entity, if any.
+    ///
+    public Optional<Class<? extends IComponentRefreshCondition<?>>> refreshCondition() {
+        return refreshCondition;
     }
 
     /// The names of attributes rendered by a concrete widget in addition to those of both component widgets, which cannot be declared.
