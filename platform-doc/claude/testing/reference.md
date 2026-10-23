@@ -215,7 +215,7 @@ Some applications expose a base-class helper like `resetNowAndStartTimeTicking(c
 #### Where to set the clock
 
 Why `@Before` (and `@After`) and not just `populateDomain()`:
-- `UniversalConstantsForTesting` is mutable and shared across tests within a JVM fork — a previous test may have set a different time, or left a ticker installed.
+- `UniversalConstantsForTesting` is mutable and shared by all tests that run with the same test configuration (see *Test configurations*) — a previous test may have set a different time, or left a ticker installed.
 - `populateDomain()` runs only for the first test of a test case — the others restore the recorded data population script.
 - `populateDomain()` early-returns when `useSavedDataPopulationScript()` is `true`, so any clock setup done there is skipped in the fast-iteration path.
 
