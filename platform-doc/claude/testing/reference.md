@@ -151,6 +151,7 @@ Such test cases run in the normal build, alongside all others.
 - All configurations in a JVM share the test database and its schema, which is created once; the properties may adjust the configuration (e.g., `auth.mode`, or `config.domain` for a configuration class with other bindings), but not the domain entity types.
 - Each configuration keeps its injector and connection pool for the rest of the JVM, so a runner type is introduced only where a test case depends on a separate configuration.
 - The static state of `AbstractDomainDrivenTestCase`, through which `co(...)`, `new_(...)` and `getInstance(...)` work, refers to the configuration of the running test case: a runner assigns it when created and again before its test case runs.
+- Fields injected statically by Guice (`requestStaticInjection`, e.g., `EntityUtils.dates` and `GraphQLScalars.dates`) refer to the configuration created last, whichever test case is running; code that a test case relies on to see the bindings of its own configuration obtains them from its injector instead.
 
 ### Test clock control
 
