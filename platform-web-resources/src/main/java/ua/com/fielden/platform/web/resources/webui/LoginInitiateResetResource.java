@@ -31,7 +31,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.restlet.data.MediaType.TEXT_HTML;
@@ -125,7 +124,7 @@ public class LoginInitiateResetResource extends AbstractWebResource {
 
         } catch (final Exception ex) {
             LOGGER.fatal(ex);
-            getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s.\"}", "There was an error when attempting to request a password reset.")));
+            getResponse().setEntity(new JsonRepresentation("{\"msg\": \"There was an error when attempting to request a password reset.\"}"));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         } finally {
             // This handler sets the current user to SU (above); clear it so a pooled worker thread does not retain it after the request.
@@ -173,7 +172,7 @@ public class LoginInitiateResetResource extends AbstractWebResource {
         final SmtpEmailSender sender = new SmtpEmailSender(constants.smtpServer());
         sender.sendPlainMessage(constants.fromEmailAddress(),
                                 emailAddr,
-                                format("[%s] Please reset your password", constants.appName()),
+                                "[%s] Please reset your password".formatted(constants.appName()),
                                 emailBody);
         return (int) (System.currentTimeMillis() - computationStart);
     }
@@ -184,7 +183,7 @@ public class LoginInitiateResetResource extends AbstractWebResource {
     private static final AtomicDouble avgComputeTime = new AtomicDouble(300.00);
     private static final AtomicDouble var2ComputeTime = new AtomicDouble(0);
 
-    /// Computes the mean and the variance based on the online algorithm outlined in [Wikipeida](https://en.wikipedia.org/wiki/Algorithms\_for\_calculating\_variance).
+    /// Computes the mean and the variance based on the online algorithm outlined in [Wikipedia](https://en.wikipedia.org/wiki/Algorithms\_for\_calculating\_variance).
     ///
     private static void computeStats(final int newReading) {
         synchronized (lockForStats) {

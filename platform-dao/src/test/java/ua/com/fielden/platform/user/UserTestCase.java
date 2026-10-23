@@ -697,14 +697,14 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void active_user_can_be_found_for_password_login_by_username_case_insensitively() {
-        assertEquals("USER3", coUser.findUserForPasswordLogin("user3").orElseThrow().getKey());
+    public void active_user_can_sign_in_with_password_by_username_case_insensitively() {
+        assertTrue(coUser.canSignInWithPassword("user3"));
     }
 
     @Test
-    public void inactive_or_unknown_users_cannot_be_found_for_password_login() {
-        assertTrue(coUser.findUserForPasswordLogin("INACTIVE_USER").isEmpty());
-        assertTrue(coUser.findUserForPasswordLogin("NON-EXISTING-USER").isEmpty());
+    public void inactive_or_unknown_users_cannot_sign_in_with_password() {
+        assertFalse(coUser.canSignInWithPassword("INACTIVE_USER"));
+        assertFalse(coUser.canSignInWithPassword("NON-EXISTING-USER"));
     }
 
     @Test

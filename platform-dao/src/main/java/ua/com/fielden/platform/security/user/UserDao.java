@@ -336,8 +336,8 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     }
 
     @Override
-    public Optional<User> findUserForPasswordLogin(final String username) {
-        return getEntityOptional(from(passwordLoginQuery()).with(fetchAll(User.class)).with(PARAM_USERNAME, username).model());
+    public boolean canSignInWithPassword(final String username) {
+        return exists(passwordLoginQuery(), Map.of(PARAM_USERNAME, username));
     }
 
     /// The query for the user who can sign in with a password in the current authentication mode.

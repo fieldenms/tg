@@ -38,7 +38,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker.BLOCK_TIME_SECONDS;
 import static ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker.LOCKOUT_THRESHOLD;
 import static ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker.LOCKOUT_WINDOW_HOURS;
@@ -156,7 +155,7 @@ public class LoginResource extends AbstractWebResource {
             credo.setTrustedDevice(Boolean.parseBoolean(form.getValues("trustedDevice")));
 
             // Attempts with all usernames are tracked and blocked in the same way, but only accounts that can sign in with a password are locked out (see IUser.lockoutUser).
-            final boolean passwordAccount = coUser.findUserForPasswordLogin(credo.username).isPresent();
+            final boolean passwordAccount = coUser.canSignInWithPassword(credo.username);
             final var authResult = new AtomicReference<Result>();
             final AttemptResult attemptResult = attemptTracker.attempt(credo.username, passwordAccount, () -> {
                 authResult.set(authenticationModel.authenticate(credo.username, credo.passwd));
@@ -184,7 +183,7 @@ public class LoginResource extends AbstractWebResource {
             getResponse().setEntity(restUtil.errorJsonRepresentation(ex.getMessage()));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         } finally {
-            LOGGER.debug(() -> "LOGIN ATTEMPT RESPONSE TIME: %s%n".formatted(TimeUnit.MILLISECONDS.convert(System.nanoTime() - nanoStart, TimeUnit.NANOSECONDS)));
+            LOGGER.debug(() -> "LOGIN ATTEMPT RESPONSE TIME: %s".formatted(TimeUnit.MILLISECONDS.convert(System.nanoTime() - nanoStart, TimeUnit.NANOSECONDS)));
         }
     }
 
@@ -199,7 +198,7 @@ public class LoginResource extends AbstractWebResource {
     }
 
     private void respondUserIsBlocked(final long delaySeconds) {
-        getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"Blocked for [%s] seconds.\"}", delaySeconds)));
+        getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Blocked for [%s] seconds.\"}".formatted(delaySeconds)));
         getResponse().setStatus(Status.CLIENT_ERROR_PRECONDITION_FAILED);
     }
 

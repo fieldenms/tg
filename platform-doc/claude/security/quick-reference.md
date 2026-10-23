@@ -127,7 +127,7 @@ Attempts with every username are tracked alike, in one cache bounded by `MAX_TRA
 Lockout is decided separately and is not reflected in the response: for an account that can sign in with a password, the `LOCKOUT_THRESHOLD`-th failed authentication within `LOCKOUT_WINDOW_HOURS` (24) locks the account out.
 These counts are kept only for such accounts and are not evicted, so that a flood of attempts with other usernames cannot reset them.
 
-**Lockout** — `IUser.lockoutUser` deactivates the account and removes its secret, but only for an account that can sign in with a password (`IUser.findUserForPasswordLogin`); accounts restricted to SSO in the SSO authentication mode are not affected.
+**Lockout** — `IUser.lockoutUser` deactivates the account and removes its secret, but only for an account that can sign in with a password (`IUser.canSignInWithPassword`); accounts restricted to SSO in the SSO authentication mode are not affected.
 `LoginResource` requests the lockout from `AccountLockout`, which performs it asynchronously on a thread of its own, so that the response time of the attempt does not disclose that the username identifies an account.
 Deactivation saves the user, which requires a current user: `AccountLockout` sets `SU` as the current user for the lockout and clears it afterwards.
 Lockouts are queued in memory and performed one at a time; a lockout requested for a username while one is queued or in progress for it is not queued again, so at most one lockout per account is queued or in progress.

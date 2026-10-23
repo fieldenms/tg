@@ -60,12 +60,12 @@ public class UserInSsoModeTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void in_SSO_authentication_mode_only_users_not_restricted_to_SSO_only_can_be_found_for_password_login() {
+    public void in_SSO_authentication_mode_only_users_not_restricted_to_SSO_only_can_sign_in_with_password() {
         assertEquals("Invalid initial conditions for this test.", AuthMode.SSO, getInstance(IApplicationSettings.class).authMode());
 
         final IUser coUser = co(User.class);
-        assertTrue(coUser.findUserForPasswordLogin("USER4").isPresent());
-        assertTrue(coUser.findUserForPasswordLogin("USER3").isEmpty());
+        assertTrue(coUser.canSignInWithPassword("USER4"));
+        assertFalse(coUser.canSignInWithPassword("USER3"));
     }
 
     @Test
