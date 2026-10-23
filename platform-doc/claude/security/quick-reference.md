@@ -106,6 +106,7 @@ Unsafe requests without either header are rejected; non-browser clients authenti
 Web API resources authenticated by headers (e.g. API keys) and attached to the `Component` default host are not affected.
 
 `AbstractWebUiResources` wires the filter in front of the resource guard, so every resource registered in `registerDomainWebResources` is covered.
+`CsrfProtectionWiringTest` verifies this wiring end to end: with a valid session cookie, a cross-site `POST` to a guarded resource is rejected before authentication, while a same-origin `POST` and a cross-site `GET` reach it.
 Resources that an application attaches elsewhere — e.g. to the `Component` default host, as with the login, logout and password reset resources — are outside this filter.
 The factories of the login and password reset resources (`LoginResourceFactory`, `LoginInitiateResetResourceFactory`, `LoginCompleteResetResourceFactory`) apply the same check with `CsrfProtectionFilter.rejectIfForged`, which protects against login CSRF, where another site signs the victim in to the account of an attacker.
 `LogoutResourceFactory` does not apply the check: `LogoutResource` handles `GET` only, as identity providers call it cross-site for front-channel logout.
