@@ -275,6 +275,40 @@ public class ResultSerialisationWithJacksonTest {
         assertEquals("Property failure.", result.get(EX).get(MESSAGE).asText());
     }
 
+    @Test
+    public void Result_that_is_a_cause_is_serialised_with_its_exception() {
+        // As for a Result thrown in a companion and wrapped by another exception.
+        final var failure = new RuntimeException("Failure.", failure(new IllegalStateException("Result failure.")));
+
+        final JsonNode cause = serialiseToTree(failure(failure)).get(EX).get("cause");
+        assertEquals(Result.class.getName(), cause.get("@resultType").asText());
+        assertEquals("Result failure.", cause.get(MESSAGE).asText());
+        assertEquals("Result failure.", cause.get(EX).get(MESSAGE).asText());
+    }
+
+    @Test
+    public void Result_that_is_a_cause_and_refers_back_to_the_throwable_it_is_the_cause_of_is_serialised_with_the_cycle_cut() {
+        final var failure = new RuntimeException("Failure.");
+        failure.initCause(failure(failure));
+
+        final JsonNode cause = serialiseToTree(failure(failure)).get(EX).get("cause");
+        assertEquals(Result.class.getName(), cause.get("@resultType").asText());
+        assertTrue("The exception of the Result has been written already.", cause.get(EX).isNull());
+    }
+
+    @Test
+    public void Result_that_is_a_suppressed_throwable_is_serialised_once() {
+        final var resultFailure = failure("Result failure.");
+        final var failure = new RuntimeException("Failure.");
+        failure.addSuppressed(resultFailure);
+        failure.addSuppressed(resultFailure);
+
+        final JsonNode suppressed = serialiseToTree(failure(failure)).get(EX).get("suppressed");
+        assertEquals("A suppressed Result that has been written already is omitted.", 1, suppressed.size());
+        assertEquals(Result.class.getName(), suppressed.get(0).get("@resultType").asText());
+        assertEquals("Result failure.", suppressed.get(0).get(MESSAGE).asText());
+    }
+
     /// Exception type with a property of its own, which is not serialised.
     ///
     private static class ExceptionWithAdditionalProperty extends RuntimeException {

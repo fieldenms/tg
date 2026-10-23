@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import org.junit.Test;
 import org.restlet.representation.StringRepresentation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCacheForTests;
 import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
@@ -12,6 +13,7 @@ import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory
 import ua.com.fielden.platform.web.resources.exceptions.InvalidRequestBodyException;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
@@ -47,6 +49,16 @@ public class RestServerUtilRequestBodyTest {
     public void invalid_request_body_for_a_Result_fails_with_a_generic_message() {
         final var ex = assertThrows(InvalidRequestBodyException.class, () -> restUtil.restoreJsonResult(json("[1, 2]")));
         assertEquals(ERR_INVALID_REQUEST_BODY, ex.getMessage());
+    }
+
+    @Test
+    public void invalid_request_body_for_an_entity_fails_with_a_generic_message_and_no_cause() {
+        // Malformed JSON, and well-formed JSON that does not represent an entity.
+        for (final String body : List.of("{\"key\": ", "[1, 2]")) {
+            final var ex = assertThrows(body, InvalidRequestBodyException.class, () -> restUtil.restoreJsonEntity(json(body), SavingInfoHolder.class));
+            assertEquals(ERR_INVALID_REQUEST_BODY, ex.getMessage());
+            assertNull(ex.getCause());
+        }
     }
 
     @Test
