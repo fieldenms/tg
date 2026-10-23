@@ -29,6 +29,8 @@ import java.util.Optional;
 /// 2. Otherwise, `Origin`, if present, must match the host of the request.
 ///    The host is taken from `X-Forwarded-Host`, if present, to account for reverse proxies that rewrite `Host`, and from the request host reference otherwise.
 ///    Host names are compared case-insensitively; ports are compared only if the request host specifies one, as the port of a TLS-terminating reverse proxy is not visible to the application server.
+///    A reverse proxy in front of the application needs to either preserve `Host`, or send the original host in `X-Forwarded-Host`.
+///    The standard `Forwarded` header is not read, so a proxy that rewrites `Host` and reports the original host only in `Forwarded` causes legitimate requests to be rejected.
 ///    An opaque origin (`Origin: null`) does not match.
 /// 3. Requests carrying neither header are rejected.
 ///    Browsers capable of running the web client send `Origin` with every request that has an unsafe method (the value is `null` under some referrer policies, which does not match).

@@ -103,6 +103,8 @@ Web UI requests are authenticated by the `authenticator` cookie, which is `Secur
 Restlet's `CookieSetting` has no `SameSite` support, so the attribute is appended to the cookie path, which Restlet writes verbatim for version-0 cookies; `AbstractWebResourceGuardCookieTest` verifies the rendered `Set-Cookie` header.
 `CsrfProtectionFilter` (`platform-web-resources`, package `web.filters`) rejects requests with unsafe methods (`POST`, `PUT`, `DELETE`, `PATCH`) with `403` when `Sec-Fetch-Site` is `same-site`/`cross-site`, or, without `Sec-Fetch-Site`, when `Origin` does not match the request host (`X-Forwarded-Host` takes precedence over the host of the request).
 Unsafe requests without either header are rejected; non-browser clients authenticating with the session cookie must send `Origin` matching the application host.
+A reverse proxy in front of the application must either preserve `Host` (e.g., nginx with `proxy_set_header Host $host`) or send the original host in `X-Forwarded-Host`; the standard `Forwarded` header is not read.
+Otherwise, legitimate requests from browsers without `Sec-Fetch-Site` are rejected, which the filter logs as "Rejected a potentially forged cross-site request".
 Web API resources authenticated by headers (e.g. API keys) and attached to the `Component` default host are not affected.
 
 `AbstractWebUiResources` wires the filter in front of the resource guard, so every resource registered in `registerDomainWebResources` is covered.
