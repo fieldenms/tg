@@ -26,6 +26,7 @@ import java.util.Map;
 
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.web.resources.webui.ComponentRefreshUtils.createRefreshedComponentsForMaster;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreEntityFrom;
 import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForMaster;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
@@ -88,7 +89,10 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
 
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
             final Result result = restUtil.singleEntityResult(applied);
-            final Map<String, Object> customObject = linkedMapOf(t2(VALIDATION_COUNTER, savingInfoHolder.getModifHolder().get(VALIDATION_COUNTER)), createPropertyActionIndicesForMaster(applied, webUiConfig)); // savingInfoHolder and its modifHolder are never empty
+            final Map<String, Object> customObject = linkedMapOf( // savingInfoHolder and its modifHolder are never empty
+                    t2(VALIDATION_COUNTER, savingInfoHolder.getModifHolder().get(VALIDATION_COUNTER)),
+                    createPropertyActionIndicesForMaster(applied, webUiConfig),
+                    createRefreshedComponentsForMaster(applied, savingInfoHolder.getModifHolder(), webUiConfig));
             return restUtil.resultJSONRepresentation(result.extendResultWithCustomObject(customObject));
         }, restUtil);
     }
