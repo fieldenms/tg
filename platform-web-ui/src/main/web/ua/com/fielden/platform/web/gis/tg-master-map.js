@@ -73,16 +73,15 @@ const template = html`
 
 /**
  * A map component for entity masters, which draws the master entity, an entity it refers to, or the entities of its collectional property.
- * It is declared in the Entity Master DSL, bound to the entity or in place of the editor of a property:
+ * It is declared in the Entity Master DSL, in place of the editor of a property, which may be dot-notated, or bound to the entity:
  *
- *     .addComponent("gis/tg-master-map")
+ *     .addProp(LocationSubsystem_.location().gisInfo()).asComponent("gis/tg-master-map")
  *         .withAttr("gis-component-uri", "gis/location/tg-location-gis-master-component")
  *         .withAttr("gis-component-name", "LocationGisMasterComponent")
- *         .withAttr("entity-path", "location.gisInfo")
  *
  * The entities are drawn by the GIS component of the application, a subclass of 'MasterGisComponent' exported as 'gis-component-name' from module 'gis-component-uri'.
- * What is drawn is the value at 'property-name' for a component in place of an editor, the value at 'entity-path' for a component bound to the entity,
- * and the entity itself if there is no path; the value is a single entity or a collection of entities, which must be fetched with the master entity.
+ * What is drawn is the value of 'property-name' for a component in place of an editor, and the entity itself for a component bound to the entity;
+ * the value is a single entity or a collection of entities, which must be fetched with the master entity.
  *
  * The map is created once it has a size, and is released when the component is detached.
  * The component fills the height of its layout cell, so that it grows with the master in a flexible row of the master layout, such as 'FLEXIBLE_ROW' of 'LayoutComposer'.
@@ -117,15 +116,8 @@ Polymer({
         },
 
         /**
-         * The dot-notated path from the entity to the entity or entities to draw, for a component bound to the entity; the entity itself is drawn if empty.
-         */
-        entityPath: {
-            type: String,
-            value: ''
-        },
-
-        /**
-         * The property whose entity or entities are drawn, for a component in place of an editor.
+         * The property whose entity or entities are drawn, for a component in place of an editor, which may be dot-notated;
+         * it is empty for a component bound to the entity, which draws the entity itself.
          */
         propertyName: {
             type: String,
@@ -178,7 +170,7 @@ Polymer({
     },
 
     observers: [
-        '_entitiesChanged(entity, entityPath, propertyName)'
+        '_entitiesChanged(entity, propertyName)'
     ],
 
     ready: function () {
@@ -221,8 +213,8 @@ Polymer({
         return `border-radius:50%;${labelsShown ? 'border:2px solid;' : ''}`;
     },
 
-    _entitiesChanged: function (entity, entityPath, propertyName) {
-        this._entities = this._entitiesToShow(entity, propertyName || entityPath);
+    _entitiesChanged: function (entity, propertyName) {
+        this._entities = this._entitiesToShow(entity, propertyName);
         if (this.gisComponent) {
             this.gisComponent.show(this._entities);
         }
