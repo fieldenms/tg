@@ -19,7 +19,11 @@ import ua.com.fielden.platform.web.utils.PropertyConflict;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.THROWABLE;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.error.Result.*;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
@@ -29,6 +33,7 @@ import static ua.com.fielden.platform.serialisation.jackson.serialisers.Throwabl
 /// Unit tests to ensure correct [Result] serialisation / deserialisation using JACKSON engine.
 ///
 public class ResultSerialisationWithJacksonTest {
+
     private final Module module = new CommonEntityTestIocModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
@@ -121,7 +126,7 @@ public class ResultSerialisationWithJacksonTest {
         assertEquals(failure.getMessage(), actualFailure.getMessage());
         assertEquals(failure.getInstance(), actualFailure.getInstance());
 
-        assertNotNull(actualFailure.getEx());
+        assertNotNull(failure.getEx());
         assertNotNull(actualFailure.getEx());
 
         assertEquals(Exception.class, actualFailure.getEx().getClass());
@@ -148,7 +153,7 @@ public class ResultSerialisationWithJacksonTest {
     private static void assertFailureEqualsWithCustomExceptionAndCause(final Result failure, final Result actualFailure) {
         assertFailureEqualsWithCustomException(failure, actualFailure);
 
-        assertNotNull(actualFailure.getEx().getCause());
+        assertNotNull(failure.getEx().getCause());
         assertNotNull(actualFailure.getEx().getCause());
 
         assertEquals(failure.getEx().getCause().getMessage(), actualFailure.getEx().getCause().getMessage());
@@ -190,10 +195,10 @@ public class ResultSerialisationWithJacksonTest {
 
         final var actualResult = serialiseAndDeserialise(failure(bodyFailure));
         assertEquals("Failure.", actualResult.getEx().getMessage());
-        assertEquals(1, actualResult.getEx().getSuppressed().length);
-        final var actualCloseFailure = actualResult.getEx().getSuppressed()[0];
-        assertEquals("Close failure.", actualCloseFailure.getMessage());
-        assertNull(actualCloseFailure.getCause());
+        assertThat(actualResult.getEx().getSuppressed())
+                .singleElement(THROWABLE)
+                .hasMessage("Close failure.")
+                .hasNoCause();
     }
 
     @Test
@@ -205,15 +210,17 @@ public class ResultSerialisationWithJacksonTest {
         final var result = failure(failure);
         final var actualResult = serialiseAndDeserialise(result);
         assertFailureEqualsWithCustomExceptionAndCause(result, actualResult);
-        assertEquals(0, actualResult.getEx().getCause().getSuppressed().length);
+        assertThat(actualResult.getEx().getCause().getSuppressed()).isEmpty();
     }
 
     @Test
     public void serialised_exception_with_causes_and_suppressed_throwables_contains_no_stack_traces() {
-        final var failure = new RuntimeException("Failure.", new IllegalStateException("Cause.", new IllegalArgumentException("Cause of cause.")));
-        failure.addSuppressed(new RuntimeException("Suppressed."));
+        final var subFailure = new RuntimeException("Failure.", new IllegalStateException("Cause.", new IllegalArgumentException("Cause of cause.")));
+        subFailure.addSuppressed(new RuntimeException("Suppressed."));
+        final var failure = failure(subFailure);
+        assertThat(failure.getStackTrace()).isNotEmpty();
 
-        final JsonNode ex = serialiseToTree(failure(failure)).get(EX);
+        final JsonNode ex = serialiseToTree(failure).get(EX);
         assertEquals("Failure.", ex.get("message").asText());
         assertEquals("Cause.", ex.get("cause").get("message").asText());
         assertEquals("Cause of cause.", ex.get("cause").get("cause").get("message").asText());
@@ -224,9 +231,7 @@ public class ResultSerialisationWithJacksonTest {
     @Test
     public void serialised_exception_contains_only_its_type_and_the_standard_properties_of_Throwable() {
         final JsonNode ex = serialiseToTree(failure(new ExceptionWithAdditionalProperty("Failure."))).get(EX);
-        final List<String> propertyNames = new ArrayList<>();
-        ex.fieldNames().forEachRemaining(propertyNames::add);
-        assertEquals(List.of("typeStr", "message", "localizedMessage", "cause", "suppressed"), propertyNames);
+        assertThat(ex.fieldNames()).toIterable().containsExactly("typeStr", "message", "localizedMessage", "cause", "suppressed");
     }
 
     @Test
@@ -248,10 +253,7 @@ public class ResultSerialisationWithJacksonTest {
         }
 
         final var actualResult = serialiseAndDeserialise(failure(new RuntimeException("Failure.", chain)));
-        int count = 0;
-        for (Throwable throwable = actualResult.getEx(); throwable != null; throwable = throwable.getCause()) {
-            count++;
-        }
+        final var count = Stream.iterate(actualResult.getEx(), Objects::nonNull, Throwable::getCause).count();
         // The serialised Result counts towards the bound.
         assertEquals(MAX_THROWABLES - 1, count);
     }
@@ -261,6 +263,7 @@ public class ResultSerialisationWithJacksonTest {
         final var sharedFailure = new RuntimeException("Failure.");
 
         final JsonNode results = serialiseToTree(new ArrayList<>(List.of(failure(sharedFailure), failure(sharedFailure))));
+        assertThat(results).hasSize(2);
         assertEquals("Failure.", results.get(0).get(EX).get("message").asText());
         assertEquals("Failure.", results.get(1).get(EX).get("message").asText());
     }
@@ -309,7 +312,7 @@ public class ResultSerialisationWithJacksonTest {
         assertEquals("Result failure.", suppressed.get(0).get(MESSAGE).asText());
     }
 
-    /// Exception type with a property of its own, which is not serialised.
+    /// Exception type with a property of its own, [#getSql], which is expected to not be serialised.
     ///
     private static class ExceptionWithAdditionalProperty extends RuntimeException {
 

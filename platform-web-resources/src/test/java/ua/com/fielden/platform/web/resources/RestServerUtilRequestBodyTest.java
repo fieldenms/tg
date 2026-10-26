@@ -26,8 +26,13 @@ import static ua.com.fielden.platform.web.resources.RestServerUtil.ERR_INVALID_R
 /// Tests for the deserialisation of request bodies by [RestServerUtil].
 ///
 public class RestServerUtilRequestBodyTest {
+
     private final Injector injector = new ApplicationInjectorFactory().add(new CommonEntityTestIocModuleWithPropertyFactory()).getInjector();
-    private final RestServerUtil restUtil = new RestServerUtil(createSerialiserWithJackson(injector.getInstance(EntityFactory.class), new ProvidedSerialisationClassProvider(), new SerialisationTypeEncoder(), new IdOnlyProxiedEntityTypeCacheForTests()));
+    private final RestServerUtil restUtil = new RestServerUtil(createSerialiserWithJackson(
+            injector.getInstance(EntityFactory.class),
+            new ProvidedSerialisationClassProvider(),
+            new SerialisationTypeEncoder(),
+            new IdOnlyProxiedEntityTypeCacheForTests()));
 
     private static StringRepresentation json(final String content) {
         return new StringRepresentation(content, APPLICATION_JSON);

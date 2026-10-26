@@ -2,6 +2,7 @@ package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.deser.std.ThrowableDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import ua.com.fielden.platform.error.Result;
 
@@ -12,14 +13,17 @@ import java.util.Set;
 
 /// Serialiser for [Throwable], which applies to throwables other than [Result] and its subtypes, as they have serialisers of their own.
 ///
-/// A throwable is written with the standard properties of [Throwable] (`message`, `localizedMessage`, `cause` and `suppressed`), and with `typeStr`, the name of its class.
-/// The standard properties are read by the web client and by Jackson's `ThrowableDeserializer`, which [ua.com.fielden.platform.error.ResultJsonDeserialiser] uses.
-/// `typeStr` lets the web client identify the type of a throwable, e.g. to handle exceptions of specific application types.
-/// Stack traces and properties specific to subtypes of [Throwable] (e.g. SQL statements of JDBC failures) are not written, as they disclose internal details of the application to clients.
+/// A throwable is written with the standard properties of [Throwable] (`message`, `localizedMessage`, `cause` and `suppressed`),
+/// and with [#TYPE_STR], the name of its class.
+/// The standard properties are read by the web client and by Jackson's [ThrowableDeserializer], which [ua.com.fielden.platform.error.ResultJsonDeserialiser] uses.
+/// [#TYPE_STR] lets the web client identify the type of a throwable, e.g. to handle exceptions of specific application types.
+/// Stack traces and properties specific to subtypes of [Throwable] (e.g. SQL statements of JDBC failures) are not written,
+/// as they disclose internal details of the application to clients.
 /// The server logs failures with their stack traces.
 ///
-/// Each throwable is written at most once per serialised [Result] (or per throwable serialised on its own), which cuts cycles between throwables.
-/// A throwable that has been written already, as found by identity, is written as `null` if it is a cause, and is omitted if it is a suppressed throwable.
+/// By using [Scope], each throwable is written at most once per serialised [Result] (or per throwable serialised on its own),
+/// cutting cycles between throwables.
+/// A throwable that has been written already is written as `null` if it is a cause, and is omitted if it is a suppressed throwable.
 /// The number of throwables written is bounded by [#MAX_THROWABLES], so that an unexpectedly long chain cannot produce an oversized response.
 ///
 public class ThrowableJsonSerialiser extends StdSerializer<Throwable> {
@@ -42,7 +46,7 @@ public class ThrowableJsonSerialiser extends StdSerializer<Throwable> {
 
     @Override
     public void serialize(final Throwable throwable, final JsonGenerator generator, final SerializerProvider provider) throws IOException {
-        final Scope scope = Scope.of(provider);
+        final var scope = Scope.of(provider);
         if (scope.isOpen()) {
             if (scope.register(throwable)) {
                 writeThrowable(throwable, generator, provider, scope);
@@ -59,14 +63,20 @@ public class ThrowableJsonSerialiser extends StdSerializer<Throwable> {
         }
     }
 
-    private static void writeThrowable(final Throwable throwable, final JsonGenerator generator, final SerializerProvider provider, final Scope scope) throws IOException {
+    private static void writeThrowable(
+            final Throwable throwable,
+            final JsonGenerator generator,
+            final SerializerProvider provider,
+            final Scope scope)
+            throws IOException
+    {
         generator.writeStartObject();
         generator.writeStringField(TYPE_STR, throwable.getClass().getName());
         generator.writeStringField(MESSAGE, throwable.getMessage());
         generator.writeStringField(LOCALIZED_MESSAGE, throwable.getLocalizedMessage());
 
         generator.writeFieldName(CAUSE);
-        final Throwable cause = throwable.getCause();
+        final var cause = throwable.getCause();
         if (cause != null && scope.canWrite(cause)) {
             provider.defaultSerializeValue(cause, generator);
         } else {
@@ -74,7 +84,7 @@ public class ThrowableJsonSerialiser extends StdSerializer<Throwable> {
         }
 
         generator.writeArrayFieldStart(SUPPRESSED);
-        for (final Throwable suppressed : throwable.getSuppressed()) {
+        for (final var suppressed : throwable.getSuppressed()) {
             // Checked right before writing, as writing a preceding suppressed throwable registers the throwables it refers to.
             if (scope.canWrite(suppressed)) {
                 provider.defaultSerializeValue(suppressed, generator);
@@ -88,6 +98,9 @@ public class ThrowableJsonSerialiser extends StdSerializer<Throwable> {
     ///
     /// The scope is open while the exception of a [Result], or a throwable serialised on its own, is being written.
     /// It is shared by [ThrowableJsonSerialiser] and [ResultJsonSerialiser], as a [Result] can be a cause or a suppressed throwable of another throwable.
+    ///
+    /// To serialise a throwable within another while propagating a [Scope] object, call [SerializerProvider#defaultSerializeValue]
+    /// rather than [JsonGenerator#writeObject].
     ///
     static final class Scope {
         private static final Object ATTRIBUTE_KEY = Scope.class;

@@ -1655,7 +1655,6 @@ export const TgReflector = Polymer({
             return causes;
         };
 
-        // outputs the exception message into the console as warning
         const printMessage = function (ex) {
             console.warn(resultMessages(ex).short);
         };

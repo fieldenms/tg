@@ -438,18 +438,17 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public Optional<User> findUserForPasswordReset(final String usernameOrEmail) {
-        // Let's try to find a user by username or email.
-        // In the SSO authentication mode, it is necessary to exclude those users who are restricted to SSO only.
-        final ICompoundCondition0<User> rsoCondition = select(User.class)
+        final var query = select(User.class)
                 .where()
                 .prop(ACTIVE).eq().val(true)
                 .and()
                 .begin()
                     .lowerCase().prop(KEY).eq().lowerCase().val(usernameOrEmail).or()
                     .lowerCase().prop(EMAIL).eq().lowerCase().val(usernameOrEmail)
-                .end();
-        final EntityResultQueryModel<User> query = (ssoMode() ? rsoCondition.and().prop(User.SSO_ONLY).eq().val(false) : rsoCondition).model();
-
+                .end()
+                // In SSO mode exclude users restricted to SSO only.
+                .and().condition(ssoMode() ? cond().prop(User.SSO_ONLY).eq().val(false).model() : emptyCondition())
+                .model();
         return ofNullable(getEntity(from(query).with(fetchAll(User.class)).model()));
     }
 

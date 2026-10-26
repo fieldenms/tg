@@ -16,6 +16,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 
+import static org.apache.commons.lang3.StringUtils.substringBefore;
+
 /// A filter that protects state-changing requests from Cross-Site Request Forgery (CSRF).
 ///
 /// Web UI requests are authenticated by the `authenticator` cookie, which browsers attach to requests regardless of the site that initiates them.
@@ -104,7 +106,7 @@ public class CsrfProtectionFilter extends Filter {
         final String forwardedHost = request.getHeaders().getFirstValue(HEADER_X_FORWARDED_HOST, true);
         if (forwardedHost != null && !forwardedHost.isBlank()) {
             // A chain of proxies produces a comma-separated list, where the first value is the host requested by the client.
-            return parseUri("//" + forwardedHost.split(",")[0].trim());
+            return parseUri("//" + substringBefore(forwardedHost, ',').trim());
         }
 
         final Reference hostRef = request.getHostRef();

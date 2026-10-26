@@ -54,10 +54,10 @@ public interface IUser extends IEntityDao<User>, ISaveWithFetch<User> {
     ///
     Optional<User> findUserByResetUuid(final String uuid);
 
-    /// Generates a temporal password reset UUID for a user that is identified by the provided username or email address.
+    /// Generates a temporary password reset UUID for a user that is identified by the provided username or email address.
     /// The generated UUID gets immediately associated with the user, and the updated user is returned for further use, such as email sending with reset URI.
     ///
-    /// An empty optional value is returned in case where no user was identified by the given username or email address.
+    /// An empty optional is returned if no user was identified.
     ///
     /// Equivalent to [#findUserForPasswordReset(String)] followed by [#assignPasswordResetUuid(User, Date)].
     ///
@@ -69,13 +69,13 @@ public interface IUser extends IEntityDao<User>, ISaveWithFetch<User> {
     Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail, final Date expirationTime);
 
     /// Finds the user identified by the provided username or email address (case-insensitive) who can reset their password.
-    /// Such a user is active and, in the SSO authentication mode, is not restricted to SSO only.
+    /// Such a user should be active and, in the SSO authentication mode, should not be restricted to SSO only.
     ///
-    /// An empty optional value is returned in case where no such user was identified.
+    /// An empty optional is returned if no such user was identified.
     ///
     Optional<User> findUserForPasswordReset(final String usernameOrEmail);
 
-    /// Generates a temporal password reset UUID for `user`, associates it with the user, and returns the updated secret.
+    /// Generates a temporary password reset UUID for `user`, associates it with the user, and returns the updated secret.
     /// A previously generated UUID of `user` is replaced, and thus can no longer be used.
     ///
     /// @param user           a user, such as one found by [#findUserForPasswordReset(String)]

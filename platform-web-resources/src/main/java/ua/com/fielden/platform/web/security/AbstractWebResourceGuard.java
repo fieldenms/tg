@@ -16,6 +16,7 @@ import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.sse.SseUtils;
 
@@ -143,13 +144,21 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
                 .max(Comparator.comparingLong(auth -> auth.version));
     }
 
-    /// A convenient method that creates an authenticating cookie based on the provided authenticator and associates it with the specified HTTP response.
+    /// Creates an authenticating cookie based on the provided authenticator and associates it with the specified HTTP response.
     ///
-    /// @param now           the current time of the server clock (`IUniversalConstants.serverNow()`), by which the authenticator expires
+    /// @param now           the current time of the server clock ([IDates#serverNow]), by which the authenticator expires
     /// @param authenticator the authenticator carried by the cookie, whose expiry time determines the max age of the cookie
     /// @param response      the response to carry the cookie, which replaces any cookies already set on it
     ///
-    public static void assignAuthenticatingCookie(final User user, final DateTime now, final Authenticator authenticator, final String domainName, final String path, final Request request, final Response response) {
+    public static void assignAuthenticatingCookie(
+            final User user,
+            final DateTime now,
+            final Authenticator authenticator,
+            final String domainName,
+            final String path,
+            final Request request,
+            final Response response)
+    {
         // Create a cookie that carries the updated authenticator back to the client.
         // Its max age is the time from `now`, which is read before this request is processed, until the authenticator expires with its session.
         // The processing time of this request therefore counts towards the session duration:

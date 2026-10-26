@@ -21,14 +21,16 @@ public class AbstractWebResourceGuardCookieTest {
 
     @Test
     public void authenticating_cookie_is_SameSite_Lax_Secure_and_HttpOnly() {
-        final String header = CookieSettingWriter.write(mkAuthenticationCookie("user::authenticator", "tgdev.com", "/", 3600));
-        assertHeader(header, "authenticator=user::authenticator; Path=/; SameSite=Lax; Expires=", "; Domain=tgdev.com; Secure; HttpOnly");
+        assertHeader(CookieSettingWriter.write(mkAuthenticationCookie("user::authenticator", "tgdev.com", "/", 3600)),
+                     "authenticator=user::authenticator; Path=/; SameSite=Lax; Expires=",
+                     "; Domain=tgdev.com; Secure; HttpOnly");
     }
 
     @Test
     public void expiring_authenticating_cookie_is_SameSite_Lax_Secure_and_HttpOnly() {
-        final String header = CookieSettingWriter.write(mkAuthenticationCookieToExpire("tgdev.com", "/"));
-        assertHeader(header, "authenticator=; Path=/; SameSite=Lax; Expires=", "; Domain=tgdev.com; Secure; HttpOnly");
+        assertHeader(CookieSettingWriter.write(mkAuthenticationCookieToExpire("tgdev.com", "/")),
+                     "authenticator=; Path=/; SameSite=Lax; Expires=",
+                     "; Domain=tgdev.com; Secure; HttpOnly");
     }
 
 }

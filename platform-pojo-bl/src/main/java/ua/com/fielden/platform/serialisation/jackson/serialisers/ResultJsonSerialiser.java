@@ -27,14 +27,10 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.CUSTOM_OBJECT_PROPERTY_NAME;
 
-/**
- * Serialiser for {@link Result} type.
- * <p>
- * Serialises information about concrete {@link Result}'s subtype, message, exception and instance with its type.
- *
- * @author TG Team
- *
- */
+/// Serialiser for [Result].
+///
+/// [ThrowableJsonSerialiser.Scope] is used to constrain cycles between throwables and eliminate duplicates.
+///
 public class ResultJsonSerialiser extends StdSerializer<Result> {
     private final TgJackson tgJackson;
 

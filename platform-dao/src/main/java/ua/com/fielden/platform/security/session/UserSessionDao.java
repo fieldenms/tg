@@ -40,15 +40,16 @@ import static ua.com.fielden.platform.security.session.Authenticator.mkToken;
 
 /// DAO implementation for companion object {@link IUserSession}.
 ///
-/// Session times — the expiry time and the time of last access — are instants of the server clock, `IUniversalConstants.serverNow()`.
-/// `IUniversalConstants.now()` is not used, as in the independent time-zone mode it shifts the instant by the offset of the request time-zone,
+/// Session times — the expiry time and the time of last access — are instants of the server clock, [IUniversalConstants#serverNow].
+/// [IUniversalConstants#now] is not used, as in the independent time-zone mode it shifts the instant by the offset of the request time-zone,
 /// whereas sessions are established, validated and cleared during requests from different time-zones, and outside of requests.
 ///
 @EntityType(UserSession.class)
 public class UserSessionDao extends CommonEntityDao<UserSession> implements IUserSession {
-    private final Logger logger = getLogger(UserSessionDao.class);
+
     private static final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
+    private final Logger logger = getLogger(UserSessionDao.class);
     /// A key to be used for hashing authenticators and series ID before storing them.
     private final String hashingKey;
     private final int trustedDurationMins;
@@ -93,7 +94,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     @Override
     @SessionRequired
     public int clearAll(final User user) {
-        final EntityResultQueryModel<UserSession> query = select(UserSession.class).where().prop("user").eq().val(user).model();
+        final var query = select(UserSession.class).where().prop("user").eq().val(user).model();
 
         final int count = count(query);
         if (count > 0) {
@@ -107,15 +108,11 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     @Override
     @SessionRequired
     public void clearUntrusted(final User user) {
-        final EntityResultQueryModel<UserSession> query =
-                select(UserSession.class)
-                        .where()
-                        .prop("user").eq().val(user)
-                        .and().prop("trusted").eq().val(false)
-                        .model();
-        
+        final var query = select(UserSession.class)
+                .where()
+                .prop("user").eq().val(user).and().prop("trusted").eq().val(false)
+                .model();
         invalidateCache(query);
-
         defaultBatchDelete(query);
     }
 
@@ -129,14 +126,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     @Override
     @SessionRequired
     public void clearUntrusted() {
-        final EntityResultQueryModel<UserSession> query =
-                select(UserSession.class)
-                        .where()
-                        .prop("trusted").eq().val(false)
-                        .model();
-
+        final var query = select(UserSession.class).where().prop("trusted").eq().val(false).model();
         invalidateCache(query);
-        
         defaultBatchDelete(query);
     }
 
@@ -144,15 +135,12 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     @SessionRequired
     public void clearExpired(final User user) {
         try {
-            final EntityResultQueryModel<UserSession> query =
-                    select(UserSession.class)
-                            .where()
-                            .prop("user").eq().val(user)
-                            .and().prop("expiryTime").lt().val(constants.serverNow().toDate())
-                            .model();
-            
+            final var query = select(UserSession.class)
+                    .where()
+                    .prop("user").eq().val(user)
+                    .and().prop("expiryTime").lt().val(constants.serverNow().toDate())
+                    .model();
             invalidateCache(query);
-            
             defaultBatchDelete(query);
         } catch (final Exception ex) {
             logger.error(() -> "Could not clear expired sessions for user [%s].".formatted(user), ex);
@@ -162,14 +150,11 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     @Override
     @SessionRequired
     public void clearExpired() {
-        final EntityResultQueryModel<UserSession> query =
-                select(UserSession.class)
-                        .where()
-                        .prop("expiryTime").lt().val(constants.serverNow().toDate())
-                        .model();
-        
+        final var query = select(UserSession.class)
+                .where()
+                .prop("expiryTime").lt().val(constants.serverNow().toDate())
+                .model();
         invalidateCache(query);
-        
         defaultBatchDelete(query);
     }
 
