@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static org.restlet.data.MediaType.APPLICATION_JSON;
 import static ua.com.fielden.platform.serialisation.api.impl.Serialiser.createSerialiserWithJackson;
@@ -70,10 +71,11 @@ public class RestServerUtilRequestBodyTest {
     public void error_response_for_an_invalid_request_body_discloses_no_details_of_the_failure() throws IOException {
         final var ex = assertThrows(InvalidRequestBodyException.class, () -> restUtil.restoreJsonMap(json("{\"key\": ")));
         // The representation is gzip-encoded.
-        final String response = new String(new GZIPInputStream(restUtil.errorJSONRepresentation(ex).getStream()).readAllBytes(), UTF_8);
-        assertTrue(response, response.contains(ERR_INVALID_REQUEST_BODY));
-        assertFalse(response, response.contains("jackson"));
-        assertFalse(response, response.contains("stackTrace"));
+        final var response = new String(new GZIPInputStream(restUtil.errorJSONRepresentation(ex).getStream()).readAllBytes(), UTF_8);
+        assertThat(response)
+                .contains(ERR_INVALID_REQUEST_BODY)
+                .doesNotContain("jackson")
+                .doesNotContain("stackTrace");
     }
 
 }
