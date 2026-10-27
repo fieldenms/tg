@@ -18,9 +18,11 @@ import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.Pa
 import java.util.Optional;
 
 import static java.util.concurrent.TimeUnit.HOURS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.joda.time.DateTimeZone.getDefault;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MINUTES;
+import static ua.com.fielden.platform.security.user.UserSecretCo.resetUuidExpirationTime;
 import static ua.com.fielden.platform.web.resources.webui.LoginCompleteResetResource.isResetUuidValid;
 import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.MIN_REUSED_LINK_VALIDITY_IN_MINUTES;
 import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.findOrAssignPasswordResetUuid;
@@ -75,12 +77,17 @@ public class PasswordResetLinkExpirationTest extends AbstractWebResourceWithDaoT
 
     @Test
     public void reset_link_requested_by_a_new_user_replaces_their_activation_link_with_one_valid_for_the_reset_period() {
+        // A new user, who has not used their activation link, which remains valid for 24 hours.
+        co$User().save(new_(User.class, "NEW_USER").setBase(true).setEmail("NEW_USER@company.com").setActive(true));
+
         final UserSecretCo coUserSecret = co$(UserSecret.class);
         final String activationUuid = coUserSecret.findByUsername("NEW_USER").orElseThrow().getResetUuid();
         assertNotNull("Invalid initial conditions: a new user should have an activation link.", activationUuid);
+        assertThat(resetUuidExpirationTime(activationUuid)).hasValue(date("2026-10-22 10:00"));
 
         final PasswordResetLink link = reset("NEW_USER").orElseThrow();
-        assertNotEquals("The activation link should not be sent again.", activationUuid, link.secret().getResetUuid());
+        assertNotEquals("A new reset link should replace the activation link.", activationUuid, link.secret().getResetUuid());
+        assertThat(resetUuidExpirationTime(link.secret().getResetUuid())).hasValue(date("2026-10-21 10:15"));
         assertEquals(RESET_UUID_EXPIRATION_IN_MINUTES, link.validityInMinutes());
         assertFalse(isResetUuidValid(co$User(), activationUuid, dates));
     }
@@ -144,9 +151,6 @@ public class PasswordResetLinkExpirationTest extends AbstractWebResourceWithDaoT
         // Saving a new user assigns a reset UUID for the initial password, which this user is assumed to have used.
         final UserSecretCo coUserSecret = co$(UserSecret.class);
         coUserSecret.save(coUserSecret.findByUsername("USER1").orElseThrow().setResetUuid(null));
-
-        // A new user, who has not used their activation link, which remains valid for 24 hours.
-        co$User().save(new_(User.class, "NEW_USER").setBase(true).setEmail("NEW_USER@company.com").setActive(true));
     }
 
 }
