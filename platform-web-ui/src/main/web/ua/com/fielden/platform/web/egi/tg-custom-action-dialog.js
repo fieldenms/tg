@@ -676,7 +676,9 @@ Polymer({
         const firstIndex = forward ? 0 : focusables.length - 1;
         const callback = this._lastElement ? (forward ? this._lastElement.focusNextView.bind(this._lastElement) : this._lastElement.focusPreviousView.bind(this._lastElement)) : null;
         if ((document.activeElement === this && !this.shadowRoot.activeElement)|| isInHierarchy(this.$.titleBar, this.shadowRoot.activeElement)) {
-            if (this.shadowRoot.activeElement === focusables[lastIndex]) {
+            // Shift+Tab while the dialog itself is focused, as after a click on a part of it that cannot be focused, such as an empty area of a grid,
+            // moves the focus to the last element of the view, rather than out of the dialog; Tab moves it to the title bar, as the browser does
+            if (this.shadowRoot.activeElement === focusables[lastIndex] || (!forward && !this.shadowRoot.activeElement)) {
                 if (callback) {
                     callback(e);
                 } else {
@@ -885,7 +887,7 @@ Polymer({
 
     _isAnimatingDimensions: function () {
         return !!this.style.getPropertyValue("transition-property");
-    },
+},
 
     _invertMinimiseState: function() {
         if (!this._maximised) { // need to skip the action if dialog is in maximised state: this is needed for alt+m collapsing
