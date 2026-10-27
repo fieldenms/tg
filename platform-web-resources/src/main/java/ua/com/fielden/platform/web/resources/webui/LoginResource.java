@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
@@ -31,16 +29,13 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker.AttemptResult;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker.BLOCK_TIME_SECONDS;
-import static ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker.LOCKOUT_THRESHOLD;
-import static ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker.LOCKOUT_WINDOW_HOURS;
+import static ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker.*;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.assignAuthenticatingCookie;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.extractAuthenticator;
 
@@ -226,14 +221,11 @@ public class LoginResource extends AbstractWebResource {
             this.trustedDevice = trustedDevice;
         }
 
+        /// Excludes the password, so that it never reaches logs.
+        ///
         @Override
         public String toString() {
-            try {
-                return new ObjectMapper().writer().writeValueAsString(this);
-            } catch (final JsonProcessingException ex) {
-                LOGGER.error(ex.getMessage(), ex);
-                return "could not serialise to JSON";
-            }
+            return "Credentials[username=%s, trustedDevice=%s]".formatted(username, trustedDevice);
         }
     }
 
