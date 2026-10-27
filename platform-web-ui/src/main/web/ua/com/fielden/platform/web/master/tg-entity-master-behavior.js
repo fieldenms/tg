@@ -108,6 +108,15 @@ const _isElementInViewport = function (el) {
 };
 
 /**
+ * Determines whether 'element' of 'container' is inert, as are the elements of a blocked master component, which cannot be focused:
+ * whether 'element' or any of its ancestors up to 'container', including the hosts of shadow roots, is inert.
+ */
+const _isInert = function (element, container) {
+    const inertOrContainer = getParentAnd(element, current => current === container || current.inert);
+    return !!inertOrContainer && inertOrContainer.inert === true;
+};
+
+/**
  * Focuses 'inputToFocus' taking into account that it can already be focused.
  */
 const focusInput = function (inputToFocus) {
@@ -1144,8 +1153,12 @@ const TgEntityMasterBehaviorImpl = {
         embeddedMaster.postSavedError = this.postSavedError;
     },
 
+    /**
+     * Returns the elements that can be focused, in the order of focus traversal, including those of the editors, the actions and the components of the master.
+     * The elements of inert subtrees, such as those of a blocked master component, are skipped, as they cannot be focused.
+     */
     _getCurrentFocusableElements: function () {
-        return queryElements(this, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
+        return queryElements(this, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null && !_isInert(element, this));
     },
 
     wasLoaded: function () {

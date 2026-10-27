@@ -4,6 +4,7 @@ import '/resources/images/tg-icons.js';
 
 import { addListener } from '/resources/polymer/@polymer/polymer/lib/utils/gestures.js';
 import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { deepestActiveElement, isInHierarchy, tearDownEvent, localStorageKey, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
 
 /**
@@ -94,9 +95,16 @@ const componentStyles = `
  * and after each validation for which the refresh condition declared for the component with `refreshWhen` in the Entity Master DSL holds.
  * A refresh asked for while the component is blocked takes place once it is unblocked, and refreshes asked for at once, such as when a save also unblocks the component, take place once.
  *
+ * The component is a container of selectable elements, as an editor is, so that its focusable elements, such as its property actions and the elements of an embedded centre,
+ * take part in the focus traversal of the master in their place among the editors.
+ * So, the master knows its first and last focusable elements also when a component comes first or last,
+ * and Tab moves on from the last of them as from the last editor, such as to the title bar of a dialog, rather than out of the master.
+ * The master skips the elements of the component while it is blocked, as they are inert.
+ * As such a container, the component is also searched by the master for the actions of its shortcuts and for elements with the `canLeave` contract, such as an embedded centre.
+ *
  * The behaviour is used with `behaviors: [...]` for an element declared with `Polymer({...})`, or with `mixinBehaviors([...], PolymerElement)` for a class-based element.
  */
-export const TgMasterComponentBehavior = {
+const TgMasterComponentBehaviorImpl = {
 
     properties: {
 
@@ -437,3 +445,8 @@ export const TgMasterComponentBehavior = {
         }
     }
 };
+
+export const TgMasterComponentBehavior = [
+    TgElementSelectorBehavior,
+    TgMasterComponentBehaviorImpl
+];
