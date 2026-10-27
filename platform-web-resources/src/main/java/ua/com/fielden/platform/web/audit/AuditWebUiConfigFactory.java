@@ -78,10 +78,12 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
     @Override
     public EntityCentre<?> createEmbeddedCentre(final Class<? extends AbstractEntity<?>> auditedType) {
         final var baseAuditedType = baseEntityType(auditedType);
+        return new EntityCentre<>(miTypeForEmbeddedCentre(auditedType),
+                                  createEmbeddedCentreConfig(auditTypeFinder.navigate(baseAuditedType).synAuditEntityType()),
+                                  injector);
+    }
 
-        // Must exist
-        final var synAuditType = auditTypeFinder.navigate(baseAuditedType).synAuditEntityType();
-
+    <T extends AbstractSynAuditEntity<?>> EntityCentreConfig<T> createEmbeddedCentreConfig(final Class<T> synAuditType) {
         final var auditProperties = domainMetadata.forEntity(synAuditType)
                 .properties()
                 .stream()
@@ -94,7 +96,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
         final EntityActionConfig standardExportAction = EXPORT_EMBEDDED_CENTRE_ACTION.mkAction(synAuditType);
         final EntityActionConfig standardSortAction = CUSTOMISE_COLUMNS_ACTION.mkAction();
 
-        IAlsoCrit centreBuilder1 = centreFor((Class) synAuditType)
+        IAlsoCrit<T> centreBuilder1 = centreFor(synAuditType)
                 .runAutomatically()
                 .addTopAction(standardSortAction).also()
                 .addTopAction(standardExportAction)
@@ -126,17 +128,23 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
             centreBuilder2 = centreBuilder2.also().addProp(prop.name());
         }
 
-        final EntityCentreConfig centre = centreBuilder2.setRenderingCustomiser(AuditEntityRenderingCustomiser.class)
-                .setQueryEnhancer(AuditEntityQueryEnhancer.class, context().withMasterEntity().build())
+        return centreBuilder2
+                .setRenderingCustomiser(AuditEntityRenderingCustomiser.class)
+                .setQueryEnhancer(AuditEntityQueryEnhancer.klass(), context().withMasterEntity().build())
                 .build();
-
-        return new EntityCentre<>(miTypeForEmbeddedCentre(auditedType), centre, injector);
     }
 
     private EntityCentre<?> createCentre(
             final Class<? extends AbstractEntity<?>> auditedType,
             final Class<? extends AbstractSynAuditEntity<?>> synAuditType,
             final Class<? extends MiWithConfigurationSupport<?>> miType)
+    {
+        return new EntityCentre<>(miType, createCentreConfig(auditedType, synAuditType), injector);
+    }
+
+    <T extends AbstractSynAuditEntity<?>> EntityCentreConfig<T> createCentreConfig(
+            final Class<? extends AbstractEntity<?>> auditedType,
+            final Class<T> synAuditType)
     {
         final var standardExportAction = StandardActions.EXPORT_ACTION.mkAction(synAuditType);
         final var standardSortAction = CentreConfigurationWebUiConfig.CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
@@ -150,7 +158,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
 
         final var layout = LayoutComposer.mkGridForCentre(5 + critAuditProperties.size(), 1);
 
-        IAlsoCrit centreBuilder1 = EntityCentreBuilder.centreFor(synAuditType)
+        IAlsoCrit<T> centreBuilder1 = EntityCentreBuilder.centreFor(synAuditType)
                 .addTopAction(standardExportAction).also()
                 .addTopAction(standardSortAction)
 
@@ -184,11 +192,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
             centreBuilder2 = centreBuilder2.also().addProp(prop.name());
         }
 
-        final var centreBuilder3 = centreBuilder2.setRenderingCustomiser(AuditEntityRenderingCustomiser.class);
-
-        final var ecc = centreBuilder3.build();
-
-        return new EntityCentre<>(miType, ecc, injector);
+        return centreBuilder2.setRenderingCustomiser(AuditEntityRenderingCustomiser.class).build();
     }
 
     /// Keep types in sync with [#addAuditPropertyAsCrit].
@@ -205,14 +209,14 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
 
     /// Keep types in sync with [#canBeCrit].
     ///
-    private static @Nullable IAlsoCrit addAuditPropertyAsCrit(
-            final ISelectionCriteriaBuilder builder,
+    private static <T extends AbstractEntity<?>> @Nullable IAlsoCrit<T> addAuditPropertyAsCrit(
+            final ISelectionCriteriaBuilder<T> builder,
             final PropertyMetadata property)
     {
         final var propType = property.type();
 
         if (propType.isEntity()) {
-            return builder.addCrit(property.name()).asMulti().autocompleter(propType.javaType());
+            return builder.addCrit(property.name()).asMulti().autocompleter(propType.asEntity().orElseThrow().javaType());
         }
         else if (isDate(propType.javaType())) {
             return builder.addCrit(property.name()).asRange().dateTime();
