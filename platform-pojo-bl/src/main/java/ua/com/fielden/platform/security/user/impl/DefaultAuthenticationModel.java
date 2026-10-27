@@ -1,18 +1,10 @@
 package ua.com.fielden.platform.security.user.impl;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-
 import com.google.inject.Inject;
-
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -21,6 +13,11 @@ import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.security.user.UserSecretCo;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
 /**
  * An authentication model for explicit user logins (thread-safe).
@@ -51,12 +48,13 @@ public class DefaultAuthenticationModel implements IAuthenticationModel {
             }
             final UserSecretCo coUserSecret = coFinder.find(UserSecret.class, true);
             // in the SSO mode, users should only be able to login with RSO if they are permitted (i.e., their ssOnly property is false).
-            final ICompoundCondition0<UserSecret> rsoCondition = select(UserSecret.class).where().lowerCase().prop("key.key").eq().lowerCase().val(username).and().prop("key.active").eq().val(true);
-            final EntityResultQueryModel<UserSecret> query = (authMode == AuthMode.RSO ? rsoCondition : rsoCondition.and().prop("key.ssoOnly").eq().val(false)).model();
-            final fetch<UserSecret> fetch = coUserSecret.getFetchProvider().fetchModel();
-            final QueryExecutionModel<UserSecret, EntityResultQueryModel<UserSecret>> qem = from(query).with(fetch).model();
-
-            return coUserSecret.getEntityOptional(qem)
+            final var query = select(UserSecret.class)
+                    .where()
+                    .lowerCase().prop("key.key").eq().lowerCase().val(username)
+                    .and().prop("key.active").eq().val(true)
+                    .and().condition(authMode == AuthMode.RSO ? emptyCondition() : cond().prop("key.ssoOnly").eq().val(false).model())
+                    .model();
+            return coUserSecret.getEntityOptional(from(query).with(coUserSecret.getFetchProvider().fetchModel()).model())
                     .map(secret -> equalsEx(secret.getPassword(), coUserSecret.hashPasswd(password, secret.getSalt())) ? successful(secret.getKey()) : failedAuthResult)
                     .orElseGet(() -> {
                         // let's mimic password hashing for unrecognised users to protected from timing-based attacks that would allow enumerating valid user names

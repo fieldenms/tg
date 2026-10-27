@@ -99,6 +99,7 @@ public class LoginAttemptTracker {
                 return new AttemptResult(Outcome.BLOCKED, false);
             }
 
+            // If the user was locked out, authentication is expected to return false.
             if (authenticate.getAsBoolean()) {
                 attempts.remove(key, usernameAttempts);
                 accountFailures.remove(key);

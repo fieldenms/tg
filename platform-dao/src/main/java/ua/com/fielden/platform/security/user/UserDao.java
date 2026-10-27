@@ -16,7 +16,6 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -325,7 +324,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // Deactivate the user if they can sign in with a password; deactivation also removes their secret.
         final IUser co$User = co$(User.class);
         co$User.getEntityOptional(from(passwordLoginQuery()).with(getFetchProvider().fetchModel()).with(PARAM_USERNAME, username).model())
-                .ifPresent(user -> save(user.setActive(false)));
+                .ifPresent(user -> save(user.setActive(false), empty()));
     }
 
     @SessionRequired(allowNestedScope = false)
@@ -349,10 +348,11 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     /// Creates a query for the active user identified by parameter [#PARAM_USERNAME] (case-insensitive) who, in the SSO authentication mode, is not restricted to SSO only.
     ///
     private static EntityResultQueryModel<User> mkPasswordLoginQuery(final boolean ssoMode) {
-        final ICompoundCondition0<User> condition = select(User.class).where()
+        return select(User.class).where()
                 .prop(ACTIVE).eq().val(true)
-                .and().lowerCase().prop(KEY).eq().lowerCase().param(PARAM_USERNAME);
-        return (ssoMode ? condition.and().prop(User.SSO_ONLY).eq().val(false) : condition).model();
+                .and().lowerCase().prop(KEY).eq().lowerCase().param(PARAM_USERNAME)
+                .and().condition(ssoMode ? cond().prop(User.SSO_ONLY).eq().val(false).model() : emptyCondition())
+                .model();
     }
 
     /// Creates a query for the secret of the user identified by parameter [#PARAM_USERNAME] (case-insensitive) who is inactive or, as determined by [#mkPasswordLoginQuery(boolean)], can sign in with a password.

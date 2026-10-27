@@ -692,6 +692,7 @@ public class UserTestCase extends AbstractDaoTestCase {
 
     @Test
     public void lockout_identifies_the_account_by_username_case_insensitively() {
+        assertTrue(coUser.findUser("USER3").isActive());
         coUser.lockoutUser("user3");
         assertFalse(coUser.findUser("USER3").isActive());
     }

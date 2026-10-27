@@ -41,7 +41,7 @@ public interface UserSecretCo extends IEntityDao<UserSecret>, ISaveWithFetch<Use
 
     /// Returns the secret of the user with `username`, or an empty value if that user has no secret.
     ///
-    Optional<UserSecret> findByUsername(final String username);
+    Optional<UserSecret> findByUsername(String username);
 
     /// Returns the hash of `passwd` with `salt`, which is stored as the password of a user, and compared with on authentication.
     ///
