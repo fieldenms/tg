@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.audit;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
@@ -23,8 +24,8 @@ import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
 
-import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
+import java.util.Set;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
@@ -86,8 +87,9 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .stream()
                 .filter(p -> p.has(AUDIT_PROPERTY))
                 .collect(toImmutableList());
+        final var critAuditProperties = auditProperties.stream().filter(AuditWebUiConfigFactory::canBeCrit).toList();
 
-        final var layout = LayoutComposer.mkGridForCentre(4 + auditProperties.size(), 1);
+        final var layout = LayoutComposer.mkGridForCentre(4 + critAuditProperties.size(), 1);
 
         final EntityActionConfig standardExportAction = EXPORT_EMBEDDED_CENTRE_ACTION.mkAction(synAuditType);
         final EntityActionConfig standardSortAction = CUSTOMISE_COLUMNS_ACTION.mkAction();
@@ -102,7 +104,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .addCrit(AUDITED_VERSION).asRange().integer().also()
                 .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType));
 
-        for (final var prop : auditProperties) {
+        for (final var prop : critAuditProperties) {
             final var result = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
             centreBuilder1 = result == null ? centreBuilder1 : result;
         }
@@ -144,8 +146,9 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .stream()
                 .filter(p -> p.has(AUDIT_PROPERTY))
                 .collect(toImmutableList());
+        final var critAuditProperties = auditProperties.stream().filter(AuditWebUiConfigFactory::canBeCrit).toList();
 
-        final var layout = LayoutComposer.mkGridForCentre(5 + auditProperties.size(), 1);
+        final var layout = LayoutComposer.mkGridForCentre(5 + critAuditProperties.size(), 1);
 
         IAlsoCrit centreBuilder1 = EntityCentreBuilder.centreFor(synAuditType)
                 .addTopAction(standardExportAction).also()
@@ -157,7 +160,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .addCrit(AUDITED_VERSION).asRange().integer().also()
                 .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType));
 
-        for (final var prop : auditProperties) {
+        for (final var prop : critAuditProperties) {
             final var result = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
             centreBuilder1 = result == null ? centreBuilder1 : result;
         }
@@ -188,6 +191,20 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
         return new EntityCentre<>(miType, ecc, injector);
     }
 
+    /// Keep types in sync with [#addAuditPropertyAsCrit].
+    ///
+    private static boolean canBeCrit(final PropertyMetadata property) {
+        class $ {
+            static final Set<Class<?>> CRIT_TYPES = Set.of(Integer.class, Long.class, BigDecimal.class, String.class, boolean.class, Money.class, RichText.class);
+        }
+        final var type = property.type();
+        return type.isEntity()
+               || isDate(type.javaType())
+               || $.CRIT_TYPES.contains(type.javaType());
+    }
+
+    /// Keep types in sync with [#canBeCrit].
+    ///
     private static @Nullable IAlsoCrit addAuditPropertyAsCrit(
             final ISelectionCriteriaBuilder builder,
             final PropertyMetadata property)
@@ -219,7 +236,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
             return builder.addCrit(property.name()).asMulti().text();
         }
         else {
-            LOGGER.warn(() -> format("Audit-property [%s] will not be added to centre criteria. Unexpected property type [%s].",
+            LOGGER.warn(() -> format("Audit-property [%s] will not be added to centre criteria as its type [%s] is not among supported criteria types.",
                                      property.name(), property.type().genericJavaType().getTypeName()));
             return null;
         }
