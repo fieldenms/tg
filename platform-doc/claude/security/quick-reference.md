@@ -97,6 +97,28 @@ public int batchDelete(final Collection<Long> entitiesIds) { ... }
 Apply to DAO methods and producers.
 Combine with `@SessionRequired` for transactional methods.
 
+## CSRF Protection
+
+Web UI requests are authenticated by the `authenticator` cookie, which is `Secure`, `HttpOnly` and `SameSite=Lax` (`AbstractWebResourceGuard.mkAuthenticationCookie`).
+`platform-web-resources/web.filters.CsrfProtectionFilter` detects CSRF and rejects such requests.
+Web API resources authenticated by headers (e.g. API keys) and attached to the `Component` default host are not affected.
+
+Resources that an application attaches elsewhere — e.g. to the `Component` default host, as with the login, logout and password reset resources — are outside this filter.
+The factories of the login and password reset resources (`LoginResourceFactory`, `LoginInitiateResetResourceFactory`, `LoginCompleteResetResourceFactory`) apply the same check with `CsrfProtectionFilter.rejectIfForged`.
+`LogoutResourceFactory` does not apply the check: `LogoutResource` handles `GET` only, as identity providers call it cross-site for front-channel logout.
+
+See *CSRF Protection* in `reference.md` for the cookie attributes, reverse proxy requirements and wiring.
+
+## Login Lockout and Password Reset Cooldown
+
+`LoginAttemptTracker` briefly blocks a username after repeated failed login attempts.
+An account that can sign in with a password is locked out (deactivated, its secret removed) after `LOCKOUT_THRESHOLD` (6) failed attempts within 24 hours; `AccountLockout` performs the lockout asynchronously.
+`PasswordResetCooldown` limits password reset to once per user within 5 minutes.
+Responses do not disclose whether a username identifies an account.
+The state is held in memory per application server, and time is measured with a Guava `Ticker`, which tests replace with a manual one (see `testing/quick-reference.md`).
+
+See *Login Lockout and Password Reset Cooldown* in `reference.md` for the exact attempt counting, lockout and reset link rules.
+
 ## Topic-Specific Gotcha
 
 **Audit security tokens are runtime-generated — do not hand-write them.**

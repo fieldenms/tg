@@ -379,12 +379,18 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return universalConstants;
     }
 
-    /**
-     * Just a convenience method for obtaining the current date/time as a single call {@code now()} instead of chaining {@code getUniversalConstants().now()}.
-     * @return
-     */
+    /// A convenience method for obtaining the current date/time as a single call `now()` instead of chaining `getUniversalConstants().now()`.
+    ///
     public DateTime now() {
         return getUniversalConstants().now();
+    }
+
+    /// A convenience method for obtaining the current date/time in the server's time zone as a single call `serverNow()` instead of chaining `getUniversalConstants().serverNow()`.
+    ///
+    /// See [IUniversalConstants#serverNow()] for how it differs from [#now()].
+    ///
+    public DateTime serverNow() {
+        return getUniversalConstants().serverNow();
     }
 
     private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> co$Cache = new HashMap<>();

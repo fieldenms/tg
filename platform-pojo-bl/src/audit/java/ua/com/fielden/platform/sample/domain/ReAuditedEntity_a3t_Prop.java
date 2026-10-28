@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-09-01 15:36:07 EEST
+// Generation timestamp: 2026-10-27 19:46:12 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.util.List;

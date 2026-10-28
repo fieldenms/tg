@@ -35,6 +35,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(new DateTime());
+        constants.removeRequestTimeZone();
 
         // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
         // It should always be used as the current user for data population activities

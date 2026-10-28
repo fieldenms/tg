@@ -1,4 +1,4 @@
-// Generation timestamp: 2026-03-05 12:46:16 EET
+// Generation timestamp: 2026-10-27 19:46:12 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -25,6 +25,8 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
@@ -71,6 +73,13 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   private boolean a3t_bool1;
 
   @Title(
+      value = "Colour",
+      desc = "[Colour] at the time of the audited event."
+  )
+  @IsProperty
+  private Colour a3t_colour;
+
+  @Title(
       value = "Date 1",
       desc = "[Date 1] at the time of the audited event."
   )
@@ -86,6 +95,13 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   )
   @IsProperty
   private Date a3t_date2;
+
+  @Title(
+      value = "Hyperlink",
+      desc = "[Hyperlink] at the time of the audited event."
+  )
+  @IsProperty
+  private Hyperlink a3t_hyperlink;
 
   @Title(
       value = "Invalidate",
@@ -172,6 +188,16 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
     return this;
   }
 
+  public Colour getA3t_colour() {
+    return this.a3t_colour;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_colour(final Colour a3t_colour) {
+    this.a3t_colour = a3t_colour;
+    return this;
+  }
+
   public Date getA3t_date1() {
     return this.a3t_date1;
   }
@@ -189,6 +215,16 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   @Observable
   public ReAuditedEntity_a3t setA3t_date2(final Date a3t_date2) {
     this.a3t_date2 = a3t_date2;
+    return this;
+  }
+
+  public Hyperlink getA3t_hyperlink() {
+    return this.a3t_hyperlink;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_hyperlink(final Hyperlink a3t_hyperlink) {
+    this.a3t_hyperlink = a3t_hyperlink;
     return this;
   }
 
