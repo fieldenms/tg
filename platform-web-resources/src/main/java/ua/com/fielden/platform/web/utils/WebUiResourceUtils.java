@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.exceptions.InvalidRequestBodyException;
 
 public class WebUiResourceUtils {
     private final static Logger LOGGER = getLogger(WebUiResourceUtils.class);
@@ -58,18 +59,20 @@ public class WebUiResourceUtils {
         return restUtil.restoreJsonEntity(envelope, SavingInfoHolder.class);
     }
 
-    /**
-     * This method wraps the function of representation creation to handle properly <b>undesired</b> server errors.
-     * <p>
-     * Please note that all <b>expected</b> exceptional situations should be handled inside the respective 'representationCreator' and one should not rely on this method for such
-     * errors.
-     *
-     * @param representationCreator
-     * @return
-     */
+    /// Wraps the creation of a representation by `representationCreator` to handle **undesired** server errors.
+    /// Such errors are logged, and responded to with status `500 Internal Server Error` and a representation of the error.
+    ///
+    /// All **expected** exceptional situations should be handled by `representationCreator` itself.
+    ///
+    /// The exception is [InvalidRequestBodyException], which is caused by the client rather than the server.
+    /// It is responded to with status `400 Bad Request` and a representation of the error, and is not logged again, as it is logged where it is thrown, together with its cause.
+    ///
     public static Representation handleUndesiredExceptions(final Response response, final Supplier<Representation> representationCreator, final RestServerUtil restUtil) {
         try {
             return representationCreator.get();
+        } catch (final InvalidRequestBodyException invalidBodyEx) {
+            response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            return restUtil.errorJSONRepresentation(invalidBodyEx);
         } catch (final Exception undesiredEx) {
             LOGGER.error(undesiredEx.getMessage(), undesiredEx);
             response.setStatus(Status.SERVER_ERROR_INTERNAL);

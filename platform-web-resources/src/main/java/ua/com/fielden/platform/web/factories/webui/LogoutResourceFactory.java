@@ -27,12 +27,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
-/**
- * A factory for a logout web resource.
- *
- * @author TG Team
- *
- */
+/// A factory for a logout web resource.
+///
+/// Unlike factories for login web resources, this factory does not apply a CSRF check as the logout mechanism is designed
+/// to support front-channel logout, which is a cross-site GET request.
+///
 public class LogoutResourceFactory extends Restlet {
 
     private final String domainName;
@@ -57,13 +56,8 @@ public class LogoutResourceFactory extends Restlet {
         return URLEncoder.encode(url, UTF_8);
     }
     
-    /**
-     * A helper method to obtain SSO parameters in a safe manner (e.i., without any exception).
-     *
-     * @param paramAnnotation
-     * @param injector
-     * @return
-     */
+    /// A helper method to obtain SSO parameters in a safe manner (i.e., without any exception).
+    ///
     private static Optional<String> getSsoParam(final Class<? extends Annotation> paramAnnotation, final Injector injector) {
         try {
             final String uri = injector.getInstance(Key.get(String.class, paramAnnotation));

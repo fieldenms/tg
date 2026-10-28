@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import ua.com.fielden.platform.continuation.NeedMoreDataException;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
@@ -27,8 +28,8 @@ public class NeedMoreDataExceptionJsonSerialiser extends ResultJsonSerialiser {
     /// These include [NeedMoreDataException#continuationType] and [NeedMoreDataException#maybeContinuation].
     ///
     @Override
-    protected void writeResultData(final Result result, final JsonGenerator generator) throws IOException {
-        super.writeResultData(result, generator);
+    protected void writeResultData(final Result result, final JsonGenerator generator, final SerializerProvider provider) throws IOException {
+        super.writeResultData(result, generator, provider);
 
         final var needDataEx = (NeedMoreDataException) result;
         generator.writeFieldName(CONTINUATION_TYPE_STR);

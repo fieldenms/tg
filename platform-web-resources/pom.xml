@@ -13,7 +13,7 @@
     <name>Trident Genesis Platform Web Resources</name>
 
     <properties>
-        <restlet.version>2.6.0</restlet.version>
+        <restlet.version>2.6.1</restlet.version>
         <jetty.version>12.1.14</jetty.version>
     </properties>
 
@@ -240,6 +240,18 @@
             <artifactId>mssql-jdbc</artifactId>
             <version>${mssql.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.bytebuddy</groupId>
+                    <artifactId>byte-buddy</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
