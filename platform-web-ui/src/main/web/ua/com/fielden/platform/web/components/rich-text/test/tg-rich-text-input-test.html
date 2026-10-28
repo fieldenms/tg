@@ -764,22 +764,19 @@
                 });
             });
 
-            suite('placing the cursor in a code block', function () {
+            suite('code blocks', function () {
 
-                test('the browser cursor just before the code of a code block is the start of the code block', async function () {
-                    // Fixed in #2881 by the ProseMirror update -- before it, the cursor went to the end of the code block.
+                test('a browser position just before the code of a code block is read as the start of the code block', function () {
+                    // Fixed in #2881 by the ProseMirror update -- before it, it was read as the end of the code block.
+                    // ProseMirror reads every position that the browser reports (the cursor, a click) this way.
+                    // Chrome moves its cursor into the code text first, so this test reads the position directly.
                     loadValue(input, '<p>Text above</p><pre><code>first line\nsecond line</code></pre><p>Text below</p>');
-                    input.focusInput();
-                    select(input, positionBefore(input, 'Text above'));
-
-                    // Imitate the browser, which puts the cursor right before the code element of the code block.
-                    placeBrowserCursor(input, editorView(input).dom.querySelector('pre'), 0);
-                    await waitUntil(() => cursorPosition(input) !== positionBefore(input, 'Text above'));
+                    const codeBlock = editorView(input).dom.querySelector('pre');
 
                     assert.strictEqual(
-                        cursorPosition(input),
+                        editorView(input).posAtDOM(codeBlock, 0),
                         positionBefore(input, 'first line'),
-                        'The cursor should be at the start of the code block.'
+                        'The position should be the start of the code block.'
                     );
                 });
             });
