@@ -217,8 +217,8 @@ public class ResultSerialisationWithJacksonTest {
     public void serialised_exception_with_causes_and_suppressed_throwables_contains_no_stack_traces() {
         final var subFailure = new RuntimeException("Failure.", new IllegalStateException("Cause.", new IllegalArgumentException("Cause of cause.")));
         subFailure.addSuppressed(new RuntimeException("Suppressed."));
+        assertThat(subFailure.getStackTrace()).isNotEmpty();
         final var failure = failure(subFailure);
-        assertThat(failure.getStackTrace()).isNotEmpty();
 
         final JsonNode ex = serialiseToTree(failure).get(EX);
         assertEquals("Failure.", ex.get("message").asText());

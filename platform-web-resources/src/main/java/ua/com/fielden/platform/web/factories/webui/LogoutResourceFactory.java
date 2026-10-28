@@ -56,7 +56,7 @@ public class LogoutResourceFactory extends Restlet {
         return URLEncoder.encode(url, UTF_8);
     }
     
-    /// A helper method to obtain SSO parameters in a safe manner (e.i., without any exception).
+    /// A helper method to obtain SSO parameters in a safe manner (i.e., without any exception).
     ///
     private static Optional<String> getSsoParam(final Class<? extends Annotation> paramAnnotation, final Injector injector) {
         try {

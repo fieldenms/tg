@@ -60,14 +60,14 @@ public interface IUserSession extends IEntityDao<UserSession>, ISaveWithFetch<Us
 
     /// Creates a session authenticator.
     ///
-    Authenticator mkAuthenticator(User user, String seriesId, long version,  Date expiryTime);
+    Authenticator mkAuthenticator(User user, String seriesId, long version, Date expiryTime);
 
     /// Invalidates the specified user session.
     ///
     void clearSession(UserSession session);
     
-    /// Delete all sessions associated with `user`.
-    /// Having no current sessions, enforces the user to login explicitly.
+    /// Deletes all sessions associated with `user`.
+    /// Having no current sessions forces the user to log in explicitly.
     /// This method should be used only when a security threat is suspected or a user account needs to be disabled.
     ///
     /// @return the number of removed sessions

@@ -69,7 +69,7 @@ public interface IUser extends IEntityDao<User>, ISaveWithFetch<User> {
     Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail, final Date expirationTime);
 
     /// Finds the user identified by the provided username or email address (case-insensitive) who can reset their password.
-    /// Such a user should be active and, in the SSO authentication mode, should not be restricted to SSO only.
+    /// Such a user is active and, in the SSO authentication mode, is not restricted to SSO only.
     ///
     /// An empty optional is returned if no such user was identified.
     ///
@@ -85,10 +85,10 @@ public interface IUser extends IEntityDao<User>, ISaveWithFetch<User> {
 
     /// Returns the secret of `user` with a password reset UUID that remains valid at least until `validUntil`.
     ///
-    /// The UUID already assigned to `user` is kept if it does not expire before `validUntil`, so that a link sent with it earlier remains usable,
-    /// and if it does not expire after `expirationTime`, so that a UUID with a shorter validity takes precedence.
+    /// The UUID already assigned to `user` is kept if it expires after `validUntil`, so that a link sent with it earlier remains usable,
+    /// and if it does not expire after `expirationTime`, so that a UUID with a longer validity, such as that of the activation link for a new user, is replaced rather than sent again.
     /// Otherwise, a new UUID that expires at `expirationTime` is assigned, as by [#assignPasswordResetUuid(User, Date)].
-    /// In other words, the UUID is kept if its expiration time is in `[validUntil, expirationTime]`.
+    /// In other words, the UUID is kept if its expiration time is in `(validUntil, expirationTime]`.
     ///
     /// @param user           a user, such as one found by [#findUserForPasswordReset(String)]
     /// @param validUntil     the moment in time until which an already assigned UUID needs to remain valid to be kept

@@ -23,7 +23,7 @@ import java.util.Set;
 ///
 /// By using [Scope], each throwable is written at most once per serialised [Result] (or per throwable serialised on its own),
 /// cutting cycles between throwables.
-/// A throwable that has been written already is written as `null` if it is a cause, and is omitted if it is a suppressed throwable.
+/// A throwable that has been written already, as found by identity, is written as `null` if it is a cause, and is omitted if it is a suppressed throwable.
 /// The number of throwables written is bounded by [#MAX_THROWABLES], so that an unexpectedly long chain cannot produce an oversized response.
 ///
 public class ThrowableJsonSerialiser extends StdSerializer<Throwable> {
