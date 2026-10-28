@@ -7,15 +7,21 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.sample.domain.AuditedEntity;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.resources.test.AbstractWebResourceWithDaoTestCase;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.*;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.CHANGED_PROPS;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.CHANGED_PROPS_CRIT;
 import static ua.com.fielden.platform.audit.AuditUtils.auditPropertyName;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.*;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridForCentre;
 
 /// Tests for [AuditWebUiConfigFactory].
 ///
@@ -70,6 +76,12 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
                         auditPropertyName(AuditedEntity.Property.invalidate),
                         auditPropertyName(AuditedEntity.Property.colour),
                         auditPropertyName(AuditedEntity.Property.hyperlink));
+    }
+
+    @Test
+    public void audit_entity_centre_criteria_layout_for_audited_entity_has_a_cell_for_each_criterion() {
+        final var synAuditEntityType = auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType();
+        assertCriteriaLayoutHasCellForEachCriterion(auditWebUiConfigFactory.createCentreConfig(AuditedEntity.class, synAuditEntityType));
     }
 
     @Test
@@ -129,6 +141,12 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
     }
 
     @Test
+    public void audit_entity_embedded_centre_criteria_layout_for_audited_entity_has_a_cell_for_each_criterion() {
+        final var synAuditEntityType = auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType();
+        assertCriteriaLayoutHasCellForEachCriterion(auditWebUiConfigFactory.createEmbeddedCentreConfig(synAuditEntityType));
+    }
+
+    @Test
     public void audit_entity_embedded_centre_for_audited_entity_does_not_contain_criteria_for_colour() {
         assertAuditedPropertyNotInEmbeddedCentreCrit(AuditedEntity.class, AuditedEntity.Property.colour, Colour.class);
     }
@@ -136,6 +154,16 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
     @Test
     public void audit_entity_embedded_centre_for_audited_entity_does_not_contain_criteria_for_hyperlink() {
         assertAuditedPropertyNotInEmbeddedCentreCrit(AuditedEntity.class, AuditedEntity.Property.hyperlink, Hyperlink.class);
+    }
+
+    /// Asserts that the criteria layout for each screen device is a single-column grid with as many cells as there are criteria.
+    ///
+    private static void assertCriteriaLayoutHasCellForEachCriterion(final EntityCentreConfig<?> ecc) {
+        final var expectedLayout = mkGridForCentre(assertPresent(ecc.getSelectionCriteria()).size(), 1);
+        for (final var device : List.of(DESKTOP, TABLET, MOBILE)) {
+            assertTrue("Missing criteria layout for [%s].".formatted(device), ecc.getSelectionCriteriaLayout().hasLayoutFor(device, null));
+            assertEquals("Criteria layout for [%s].".formatted(device), expectedLayout, ecc.getSelectionCriteriaLayout().getLayout(device, null).get());
+        }
     }
 
     private void assertAuditedPropertyNotInCentreCrit(
