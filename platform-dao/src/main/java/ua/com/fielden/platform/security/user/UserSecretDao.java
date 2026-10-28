@@ -8,7 +8,6 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
@@ -16,6 +15,7 @@ import ua.com.fielden.platform.types.either.Either;
 
 import java.security.SignatureException;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -31,10 +31,7 @@ public class UserSecretDao extends CommonEntityDao<UserSecret> implements UserSe
     private final SessionIdentifierGenerator crypto;
 
     @Inject
-    public UserSecretDao(
-            final SessionIdentifierGenerator crypto,
-            final IFilter filter) {
-        super(filter);
+    protected UserSecretDao(final SessionIdentifierGenerator crypto) {
         this.crypto = crypto;
     }
 
@@ -77,6 +74,12 @@ public class UserSecretDao extends CommonEntityDao<UserSecret> implements UserSe
     @SessionRequired
     public int batchDelete(EntityResultQueryModel<UserSecret> model) {
         return defaultBatchDelete(model);
+    }
+
+    @Override
+    @SessionRequired
+    public int batchDelete(final EntityResultQueryModel<UserSecret> model, final Map<String, Object> paramValues) {
+        return defaultBatchDelete(model, paramValues);
     }
     
     @Override

@@ -35,8 +35,26 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 /// for any other type the file is still served as an attachment, so untrusted user-uploaded content with executable payloads
 /// (HTML, SVG with scripts, JavaScript, etc.) cannot be rendered in the application's origin.
 ///
+/// As defence in depth for content that a browser renders, the file is served with headers that restrict what the content can do:
+///
+/// - `X-Content-Type-Options: nosniff` makes browsers use the declared content type instead of one guessed from the content.
+/// - `Content-Security-Policy: default-src 'none'; frame-ancestors 'self'; sandbox` disallows loading resources and running scripts,
+///   places the content in an opaque origin, and permits framing only by the application, as the PDF preview does.
+///
+/// The policy governs content that the browser renders as a document, such as HTML or SVG.
+/// JavaScript embedded in a PDF is run by the PDF viewer of the browser in an environment of its own, which the policy does not govern,
+/// and which does not give that JavaScript access to the origin of the application.
+///
 public class AttachmentDownloadResource extends AbstractWebResource {
     private static final Logger LOGGER = LogManager.getLogger(AttachmentDownloadResource.class);
+
+    public static final String
+            HEADER_X_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options",
+            HEADER_CONTENT_SECURITY_POLICY = "Content-Security-Policy";
+
+    public static final String
+            X_CONTENT_TYPE_OPTIONS = "nosniff",
+            CONTENT_SECURITY_POLICY = "default-src 'none'; frame-ancestors 'self'; sandbox";
 
     private final RestServerUtil restUtil;
     private final IAttachment coAttachment;
@@ -81,6 +99,8 @@ public class AttachmentDownloadResource extends AbstractWebResource {
 
                     final Representation repFile = new FileRepresentation(file, fileType);
                     repFile.setDisposition(disposition);
+                    getResponse().getHeaders().add(HEADER_X_CONTENT_TYPE_OPTIONS, X_CONTENT_TYPE_OPTIONS);
+                    getResponse().getHeaders().add(HEADER_CONTENT_SECURITY_POLICY, CONTENT_SECURITY_POLICY);
                     return repFile;
                 }).orElseThrow(() -> failure(format("Could not read file for attachment [ID = %s, SHA1=%s, %s]", attachmentId, attachmentSha1, attachment)));
             }).orElseThrow(() -> failure(format("Attachment [ID = %s, SHA1=%s] could not be found.", attachmentId, attachmentSha1)));

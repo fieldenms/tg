@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>tg-ajax-utils tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+    <script src="/resources/test-configuration.js"></script>
+</head>
+
+<body>
+    <script type="module">
+
+        import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
+
+        /// The handling of responses with status 400 Bad Request by processResponseError.
+        /// The reflector and serialiser are stubs: a deserialised response is the response itself, and it is an error if it has `ex`.
+        ///
+        suite('ajax utils: 400 Bad Request', function () {
+
+            const errorResult = { message: 'The request could not be processed, as its content is invalid.', ex: {} };
+
+            const reflector = { isError: result => !!(result && result.ex) };
+            const serialiser = { deserialise: response => response };
+            const failingSerialiser = { deserialise: _ => { throw new Error('Cannot deserialise.'); } };
+
+            /// Processes a response with `status` and `response`, returning what the custom handler and the toaster received.
+            ///
+            const process = function (response, ser = serialiser, status = 400) {
+                const handled = [];
+                const toasts = [];
+                const toaster = {
+                    openToastForErrorResult: (result, showButton) => toasts.push({ result }),
+                    openToastForError: (header, message, showButton) => toasts.push({ header, message })
+                };
+                processResponseError({ xhr: { status, response }, aborted: false }, null, reflector, ser, value => handled.push(value), toaster);
+                return { handled, toasts };
+            };
+
+            const assertGenericError = function ({ handled, toasts }, status = 400) {
+                assert.deepEqual(handled, [`Service Error (${status}).`]);
+                assert.deepEqual(toasts, [{ header: `Service Error (${status}).`, message: `Server responded with error code ${status}` }]);
+            };
+
+            test('an error result is passed to the custom handler and shown in a toast', function () {
+                const { handled, toasts } = process(errorResult);
+                assert.deepEqual(handled, [errorResult]);
+                assert.deepEqual(toasts, [{ result: errorResult }]);
+            });
+
+            test('a response without content is reported as a generic error', function () {
+                assertGenericError(process(null));
+            });
+
+            test('a response that is not an error result is reported as a generic error', function () {
+                assertGenericError(process({ msg: 'Invalid credentials.' }));
+            });
+
+            test('a response that cannot be deserialised is reported as a generic error', function () {
+                assertGenericError(process(errorResult, failingSerialiser));
+            });
+
+            test('an error result with a status other than 400 is not treated as a bad request', function () {
+                assertGenericError(process(errorResult, serialiser, 404), 404);
+            });
+
+        });
+
+    </script>
+</body>
+
+</html>

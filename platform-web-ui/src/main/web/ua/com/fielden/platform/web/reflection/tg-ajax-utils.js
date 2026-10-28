@@ -28,6 +28,7 @@ export function processResponseErrorEvent (e, reflector, serialiser, customHandl
 export function processResponseError (request, error, reflector, serialiser, customHandler, toaster) {
     console.log('PROCESS ERROR', error);
     const xhr = request.xhr;
+    const badRequestResult = xhr.status === 400 ? errorResultOf(xhr, reflector, serialiser) : null;
     if (xhr.status === 500) { // internal server error, which could either be due to business rules or have some other cause due to a bug or db connectivity issue
         const deserialisedResult = serialiser.deserialise(xhr.response);
 
@@ -42,6 +43,9 @@ export function processResponseError (request, error, reflector, serialiser, cus
             toaster && toaster.openToastForError('Server responded with error.', error.message, true);
             throw error;
         }
+    } else if (badRequestResult) { // bad request with an error result, e.g., for a request body that could not be deserialised
+        toaster && toaster.openToastForErrorResult(badRequestResult, true);
+        customHandler && customHandler(badRequestResult);
     } else if (xhr.status === 403) { // forbidden!
         // TODO should prompt for login in place...
         toaster && toaster.openToastForError('Access denied.', 'The current session has expired. Please login and try again.', true);
@@ -66,5 +70,17 @@ export function processResponseError (request, error, reflector, serialiser, cus
             toaster && toaster.openToastForError(`${msgHeader}`, error.message, true);
             throw error;
         }
+    }
+}
+
+/// Returns the error result carried by the response of `xhr`, or `null` if the response carries none.
+/// Responses with status `400 Bad Request` may come from resources that do not respond with a result, so a response that cannot be deserialised is treated as one without an error result.
+///
+function errorResultOf(xhr, reflector, serialiser) {
+    try {
+        const deserialised = serialiser.deserialise(xhr.response);
+        return reflector.isError(deserialised) ? deserialised : null;
+    } catch (ex) {
+        return null;
     }
 }
