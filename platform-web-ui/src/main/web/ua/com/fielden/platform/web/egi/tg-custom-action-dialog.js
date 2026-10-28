@@ -674,10 +674,11 @@ Polymer({
         const focusables = this._getCurrentFocusableElements();
         const lastIndex = forward ? focusables.length - 1 : 0;
         const firstIndex = forward ? 0 : focusables.length - 1;
-        const callback = this._lastElement ? (forward ? this._lastElement.focusNextView.bind(this._lastElement) : this._lastElement.focusPreviousView.bind(this._lastElement)) : null;
+        // while the dialog is minimised, its view is hidden, so the focus moves through the title bar only
+        const callback = this._lastElement && !this._minimised ? (forward ? this._lastElement.focusNextView.bind(this._lastElement) : this._lastElement.focusPreviousView.bind(this._lastElement)) : null;
         if ((document.activeElement === this && !this.shadowRoot.activeElement)|| isInHierarchy(this.$.titleBar, this.shadowRoot.activeElement)) {
             // Shift+Tab while the dialog itself is focused, as after a click on a part of it that cannot be focused, such as an empty area of a grid,
-            // moves the focus to the last element of the view, rather than out of the dialog; Tab moves it to the title bar, as the browser does
+            // moves the focus to the last element of the view, or of the title bar while the dialog is minimised, rather than out of the dialog; Tab moves it to the title bar, as the browser does
             if (this.shadowRoot.activeElement === focusables[lastIndex] || (!forward && !this.shadowRoot.activeElement)) {
                 if (callback) {
                     callback(e);
