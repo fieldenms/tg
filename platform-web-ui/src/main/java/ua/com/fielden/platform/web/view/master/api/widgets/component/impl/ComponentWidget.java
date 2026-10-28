@@ -17,6 +17,10 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 /// Any other data it needs is declared as attributes, with either static values or pass-through binding expressions, such as `[[centreUuid]]`.
 /// By default, the component is blocked while the entity is unsaved, as rendered by [AbstractComponentWidget].
 ///
+/// Besides the refreshes that the master asks for whenever it retrieves or saves the entity, the component is refreshed by default whenever the value of its property changes,
+/// whether the user or a definer changed it, which the client-side component contract determines by comparing the values, as the `refresh-on-property-change` flag tells it.
+/// A refresh condition declared with `refreshWhen` takes the place of this default, and the flag is not rendered then.
+///
 /// The element id is `component_4_<property>`, which keeps the component apart from editors, addressed by the entity binder through `editor_4_<property>`.
 ///
 public class ComponentWidget extends AbstractComponentWidget {
@@ -29,7 +33,7 @@ public class ComponentWidget extends AbstractComponentWidget {
 
     @Override
     protected Set<String> additionalReservedAttrNames() {
-        return setOf("property-name");
+        return setOf("property-name", "refresh-on-property-change");
     }
 
     @Override
@@ -45,6 +49,7 @@ public class ComponentWidget extends AbstractComponentWidget {
         attrs.put("prop-desc", desc());
         attrs.put("property-action-index", propertyActionIndexBinding(propertyName()));
         attrs.put("refresh-count", refreshCountBinding(propertyName()));
+        attrs.put("refresh-on-property-change", refreshCondition().isEmpty()); // a `false` boolean attribute is not rendered
         addHeightAttributes(attrs);
         addUnsavedStateAttributes(attrs);
         addMasterContextAttribute(attrs);

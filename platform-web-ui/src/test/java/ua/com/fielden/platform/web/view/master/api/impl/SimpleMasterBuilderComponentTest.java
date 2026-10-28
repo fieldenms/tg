@@ -78,7 +78,7 @@ public class SimpleMasterBuilderComponentTest {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).also());
 
         assertTrue(out.contains("import '/resources/components/tg-fuel-chart.js';"));
-        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' property-name='integerProp' prop-title='Integer prop' prop-desc='Integer prop desc' " + actionIndexAttr("integerProp") + " " + refreshCountAttr("integerProp") + " block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' property-name='integerProp' prop-title='Integer prop' prop-desc='Integer prop desc' " + actionIndexAttr("integerProp") + " " + refreshCountAttr("integerProp") + " refresh-on-property-change block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
     }
 
     @Test
@@ -133,7 +133,7 @@ public class SimpleMasterBuilderComponentTest {
     public void property_component_that_skips_blocking_has_no_blocking_flag_but_receives_modification_state_of_master() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).skipBlockingWhenUnsaved().also());
 
-        assertTrue(out.contains(actionIndexAttr("integerProp") + " " + refreshCountAttr("integerProp") + " " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " " + refreshCountAttr("integerProp") + " refresh-on-property-change " + MASTER_STATE_ATTRS + ">"));
         assertFalse(out.contains("block-when-unsaved"));
     }
 
@@ -141,14 +141,29 @@ public class SimpleMasterBuilderComponentTest {
     public void property_component_receives_declared_height_with_entity_type_of_master_and_declared_minimum_height() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withHeight(300).withMinHeight(200).also());
 
-        assertTrue(out.contains(actionIndexAttr("integerProp") + " " + refreshCountAttr("integerProp") + " entity-type='" + TgPersistentEntityWithProperties.class.getName() + "' height='300px' min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " " + refreshCountAttr("integerProp") + " refresh-on-property-change entity-type='" + TgPersistentEntityWithProperties.class.getName() + "' height='300px' min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
     }
 
     @Test
     public void property_component_without_declared_height_receives_only_declared_minimum_height() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withMinHeight(200).also());
 
-        assertTrue(out.contains(actionIndexAttr("integerProp") + " " + refreshCountAttr("integerProp") + " min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " " + refreshCountAttr("integerProp") + " refresh-on-property-change min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+    }
+
+    @Test
+    public void property_component_without_refresh_condition_is_refreshed_whenever_the_value_of_its_property_changes() {
+        final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).also());
+
+        assertTrue(out.contains(refreshCountAttr("integerProp") + " refresh-on-property-change "));
+    }
+
+    @Test
+    public void property_component_with_refresh_condition_is_refreshed_by_the_condition_in_place_of_changes_of_its_property() {
+        final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).refreshWhen(FirstRefreshCondition.class).also());
+
+        assertTrue(out.contains(refreshCountAttr("integerProp") + " block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertFalse(out.contains("refresh-on-property-change"));
     }
 
     @Test
@@ -409,6 +424,8 @@ public class SimpleMasterBuilderComponentTest {
     public void attributes_rendered_by_property_component_cannot_be_declared() {
         assertConfigurationError(ERR_RESERVED_ATTR_NAME.formatted("property-name", PROPERTY_COMPONENT_DESC),
                 () -> master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withAttr("property-name", "fuelUsages"));
+        assertConfigurationError(ERR_RESERVED_ATTR_NAME.formatted("refresh-on-property-change", PROPERTY_COMPONENT_DESC),
+                () -> master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withAttr("refresh-on-property-change", "true"));
     }
 
     @Test

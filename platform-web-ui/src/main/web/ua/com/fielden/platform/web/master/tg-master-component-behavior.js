@@ -6,6 +6,7 @@ import { addListener } from '/resources/polymer/@polymer/polymer/lib/utils/gestu
 import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { deepestActiveElement, isInHierarchy, tearDownEvent, localStorageKey, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
+import { TgReflector } from '/app/tg-reflector.js';
 
 /**
  * The message of the blocking pane while the master entity is new, as for sections of a compound master.
@@ -93,6 +94,8 @@ const componentStyles = `
  * A component that runs something for the master entity, such as an embedded centre, does so in `refresh()`, which the master asks for through `refreshCount`:
  * whenever the master retrieves the entity, as when it is opened or its changes are cancelled, whenever it saves the entity,
  * and after each validation for which the refresh condition declared for the component with `refreshWhen` in the Entity Master DSL holds.
+ * A component in place of an editor without a declared condition is also refreshed whenever the value of its property `propertyName` changes, as `refreshOnPropertyChange` indicates,
+ * whether the user or a definer changed it, but not when other properties change; the values are compared as values of properties are, such as entities by their keys.
  * A refresh asked for while the component is blocked takes place once it is unblocked, and refreshes asked for at once, such as when a save also unblocks the component, take place once.
  *
  * The component is a container of selectable elements, as an editor is, so that its focusable elements, such as its property actions and the elements of an embedded centre,
@@ -114,6 +117,14 @@ const TgMasterComponentBehaviorImpl = {
         entity: {
             type: Object,
             value: null
+        },
+
+        /**
+         * The property that a component in place of an editor represents, which may be dot-notated; it is empty for a component bound to the entity.
+         */
+        propertyName: {
+            type: String,
+            value: ''
         },
 
         /**
@@ -181,6 +192,14 @@ const TgMasterComponentBehaviorImpl = {
         },
 
         /**
+         * Indicates whether the component is refreshed whenever the value of its property changes, as a component in place of an editor is without a declared refresh condition.
+         */
+        refreshOnPropertyChange: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * Indicates whether the component is blocked while the entity is unsaved.
          */
         blockWhenUnsaved: {
@@ -227,8 +246,13 @@ const TgMasterComponentBehaviorImpl = {
     observers: [
         '_updateBlocking(blockWhenUnsaved, entity, entityModified, entityEdited)',
         '_refreshRequested(refreshCount, blocked)',
+        '_propertyValueChanged(entity, propertyName, refreshOnPropertyChange, blocked)',
         '_updateHeight(height, minHeight, entityType)'
     ],
+
+    created: function () {
+        this._reflector = new TgReflector();
+    },
 
     ready: function () {
         this._propertyActions = [...this.querySelectorAll(':scope > [slot="property-action"]')];
@@ -268,13 +292,32 @@ const TgMasterComponentBehaviorImpl = {
      */
     _refreshRequested: function (refreshCount, blocked) {
         if (refreshCount && !blocked && refreshCount !== this._refreshedCount) {
-            this.debounce('tg-master-component-refresh', () => {
-                if (!this.blocked) {
-                    this._refreshedCount = this.refreshCount;
-                    this.refresh();
-                }
-            });
+            this._debounceRefresh();
         }
+    },
+
+    /**
+     * Refreshes the component when the value of its property differs from the value for which it was last refreshed, if it is refreshed whenever the value changes,
+     * unless the component is blocked, which defers the refresh until it is unblocked, as for a refresh asked for by the master.
+     */
+    _propertyValueChanged: function (entity, propertyName, refreshOnPropertyChange, blocked) {
+        if (refreshOnPropertyChange && propertyName && entity && !blocked && !this._reflector.equalsEx(entity.get(propertyName), this._refreshedValue)) {
+            this._debounceRefresh();
+        }
+    },
+
+    /**
+     * Refreshes the component at microtask timing, so that refreshes asked for at once take place once, unless it is blocked by then,
+     * recording the refresh count and the value of the property for which it is refreshed.
+     */
+    _debounceRefresh: function () {
+        this.debounce('tg-master-component-refresh', () => {
+            if (!this.blocked) {
+                this._refreshedCount = this.refreshCount;
+                this._refreshedValue = this.propertyName && this.entity ? this.entity.get(this.propertyName) : undefined;
+                this.refresh();
+            }
+        });
     },
 
     /**

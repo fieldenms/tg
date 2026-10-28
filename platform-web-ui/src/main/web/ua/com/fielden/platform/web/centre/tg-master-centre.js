@@ -63,9 +63,10 @@ const template = html`
  *
  * The centre is that of menu item type 'mi-type', registered in the application, which is loaded from '/centre_ui/<mi-type>' as element 'tg-<simple name of mi-type>-centre'.
  * Its context includes the master entity, with the changes that are not yet saved, so that its query enhancer with 'context().withMasterEntity()' can restrict the query by the master entity.
- * The centre runs whenever the master asks the component to refresh, as described in 'TgMasterComponentBehavior':
+ * The centre runs whenever the component is refreshed, as described in 'TgMasterComponentBehavior':
  * when the master retrieves the entity, as when it is opened or its changes are cancelled, when it saves the entity,
- * and after each validation for which the refresh condition declared with 'refreshWhen' in the Entity Master DSL holds.
+ * and after each validation for which the refresh condition declared with 'refreshWhen' in the Entity Master DSL holds,
+ * or, for a component in place of an editor without a declared condition, whenever the value of its property changes.
  * It does not run while the component is blocked.
  *
  * The centre has its own uuid, so that its actions do not refresh the master.
