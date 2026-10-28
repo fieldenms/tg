@@ -19,11 +19,14 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static graphql.GraphQL.newGraphQL;
@@ -78,9 +81,11 @@ public class GraphQLService implements IWebApi {
     public static final String
             WARN_INSUFFICIENT_MAX_QUERY_DEPTH = "Web API maximum query depth [%s] is insufficient for GraphiQL editor. Minimum value [" + DEFAULT_MAX_QUERY_DEPTH + "] was used.";
 
-    private final AtomicReference<GraphQLSchema> schemaRef;
+    private final GraphQLSchema initSchema;
+    private final ConcurrentHashMap<String, GraphQLSchema> schemas;
     private final FluentConditions fluentConditions;
     private final GraphQLCommon common;
+    private final IUserProvider userProvider;
 
     /// Creates a GraphQLService instance based on `applicationDomainProvider` which contains all entity types.
     ///
@@ -103,6 +108,8 @@ public class GraphQLService implements IWebApi {
             LOGGER.info("GraphQL Web API...");
             this.fluentConditions = fluentConditions;
             this.common = common;
+            this.userProvider = userProvider;
+            this.schemas = new ConcurrentHashMap<>();
 
             final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
 
@@ -127,12 +134,12 @@ public class GraphQLService implements IWebApi {
             codeRegistryBuilder.defaultDataFetcher(env -> fetching(env.getFieldDefinition().getName()));
 
             LOGGER.info("\tBuilding schema...");
-            schemaRef = new AtomicReference<>(fluentConditions.enhanceSchema(entityAggregation.enhanceSchema(entityTypeIntrospection.enhanceSchema(
+            initSchema = fluentConditions.enhanceSchema(entityAggregation.enhanceSchema(entityTypeIntrospection.enhanceSchema(
                     newSchema()
                     .codeRegistry(codeRegistryBuilder.build())
                     .query(queryType)
                     .additionalTypes(new LinkedHashSet<>(dictionary.values()))
-                    .build()))));
+                    .build())));
 
             LOGGER.info("GraphQL Web API...done");
         } catch (final Throwable t) {
@@ -144,7 +151,8 @@ public class GraphQLService implements IWebApi {
     @Override
     public Map<String, Object> execute(final Map<String, Object> input) {
         try {
-            final var graphQL = newGraphQL(schemaRef.get())
+            final var schema = schemaForUser(currentUser().getKey());
+            final var graphQL = newGraphQL(schema)
                     .queryExecutionStrategy(new GraphQLAsyncExecutionStrategy(new GraphQLSimpleDataFetcherExceptionHandler()))
                     .instrumentation(new MaxQueryDepthInstrumentation(common.maxQueryDepth()))
                     .build();
@@ -190,7 +198,7 @@ public class GraphQLService implements IWebApi {
 
         final var baseEntityType = PropertyTypeDeterminator.baseEntityType(entityType);
 
-        schemaRef.updateAndGet(oldSchema -> {
+        updateSchemaForUser(currentUser().getKey(), oldSchema -> {
             final var oldGraphQlEntityType = common.getGraphQlEntityType(oldSchema, baseEntityType.getSimpleName());
             final var oldGraphQlEntityCondCondType = common.getCoercedType(oldSchema, common.graphQlTypeNameForCondEntityCond(baseEntityType), GraphQLInputObjectType.class);
             return transformSchema(oldSchema, new GraphQLTypeVisitorStub() {
@@ -246,7 +254,7 @@ public class GraphQLService implements IWebApi {
 
         final var baseEntityType = PropertyTypeDeterminator.baseEntityType(entityType);
 
-        schemaRef.updateAndGet(oldSchema -> {
+        updateSchemaForUser(currentUser().getKey(), oldSchema -> {
             final var oldGraphQlEntityType = common.getGraphQlEntityType(oldSchema, baseEntityType.getSimpleName());
             final var oldGraphQlEntityCondCondType = common.getCoercedType(oldSchema, common.graphQlTypeNameForCondEntityCond(baseEntityType), GraphQLInputObjectType.class);
             return transformSchema(oldSchema, new GraphQLTypeVisitorStub() {
@@ -284,6 +292,22 @@ public class GraphQLService implements IWebApi {
                 }
             });
         });
+    }
+
+    private GraphQLSchema schemaForUser(final String userKey) {
+        return schemas.getOrDefault(userKey, initSchema);
+    }
+
+    private User currentUser() {
+        final var user = userProvider.getUser();
+        if (user == null) {
+            throw new WebApiException("Current user is missing.");
+        }
+        return user;
+    }
+
+    private GraphQLSchema updateSchemaForUser(final String userKey, final Function<? super GraphQLSchema, GraphQLSchema> fn) {
+        return schemas.compute(userKey, (_, s) -> fn.apply(s == null ? initSchema : s));
     }
 
     /// Creates a GraphQL dictionary (aka GraphQL "additional types") for the specified entity types.
