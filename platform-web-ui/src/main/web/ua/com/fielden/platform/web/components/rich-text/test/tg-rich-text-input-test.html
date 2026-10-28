@@ -371,6 +371,17 @@
                     assert.strictEqual(image.getAttribute('alt'), 'Company logo', 'The alternative text should be kept.');
                 });
 
+                test('an image keeps its address, but loses alternative text that hides markup after a comment end', function () {
+                    // DOMPurify removes an attribute value that could close a comment.
+                    // Inside a comment, such a value would end the comment and turn the rest into markup.
+                    paste(input, `<meta charset="utf-8"><img src="${IMAGE_URL}" alt="--><img src=x onerror=alert(1)>">`);
+
+                    const image = savedValue(input).querySelector('img');
+                    assert.ok(image, 'The image should be kept.');
+                    assert.strictEqual(image.getAttribute('src'), IMAGE_URL, 'The address of the image should be kept.');
+                    assert.isFalse(image.hasAttribute('alt'), 'The alternative text, which hides markup, should be removed.');
+                });
+
                 test('scripts, javascript: links, onerror handlers, forms and input fields are removed and never run', async function () {
                     paste(input, UNSAFE_CONTENT);
                     // Give the image time to fail loading, which would trigger its `onerror` handler, if it was kept.
@@ -384,6 +395,22 @@
                     assert.isNull(value.querySelector('a[href^="javascript:" i]'), 'The code of the javascript: link should be removed.');
                     assert.isNull(value.querySelector('[onerror]'), 'The onerror handler should be removed.');
                     assert.isNull(value.querySelector('form, input, button'), 'Forms and input fields should be removed.');
+                });
+
+                test('highlighted text from a web page loses an onmouseover handler, so that hovering over it runs no code', function () {
+                    // The editor keeps the attributes of pasted highlighted text.
+                    // Only DOMPurify removes the unsafe ones.
+                    paste(input, '<meta charset="utf-8"><mark onmouseover="window.richTextUnsafeCodeRan = true">Overdue</mark>');
+
+                    const value = savedValue(input);
+                    assert.include(value.textContent, 'Overdue', 'The highlighted text should be kept.');
+                    assert.isNull(value.querySelector('[onmouseover]'), 'The onmouseover handler should be removed from the saved value.');
+
+                    const markInEditor = editorView(input).dom.querySelector('mark');
+                    assert.ok(markInEditor, 'The highlighted text should stay highlighted in the editor.');
+                    assert.isFalse(markInEditor.hasAttribute('onmouseover'), 'The onmouseover handler should be removed from the editor.');
+                    markInEditor.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+                    assert.isUndefined(window.richTextUnsafeCodeRan, 'Hovering over the highlighted text should run no code.');
                 });
 
                 test('a nested bulleted list from Google Docs keeps all its items, with the nested item still nested', function () {
