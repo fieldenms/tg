@@ -91,3 +91,6 @@ Raw `fetch<T>` does **not** support dot-notation — use nested fetch models or 
   Database covering indexes must target the operand columns.
 - **Prefer `co.exists(model)` over `co.count(model) == 0` (or `> 0`) for existence checks**: `exists` compiles to SQL `EXISTS` and short-circuits on the first matching row, whereas `count` materialises the full count.
   Use `count` only when the count value itself is needed.
+- **Prefer `co.getAllEntities(qem)` over `co.stream(qem)` for small, bounded results**: a stream holds database resources and must be closed with try-with-resources; a list holds none.
+  Reserve `stream` for large or unbounded results, where not materialising the whole result is the point.
+  See [reference.md](reference.md#choosing-a-retrieval-method).

@@ -25,19 +25,14 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 import java.io.ByteArrayInputStream;
-import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * A web resource handling user login reset requests.
- *
- * @author TG Team
- *
- */
+/// A web resource handling user login reset requests.
+///
 public class LoginCompleteResetResource extends AbstractWebResource {
 
     public static final String ERR_RESETTING_PASSWORD = "Could not reset the password.";
@@ -85,7 +80,7 @@ public class LoginCompleteResetResource extends AbstractWebResource {
             up.setUsername(User.system_users.SU.name(), coFinder.find(User.class, true));
 
             // if the UUID is invalid, then redirect the user to the password reset resource
-            if (StringUtils.isEmpty(uuid) || !coUser.isPasswordResetUuidValid(uuid, serverNow())) {
+            if (!isResetUuidValid(coUser, uuid, dates)) {
                 return pageToReportResetSessionExpiration();
             } else {
                 final Optional<User> user = coUser.findUserByResetUuid(uuid);
@@ -106,6 +101,13 @@ public class LoginCompleteResetResource extends AbstractWebResource {
             // This resource is attached at the component level and is not covered by the application-level cleanup filter.
             up.clearUser();
         }
+    }
+
+    /// Determines whether `uuid` identifies a password reset link that has not expired by the server clock, `dates.serverNow()`, against which [LoginInitiateResetResource] sets the expiration time of reset links.
+    /// [IDates#now()] is not used, as in the independent time-zone mode it shifts the instant by the offset of the request time-zone.
+    ///
+    static boolean isResetUuidValid(final IUser coUser, final String uuid, final IDates dates) {
+        return !StringUtils.isEmpty(uuid) && coUser.isPasswordResetUuidValid(uuid, dates.serverNow().toDate());
     }
 
     private static Representation pageToReportResetSessionExpiration() {
@@ -144,7 +146,7 @@ public class LoginCompleteResetResource extends AbstractWebResource {
             final String uuid = form.getValues("uuid");
             final IUser coUser = coFinder.find(User.class, true);
             // If the UUID is invalid, then redirect the user to the password reset resource.
-            if (StringUtils.isEmpty(uuid) || !coUser.isPasswordResetUuidValid(uuid, serverNow())) {
+            if (!isResetUuidValid(coUser, uuid, dates)) {
                 getResponse().setEntity(new JsonRepresentation(msgTemplate.formatted(UUID_EXPIRED_ERROR)));
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             } else {
@@ -183,10 +185,6 @@ public class LoginCompleteResetResource extends AbstractWebResource {
             // This resource is attached at the component level and is not covered by the application-level cleanup filter.
             up.clearUser();
         }
-    }
-
-    private static Date serverNow() {
-        return new Date();
     }
 
 }

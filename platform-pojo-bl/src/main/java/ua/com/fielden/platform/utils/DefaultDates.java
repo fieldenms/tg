@@ -171,6 +171,13 @@ public class DefaultDates implements IDates {
         .orElseGet(DateTime::new); // now in server time-zone; used as a fallback where no time-zone was used.
     }
 
+    /// Returns the current time in the server's time zone, regardless of the request time zone and `independent.time.zone`.
+    ///
+    @Override
+    public DateTime serverNow() {
+        return new DateTime();
+    }
+
     @Override
     public DateTime zoned(final Date date) {
         return new DateTime(date, timeZone());
