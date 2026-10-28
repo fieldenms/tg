@@ -5272,14 +5272,8 @@ function readDOMChange(view, from, to, typeOver, addedNodes) {
     }
     // Same for backspace
     if (view.state.selection.anchor > change.start &&
-        /*TG #2881*/
-        // Since 1.42.7, any deletion inside a textblock is replayed as Backspace at the editor's selection.
-        // On Android, that selection can lag behind the keyboard's cursor, so Backspace joined paragraphs instead.
-        // So, as in 1.42.6, only a change that looks like joining blocks is replayed as Backspace.
-        looksLikeBlockJoin(doc, change.start, change.endA, $from, $to) &&
-        // (inlineChange ? change.endA > change.start && change.endB == change.start
-        //    : looksLikeBlockJoin(doc, change.start, change.endA, $from, $to)) &&
-        /*TG #2881*/ /*end*/
+        (inlineChange ? change.endA > change.start && change.endB == change.start
+            : looksLikeBlockJoin(doc, change.start, change.endA, $from, $to)) &&
         view.someProp("handleKeyDown", f => f(view, keyEvent(8, "Backspace")))) {
         if (android && chrome)
             view.domObserver.suppressSelectionUpdates(); // #820
