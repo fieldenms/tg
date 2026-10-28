@@ -192,6 +192,13 @@
             return textsOf(savedValue(input), 'span[style*="color"]');
         }
 
+        /// Returns every coloured text in the saved value of `input` with its colour, e.g. `word: rgb(229, 57, 53)`.
+        ///
+        function textColours(input) {
+            return [...savedValue(input).querySelectorAll('span[style*="color"]')]
+                .map(span => `${span.textContent.trim()}: ${span.style.color}`);
+        }
+
         /// Returns the web addresses of all links in the saved value of `input`.
         ///
         function linkAddresses(input) {
@@ -265,6 +272,13 @@
         ///
         function select(input, from, to = from) {
             input._editor.setSelection(from, to);
+        }
+
+        /// Puts the browser's cursor at `offset` in the DOM `node`, the same way a click or an on-screen keyboard does.
+        /// The editor reads the cursor from the browser asynchronously.
+        ///
+        function placeBrowserCursor(input, node, offset) {
+            editorView(input).domSelection().collapse(node, offset);
         }
 
         /// Pastes `html` at the cursor, through the editor's handling of pasted HTML.
@@ -615,6 +629,39 @@
                     input._redo({});
                     assert.deepEqual(linkAddresses(input), ['https://www.fielden.com.au/'], 'Redo should bring the link back.');
                 });
+
+                test('re-colouring partly coloured text: undo brings the previous colours back, redo the new colour', function () {
+                    // The ProseMirror update in #2881 changed how colouring and its undo are recorded.
+                    loadValue(input, '<p>Paint <span style="color: #1e88e5">this</span> word red</p>');
+                    select(input, positionBefore(input, 'this'), positionAfter(input, 'word'));
+                    input._editor.exec('color', { selectedColor: '#e53935' });
+                    assert.deepEqual(textColours(input), ['this word: rgb(229, 57, 53)'], 'The selected text should get the new colour.');
+
+                    input._undo({});
+                    assert.deepEqual(textColours(input), ['this: rgb(30, 136, 229)'], 'Undo should bring the previous colours back.');
+                    assert.strictEqual(editorText(input), 'Paint this word red', 'Undo should keep the text.');
+
+                    input._redo({});
+                    assert.deepEqual(textColours(input), ['this word: rgb(229, 57, 53)'], 'Redo should bring the new colour back.');
+                });
+
+                test('removing the colour of text in two colours: undo brings both colours back, redo removes them again', function () {
+                    // The ProseMirror update in #2881 changed how removing a colour and its undo are recorded.
+                    loadValue(input, '<p><span style="color: #e53935">Red</span> and <span style="color: #1e88e5">blue</span> text</p>');
+                    select(input, positionBefore(input, 'Red'), positionAfter(input, 'blue'));
+                    input._editor.exec('clearColor');
+                    assert.deepEqual(textColours(input), [], 'The colours should be removed.');
+
+                    input._undo({});
+                    assert.deepEqual(
+                        textColours(input),
+                        ['Red: rgb(229, 57, 53)', 'blue: rgb(30, 136, 229)'],
+                        'Undo should bring both colours back.'
+                    );
+
+                    input._redo({});
+                    assert.deepEqual(textColours(input), [], 'Redo should remove the colours again.');
+                });
             });
 
             suite('typing over selected text', function () {
@@ -663,6 +710,28 @@
 
                     assert.deepEqual(textsOf(savedValue(input), 'p'), ['First lineSecond line'], 'The paragraphs should be joined.');
                 });
+
+                test('a letter deleted by an Android on-screen keyboard is deleted, and the cursor stays in its place', async function () {
+                    // On Android, the on-screen keyboard deletes the letter itself.
+                    // The editor recognises such a deletion from the changed text.
+                    // The ProseMirror update in #2881 changed how it tells such a deletion from a Backspace press.
+                    loadValue(input, '<p>Order a coffee now</p>');
+                    input.focusInput();
+                    select(input, positionAfter(input, 'coffee'));
+
+                    // Imitate the on-screen keyboard, which deletes the letter before the cursor.
+                    const textNode = findTextNode(editorView(input).dom, 'coffee');
+                    textNode.data = textNode.data.replace('coffee', 'coffe');
+                    placeBrowserCursor(input, textNode, textNode.data.indexOf('coffe') + 'coffe'.length);
+                    await waitUntil(() => editorText(input) === 'Order a coffe now');
+
+                    assert.strictEqual(editorText(input), 'Order a coffe now', 'The letter should be deleted.');
+                    assert.strictEqual(
+                        cursorPosition(input),
+                        positionAfter(input, 'coffe'),
+                        'The cursor should stay after the remaining letters.'
+                    );
+                });
             });
 
             suite('moving the cursor around images with the arrow keys', function () {
@@ -692,6 +761,26 @@
                     pressKey(input, 'ArrowRight', 39);
 
                     assert.strictEqual(cursorPosition(input), secondImagePosition + 1, 'The cursor should be just after the second image.');
+                });
+            });
+
+            suite('placing the cursor in a code block', function () {
+
+                test('the browser cursor just before the code of a code block is the start of the code block', async function () {
+                    // Fixed in #2881 by the ProseMirror update -- before it, the cursor went to the end of the code block.
+                    loadValue(input, '<p>Text above</p><pre><code>first line\nsecond line</code></pre><p>Text below</p>');
+                    input.focusInput();
+                    select(input, positionBefore(input, 'Text above'));
+
+                    // Imitate the browser, which puts the cursor right before the code element of the code block.
+                    placeBrowserCursor(input, editorView(input).dom.querySelector('pre'), 0);
+                    await waitUntil(() => cursorPosition(input) !== positionBefore(input, 'Text above'));
+
+                    assert.strictEqual(
+                        cursorPosition(input),
+                        positionBefore(input, 'first line'),
+                        'The cursor should be at the start of the code block.'
+                    );
                 });
             });
         });
