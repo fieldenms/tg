@@ -19259,6 +19259,13 @@ var Link = /** @class */ (function (_super) {
                         getAttrs: function (dom) {
                             var sanitizedDOM = sanitizeHTML(dom, { RETURN_DOM_FRAGMENT: true })
                                 .firstChild;
+                            /*TG #2881*/
+                            // DOMPurify removes an SVG link (e.g. from an inline SVG image), as it gets it without its `<svg>`.
+                            // Such a link is not parsed as a link, so that its text is still parsed.
+                            if (!isElemNode(sanitizedDOM)) {
+                                return false;
+                            }
+                            /*TG #2881*/ /*end*/
                             var href = sanitizedDOM.getAttribute('href') || '';
                             var title = sanitizedDOM.getAttribute('title') || '';
                             var rawHTML = sanitizedDOM.getAttribute('data-raw-html');
