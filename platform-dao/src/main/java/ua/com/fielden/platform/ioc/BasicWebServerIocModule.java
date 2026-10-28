@@ -9,7 +9,6 @@ import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.audit.AbstractAuditProp;
 import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
-import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
@@ -43,8 +42,7 @@ import static ua.com.fielden.platform.audit.AuditUtils.getAuditTypeVersion;
 import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
-import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
-import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_MAX_QUERY_DEPTH;
+import static ua.com.fielden.platform.web_api.GraphQLService.*;
 
 /// Basic IoC module for server web applications, which should be extended by an application-specific IoC module.
 ///
@@ -123,6 +121,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
             LOGGER.warn(WARN_INSUFFICIENT_MAX_QUERY_DEPTH.formatted(maxQueryDepth));
         }
         bindConstant().annotatedWith(Names.named(maxQueryDepthKey)).to(insufficientMaxQueryDepth ? DEFAULT_MAX_QUERY_DEPTH : maxQueryDepth);
+        bindConstant().annotatedWith(Names.named("web.api.maxPageCapacity")).to(Integer.parseInt(props.getProperty("web.api.maxPageCapacity", String.valueOf(DEFAULT_MAX_PAGE_CAPACITY))));
         // user management
         bindConstant().annotatedWith(Names.named("users.selfEdit")).to(props.getProperty("users.selfEdit", "true"));
         // authentication parameters

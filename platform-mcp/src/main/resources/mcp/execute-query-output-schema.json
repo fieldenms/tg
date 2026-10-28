@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "description": "A GraphQL response document, as defined by the GraphQL specification.",
+  "properties": {
+    "data": {
+      "type": ["object", "null"],
+      "description": "Result of the executed operation, keyed by the response keys of the root selection set (an alias, where used, otherwise a field name). Absent if the query failed before execution began.",
+      "additionalProperties": true
+    },
+    "errors": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Errors raised while handling the query. May accompany partial data.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Description of the error."
+          },
+          "locations": {
+            "type": "array",
+            "description": "Locations in the query that relate to the error.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "line": {"type": "integer"},
+                "column": {"type": "integer"}
+              }
+            }
+          },
+          "path": {
+            "type": "array",
+            "description": "Path to the response field that raised the error.",
+            "items": {"type": ["string", "integer"]}
+          },
+          "extensions": {
+            "type": "object",
+            "description": "Additional information about the error."
+          }
+        },
+        "required": ["message"]
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Values outside the scope of the GraphQL specification."
+    }
+  }
+}

@@ -72,11 +72,16 @@ public abstract class AbstractWebUiResources extends Application {
         setAuthor(author);
     }
 
-    /// An insertion point for registering a domain specific web resources. The provided router is guarded, making all domain web resources automatically secure.
+    /// An insertion point for registering domain-specific web resources.
+    /// The provided router is guarded, making all domain web resources automatically secure.
     ///
     protected void registerDomainWebResources(final Router router, final IWebUiConfig webApp) {
         // The implementation is empty to ensure backward compatibility with existing projects.
     }
+
+    /// An insertion point for registering domain-specific web resources that are not guarded by the platform's builtin web resource guard.
+    ///
+    protected void registerUnguardedDomainWebResources(final Router router, final IWebUiConfig webApp) {}
 
     /// Creates the application router and configures it with default web resources.
     ///
@@ -138,6 +143,8 @@ public abstract class AbstractWebUiResources extends Application {
         // Register resources those are in resource paths.
         attachResources(mainRouter);
         mainRouter.attach("/service-worker.js", new ServiceWorkerResourceFactory(webResourceLoader, deviceProvider, dates));
+
+        registerUnguardedDomainWebResources(mainRouter, webApp);
 
         // Guarded resources are authenticated by a cookie, which makes them a target for CSRF.
         // Cross-site requests with unsafe methods are rejected before they reach the guard.

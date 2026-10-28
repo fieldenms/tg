@@ -1,22 +1,19 @@
 package ua.com.fielden.platform.web_api;
 
+import org.junit.Test;
+import ua.com.fielden.platform.sample.domain.TgVehicleMake;
+import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgWebApiEntity;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+
+import java.util.Map;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.web_api.WebApiUtils.errors;
-import static ua.com.fielden.platform.web_api.WebApiUtils.input;
-import static ua.com.fielden.platform.web_api.WebApiUtils.result;
-
-import java.util.Map;
-
-import org.junit.Test;
-
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgWebApiEntity;
-import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 
 /**
  * Test for GraphQL Web API implementation for standard @include & @skip directives.
@@ -38,7 +35,7 @@ public class WebApiStandardDirectivesTest extends AbstractDaoTestCase {
     public void skip_directive_works_with_argument_literal() {
         createEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity{key desc(like:\"veh2%desc\") @skip(if:true) }}"));
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(where: {cond: {desc: {like: \"veh2*desc\"}}}){key desc @skip(if:true) }}"));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -52,7 +49,7 @@ public class WebApiStandardDirectivesTest extends AbstractDaoTestCase {
     public void include_directive_works_with_argument_variable() {
         createEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query ($val: Boolean!) {tgWebApiEntity{key desc(like:\"veh2%desc\") @include(if:$val) }}", linkedMapOf(t2("val", false))));
+        final Map<String, Object> result = webApi.execute(input("query ($val: Boolean!) {tgWebApiEntity(where: {cond: {desc: {like: \"veh2*desc\"}}}){key desc @include(if:$val) }}", linkedMapOf(t2("val", false))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
