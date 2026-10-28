@@ -15706,6 +15706,15 @@ function findListItem(pos) {
         return type.name === 'listItem';
     });
 }
+/*TG #2881*/
+// `rawHTML` is the tag name of an element that was written as HTML in Markdown (e.g. `<b>` instead of `**`).
+// It is rendered as is and converted back to Markdown as the same HTML tag.
+// It is also read from the `data-raw-html` attribute of loaded or pasted HTML, where it can be any tag, e.g. `script`.
+// So, only a tag name that Markdown conversion assigns to the element is rendered, otherwise the first of `tagNames`.
+function rawHTMLTagName(rawHTML, tagNames) {
+    return rawHTML && includes(tagNames, rawHTML.toLowerCase()) ? rawHTML : tagNames[0];
+}
+/*TG #2881*/ /*end*/
 function createDOMInfoParsedRawHTML(tag) {
     return {
         tag: tag,
@@ -17905,7 +17914,9 @@ var CodeBlock = /** @class */ (function (_super) {
                 toDOM: function (_a) {
                     var attrs = _a.attrs;
                     return [
-                        attrs.rawHTML || 'pre',
+                        /*TG #2881*/
+                        rawHTMLTagName(attrs.rawHTML, ['pre']),
+                        //attrs.rawHTML || 'pre',
                         ['code', __assign$1({ 'data-language': attrs.language }, getCustomAttrs(attrs)), 0],
                     ];
                 },
@@ -18035,7 +18046,9 @@ var OrderedList = /** @class */ (function (_super) {
                 toDOM: function (_a) {
                     var attrs = _a.attrs;
                     return [
-                        attrs.rawHTML || 'ol',
+                        /*TG #2881*/
+                        rawHTMLTagName(attrs.rawHTML, ['ol']),
+                        //attrs.rawHTML || 'ol',
                         __assign$1({ start: attrs.order === 1 ? null : attrs.order }, getCustomAttrs(attrs)),
                         0,
                     ];
@@ -18097,14 +18110,18 @@ var ListItem = /** @class */ (function (_super) {
                     var attrs = _a.attrs;
                     var task = attrs.task, checked = attrs.checked;
                     if (!task) {
-                        return [attrs.rawHTML || 'li', 0];
+                        /*TG #2881*/
+                        return [rawHTMLTagName(attrs.rawHTML, ['li']), 0];
+                        //return [attrs.rawHTML || 'li', 0];
                     }
                     var classNames = ['task-list-item'];
                     if (checked) {
                         classNames.push('checked');
                     }
                     return [
-                        attrs.rawHTML || 'li',
+                        /*TG #2881*/
+                        rawHTMLTagName(attrs.rawHTML, ['li']),
+                        //attrs.rawHTML || 'li',
                         __assign$1({ class: classNames.join(' '), 'data-task': task }, (checked && { 'data-task-checked': checked })),
                         0,
                     ];
@@ -18963,7 +18980,9 @@ var Image = /** @class */ (function (_super) {
                 toDOM: function (_a) {
                     var attrs = _a.attrs;
                     return [
-                        attrs.rawHTML || 'img',
+                        /*TG #2881*/
+                        rawHTMLTagName(attrs.rawHTML, ['img']),
+                        //attrs.rawHTML || 'img',
                         __assign$1(__assign$1({ src: escapeXml$1(attrs.imageUrl) }, (attrs.altText && { alt: attrs.altText })), getCustomAttrs(attrs)),
                     ];
                 },
@@ -19014,7 +19033,9 @@ var ThematicBreak = /** @class */ (function (_super) {
                 selectable: false,
                 toDOM: function (_a) {
                     var attrs = _a.attrs;
-                    return ['div', getCustomAttrs(attrs), [attrs.rawHTML || 'hr']];
+                    /*TG #2881*/
+                    return ['div', getCustomAttrs(attrs), [rawHTMLTagName(attrs.rawHTML, ['hr'])]];
+                    //return ['div', getCustomAttrs(attrs), [attrs.rawHTML || 'hr']];
                 },
             };
         },
@@ -19084,7 +19105,9 @@ var Strong = /** @class */ (function (_super) {
                 parseDOM: parseDOM,
                 toDOM: function (_a) {
                     var attrs = _a.attrs;
-                    return [attrs.rawHTML || 'strong', getCustomAttrs(attrs)];
+                    /*TG #2881*/
+                    return [rawHTMLTagName(attrs.rawHTML, ['strong', 'b']), getCustomAttrs(attrs)];
+                    //return [attrs.rawHTML || 'strong', getCustomAttrs(attrs)];
                 },
             };
         },
@@ -19135,7 +19158,9 @@ var Emph = /** @class */ (function (_super) {
                 parseDOM: parseDOM,
                 toDOM: function (_a) {
                     var attrs = _a.attrs;
-                    return [attrs.rawHTML || 'em', getCustomAttrs(attrs)];
+                    /*TG #2881*/
+                    return [rawHTMLTagName(attrs.rawHTML, ['em', 'i']), getCustomAttrs(attrs)];
+                    //return [attrs.rawHTML || 'em', getCustomAttrs(attrs)];
                 },
             };
         },
@@ -19186,7 +19211,9 @@ var Strike = /** @class */ (function (_super) {
                 parseDOM: parseDOM,
                 toDOM: function (_a) {
                     var attrs = _a.attrs;
-                    return [attrs.rawHTML || 'del', getCustomAttrs(attrs)];
+                    /*TG #2881*/
+                    return [rawHTMLTagName(attrs.rawHTML, ['del', 's']), getCustomAttrs(attrs)];
+                    //return [attrs.rawHTML || 'del', getCustomAttrs(attrs)];
                 },
             };
         },
@@ -19242,7 +19269,9 @@ var Link = /** @class */ (function (_super) {
                 toDOM: function (_a) {
                     var attrs = _a.attrs;
                     return [
-                        attrs.rawHTML || 'a',
+                        /*TG #2881*/
+                        rawHTMLTagName(attrs.rawHTML, ['a']),
+                        //attrs.rawHTML || 'a',
                         __assign$1(__assign$1({ href: escapeXml$1(attrs.linkUrl) }, _this.linkAttributes), getCustomAttrs(attrs)),
                     ];
                 },
@@ -19313,7 +19342,9 @@ var Code = /** @class */ (function (_super) {
                 ],
                 toDOM: function (_a) {
                     var attrs = _a.attrs;
-                    return [attrs.rawHTML || 'code', getCustomAttrs(attrs)];
+                    /*TG #2881*/
+                    return [rawHTMLTagName(attrs.rawHTML, ['code']), getCustomAttrs(attrs)];
+                    //return [attrs.rawHTML || 'code', getCustomAttrs(attrs)];
                 },
             };
         },
