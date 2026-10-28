@@ -107,6 +107,13 @@
             '<meta charset="utf-8"><p data-pm-slice="1 1 [&quot;orderedList&quot;,{&quot;start&quot;:1,&quot;type&quot;:null},' +
             '&quot;listItem&quot;,null]">Item text from another editor</p>';
 
+        /// A line with a diagram, as a web page puts it into the clipboard.
+        /// The diagram is an inline SVG image with a link in it.
+        ///
+        const WEB_PAGE_LINE_WITH_LINK_IN_SVG_IMAGE =
+            '<meta charset="utf-8"><p>Diagram: <svg width="120" height="20"><a href="https://www.fielden.com.au/">' +
+            '<text x="0" y="15">Fielden website</text></a></svg> and text after it</p>';
+
         /// Content that would run code, if it was not removed: a script, a `javascript:` link and an image `onerror` handler.
         /// It also contains a form with an input field, which RichText does not support.
         /// Every piece of code sets `window.richTextUnsafeCodeRan`.
@@ -547,6 +554,14 @@
 
                     const numberedItems = textsOf(savedValue(input), 'ol > li');
                     assert.deepEqual(numberedItems, ['Item text from another editor'], 'The text should stay a numbered list item.');
+                });
+
+                test('a line with a link inside an inline SVG image from a web page keeps all its text', function () {
+                    // Fixed in #2881 -- before it, such a link stopped the whole paste with an error, and nothing was pasted.
+                    paste(input, WEB_PAGE_LINE_WITH_LINK_IN_SVG_IMAGE);
+
+                    checkEditorContentIsValid(input);
+                    assert.strictEqual(editorText(input), 'Diagram: Fielden website and text after it', 'All text should be kept.');
                 });
             });
 
