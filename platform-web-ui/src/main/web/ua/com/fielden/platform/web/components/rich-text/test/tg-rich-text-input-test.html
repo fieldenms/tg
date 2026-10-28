@@ -118,7 +118,19 @@
             '<script>window.richTextUnsafeCodeRan = true;<\/script>' +
             '<form action="https://example.com/collect"><input name="secret" value="secret"><button>Send</button></form>';
 
-        const wait = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+        /// A link, formatted text and a list item, which ask to be shown as scripts through `data-raw-html`.
+        /// The editor uses `data-raw-html` to keep the tag name of an element that was written as HTML in Markdown.
+        /// Every script would set `window.richTextUnsafeCodeRan`.
+        ///
+        const CONTENT_ASKING_TO_BE_SHOWN_AS_SCRIPTS =
+            '<p><a href="https://www.fielden.com.au/" data-raw-html="script">window.richTextUnsafeCodeRan = true</a></p>' +
+            '<p><strong data-raw-html="script">window.richTextUnsafeCodeRan = true</strong></p>' +
+            '<p><em data-raw-html="script">window.richTextUnsafeCodeRan = true</em></p>' +
+            '<p><del data-raw-html="script">window.richTextUnsafeCodeRan = true</del></p>' +
+            '<p><code data-raw-html="script">window.richTextUnsafeCodeRan = true</code></p>' +
+            '<ol><li data-raw-html="script"><p>window.richTextUnsafeCodeRan = true</p></li></ol>';
+
+        const wait =milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
         /// Waits until `condition` holds, checking it every 10 milliseconds, but no longer than `timeout` milliseconds.
         /// It returns in either case, so that the assertion that follows reports whether the condition holds.
@@ -177,6 +189,19 @@
         ///
         function linkAddresses(input) {
             return [...savedValue(input).querySelectorAll('a')].map(link => link.getAttribute('href'));
+        }
+
+        /// Checks that `CONTENT_ASKING_TO_BE_SHOWN_AS_SCRIPTS` is shown in `input` as it is, not as scripts.
+        /// So, it should stay a link, formatted text and a list item, and no code should run.
+        ///
+        function checkNotShownAsScripts(input) {
+            assert.isNull(editorView(input).dom.querySelector('script'), 'Nothing should be shown as a script in the editor.');
+            assert.isUndefined(window.richTextUnsafeCodeRan, 'No code should run.');
+            const value = savedValue(input);
+            assert.isNull(value.querySelector('script'), 'The saved value should contain no scripts.');
+            assert.deepEqual(linkAddresses(input), ['https://www.fielden.com.au/'], 'The link should be kept.');
+            ['strong', 'em', 'del', 'code', 'ol > li']
+                .forEach(selector => assert.ok(value.querySelector(selector), `The [${selector}] element should be kept.`));
         }
 
         /// Returns the plain text of the whole editor content.
@@ -344,6 +369,13 @@
                     assert.include(value.textContent, 'Unsafe link', 'The text of the link should be kept.');
                     assert.isNull(value.querySelector('a[href^="javascript:" i]'), 'The code of the link should be removed.');
                 });
+
+                test('links and formatted text that ask to be shown as scripts are not shown as scripts and run no code', function () {
+                    // Fixed in #2881 -- before it, the editor showed them as scripts.
+                    loadValue(input, CONTENT_ASKING_TO_BE_SHOWN_AS_SCRIPTS);
+
+                    checkNotShownAsScripts(input);
+                });
             });
 
             suite('pasting content copied from a web page, Google Docs or Microsoft Word', function () {
@@ -395,6 +427,13 @@
                     assert.isNull(value.querySelector('a[href^="javascript:" i]'), 'The code of the javascript: link should be removed.');
                     assert.isNull(value.querySelector('[onerror]'), 'The onerror handler should be removed.');
                     assert.isNull(value.querySelector('form, input, button'), 'Forms and input fields should be removed.');
+                });
+
+                test('links and formatted text that ask to be shown as scripts are not shown as scripts and run no code', function () {
+                    // Fixed in #2881 -- before it, the editor showed them as scripts, which ran right away.
+                    paste(input, `<meta charset="utf-8">${CONTENT_ASKING_TO_BE_SHOWN_AS_SCRIPTS}`);
+
+                    checkNotShownAsScripts(input);
                 });
 
                 test('highlighted text from a web page loses an onmouseover handler, so that hovering over it runs no code', function () {
