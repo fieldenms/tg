@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web.audit;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
@@ -25,10 +24,9 @@ import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
 
 import java.math.BigDecimal;
-import java.util.Set;
+import java.util.Optional;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.*;
@@ -89,9 +87,6 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .stream()
                 .filter(p -> p.has(AUDIT_PROPERTY))
                 .collect(toImmutableList());
-        final var critAuditProperties = auditProperties.stream().filter(AuditWebUiConfigFactory::canBeCrit).toList();
-
-        final var layout = LayoutComposer.mkGridForCentre(4 + critAuditProperties.size(), 1);
 
         final EntityActionConfig standardExportAction = EXPORT_EMBEDDED_CENTRE_ACTION.mkAction(synAuditType);
         final EntityActionConfig standardSortAction = CUSTOMISE_COLUMNS_ACTION.mkAction();
@@ -106,10 +101,17 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .addCrit(AUDITED_VERSION).asRange().integer().also()
                 .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType));
 
-        for (final var prop : critAuditProperties) {
-            final var result = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
-            centreBuilder1 = result == null ? centreBuilder1 : result;
+        // Not every audit property can be a criterion, so the layout is sized by the number of criteria actually added.
+        int auditCritCount = 0;
+        for (final var prop : auditProperties) {
+            final var maybeResult = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
+            if (maybeResult.isPresent()) {
+                centreBuilder1 = maybeResult.get();
+                auditCritCount++;
+            }
         }
+
+        final var layout = LayoutComposer.mkGridForCentre(4 + auditCritCount, 1);
 
         var centreBuilder2 = centreBuilder1
                 .setLayoutFor(DESKTOP, empty(), layout)
@@ -154,9 +156,6 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .stream()
                 .filter(p -> p.has(AUDIT_PROPERTY))
                 .collect(toImmutableList());
-        final var critAuditProperties = auditProperties.stream().filter(AuditWebUiConfigFactory::canBeCrit).toList();
-
-        final var layout = LayoutComposer.mkGridForCentre(5 + critAuditProperties.size(), 1);
 
         IAlsoCrit<T> centreBuilder1 = EntityCentreBuilder.centreFor(synAuditType)
                 .addTopAction(standardExportAction).also()
@@ -168,10 +167,17 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .addCrit(AUDITED_VERSION).asRange().integer().also()
                 .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType));
 
-        for (final var prop : critAuditProperties) {
-            final var result = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
-            centreBuilder1 = result == null ? centreBuilder1 : result;
+        // Not every audit property can be a criterion, so the layout is sized by the number of criteria actually added.
+        int auditCritCount = 0;
+        for (final var prop : auditProperties) {
+            final var maybeResult = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
+            if (maybeResult.isPresent()) {
+                centreBuilder1 = maybeResult.get();
+                auditCritCount++;
+            }
         }
+
+        final var layout = LayoutComposer.mkGridForCentre(5 + auditCritCount, 1);
 
         var centreBuilder2 = centreBuilder1
                 .setLayoutFor(DESKTOP, empty(), layout)
@@ -195,54 +201,44 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
         return centreBuilder2.setRenderingCustomiser(AuditEntityRenderingCustomiser.class).build();
     }
 
-    /// Keep types in sync with [#addAuditPropertyAsCrit].
+    /// Adds `property` as a criterion if its type is supported for criteria.
     ///
-    private static boolean canBeCrit(final PropertyMetadata property) {
-        class $ {
-            static final Set<Class<?>> CRIT_TYPES = Set.of(Integer.class, Long.class, BigDecimal.class, String.class, boolean.class, Money.class, RichText.class);
-        }
-        final var type = property.type();
-        return type.isEntity()
-               || isDate(type.javaType())
-               || $.CRIT_TYPES.contains(type.javaType());
-    }
-
-    /// Keep types in sync with [#canBeCrit].
+    /// @return the builder with the criterion added, or an empty `Optional` if the property type is not supported, in which case nothing is added.
     ///
-    private static <T extends AbstractEntity<?>> @Nullable IAlsoCrit<T> addAuditPropertyAsCrit(
+    private static <T extends AbstractEntity<?>> Optional<IAlsoCrit<T>> addAuditPropertyAsCrit(
             final ISelectionCriteriaBuilder<T> builder,
             final PropertyMetadata property)
     {
         final var propType = property.type();
 
         if (propType.isEntity()) {
-            return builder.addCrit(property.name()).asMulti().autocompleter(propType.asEntity().orElseThrow().javaType());
+            return Optional.of(builder.addCrit(property.name()).asMulti().autocompleter(propType.asEntity().orElseThrow().javaType()));
         }
         else if (isDate(propType.javaType())) {
-            return builder.addCrit(property.name()).asRange().dateTime();
+            return Optional.of(builder.addCrit(property.name()).asRange().dateTime());
         }
         else if (propType.javaType() == Integer.class || propType.javaType() == Long.class) {
-            return builder.addCrit(property.name()).asRange().integer();
+            return Optional.of(builder.addCrit(property.name()).asRange().integer());
         }
         else if (propType.javaType() == BigDecimal.class) {
-            return builder.addCrit(property.name()).asRange().decimal();
+            return Optional.of(builder.addCrit(property.name()).asRange().decimal());
         }
         else if (propType.javaType() == String.class) {
-            return builder.addCrit(property.name()).asMulti().text();
+            return Optional.of(builder.addCrit(property.name()).asMulti().text());
         }
         else if (propType.javaType() == boolean.class) {
-            return builder.addCrit(property.name()).asMulti().bool();
+            return Optional.of(builder.addCrit(property.name()).asMulti().bool());
         }
         else if (propType.javaType() == Money.class) {
-            return builder.addCrit(property.name()).asRange().decimal();
+            return Optional.of(builder.addCrit(property.name()).asRange().decimal());
         }
         else if (propType.javaType() == RichText.class) {
-            return builder.addCrit(property.name()).asMulti().text();
+            return Optional.of(builder.addCrit(property.name()).asMulti().text());
         }
         else {
-            LOGGER.warn(() -> format("Audit-property [%s] will not be added to centre criteria as its type [%s] is not among supported criteria types.",
-                                     property.name(), property.type().genericJavaType().getTypeName()));
-            return null;
+            LOGGER.warn(() -> "Audit-property [%s] will not be added to centre criteria as its type [%s] is not among supported criteria types."
+                              .formatted(property.name(), property.type().genericJavaType().getTypeName()));
+            return Optional.empty();
         }
     }
 
