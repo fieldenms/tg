@@ -1,4 +1,4 @@
-import { Slice, ReplaceError, Fragment, Mark, MarkType } from '../../prosemirror-model/dist/index.js';
+import { Slice, ReplaceError, Mark, Fragment, MarkType } from '../../prosemirror-model/dist/index.js';
 
 // Recovery values encode a range index and an offset. They are
 // represented as numbers, because tons of them will be created when
@@ -466,14 +466,27 @@ class AddMarkStep extends Step {
         }, parent), oldSlice.openStart, oldSlice.openEnd);
         return StepResult.fromReplace(doc, this.from, this.to, slice);
     }
-    invert() {
-        return new RemoveMarkStep(this.from, this.to, this.mark);
+    invert(doc) {
+        let steps = [];
+        doc.nodesBetween(this.from, this.to, (node, pos) => {
+            if (node.isInline && node.isAtom) {
+                let added = this.mark.addToSet(node.marks);
+                if (!Mark.sameSet(added, node.marks)) {
+                    let from = Math.max(this.from, pos), to = Math.min(this.to, pos + node.nodeSize);
+                    pushMarkStep(RemoveMarkStep, from, to, this.mark, steps);
+                    for (let mark of node.marks)
+                        if (!mark.isInSet(added))
+                            pushMarkStep(AddMarkStep, from, to, mark, steps);
+                }
+            }
+        });
+        return steps.length == 1 ? steps[0] : new MarkSetStep(steps);
     }
     map(mapping) {
-        let from = mapping.mapResult(this.from, 1), to = mapping.mapResult(this.to, -1);
-        if (from.deleted && to.deleted || from.pos >= to.pos)
+        let from = mapping.map(this.from, 1), to = mapping.map(this.to, -1);
+        if (from >= to)
             return null;
-        return new AddMarkStep(from.pos, to.pos, this.mark);
+        return new AddMarkStep(from, to, this.mark);
     }
     merge(other) {
         if (other instanceof AddMarkStep &&
@@ -528,14 +541,19 @@ class RemoveMarkStep extends Step {
         }, doc), oldSlice.openStart, oldSlice.openEnd);
         return StepResult.fromReplace(doc, this.from, this.to, slice);
     }
-    invert() {
-        return new AddMarkStep(this.from, this.to, this.mark);
+    invert(doc) {
+        let steps = [];
+        doc.nodesBetween(this.from, this.to, (node, pos) => {
+            if (node.isInline && node.isAtom && this.mark.isInSet(node.marks))
+                pushMarkStep(AddMarkStep, Math.max(this.from, pos), Math.min(this.to, pos + node.nodeSize), this.mark, steps);
+        });
+        return steps.length == 1 ? steps[0] : new MarkSetStep(steps);
     }
     map(mapping) {
-        let from = mapping.mapResult(this.from, 1), to = mapping.mapResult(this.to, -1);
-        if (from.deleted && to.deleted || from.pos >= to.pos)
+        let from = mapping.map(this.from, 1), to = mapping.map(this.to, -1);
+        if (from >= to)
             return null;
-        return new RemoveMarkStep(from.pos, to.pos, this.mark);
+        return new RemoveMarkStep(from, to, this.mark);
     }
     merge(other) {
         if (other instanceof RemoveMarkStep &&
@@ -558,6 +576,51 @@ class RemoveMarkStep extends Step {
     }
 }
 Step.jsonID("removeMark", RemoveMarkStep);
+function pushMarkStep(cls, from, to, mark, target) {
+    let last = target.length ? target[target.length - 1] : null;
+    if (last && last instanceof cls && last.to == from && last.mark.eq(mark)) {
+        target[target.length - 1] = new cls(last.from, to, mark);
+    }
+    else {
+        target.push(new cls(from, to, mark));
+    }
+}
+class MarkSetStep extends Step {
+    constructor(steps) {
+        super();
+        this.steps = steps;
+    }
+    apply(doc) {
+        for (let step of this.steps) {
+            let result = step.apply(doc);
+            if (!result.doc)
+                return result;
+            doc = result.doc;
+        }
+        return new StepResult(doc, null);
+    }
+    invert(doc) {
+        return new MarkSetStep(this.steps.map(s => s.invert(doc)));
+    }
+    map(mapping) {
+        let result = [];
+        for (let step of this.steps) {
+            let mapped = step.map(mapping);
+            if (mapped)
+                result.push(mapped);
+        }
+        return result.length ? new MarkSetStep(result) : null;
+    }
+    toJSON() {
+        return { stepType: "markSet", steps: this.steps.map(s => s.toJSON()) };
+    }
+    static fromJSON(schema, json) {
+        if (!Array.isArray(json.steps) || !json.steps.every((s) => s.stepType == "addMark" || s.stepType == "removeMark"))
+            throw new RangeError("Invalid JSON for MarkSetStep");
+        return new MarkSetStep(json.steps.map((s) => Step.fromJSON(schema, s)));
+    }
+}
+Step.jsonID("markSet", MarkSetStep);
 /**
 Add a mark to a specific node.
 */
@@ -882,36 +945,22 @@ function contentBetween(doc, from, to) {
 }
 
 function addMark(tr, from, to, mark) {
-    let removed = [], added = [];
-    let removing, adding;
+    let added = [];
     tr.doc.nodesBetween(from, to, (node, pos, parent) => {
         if (!node.isInline)
             return;
         let marks = node.marks;
         if (!mark.isInSet(marks) && parent.type.allowsMarkType(mark.type)) {
             let start = Math.max(pos, from), end = Math.min(pos + node.nodeSize, to);
-            let newSet = mark.addToSet(marks);
-            for (let i = 0; i < marks.length; i++) {
-                if (!marks[i].isInSet(newSet)) {
-                    if (removing && removing.to == start && removing.mark.eq(marks[i]))
-                        removing.to = end;
-                    else
-                        removed.push(removing = new RemoveMarkStep(start, end, marks[i]));
-                }
-            }
-            if (adding && adding.to == start)
-                adding.to = end;
-            else
-                added.push(adding = new AddMarkStep(start, end, mark));
+            pushMarkStep(AddMarkStep, start, end, mark, added);
         }
     });
-    removed.forEach(s => tr.step(s));
     added.forEach(s => tr.step(s));
 }
 function removeMark(tr, from, to, mark) {
     let matched = [], step = 0;
     tr.doc.nodesBetween(from, to, (node, pos) => {
-        if (!node.isInline)
+        if (!node.isInline || !node.isAtom)
             return;
         step++;
         let toRemove = null;
