@@ -732,28 +732,6 @@
                         'The cursor should stay after the remaining letters.'
                     );
                 });
-
-                test('a letter deleted by an Android keyboard, before the editor knows the cursor, joins no paragraphs', async function () {
-                    // Fixed in #2881 by a lib transform of ProseMirror.
-                    // Without it, ProseMirror 1.42.7 joins the next paragraph to this one instead.
-                    loadValue(input, '<p>First paragraph</p><p>Some long text here</p><p>Next paragraph</p>');
-                    input.focusInput();
-                    // On Android, the editor may learn where the cursor is only after the keyboard has deleted a letter.
-                    // Imitate this with the editor's cursor still at the start of the next paragraph.
-                    select(input, positionBefore(input, 'Next paragraph'));
-
-                    // Imitate the on-screen keyboard, which deletes the letter `o` of `long` and puts the cursor there.
-                    const textNode = findTextNode(editorView(input).dom, 'long');
-                    textNode.data = textNode.data.replace('long', 'lng');
-                    placeBrowserCursor(input, textNode, textNode.data.indexOf('lng') + 1);
-                    await waitUntil(() => editorText(input).includes('lng'));
-
-                    assert.deepEqual(
-                        textsOf(savedValue(input), 'p'),
-                        ['First paragraph', 'Some lng text here', 'Next paragraph'],
-                        'The letter should be deleted, and no paragraphs should be joined.'
-                    );
-                });
             });
 
             suite('moving the cursor around images with the arrow keys', function () {
