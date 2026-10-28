@@ -86,12 +86,16 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
 
     @Test
     public void audit_entity_centre_for_audited_entity_does_not_contain_criteria_for_colour() {
-        assertAuditedPropertyNotInCentreCrit(AuditedEntity.class, "colour", Colour.class);
+        final var synAuditEntityType = auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType();
+        assertAuditedPropertyNotInCrit(auditWebUiConfigFactory.createCentreConfig(AuditedEntity.class, synAuditEntityType),
+                                       AuditedEntity.class, AuditedEntity.Property.colour, Colour.class);
     }
 
     @Test
     public void audit_entity_centre_for_audited_entity_does_not_contain_criteria_for_hyperlink() {
-        assertAuditedPropertyNotInCentreCrit(AuditedEntity.class, "hyperlink", Hyperlink.class);
+        final var synAuditEntityType = auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType();
+        assertAuditedPropertyNotInCrit(auditWebUiConfigFactory.createCentreConfig(AuditedEntity.class, synAuditEntityType),
+                                       AuditedEntity.class, AuditedEntity.Property.hyperlink, Hyperlink.class);
     }
 
     @Test
@@ -114,7 +118,6 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
                         auditPropertyName(AuditedEntity.Property.union),
                         auditPropertyName(AuditedEntity.Property.invalidate));
     }
-
 
     @Test
     public void audit_entity_embedded_centre_resultset_properties_for_audited_entity() {
@@ -148,12 +151,16 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
 
     @Test
     public void audit_entity_embedded_centre_for_audited_entity_does_not_contain_criteria_for_colour() {
-        assertAuditedPropertyNotInEmbeddedCentreCrit(AuditedEntity.class, AuditedEntity.Property.colour, Colour.class);
+        final var synAuditEntityType = auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType();
+        assertAuditedPropertyNotInCrit(auditWebUiConfigFactory.createEmbeddedCentreConfig(synAuditEntityType),
+                                       AuditedEntity.class, AuditedEntity.Property.colour, Colour.class);
     }
 
     @Test
     public void audit_entity_embedded_centre_for_audited_entity_does_not_contain_criteria_for_hyperlink() {
-        assertAuditedPropertyNotInEmbeddedCentreCrit(AuditedEntity.class, AuditedEntity.Property.hyperlink, Hyperlink.class);
+        final var synAuditEntityType = auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType();
+        assertAuditedPropertyNotInCrit(auditWebUiConfigFactory.createEmbeddedCentreConfig(synAuditEntityType),
+                                       AuditedEntity.class, AuditedEntity.Property.hyperlink, Hyperlink.class);
     }
 
     /// Asserts that the criteria layout for each screen device is a single-column grid with as many cells as there are criteria.
@@ -166,7 +173,10 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
         }
     }
 
-    private void assertAuditedPropertyNotInCentreCrit(
+    /// Asserts that `auditedProp` has type `auditedPropType` in both `auditedType` and its audit type, and that its audit property is not among the criteria of `ecc`.
+    ///
+    private void assertAuditedPropertyNotInCrit(
+            final EntityCentreConfig<?> ecc,
             final Class<? extends AbstractEntity<?>> auditedType,
             final CharSequence auditedProp,
             final Class<?> auditedPropType)
@@ -177,23 +187,6 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
         final var auditPropMetadata = assertPresent(domainMetadata.forPropertyOpt(synAuditEntityType, auditPropertyName(auditedPropMetadata.name())));
         assertEquals(auditedPropType, auditPropMetadata.type().javaType());
 
-        final var ecc = auditWebUiConfigFactory.createCentreConfig(auditedType, synAuditEntityType);
-        assertThat(assertPresent(ecc.getSelectionCriteria()))
-                .doesNotContain(auditPropMetadata.name());
-    }
-
-    private void assertAuditedPropertyNotInEmbeddedCentreCrit(
-            final Class<? extends AbstractEntity<?>> auditedType,
-            final CharSequence auditedProp,
-            final Class<?> auditedPropType)
-    {
-        final var synAuditEntityType = auditTypeFinder.navigate(auditedType).synAuditEntityType();
-        final var auditedPropMetadata = assertPresent(domainMetadata.forPropertyOpt(auditedType, auditedProp));
-        assertEquals(auditedPropType, auditedPropMetadata.type().javaType());
-        final var auditPropMetadata = assertPresent(domainMetadata.forPropertyOpt(synAuditEntityType, auditPropertyName(auditedPropMetadata.name())));
-        assertEquals(auditedPropType, auditPropMetadata.type().javaType());
-
-        final var ecc = auditWebUiConfigFactory.createEmbeddedCentreConfig(synAuditEntityType);
         assertThat(assertPresent(ecc.getSelectionCriteria()))
                 .doesNotContain(auditPropMetadata.name());
     }
