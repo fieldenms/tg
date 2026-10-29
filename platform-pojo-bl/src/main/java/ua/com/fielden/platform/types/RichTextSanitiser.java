@@ -381,6 +381,8 @@ public final class RichTextSanitiser {
         return new HtmlPolicyBuilder()
                 // Attributes were extracted by grepping the source code of tui.editor with the following command:
                 // grep -hoRP '\bdata(-\w+\b)+' apps/ libs/ types/ plugins/ | sort -u
+                // `data-raw-html` is excluded, even though the command above finds it.
+                // TOAST UI renders its value as a tag name, which could turn a link or bold text into a script.
                 .allowAttributes(
                         "data-backticks",
                         "data-chart-id",
@@ -395,7 +397,6 @@ public final class RichTextSanitiser {
                         "data-my-nav",
                         "data-nodeid",
                         "data-placeholder",
-                        "data-raw-html",
                         "data-task",
                         "data-task-checked",
                         "data-task-disabled",
