@@ -227,9 +227,9 @@ export const TgEntityBinderBehavior = {
          *
          * In case where result is successful -- 'customHandlerFor(result.instance)' is invoked.
          *
-         * In case where the response has no content (e.g. due to a timeout), the toast message is shown and
-         *   'customErrorHandlerFor(message)' is invoked, as '_processError' does for a failed request.
-         *   Callers pass the same 'customErrorHandlerFor' to both; without it, '_postRetrievedDefaultError(message)' is invoked.
+         * In case where the response has no content (e.g. due to a timeout) or a status other than 200, the toast message is shown and
+         * 'customErrorHandlerFor(message)' is invoked, as '_processError' does for a failed request.
+         * Callers pass the same 'customErrorHandlerFor' to both; without it, '_postRetrievedDefaultError(message)' is invoked.
          *
          * This is the function, that is designated for binding.
          */
@@ -238,13 +238,11 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
-         * This is the standard processor for 'iron-response's and is applicable for all
-         *   responses that contain java Result inside 'e.detail.response'.
+         * This is the standard processor for 'iron-error's, i.e. for requests that failed.
          *
-         * In case where result is not successful (i.e. has 'ex' inside) the toast message is shown
-         *   and 'customErrorHandlerFor(result)' is invoked.
-         *
-         * In case where result is successful -- 'customHandlerFor(result.instance)' is invoked.
+         * The toast message is shown and 'customErrorHandlerFor(error)' is invoked,
+         * where 'error' is the error Result carried by the response, if any, or a message describing the failure.
+         * An aborted request is processed without invoking 'customErrorHandlerFor'.
          *
          * This is the function, that is designated for binding.
          */
