@@ -13,7 +13,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 ///
 /// The component is read-only.
 /// It is bound to the fully-fledged entity of the master and to the name of the property, and receives the title and description of the property, unless others are declared for it,
-/// the index of the property action to show, the number of times the master has asked it to refresh, the context of the master, and its height and minimum height, if declared.
+/// the index of the property action to show, the context of the master, and its height and minimum height, if declared.
 /// Any other data it needs is declared as attributes, with either static values or pass-through binding expressions, such as `[[centreUuid]]`.
 /// By default, the component is blocked while the entity is unsaved, as rendered by [AbstractComponentWidget].
 ///
@@ -48,7 +48,6 @@ public class ComponentWidget extends AbstractComponentWidget {
         attrs.put("prop-title", title());
         attrs.put("prop-desc", desc());
         attrs.put("property-action-index", propertyActionIndexBinding(propertyName()));
-        attrs.put("refresh-count", refreshCountBinding(propertyName()));
         attrs.put("refresh-on-property-change", refreshCondition().isEmpty()); // a `false` boolean attribute is not rendered
         addHeightAttributes(attrs);
         addUnsavedStateAttributes(attrs);

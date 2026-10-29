@@ -13,11 +13,11 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 ///
 /// The component is read-only.
 /// It is bound to the fully-fledged entity of the master, and receives the title and description declared for it, if any, the index of the action to show,
-/// the number of times the master has asked it to refresh, the context of the master, and its height and minimum height, if declared.
+/// the context of the master, and its height and minimum height, if declared.
 /// Any other data it needs is declared as attributes, with either static values or pass-through binding expressions, such as `[[centreUuid]]`.
 /// By default, the component is blocked while the entity is unsaved, as rendered by [AbstractComponentWidget].
 ///
-/// The component is identified in the master by [#componentKey()], which is the element id, and the key of its action index and of its refresh count.
+/// The component is identified in the master by [#componentKey()], which is the element id, and the key of its action index and of its refresh condition.
 ///
 /// The widget has no property name, so its actions have no chosen property.
 /// Its action is declared as for property widgets: a single action, or a multi-action whose selector chooses the action to show for the entity.
@@ -35,7 +35,7 @@ public class EntityComponentWidget extends AbstractComponentWidget {
 
     /// The key that identifies the component in the master, which distinguishes the components of a master from one another, from its editors and from its properties.
     /// It is the id of the component element, and the key under which the index of the action to show is calculated for the entity, among the property action indices of the master,
-    /// and under which the master collects the refresh condition of the component and counts the times it has asked the component to refresh.
+    /// and under which the master collects the refresh condition of the component.
     ///
     public String componentKey() {
         return componentKey;
@@ -53,7 +53,6 @@ public class EntityComponentWidget extends AbstractComponentWidget {
         ofNullable(title()).ifPresent(value -> attrs.put("prop-title", value));
         ofNullable(desc()).ifPresent(value -> attrs.put("prop-desc", value));
         attrs.put("property-action-index", propertyActionIndexBinding(componentKey));
-        attrs.put("refresh-count", refreshCountBinding(componentKey));
         addHeightAttributes(attrs);
         addUnsavedStateAttributes(attrs);
         addMasterContextAttribute(attrs);

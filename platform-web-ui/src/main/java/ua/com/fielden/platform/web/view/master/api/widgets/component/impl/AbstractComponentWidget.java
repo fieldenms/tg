@@ -37,7 +37,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 /// The client-side component contract combines these with the persistence of the bound entity to block interaction.
 ///
 /// The condition for refreshing the component is not rendered: the master collects it under the key of the component, as it collects the selector of the action of the component.
-/// The master asks the component to refresh through `refresh-count`, which is bound to the number of times the master has asked the component with that key.
+/// Nothing is rendered for refreshing either: the client-side master asks the component to refresh with a method call, finding the component by that key.
 ///
 /// The configuration is validated as it is declared, and errors are reported with [EntityMasterConfigurationException].
 /// Attributes and texts are rendered into a single-quoted attribute of the master template, which is a JavaScript template literal,
@@ -64,7 +64,7 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
 
     /// The names of attributes rendered by both component widgets, which cannot be declared.
     private static final Set<String> RESERVED_ATTR_NAMES = setOf(
-            "debug", "id", "entity", "prop-title", "prop-desc", "property-action-index", "refresh-count",
+            "debug", "id", "entity", "prop-title", "prop-desc", "property-action-index",
             "entity-type", "height", "min-height",
             "block-when-unsaved", "entity-modified", "entity-edited", "create-context-holder",
             "slot"); // the flex layout of a master assigns slots to its elements
@@ -179,14 +179,6 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
     ///
     public Optional<Class<? extends IComponentRefreshCondition<?>>> refreshCondition() {
         return refreshCondition;
-    }
-
-    /// The binding of the number of times the master has asked the component with `key` to refresh, which changes every time the master asks again:
-    /// whenever it retrieves or saves the entity, and after each validation for which the refresh condition of the component holds.
-    /// The master looks the key up as a whole, as it looks up the index of the action to show with [AbstractWidget#propertyActionIndexBinding(String)].
-    ///
-    protected static String refreshCountBinding(final String key) {
-        return "[[_componentRefreshCount(_componentRefreshes, \"" + key + "\")]]";
     }
 
     /// The names of attributes rendered by a concrete widget in addition to those of both component widgets, which cannot be declared.

@@ -78,7 +78,7 @@ public class SimpleMasterBuilderComponentTest {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).also());
 
         assertTrue(out.contains("import '/resources/components/tg-fuel-chart.js';"));
-        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' property-name='integerProp' prop-title='Integer prop' prop-desc='Integer prop desc' " + actionIndexAttr("integerProp") + " " + refreshCountAttr("integerProp") + " refresh-on-property-change block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' property-name='integerProp' prop-title='Integer prop' prop-desc='Integer prop desc' " + actionIndexAttr("integerProp") + " refresh-on-property-change block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
     }
 
     @Test
@@ -133,7 +133,7 @@ public class SimpleMasterBuilderComponentTest {
     public void property_component_that_skips_blocking_has_no_blocking_flag_but_receives_modification_state_of_master() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).skipBlockingWhenUnsaved().also());
 
-        assertTrue(out.contains(actionIndexAttr("integerProp") + " " + refreshCountAttr("integerProp") + " refresh-on-property-change " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " refresh-on-property-change " + MASTER_STATE_ATTRS + ">"));
         assertFalse(out.contains("block-when-unsaved"));
     }
 
@@ -141,28 +141,28 @@ public class SimpleMasterBuilderComponentTest {
     public void property_component_receives_declared_height_with_entity_type_of_master_and_declared_minimum_height() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withHeight(300).withMinHeight(200).also());
 
-        assertTrue(out.contains(actionIndexAttr("integerProp") + " " + refreshCountAttr("integerProp") + " refresh-on-property-change entity-type='" + TgPersistentEntityWithProperties.class.getName() + "' height='300px' min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " refresh-on-property-change entity-type='" + TgPersistentEntityWithProperties.class.getName() + "' height='300px' min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
     }
 
     @Test
     public void property_component_without_declared_height_receives_only_declared_minimum_height() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withMinHeight(200).also());
 
-        assertTrue(out.contains(actionIndexAttr("integerProp") + " " + refreshCountAttr("integerProp") + " refresh-on-property-change min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " refresh-on-property-change min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
     }
 
     @Test
     public void property_component_without_refresh_condition_is_refreshed_whenever_the_value_of_its_property_changes() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).also());
 
-        assertTrue(out.contains(refreshCountAttr("integerProp") + " refresh-on-property-change "));
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " refresh-on-property-change "));
     }
 
     @Test
     public void property_component_with_refresh_condition_is_refreshed_by_the_condition_in_place_of_changes_of_its_property() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).refreshWhen(FirstRefreshCondition.class).also());
 
-        assertTrue(out.contains(refreshCountAttr("integerProp") + " block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
         assertFalse(out.contains("refresh-on-property-change"));
     }
 
@@ -182,12 +182,12 @@ public class SimpleMasterBuilderComponentTest {
     }
 
     @Test
-    public void property_component_for_dot_notated_property_looks_up_its_action_index_and_refresh_count_by_the_whole_property_name() {
+    public void property_component_for_dot_notated_property_looks_up_its_action_index_by_the_whole_property_name() {
         final IMaster<TgPersistentEntityWithProperties> master = done(master().addProp("entityProp.integerProp").asComponent(PROPERTY_COMPONENT).withAction(mkAction("propAction")).also());
         final String out = render(master);
 
         assertTrue(out.contains("<tg-fuel-chart id='component_4_entityProp.integerProp' entity='[[_currEntity]]' property-name='entityProp.integerProp' "));
-        assertTrue(out.contains(actionIndexAttr("entityProp.integerProp") + " " + refreshCountAttr("entityProp.integerProp")));
+        assertTrue(out.contains(actionIndexAttr("entityProp.integerProp") + " refresh-on-property-change "));
         assertEquals(Map.of("entityProp.integerProp", SingleActionSelector.class), master.propertyActionSelectors());
     }
 
@@ -208,7 +208,7 @@ public class SimpleMasterBuilderComponentTest {
         final String out = render(master().addComponent(ENTITY_COMPONENT).also());
 
         assertTrue(out.contains("import '/resources/components/tg-vehicle-fuel-usages.js';"));
-        assertTrue(out.contains("<tg-vehicle-fuel-usages id='component-0' entity='[[_currEntity]]' " + actionIndexAttr("component-0") + " " + refreshCountAttr("component-0") + " block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains("<tg-vehicle-fuel-usages id='component-0' entity='[[_currEntity]]' " + actionIndexAttr("component-0") + " block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
     }
 
     @Test
@@ -229,14 +229,14 @@ public class SimpleMasterBuilderComponentTest {
                 .skipBlockingWhenUnsaved()
                 .also());
 
-        assertTrue(out.contains("<tg-fuel-usages id='component-0' entity='[[_currEntity]]' " + actionIndexAttr("component-0") + " " + refreshCountAttr("component-0") + " " + MASTER_STATE_ATTRS + " mode='compact'>"));
+        assertTrue(out.contains("<tg-fuel-usages id='component-0' entity='[[_currEntity]]' " + actionIndexAttr("component-0") + " " + MASTER_STATE_ATTRS + " mode='compact'>"));
     }
 
     @Test
     public void entity_component_receives_declared_height_with_entity_type_of_master_without_minimum_height_unless_it_is_declared() {
         final String out = render(master().addComponent(ENTITY_COMPONENT).withHeight(300).also());
 
-        assertTrue(out.contains("<tg-vehicle-fuel-usages id='component-0' entity='[[_currEntity]]' " + actionIndexAttr("component-0") + " " + refreshCountAttr("component-0") + " entity-type='" + TgPersistentEntityWithProperties.class.getName() + "' height='300px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains("<tg-vehicle-fuel-usages id='component-0' entity='[[_currEntity]]' " + actionIndexAttr("component-0") + " entity-type='" + TgPersistentEntityWithProperties.class.getName() + "' height='300px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
     }
 
     @Test
@@ -403,12 +403,6 @@ public class SimpleMasterBuilderComponentTest {
     }
 
     @Test
-    public void refresh_count_rendered_by_both_component_widgets_cannot_be_declared() {
-        assertConfigurationError(ERR_RESERVED_ATTR_NAME.formatted("refresh-count", ENTITY_COMPONENT_DESC),
-                () -> master().addComponent(ENTITY_COMPONENT).withAttr("refresh-count", "1"));
-    }
-
-    @Test
     public void context_of_master_rendered_by_both_component_widgets_cannot_be_declared() {
         assertConfigurationError(ERR_RESERVED_ATTR_NAME.formatted("create-context-holder", PROPERTY_COMPONENT_DESC),
                 () -> master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withAttr("create-context-holder", "[[_createContextHolderForEmbeddedViews]]"));
@@ -555,12 +549,6 @@ public class SimpleMasterBuilderComponentTest {
     ///
     private static String actionIndexAttr(final String key) {
         return "property-action-index='[[_propertyActionIndex(_propertyActionIndices, \"" + key + "\")]]'";
-    }
-
-    /// The rendered attribute with the number of times the master has asked the component with `key` to refresh, which the master looks up as a whole.
-    ///
-    private static String refreshCountAttr(final String key) {
-        return "refresh-count='[[_componentRefreshCount(_componentRefreshes, \"" + key + "\")]]'";
     }
 
     private static IPropertySelector<TgPersistentEntityWithProperties> master() {

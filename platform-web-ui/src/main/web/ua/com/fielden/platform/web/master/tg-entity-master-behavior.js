@@ -421,19 +421,6 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
-         * The numbers of times the master has asked its components to refresh, from which the 'refresh-count' of each component is calculated by '_componentRefreshCount':
-         * 'all' for all components, which are asked whenever the entity is retrieved or saved, and 'byKey' for the components whose refresh conditions held after a validation,
-         * keyed as the property action indices are.
-         * A new object is assigned on every change, so that the bindings of the components are updated.
-         */
-        _componentRefreshes: {
-            type: Object,
-            value: function () {
-                return { all: 0, byKey: {} };
-            }
-        },
-
-        /**
          * A dialog instance that is used for displaying entity (functional and not) masters as part of master actions logic.
          * This dialog is of type tg-custom-action-dialog and gets created on demand when needed i.e. on first _showDialog invocation.
          * It is appended to document.body just before dialog opening and is removed just after dialog closing.
@@ -1526,26 +1513,22 @@ const TgEntityMasterBehaviorImpl = {
      * Asks all components to refresh, as when the entity is retrieved or saved.
      */
     _refreshAllComponents: function () {
-        this._componentRefreshes = { all: this._componentRefreshes.all + 1, byKey: this._componentRefreshes.byKey };
+        this._getComponents().forEach(component => component.requestRefresh());
     },
 
     /**
-     * Asks the components with 'keys' to refresh.
+     * Asks the components with 'keys' to refresh, which are keyed as the property action indices are:
+     * by the property name of a component in place of an editor, and by the id of a component bound to the entity, which has no property name.
      */
     _refreshComponents: function (keys) {
-        if (keys.length > 0) {
-            const byKey = { ...this._componentRefreshes.byKey };
-            keys.forEach(key => byKey[key] = (byKey[key] || 0) + 1);
-            this._componentRefreshes = { all: this._componentRefreshes.all, byKey };
-        }
+        this._getComponents().filter(component => keys.includes(component.propertyName || component.id)).forEach(component => component.requestRefresh());
     },
 
     /**
-     * Returns the number of times the master has asked the component with 'key' to refresh, which changes every time the master asks again.
-     * The key is looked up as a whole, as for '_propertyActionIndex'.
+     * Returns the components of the master, which are marked with attribute 'tg-master-component', as editors are with 'tg-editor'.
      */
-    _componentRefreshCount: function (componentRefreshes, key) {
-        return componentRefreshes.all + (componentRefreshes.byKey[key] || 0);
+    _getComponents: function () {
+        return [...this.shadowRoot.querySelectorAll('[tg-master-component]')];
     },
 
     /**
