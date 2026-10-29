@@ -1407,6 +1407,76 @@
             });
 
         });
+
+        /// The handling of a response with no content, which a timeout can produce, or with a status other than 200.
+        /// Such a response is handled by the error handler of the request it answers.
+        /// The responses are dispatched to the `iron-ajax` of each request as its `response` event.
+        ///
+        suite('response with no content', function () {
+            const ERR_NOT_DISPATCHED = 'Request could not be dispatched.';
+
+            let master, retrievedErrors, firedEvents;
+
+            /// Dispatches to `ajax` the `response` event of a request answered with `status` and no content.
+            ///
+            const respondWithNoContent = function (ajax, status = 200) {
+                ajax.dispatchEvent(new CustomEvent('response', { detail: { xhr: { status }, response: null } }));
+            };
+
+            setup(function () {
+                master = fixture('MasterFixture');
+                retrievedErrors = [];
+                master.postRetrievedError = errorResult => retrievedErrors.push(errorResult);
+                firedEvents = [];
+                ['binding-entity-retrieved-error', 'binding-entity-saved-error'].forEach(type =>
+                    master.addEventListener(type, e => firedEvents.push([type, e.detail])));
+            });
+
+            [200, 204].forEach(status => {
+                test(`with status ${status} to a save is handled as a failed save`, async function () {
+                    await master.retrieve();
+                    const savedErrors = [];
+                    master.postSavedError = errorResult => savedErrors.push(errorResult);
+                    master._saveModifiedProperties = function () {
+                        respondWithNoContent(this._ajaxSaver(), status);
+                        return Promise.resolve();
+                    };
+
+                    await master.save();
+
+                    assert.deepEqual(savedErrors, [ERR_NOT_DISPATCHED], 'The error handler of saving should be invoked.');
+                    assert.deepEqual(retrievedErrors, [], 'The error handler of retrieval should not be invoked.');
+                    assert.deepEqual(firedEvents, [['binding-entity-saved-error', ERR_NOT_DISPATCHED]], 'Only the event of a failed save should be fired.');
+                    assert.isFalse(master._savingInitiated, 'The master should be restored after saving.');
+                    assert.strictEqual(master.currentState, 'EDIT', 'The master should be enabled after saving.');
+                });
+            });
+
+            test('to a retrieval is handled as a failed retrieval', function () {
+                respondWithNoContent(master._ajaxRetriever());
+
+                assert.deepEqual(retrievedErrors, [ERR_NOT_DISPATCHED], 'The error handler of retrieval should be invoked.');
+                assert.deepEqual(firedEvents, [['binding-entity-retrieved-error', ERR_NOT_DISPATCHED]], 'Only the event of a failed retrieval should be fired.');
+            });
+
+            test('to a validation is handled as a failed validation', function () {
+                const validatedErrors = [];
+                master._postValidatedDefaultError = errorResult => validatedErrors.push(errorResult);
+
+                respondWithNoContent(master._validator().$.ajaxSender);
+
+                assert.deepEqual(validatedErrors, [ERR_NOT_DISPATCHED], 'The error handler of validation should be invoked.');
+                assert.deepEqual(retrievedErrors, [], 'The error handler of retrieval should not be invoked.');
+                assert.deepEqual(firedEvents, [], 'No event of a failed retrieval or save should be fired.');
+            });
+
+            test('to a request whose caller passes no error handler is handled as a failed retrieval', function () {
+                master._processResponse({ detail: { xhr: { status: 200 }, response: null } }, 'custom', () => assert.fail('The handler of a successful response should not be invoked.'));
+
+                assert.deepEqual(retrievedErrors, [ERR_NOT_DISPATCHED], 'The error handler of retrieval should be invoked.');
+            });
+
+        });
     </script>
 </body>
 
