@@ -63,16 +63,18 @@ Polymer({
     ready: function () {
         const self = this;
 
+        const validationFailed = function (errorResult) {
+            self.postValidatedDefaultError(errorResult);
+        };
+
         self._processValidatorResponse = function (e) {
             self.processResponse(e, "criteria-validate", function (entityAndCustomObject) {
                 self.postValidatedDefault(entityAndCustomObject);
-            });
+            }, validationFailed);
         };
 
         self._processValidatorError = function (e) {
-            self.processError(e, "criteria-validate", function (errorResult) {
-                self.postValidatedDefaultError(errorResult);
-            });
+            self.processError(e, "criteria-validate", validationFailed);
         };
     },
 
