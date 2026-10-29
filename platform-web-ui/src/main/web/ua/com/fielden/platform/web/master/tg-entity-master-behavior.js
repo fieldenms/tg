@@ -579,17 +579,19 @@ const TgEntityMasterBehaviorImpl = {
 
         self.focusViewBound = self.focusView.bind(self);
 
+        const savingFailed = function (errorResult) {
+            return self._postSavedDefaultError(errorResult);
+        };
+
         self._processSaverResponse = function (e) {
             self._processResponse(e, "save", function (potentiallySavedOrNewEntityAndCustomObject, exceptionOccurred) {
                 self._provideExceptionOccurred(potentiallySavedOrNewEntityAndCustomObject[0], exceptionOccurred);
                 return self._postSavedDefault(potentiallySavedOrNewEntityAndCustomObject);
-            });
+            }, savingFailed);
         };
 
         self._processSaverError = function (e) {
-            self._processError(e, "save", function (errorResult) {
-                return self._postSavedDefaultError(errorResult);
-            });
+            self._processError(e, "save", savingFailed);
         };
 
         self._createActions();
