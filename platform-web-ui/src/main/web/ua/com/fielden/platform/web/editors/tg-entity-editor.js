@@ -1276,18 +1276,31 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTapHandlerBehaviour], 
             // in case of unexpected exception, resultant representation is processed in _processSearcherError;
             // please see tg-entity-binder-behavior._processResponse for more details
             self._onFound(entitiesAndCustomObject);
+        }, function (errorResult) {
+            self._closeSearch();
+            self._postSearchedError(errorResult);
         });
     }
 
     _processSearcherError (e) {
+        // The search is closed before the error is processed, as an aborted request is processed without invoking the error handler.
+        this._closeSearch();
+        this.processError(e, "search", this._postSearchedError.bind(this));
+    }
+
+    /**
+     * Closes the search that has failed, together with its result, if open.
+     */
+    _closeSearch () {
         this.opened = false;
         this.searching = false;
         this.result && this.result.close();
-        this.processError(e, "search", function (errorResult) {
-            if (this.postSearchedDefaultError) {
-                this.postSearchedDefaultError(errorResult);
-            }
-        }.bind(this));
+    }
+
+    _postSearchedError (errorResult) {
+        if (this.postSearchedDefaultError) {
+            this.postSearchedDefaultError(errorResult);
+        }
     }
 
     _selectNextOnKeyDown (e) {
