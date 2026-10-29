@@ -975,10 +975,10 @@ const TgEntityCentreBehaviorImpl = {
         };
 
         const discardFailed = function (errorResult) {
-            // This function will be invoked after server-side error appear.
-            console.warn("SERVER ERROR: ", errorResult);
+            // This function will be invoked after a server-side error or a response without content.
             self.$.selection_criteria._postRetrievedDefaultError(errorResult);
         };
+
         self._processDiscarderResponse = function (e) {
             self.$.selection_criteria._processResponse(e, "discard", function (entityAndCustomObject, exceptionOccurred) {
                 console.log("CENTRE DISCARDED", entityAndCustomObject);
