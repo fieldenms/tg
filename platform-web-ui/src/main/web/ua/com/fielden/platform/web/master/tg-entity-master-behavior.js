@@ -860,6 +860,8 @@ const TgEntityMasterBehaviorImpl = {
                 }
             }
             this.restoreAfterSave();
+            // This event can be used to react on failed saving, as 'binding-entity-retrieved-error' on failed retrieval.
+            this.fire('binding-entity-saved-error', errorResult);
         }).bind(self);
 
         self.edit = (function () {
