@@ -85,7 +85,11 @@ Topic-specific gotchas live in each directory's `quick-reference.md`.
 9. **`try-with-resources` with `stream()`**: Entity streams hold database resources that must be closed.
    Reserve `co.stream(qem)` for large or unbounded results; for small, bounded ones (e.g. a selection by IDs) use `co.getAllEntities(qem)` — nothing to close, no `try` block.
 10. **Fetch model instrumentation precedence**: If a fetch model is instrumented, entities *are* instrumented even if `QueryExecutionModel` is lightweight.
-11. **GraphQL API**: Read-only queries only.
+11. **`IDates.now()` is business time, not a reliable instant.**
+    In the independent time-zone mode, it returns the wall time of the request time-zone — taken from the client's `Time-Zone` header — with the server time-zone, which shifts the instant by their offset; `IUniversalConstants.now()` delegates to it.
+    Compare with stored instants (e.g., expiry times encoded as epoch milliseconds) using `serverNow()` of `IDates` or `IUniversalConstants` — the current time in the server time-zone on any thread, which tests control as they do `now()` — and measure durations (e.g., for throttling) with a monotonic clock (a Guava `Ticker`, `System.nanoTime()`), as a client can otherwise shift the time.
+    Code that reads a clock directly (e.g., a `Ticker`) takes the time, or the clock, as a parameter where tests need to control it (see `testing/quick-reference.md`).
+12. **GraphQL API**: Read-only queries only.
     Fields are uncapitalized entity names.
     Token: `GraphiQL_CanExecute_Token`.
 
@@ -178,8 +182,8 @@ Cross-links from a quick-reference should prefer another quick-reference; from a
 | `entity-model/` | Hierarchy, annotations, property patterns, companions, calculated/synthetic, metamodel | `reference.md` — composite keys, activatable, validators/definers, union entities, producers, ISaveWithFetch, MetaProperty, declarative filters, generative entities |
 | `eql/` | Query construction, operators, functions, fetch models | `reference.md` — JOIN patterns, pivot, CASE WHEN, critCondition, QEM. `design.md` — EQL internals, adding new functions |
 | `web-ui/` | Standard actions, criterion/editor types, centre/master options | `reference.md` — full builder APIs, action config, query enhancers, insertion points, rendering customisers |
-| `testing/` | Fetch patterns, indirect testing, test data caching | `reference.md` — DynamicQueryBuilder testing, test clock, web resource testing |
-| `security/` | Token templates, `@Authorise` usage | `reference.md` — `@Authorise` + AOP infrastructure, authorization scopes (DAO/Producer/Property/Action), runtime-generated audit tokens |
+| `testing/` | Fetch patterns, indirect testing, current time in tests, test data caching | `reference.md` — DynamicQueryBuilder testing, test configurations (e.g., SSO mode), test clock (fixed and ticking time), web resource testing |
+| `security/` | Token templates, `@Authorise` usage, CSRF protection, login lockout and password reset cooldown | `reference.md` — `@Authorise` + AOP infrastructure, authorization scopes (DAO/Producer/Property/Action), CSRF protection (cookie attributes, reverse proxy requirements, wiring), login attempt counting, lockout and reset link rules, runtime-generated audit tokens |
 | `auditing/` | @Audited basics, generated types, test config | `reference.md` — full type hierarchy, versioning, runtime plumbing, GenAudit, Web UI |
 
 ## Development Guidelines
@@ -203,9 +207,13 @@ State the fact positively, on the thing that does exist.
 Not "a separate `elementType` is not needed, because `type` already reports the element type", but "for a collectional property, `type` reports the type of its elements".
 The same applies to a `TODO` describing a feature nobody has asked for, and to a comment explaining why a simpler implementation was not chosen.
 
-Two things this does not prohibit, because in both the absent thing has a claim on the reader.
+Three things this does not prohibit, because in each the absent thing has a claim on the reader.
 
 1. Choosing between real alternatives.
    Where a reader would otherwise reach for a named, existing mechanism — a platform facility, a library, a standard — say why the implemented design was preferred to it.
 2. The boundary of a contract.
    What an API deliberately does not expose is part of what it does expose, and belongs in its documentation, particularly where a developer would otherwise reintroduce it.
+3. An annotation that must not be applied.
+   Where adding an annotation would be a natural mistake, it stays in view as a comment followed by `-- not here to` and the reason, so that nobody adds it by accident.
+   E.g., `UserDao.lockoutUser` performs two steps in separate transactions: `// @SessionRequired(allowNestedScope = false) -- not here to keep user deactivation and deletion of user secrets in separate transactions.`
+   Do not flag or remove such comments.

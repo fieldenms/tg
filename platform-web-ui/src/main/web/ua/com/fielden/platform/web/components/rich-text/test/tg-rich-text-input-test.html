@@ -1,0 +1,787 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>tg-rich-text-input test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+    <script src="/resources/test-configuration.js"></script>
+</head>
+
+<body>
+
+    <test-fixture id="RichTextInputFixture">
+        <template>
+            <tg-rich-text-input style="width: 600px; height: 300px;"></tg-rich-text-input>
+        </template>
+    </test-fixture>
+
+    <script type="module">
+
+        import '/resources/components/rich-text/tg-rich-text-input.js';
+
+        // Each test mirrors what a user does in any RichText editor (e.g. on an Entity Master).
+        // So, it can also be checked manually, in any browser and on any device, by following the suite and test names.
+
+        /// A 1x1 transparent PNG image.
+        /// It is embedded as a data URI, so that tests with images do not depend on the network.
+        ///
+        const IMAGE_URL =
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+        /// Returns an image element with `IMAGE_URL` and the alternative text `alt`.
+        ///
+        const imageHtml = alt => `<img src="${IMAGE_URL}" alt="${alt}">`;
+
+        /// A nested bulleted list, as Google Docs puts it into the clipboard.
+        /// Google Docs wraps everything into a `<b>` element and puts the nested `<ul>` directly into the outer `<ul>`.
+        ///
+        const GOOGLE_DOCS_NESTED_LIST =
+            '<meta charset="utf-8"><b style="font-weight:normal;" id="docs-internal-guid-0a1b2c3d-7fff-4e5f-8a9b-0c1d2e3f4a5b">' +
+            '<ul style="margin-top:0;margin-bottom:0;padding-inline-start:48px;">' +
+            '<li dir="ltr" style="list-style-type:disc;font-size:11pt;font-family:Arial,sans-serif;" aria-level="1">' +
+            '<p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;" role="presentation">' +
+            '<span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;">Outer item from Google Docs</span></p></li>' +
+            '<ul style="margin-top:0;margin-bottom:0;padding-inline-start:48px;">' +
+            '<li dir="ltr" style="list-style-type:circle;font-size:11pt;font-family:Arial,sans-serif;" aria-level="2">' +
+            '<p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;" role="presentation">' +
+            '<span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;">Nested item from Google Docs</span></p></li>' +
+            '</ul></ul></b>';
+
+        /// A bulleted list with a nested item, as Microsoft Word puts it into the clipboard.
+        /// Word represents list items as paragraphs with `mso-list` styles and literal bullet characters.
+        ///
+        const MICROSOFT_WORD_BULLETED_LIST =
+            '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">' +
+            '<body lang="EN-AU" style="tab-interval:36.0pt"><!--StartFragment-->' +
+            '<p class="MsoListParagraphCxSpFirst" style="text-indent:-18.0pt;mso-list:l0 level1 lfo1">' +
+            '<!--[if !supportLists]--><span style="font-family:Symbol;mso-fareast-font-family:Symbol">' +
+            '<span style="mso-list:Ignore">·<span style="font:7.0pt &quot;Times New Roman&quot;">&nbsp;&nbsp; </span></span></span>' +
+            '<!--[endif]--><span lang="EN-US">First item from Word<o:p></o:p></span></p>' +
+            '<p class="MsoListParagraphCxSpLast" style="margin-left:72.0pt;text-indent:-18.0pt;mso-list:l0 level2 lfo1">' +
+            '<!--[if !supportLists]--><span style="font-family:&quot;Courier New&quot;">' +
+            '<span style="mso-list:Ignore">o<span style="font:7.0pt &quot;Times New Roman&quot;">&nbsp;&nbsp; </span></span></span>' +
+            '<!--[endif]--><span lang="EN-US">Nested item from Word<o:p></o:p></span></p>' +
+            '<!--EndFragment--></body></html>';
+
+        /// A quote, which contains a paragraph and a bulleted list with a nested item.
+        ///
+        const QUOTE_WITH_NESTED_LIST =
+            '<blockquote><p>Quoted paragraph</p>' +
+            '<ul><li><p>Quoted item</p><ul><li><p>Deeper quoted item</p></li></ul></li></ul></blockquote>';
+
+        /// A table, as a web page puts it into the clipboard.
+        ///
+        const WEB_PAGE_TABLE =
+            '<meta charset="utf-8"><table><thead><tr><th>Part</th><th>Quantity</th></tr></thead>' +
+            '<tbody><tr><td>Bolt</td><td>10</td></tr><tr><td>Nut</td><td>20</td></tr></tbody></table>';
+
+        /// The text of every cell in `WEB_PAGE_TABLE`.
+        ///
+        const WEB_PAGE_TABLE_CELLS = ['Part', 'Quantity', 'Bolt', '10', 'Nut', '20'];
+
+        /// A table with a heading in its first cell, followed by a horizontal line, as a web page puts it into the clipboard.
+        /// A RichText table cell can only contain paragraphs and lists, so pasting moves the heading out of the table.
+        ///
+        const WEB_PAGE_TABLE_WITH_HEADING_IN_CELL_AND_LINE_BELOW =
+            '<meta charset="utf-8"><table><thead><tr><th>Part</th><th>Quantity</th></tr></thead>' +
+            '<tbody><tr><td><h3>Brake pads</h3></td><td>4</td></tr></tbody></table><hr>';
+
+        /// A table with a heading in its first cell, followed by an image, as a web page puts it into the clipboard.
+        /// A RichText table cell can only contain paragraphs and lists, so pasting moves the heading out of the table.
+        ///
+        const WEB_PAGE_TABLE_WITH_HEADING_IN_CELL_AND_IMAGE_BELOW =
+            '<meta charset="utf-8"><table><thead><tr><th>Part</th><th>Quantity</th></tr></thead>' +
+            `<tbody><tr><td><h3>Brake pads</h3></td><td>4</td></tr></tbody></table>${imageHtml('Brake pad diagram')}`;
+
+        /// Text copied from inside a numbered list item of another web-based editor built on ProseMirror (e.g. with Tiptap).
+        /// Such editors describe the list around the copied text in the `data-pm-slice` attribute.
+        /// Their numbered lists have attributes that RichText does not have, such as `start` and `type`.
+        ///
+        const NUMBERED_LIST_ITEM_TEXT_FROM_ANOTHER_EDITOR =
+            '<meta charset="utf-8"><p data-pm-slice="1 1 [&quot;orderedList&quot;,{&quot;start&quot;:1,&quot;type&quot;:null},' +
+            '&quot;listItem&quot;,null]">Item text from another editor</p>';
+
+        /// A line with a diagram, as a web page puts it into the clipboard.
+        /// The diagram is an inline SVG image with a link in it.
+        ///
+        const WEB_PAGE_LINE_WITH_LINK_IN_SVG_IMAGE =
+            '<meta charset="utf-8"><p>Diagram: <svg width="120" height="20"><a href="https://www.fielden.com.au/">' +
+            '<text x="0" y="15">Fielden website</text></a></svg> and text after it</p>';
+
+        /// Content that would run code, if it was not removed: a script, a `javascript:` link and an image `onerror` handler.
+        /// It also contains a form with an input field, which RichText does not support.
+        /// Every piece of code sets `window.richTextUnsafeCodeRan`.
+        ///
+        const UNSAFE_CONTENT =
+            '<p>Safe pasted text</p>' +
+            '<p><img src="data:image/png;base64,AAAA" onerror="window.richTextUnsafeCodeRan = true"></p>' +
+            '<p><a href="javascript:window.richTextUnsafeCodeRan = true">Unsafe link</a></p>' +
+            '<script>window.richTextUnsafeCodeRan = true;<\/script>' +
+            '<form action="https://example.com/collect"><input name="secret" value="secret"><button>Send</button></form>';
+
+        /// A link, formatted text and a list item, which ask to be shown as scripts through `data-raw-html`.
+        /// The editor uses `data-raw-html` to keep the tag name of an element that was written as HTML in Markdown.
+        /// Every script would set `window.richTextUnsafeCodeRan`.
+        ///
+        const CONTENT_ASKING_TO_BE_SHOWN_AS_SCRIPTS =
+            '<p><a href="https://www.fielden.com.au/" data-raw-html="script">window.richTextUnsafeCodeRan = true</a></p>' +
+            '<p><strong data-raw-html="script">window.richTextUnsafeCodeRan = true</strong></p>' +
+            '<p><em data-raw-html="script">window.richTextUnsafeCodeRan = true</em></p>' +
+            '<p><del data-raw-html="script">window.richTextUnsafeCodeRan = true</del></p>' +
+            '<p><code data-raw-html="script">window.richTextUnsafeCodeRan = true</code></p>' +
+            '<ol><li data-raw-html="script"><p>window.richTextUnsafeCodeRan = true</p></li></ol>';
+
+        const wait = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+
+        /// Waits until `condition` holds, checking it every 10 milliseconds, but no longer than `timeout` milliseconds.
+        /// It returns in either case, so that the assertion that follows reports whether the condition holds.
+        ///
+        const waitUntil = async (condition, timeout = 1000) => {
+            const deadline = Date.now() + timeout;
+            while (!condition() && Date.now() < deadline) {
+                await wait(10);
+            }
+        };
+
+        /// Creates an empty RichText input.
+        /// The input calls `changeEventHandler` on undo, redo and focus loss, and `keyDownHandler` on every key press.
+        /// The RichText editor of an Entity Master always provides both, so no-op handlers are provided here.
+        ///
+        function createInput() {
+            const input = fixture('RichTextInputFixture');
+            input.changeEventHandler = () => {};
+            input.keyDownHandler = () => {};
+            return input;
+        }
+
+        /// Returns the ProseMirror view, which backs the RichText input.
+        ///
+        function editorView(input) {
+            return input._editor.wwEditor.view;
+        }
+
+        /// Loads `html` into `input` the same way a saved value gets loaded into the RichText editor of an Entity Master.
+        ///
+        function loadValue(input, html) {
+            input.value = html;
+            input.clearHistory();
+        }
+
+        /// Returns the value that would be saved, parsed into a separate document, which never runs scripts or loads images.
+        ///
+        function savedValue(input) {
+            input._htmlContentChanged();
+            return new DOMParser().parseFromString(input.value, 'text/html').body;
+        }
+
+        /// Returns the trimmed text of every element in `root` that matches `selector`.
+        ///
+        function textsOf(root, selector) {
+            return [...root.querySelectorAll(selector)].map(element => element.textContent.trim());
+        }
+
+        /// Returns the texts that have a colour in the saved value of `input`.
+        ///
+        function colouredTexts(input) {
+            return textsOf(savedValue(input), 'span[style*="color"]');
+        }
+
+        /// Returns every coloured text in the saved value of `input` with its colour, e.g. `word: rgb(229, 57, 53)`.
+        ///
+        function textColours(input) {
+            return [...savedValue(input).querySelectorAll('span[style*="color"]')]
+                .map(span => `${span.textContent.trim()}: ${span.style.color}`);
+        }
+
+        /// Returns the web addresses of all links in the saved value of `input`.
+        ///
+        function linkAddresses(input) {
+            return [...savedValue(input).querySelectorAll('a')].map(link => link.getAttribute('href'));
+        }
+
+        /// Checks that `CONTENT_ASKING_TO_BE_SHOWN_AS_SCRIPTS` is shown in `input` as it is, not as scripts.
+        /// So, it should stay a link, formatted text and a list item, and no code should run.
+        ///
+        function checkNotShownAsScripts(input) {
+            assert.isNull(editorView(input).dom.querySelector('script'), 'Nothing should be shown as a script in the editor.');
+            assert.isUndefined(window.richTextUnsafeCodeRan, 'No code should run.');
+            const value = savedValue(input);
+            assert.isNull(value.querySelector('script'), 'The saved value should contain no scripts.');
+            assert.deepEqual(linkAddresses(input), ['https://www.fielden.com.au/'], 'The link should be kept.');
+            ['strong', 'em', 'del', 'code', 'ol > li']
+                .forEach(selector => assert.ok(value.querySelector(selector), `The [${selector}] element should be kept.`));
+        }
+
+        /// Returns the plain text of the whole editor content.
+        ///
+        function editorText(input) {
+            return editorView(input).state.doc.textContent;
+        }
+
+        /// Checks that the editor content conforms to the editor schema, throwing an error otherwise.
+        ///
+        function checkEditorContentIsValid(input) {
+            editorView(input).state.doc.check();
+        }
+
+        /// Returns the editor position right after the first occurrence of `text`.
+        ///
+        function positionAfter(input, text) {
+            let position = -1;
+            editorView(input).state.doc.descendants((node, pos) => {
+                if (position < 0 && node.isText && node.text.includes(text)) {
+                    position = pos + node.text.indexOf(text) + text.length;
+                }
+                return position < 0;
+            });
+            assert.isAtLeast(position, 0, `Text [${text}] should be in the editor.`);
+            return position;
+        }
+
+        /// Returns the editor position right before the first occurrence of `text`.
+        ///
+        function positionBefore(input, text) {
+            return positionAfter(input, text) - text.length;
+        }
+
+        /// Returns the editor positions right before every image.
+        ///
+        function imagePositions(input) {
+            const positions = [];
+            editorView(input).state.doc.descendants((node, pos) => {
+                if (node.type.name === 'image') {
+                    positions.push(pos);
+                }
+            });
+            return positions;
+        }
+
+        /// Returns the editor position of the cursor.
+        ///
+        function cursorPosition(input) {
+            return editorView(input).state.selection.from;
+        }
+
+        /// Selects the editor content between positions `from` and `to`, or places the cursor at `from` if `to` is omitted.
+        ///
+        function select(input, from, to = from) {
+            input._editor.setSelection(from, to);
+        }
+
+        /// Puts the browser's cursor at `offset` in the DOM `node`, the same way a click or an on-screen keyboard does.
+        /// The editor reads the cursor from the browser asynchronously.
+        ///
+        function placeBrowserCursor(input, node, offset) {
+            editorView(input).domSelection().collapse(node, offset);
+        }
+
+        /// Pastes `html` at the cursor, through the editor's handling of pasted HTML.
+        /// The handling of the `paste` event itself, which reads the clipboard and deals with a pasted image file, is not involved.
+        ///
+        function paste(input, html) {
+            editorView(input).pasteHTML(html);
+        }
+
+        /// Creates a key press event for the key with the specified `key` name and `keyCode`.
+        ///
+        function keyDownEvent(key, keyCode) {
+            const event = new KeyboardEvent('keydown', { key, keyCode, bubbles: true, cancelable: true });
+            if (event.keyCode !== keyCode) {
+                Object.defineProperty(event, 'keyCode', { value: keyCode });
+            }
+            return event;
+        }
+
+        /// Presses the key with the specified `key` name and `keyCode` in the editor.
+        ///
+        function pressKey(input, key, keyCode) {
+            editorView(input).dom.dispatchEvent(keyDownEvent(key, keyCode));
+        }
+
+        /// Presses Enter in the editor, the same way on a computer, a phone or a tablet.
+        /// On a computer, the editor handles the Enter key press directly.
+        /// On Android and iOS, the editor lets the on-screen keyboard and the browser handle the Enter key press first.
+        /// The editor then recognises Enter from the change the browser has made to the content.
+        /// It replaces that change with its own handling of Enter.
+        /// A test cannot make the browser change the content, so this function runs the editor's handling of Enter directly.
+        ///
+        function pressEnter(input) {
+            const view = editorView(input);
+            view.someProp('handleKeyDown', handleKeyDown => handleKeyDown(view, keyDownEvent('Enter', 13)));
+        }
+
+        /// Returns the first text node in `root` that contains `text`.
+        ///
+        function findTextNode(root, text) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            while (walker.nextNode()) {
+                if (walker.currentNode.data.includes(text)) {
+                    return walker.currentNode;
+                }
+            }
+            return null;
+        }
+
+        suite('RichText editor', function () {
+            let input;
+
+            setup(function () {
+                input = createInput();
+                delete window.richTextUnsafeCodeRan;
+            });
+
+            suite('loading a saved value', function () {
+
+                test('a link keeps its web address and opens in a new browser tab', function () {
+                    loadValue(input, '<p>Read more on <a href="https://www.fielden.com.au/">the Fielden website</a>.</p>');
+
+                    const link = savedValue(input).querySelector('a');
+                    assert.ok(link, 'The link should be kept.');
+                    assert.strictEqual(link.getAttribute('href'), 'https://www.fielden.com.au/', 'The web address should be kept.');
+                    assert.strictEqual(link.getAttribute('target'), '_blank', 'The link should open in a new browser tab.');
+                    assert.strictEqual(link.textContent, 'the Fielden website', 'The text of the link should be kept.');
+                });
+
+                test('an image keeps its address and its alternative text', function () {
+                    loadValue(input, `<p>${imageHtml('Company logo')}</p>`);
+
+                    const image = savedValue(input).querySelector('img');
+                    assert.ok(image, 'The image should be kept.');
+                    assert.strictEqual(image.getAttribute('src'), IMAGE_URL, 'The address of the image should be kept.');
+                    assert.strictEqual(image.getAttribute('alt'), 'Company logo', 'The alternative text should be kept.');
+                });
+
+                test('coloured text keeps its colour', function () {
+                    loadValue(input, '<p>Status: <span style="color: #e53935">Overdue</span></p>');
+
+                    const span = savedValue(input).querySelector('span');
+                    assert.ok(span, 'The coloured text should be kept.');
+                    assert.strictEqual(span.textContent, 'Overdue', 'The coloured text should be kept.');
+                    assert.strictEqual(span.style.color, 'rgb(229, 57, 53)', 'The colour should be kept.');
+                });
+
+                test('coloured text keeps its colour, but loses an onclick handler, so that clicking it runs no code', function () {
+                    loadValue(
+                        input,
+                        '<p>Status: <span style="color: #e53935" onclick="window.richTextUnsafeCodeRan = true">Overdue</span></p>'
+                    );
+
+                    const span = savedValue(input).querySelector('span');
+                    assert.ok(span, 'The coloured text should be kept.');
+                    assert.strictEqual(span.style.color, 'rgb(229, 57, 53)', 'The colour should be kept.');
+                    assert.isFalse(span.hasAttribute('onclick'), 'The onclick handler should be removed from the saved value.');
+
+                    const spanInEditor = editorView(input).dom.querySelector('span[style]');
+                    assert.isFalse(spanInEditor.hasAttribute('onclick'), 'The onclick handler should be removed from the editor.');
+                    spanInEditor.click();
+                    assert.isUndefined(window.richTextUnsafeCodeRan, 'Clicking the coloured text should run no code.');
+                });
+
+                test('a link that runs code when clicked (a javascript: link) keeps its text, but loses the code', function () {
+                    loadValue(input, '<p><a href="javascript:window.richTextUnsafeCodeRan = true">Unsafe link</a></p>');
+
+                    const value = savedValue(input);
+                    assert.include(value.textContent, 'Unsafe link', 'The text of the link should be kept.');
+                    assert.isNull(value.querySelector('a[href^="javascript:" i]'), 'The code of the link should be removed.');
+                });
+
+                test('links and formatted text that ask to be shown as scripts are not shown as scripts and run no code', function () {
+                    // Fixed in #2881 -- before it, the editor showed them as scripts.
+                    loadValue(input, CONTENT_ASKING_TO_BE_SHOWN_AS_SCRIPTS);
+
+                    checkNotShownAsScripts(input);
+                });
+            });
+
+            suite('pasting content copied from a web page, Google Docs or Microsoft Word', function () {
+
+                test('a link from a web page keeps its web address and its text', function () {
+                    loadValue(input, '<p>Pasted link:</p>');
+                    select(input, positionAfter(input, 'Pasted link:'));
+                    paste(
+                        input,
+                        '<meta charset="utf-8"><a href="https://www.fielden.com.au/" style="color: #1a0dab;">the Fielden website</a>'
+                    );
+
+                    const link = savedValue(input).querySelector('a');
+                    assert.ok(link, 'The link should be kept.');
+                    assert.strictEqual(link.getAttribute('href'), 'https://www.fielden.com.au/', 'The web address should be kept.');
+                    assert.strictEqual(link.textContent, 'the Fielden website', 'The text of the link should be kept.');
+                });
+
+                test('an image from a web page keeps its address and its alternative text', function () {
+                    paste(input, `<meta charset="utf-8">${imageHtml('Company logo')}`);
+
+                    const image = savedValue(input).querySelector('img');
+                    assert.ok(image, 'The image should be kept.');
+                    assert.strictEqual(image.getAttribute('src'), IMAGE_URL, 'The address of the image should be kept.');
+                    assert.strictEqual(image.getAttribute('alt'), 'Company logo', 'The alternative text should be kept.');
+                });
+
+                test('an image keeps its address, but loses alternative text that hides markup after a comment end', function () {
+                    // DOMPurify removes an attribute value that could close a comment.
+                    // Inside a comment, such a value would end the comment and turn the rest into markup.
+                    paste(input, `<meta charset="utf-8"><img src="${IMAGE_URL}" alt="--><img src=x onerror=alert(1)>">`);
+
+                    const image = savedValue(input).querySelector('img');
+                    assert.ok(image, 'The image should be kept.');
+                    assert.strictEqual(image.getAttribute('src'), IMAGE_URL, 'The address of the image should be kept.');
+                    assert.isFalse(image.hasAttribute('alt'), 'The alternative text, which hides markup, should be removed.');
+                });
+
+                test('scripts, javascript: links, onerror handlers, forms and input fields are removed and never run', async function () {
+                    paste(input, UNSAFE_CONTENT);
+                    // Give the image time to fail loading, which would trigger its `onerror` handler, if it was kept.
+                    await wait(200);
+
+                    assert.isUndefined(window.richTextUnsafeCodeRan, 'No pasted code should run.');
+                    const value = savedValue(input);
+                    assert.include(value.textContent, 'Safe pasted text', 'The safe text should be kept.');
+                    assert.include(value.textContent, 'Unsafe link', 'The text of the link should be kept.');
+                    assert.isNull(value.querySelector('script'), 'Scripts should be removed.');
+                    assert.isNull(value.querySelector('a[href^="javascript:" i]'), 'The code of the javascript: link should be removed.');
+                    assert.isNull(value.querySelector('[onerror]'), 'The onerror handler should be removed.');
+                    assert.isNull(value.querySelector('form, input, button'), 'Forms and input fields should be removed.');
+                });
+
+                test('links and formatted text that ask to be shown as scripts are not shown as scripts and run no code', function () {
+                    // Fixed in #2881 -- before it, the editor showed them as scripts, which ran right away.
+                    paste(input, `<meta charset="utf-8">${CONTENT_ASKING_TO_BE_SHOWN_AS_SCRIPTS}`);
+
+                    checkNotShownAsScripts(input);
+                });
+
+                test('highlighted text from a web page loses an onmouseover handler, so that hovering over it runs no code', function () {
+                    // The editor keeps the attributes of pasted highlighted text.
+                    // Only DOMPurify removes the unsafe ones.
+                    paste(input, '<meta charset="utf-8"><mark onmouseover="window.richTextUnsafeCodeRan = true">Overdue</mark>');
+
+                    const value = savedValue(input);
+                    assert.include(value.textContent, 'Overdue', 'The highlighted text should be kept.');
+                    assert.isNull(value.querySelector('[onmouseover]'), 'The onmouseover handler should be removed from the saved value.');
+
+                    const markInEditor = editorView(input).dom.querySelector('mark');
+                    assert.ok(markInEditor, 'The highlighted text should stay highlighted in the editor.');
+                    assert.isFalse(markInEditor.hasAttribute('onmouseover'), 'The onmouseover handler should be removed from the editor.');
+                    markInEditor.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+                    assert.isUndefined(window.richTextUnsafeCodeRan, 'Hovering over the highlighted text should run no code.');
+                });
+
+                test('a nested bulleted list from Google Docs keeps all its items, with the nested item still nested', function () {
+                    paste(input, GOOGLE_DOCS_NESTED_LIST);
+
+                    checkEditorContentIsValid(input);
+                    const items = [...savedValue(input).querySelectorAll('li')];
+                    const outerItemKept = items.some(item => item.textContent.includes('Outer item from Google Docs'));
+                    assert.ok(outerItemKept, 'The outer item should be kept.');
+                    const nestedItem = items
+                        .filter(item => !item.querySelector('li'))
+                        .find(item => item.textContent.includes('Nested item from Google Docs'));
+                    assert.ok(nestedItem, 'The nested item should be kept.');
+                    assert.ok(nestedItem.parentElement.closest('li'), 'The nested item should stay nested in another list item.');
+                });
+
+                test('a nested bulleted list from Google Docs, pasted into the middle of a list item, keeps all text', function () {
+                    loadValue(input, '<ul><li><p>Existing item text</p></li></ul>');
+                    select(input, positionAfter(input, 'Existing item'));
+                    paste(input, GOOGLE_DOCS_NESTED_LIST);
+
+                    checkEditorContentIsValid(input);
+                    const text = editorText(input);
+                    ['Existing item', 'text', 'Outer item from Google Docs', 'Nested item from Google Docs']
+                        .forEach(expected => assert.include(text, expected, `Text [${expected}] should be kept.`));
+                });
+
+                test('a quote with a nested list, pasted into the middle of a paragraph, keeps all text', function () {
+                    loadValue(input, '<p>Text before cursor and text after cursor</p>');
+                    select(input, positionAfter(input, 'Text before cursor'));
+                    paste(input, QUOTE_WITH_NESTED_LIST);
+
+                    checkEditorContentIsValid(input);
+                    const text = editorText(input);
+                    ['Text before cursor', 'and text after cursor', 'Quoted paragraph', 'Quoted item', 'Deeper quoted item']
+                        .forEach(expected => assert.include(text, expected, `Text [${expected}] should be kept.`));
+                });
+
+                test('a table from a web page keeps the text of every cell', function () {
+                    paste(input, WEB_PAGE_TABLE);
+
+                    checkEditorContentIsValid(input);
+                    const value = savedValue(input);
+                    assert.ok(value.querySelector('table'), 'The table should be kept.');
+                    assert.includeMembers(textsOf(value, 'th, td'), WEB_PAGE_TABLE_CELLS, 'The text of every cell should be kept.');
+                });
+
+                test('a table from a web page, pasted at the end of a bulleted list item, keeps the text of every cell', function () {
+                    loadValue(input, '<ul><li><p>Parts list</p></li></ul>');
+                    select(input, positionAfter(input, 'Parts list'));
+                    paste(input, WEB_PAGE_TABLE);
+
+                    checkEditorContentIsValid(input);
+                    const value = savedValue(input);
+                    assert.include(value.textContent, 'Parts list', 'The existing text should be kept.');
+                    assert.includeMembers(textsOf(value, 'th, td'), WEB_PAGE_TABLE_CELLS, 'The text of every cell should be kept.');
+                });
+
+                test('a bulleted list from Microsoft Word keeps the text of every item', function () {
+                    paste(input, MICROSOFT_WORD_BULLETED_LIST);
+
+                    checkEditorContentIsValid(input);
+                    const text = editorText(input);
+                    ['First item from Word', 'Nested item from Word']
+                        .forEach(expected => assert.include(text, expected, `Text [${expected}] should be kept.`));
+                });
+
+                test('a table with a heading in a cell, pasted on an empty line, keeps the horizontal line below the table', function () {
+                    // Fixed in #2861 by the ProseMirror update -- before it, the horizontal line below the table was dropped.
+                    paste(input, WEB_PAGE_TABLE_WITH_HEADING_IN_CELL_AND_LINE_BELOW);
+
+                    checkEditorContentIsValid(input);
+                    const value = savedValue(input);
+                    assert.ok(value.querySelector('hr'), 'The horizontal line below the table should be kept.');
+                    ['Part', 'Quantity', 'Brake pads', '4']
+                        .forEach(expected => assert.include(value.textContent, expected, `Text [${expected}] should be kept.`));
+                });
+
+                test('a table with a heading in a cell, pasted on an empty line, keeps the image below the table', function () {
+                    // Fixed in #2861 by the ProseMirror update -- before it, the image below the table was dropped.
+                    paste(input, WEB_PAGE_TABLE_WITH_HEADING_IN_CELL_AND_IMAGE_BELOW);
+
+                    checkEditorContentIsValid(input);
+                    const value = savedValue(input);
+                    const image = value.querySelector('img');
+                    assert.ok(image, 'The image below the table should be kept.');
+                    assert.strictEqual(image.getAttribute('alt'), 'Brake pad diagram', 'The alternative text of the image should be kept.');
+                    ['Part', 'Quantity', 'Brake pads', '4']
+                        .forEach(expected => assert.include(value.textContent, expected, `Text [${expected}] should be kept.`));
+                });
+
+                test('text from a numbered list item of another editor, pasted on an empty line, stays a numbered list item', function () {
+                    // Fixed in #2861 by the ProseMirror update -- before it, the text did not stay a numbered list item.
+                    paste(input, NUMBERED_LIST_ITEM_TEXT_FROM_ANOTHER_EDITOR);
+
+                    const numberedItems = textsOf(savedValue(input), 'ol > li');
+                    assert.deepEqual(numberedItems, ['Item text from another editor'], 'The text should stay a numbered list item.');
+                });
+
+                test('a line with a link inside an inline SVG image from a web page keeps all its text', function () {
+                    // Fixed in #2881 -- before it, such a link stopped the whole paste with an error, and nothing was pasted.
+                    paste(input, WEB_PAGE_LINE_WITH_LINK_IN_SVG_IMAGE);
+
+                    checkEditorContentIsValid(input);
+                    assert.strictEqual(editorText(input), 'Diagram: Fielden website and text after it', 'All text should be kept.');
+                });
+            });
+
+            suite('undo and redo (toolbar buttons, or Ctrl+Z and Ctrl+Y)', function () {
+
+                test('colouring the selected text: undo removes the colour, redo brings it back', function () {
+                    loadValue(input, '<p>Paint this word red</p>');
+                    select(input, positionBefore(input, 'word'), positionAfter(input, 'word'));
+                    input._editor.exec('color', { selectedColor: '#e53935' });
+                    assert.deepEqual(colouredTexts(input), ['word'], 'The selected word should be coloured.');
+
+                    input._undo({});
+                    assert.deepEqual(colouredTexts(input), [], 'Undo should remove the colour.');
+                    assert.strictEqual(editorText(input), 'Paint this word red', 'Undo should keep the text.');
+
+                    input._redo({});
+                    assert.deepEqual(colouredTexts(input), ['word'], 'Redo should bring the colour back.');
+                });
+
+                test('colouring via the colour dialog: undo removes only the colour and leaves no selection highlight behind', function () {
+                    loadValue(input, '<p>Paint this word red</p>');
+                    select(input, positionBefore(input, 'word'), positionAfter(input, 'word'));
+                    // Pressing the colour button highlights the selected text, while the colour dialog has the focus.
+                    input._applyFakeSelect();
+                    assert.ok(editorView(input).dom.querySelector('mark'), 'The selected text should be highlighted.');
+                    // Accepting a colour returns the focus to the editor, which removes the highlight, and applies the colour.
+                    input._focusGain();
+                    input._editor.exec('color', { selectedColor: '#e53935' });
+                    assert.deepEqual(colouredTexts(input), ['word'], 'The selected word should be coloured.');
+
+                    input._undo({});
+                    assert.deepEqual(colouredTexts(input), [], 'Undo should remove the colour.');
+                    assert.strictEqual(editorText(input), 'Paint this word red', 'Undo should keep the text.');
+                    assert.isNull(editorView(input).dom.querySelector('mark'), 'Undo should not bring the highlight back.');
+
+                    input._redo({});
+                    assert.deepEqual(colouredTexts(input), ['word'], 'Redo should bring the colour back.');
+                    assert.isNull(editorView(input).dom.querySelector('mark'), 'Redo should not bring the highlight back.');
+                });
+
+                test('turning the selected text into a link: undo removes the link, redo brings it back', function () {
+                    loadValue(input, '<p>Read the guide today</p>');
+                    select(input, positionBefore(input, 'guide'), positionAfter(input, 'guide'));
+                    input._editor.exec('addLink', { linkUrl: 'https://www.fielden.com.au/', linkText: 'guide' });
+                    assert.deepEqual(linkAddresses(input), ['https://www.fielden.com.au/'], 'The selected word should become a link.');
+
+                    input._undo({});
+                    assert.deepEqual(linkAddresses(input), [], 'Undo should remove the link.');
+                    assert.strictEqual(editorText(input), 'Read the guide today', 'Undo should keep the text.');
+
+                    input._redo({});
+                    assert.deepEqual(linkAddresses(input), ['https://www.fielden.com.au/'], 'Redo should bring the link back.');
+                });
+
+                test('re-colouring partly coloured text: undo brings the previous colours back, redo the new colour', function () {
+                    // The ProseMirror update in #2881 changed how colouring and its undo are recorded.
+                    loadValue(input, '<p>Paint <span style="color: #1e88e5">this</span> word red</p>');
+                    select(input, positionBefore(input, 'this'), positionAfter(input, 'word'));
+                    input._editor.exec('color', { selectedColor: '#e53935' });
+                    assert.deepEqual(textColours(input), ['this word: rgb(229, 57, 53)'], 'The selected text should get the new colour.');
+
+                    input._undo({});
+                    assert.deepEqual(textColours(input), ['this: rgb(30, 136, 229)'], 'Undo should bring the previous colours back.');
+                    assert.strictEqual(editorText(input), 'Paint this word red', 'Undo should keep the text.');
+
+                    input._redo({});
+                    assert.deepEqual(textColours(input), ['this word: rgb(229, 57, 53)'], 'Redo should bring the new colour back.');
+                });
+
+                test('removing the colour of text in two colours: undo brings both colours back, redo removes them again', function () {
+                    // The ProseMirror update in #2881 changed how removing a colour and its undo are recorded.
+                    loadValue(input, '<p><span style="color: #e53935">Red</span> and <span style="color: #1e88e5">blue</span> text</p>');
+                    select(input, positionBefore(input, 'Red'), positionAfter(input, 'blue'));
+                    input._editor.exec('clearColor');
+                    assert.deepEqual(textColours(input), [], 'The colours should be removed.');
+
+                    input._undo({});
+                    assert.deepEqual(
+                        textColours(input),
+                        ['Red: rgb(229, 57, 53)', 'blue: rgb(30, 136, 229)'],
+                        'Undo should bring both colours back.'
+                    );
+
+                    input._redo({});
+                    assert.deepEqual(textColours(input), [], 'Redo should remove the colours again.');
+                });
+            });
+
+            suite('typing over selected text', function () {
+
+                test('an accented letter typed with a dead key or an input method replaces the selected word', async function () {
+                    // For example, select a word, then press Option+E and E on a Mac to type é.
+                    loadValue(input, '<p>Order a coffee now</p>');
+                    input.focusInput();
+                    select(input, positionBefore(input, 'coffee'), positionAfter(input, 'coffee'));
+                    const editable = editorView(input).dom;
+
+                    editable.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true, data: '' }));
+                    // Imitate the browser, which replaces the selected word with the composed letter.
+                    const textNode = findTextNode(editable, 'coffee');
+                    textNode.data = textNode.data.replace('coffee', 'é');
+                    editable.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: 'é' }));
+                    // The editor finishes the composition asynchronously.
+                    await waitUntil(() => editorText(input) === 'Order a é now');
+
+                    assert.strictEqual(editorText(input), 'Order a é now', 'The selected word should be replaced.');
+                });
+            });
+
+            suite('Enter and Backspace keys', function () {
+
+                test('Enter in the middle of a paragraph splits it into two paragraphs', function () {
+                    loadValue(input, '<p>First half second half</p>');
+                    select(input, positionAfter(input, 'First half'));
+                    pressEnter(input);
+
+                    assert.deepEqual(textsOf(savedValue(input), 'p'), ['First half', 'second half'], 'The paragraph should be split.');
+                });
+
+                test('Enter at the end of a bulleted list item starts a new, empty bulleted list item', function () {
+                    loadValue(input, '<ul><li><p>First item</p></li></ul>');
+                    select(input, positionAfter(input, 'First item'));
+                    pressEnter(input);
+
+                    assert.deepEqual(textsOf(savedValue(input), 'li'), ['First item', ''], 'A new, empty list item should follow.');
+                });
+
+                test('Backspace at the start of a paragraph joins it with the paragraph above, without adding a new line', function () {
+                    loadValue(input, '<p>First line</p><p>Second line</p>');
+                    select(input, positionBefore(input, 'Second line'));
+                    pressKey(input, 'Backspace', 8);
+
+                    assert.deepEqual(textsOf(savedValue(input), 'p'), ['First lineSecond line'], 'The paragraphs should be joined.');
+                });
+
+                test('a letter deleted by an Android on-screen keyboard is deleted, and the cursor stays in its place', async function () {
+                    // On Android, the on-screen keyboard deletes the letter itself.
+                    // The editor recognises such a deletion from the changed text.
+                    // The ProseMirror update in #2881 changed how it tells such a deletion from a Backspace press.
+                    loadValue(input, '<p>Order a coffee now</p>');
+                    input.focusInput();
+                    select(input, positionAfter(input, 'coffee'));
+
+                    // Imitate the on-screen keyboard, which deletes the letter before the cursor.
+                    const textNode = findTextNode(editorView(input).dom, 'coffee');
+                    textNode.data = textNode.data.replace('coffee', 'coffe');
+                    placeBrowserCursor(input, textNode, textNode.data.indexOf('coffe') + 'coffe'.length);
+                    await waitUntil(() => editorText(input) === 'Order a coffe now');
+
+                    assert.strictEqual(editorText(input), 'Order a coffe now', 'The letter should be deleted.');
+                    assert.strictEqual(
+                        cursorPosition(input),
+                        positionAfter(input, 'coffe'),
+                        'The cursor should stay after the remaining letters.'
+                    );
+                });
+            });
+
+            suite('moving the cursor around images with the arrow keys', function () {
+
+                test('right arrow just before an image at the start of a line moves the cursor just after the image', function () {
+                    loadValue(input, `<p>${imageHtml('Company logo')}Text after the image</p>`);
+                    const [imagePosition] = imagePositions(input);
+                    select(input, imagePosition);
+                    pressKey(input, 'ArrowRight', 39);
+
+                    assert.strictEqual(cursorPosition(input), imagePosition + 1, 'The cursor should be just after the image.');
+                });
+
+                test('left arrow just after an image at the start of a line moves the cursor just before the image', function () {
+                    loadValue(input, `<p>${imageHtml('Company logo')}Text after the image</p>`);
+                    const [imagePosition] = imagePositions(input);
+                    select(input, imagePosition + 1);
+                    pressKey(input, 'ArrowLeft', 37);
+
+                    assert.strictEqual(cursorPosition(input), imagePosition, 'The cursor should be just before the image.');
+                });
+
+                test('right arrow between two adjacent images moves the cursor just after the second image', function () {
+                    loadValue(input, `<p>${imageHtml('First image')}${imageHtml('Second image')}Text after the images</p>`);
+                    const [, secondImagePosition] = imagePositions(input);
+                    select(input, secondImagePosition);
+                    pressKey(input, 'ArrowRight', 39);
+
+                    assert.strictEqual(cursorPosition(input), secondImagePosition + 1, 'The cursor should be just after the second image.');
+                });
+            });
+
+            suite('code blocks', function () {
+
+                test('a browser position just before the code of a code block is read as the start of the code block', function () {
+                    // Fixed in #2881 by the ProseMirror update -- before it, it was read as the end of the code block.
+                    // ProseMirror reads every position that the browser reports (the cursor, a click) this way.
+                    // Chrome moves its cursor into the code text first, so this test reads the position directly.
+                    loadValue(input, '<p>Text above</p><pre><code>first line\nsecond line</code></pre><p>Text below</p>');
+                    const codeBlock = editorView(input).dom.querySelector('pre');
+
+                    assert.strictEqual(
+                        editorView(input).posAtDOM(codeBlock, 0),
+                        positionBefore(input, 'first line'),
+                        'The position should be the start of the code block.'
+                    );
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
