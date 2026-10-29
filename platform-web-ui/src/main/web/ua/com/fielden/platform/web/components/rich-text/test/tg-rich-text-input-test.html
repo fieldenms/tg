@@ -137,7 +137,7 @@
             '<p><code data-raw-html="script">window.richTextUnsafeCodeRan = true</code></p>' +
             '<ol><li data-raw-html="script"><p>window.richTextUnsafeCodeRan = true</p></li></ol>';
 
-        const wait =milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+        const wait = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
         /// Waits until `condition` holds, checking it every 10 milliseconds, but no longer than `timeout` milliseconds.
         /// It returns in either case, so that the assertion that follows reports whether the condition holds.
