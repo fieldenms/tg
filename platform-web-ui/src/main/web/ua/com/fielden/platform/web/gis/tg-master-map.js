@@ -1,8 +1,8 @@
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/egi/tg-responsive-toolbar.js';
-import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { TgMasterComponentBehavior } from '/resources/master/tg-master-component-behavior.js';
 
 const template = html`
@@ -92,100 +92,106 @@ const template = html`
  * The toolbar has the property actions, and a toggle that shows and hides the labels of map features, as the labels toggle of centre maps, if attribute 'labels-toggle' is set.
  * A property action reaches the map as 'action.masterMap', wherever the toolbar places the action, and the GIS component as 'action.masterMap.gisComponent' once the map is created.
  */
-Polymer({
-    _template: template,
+class TgMasterMap extends mixinBehaviors([TgMasterComponentBehavior], PolymerElement) {
 
-    is: 'tg-master-map',
+    static get template() {
+        return template;
+    }
 
-    behaviors: [TgMasterComponentBehavior],
+    static get properties() {
+        return {
 
-    properties: {
+            /**
+             * The path of the module with the GIS component, relative to '/resources/' and without the '.js' extension.
+             */
+            gisComponentUri: {
+                type: String
+            },
 
-        /**
-         * The path of the module with the GIS component, relative to '/resources/' and without the '.js' extension.
-         */
-        gisComponentUri: {
-            type: String
-        },
+            /**
+             * The name under which the module exports the GIS component.
+             */
+            gisComponentName: {
+                type: String
+            },
 
-        /**
-         * The name under which the module exports the GIS component.
-         */
-        gisComponentName: {
-            type: String
-        },
+            /**
+             * The property whose entity or entities are drawn, for a component in place of an editor, which may be dot-notated;
+             * it is empty for a component bound to the entity, which draws the entity itself.
+             */
+            propertyName: {
+                type: String,
+                value: ''
+            },
 
-        /**
-         * The property whose entity or entities are drawn, for a component in place of an editor, which may be dot-notated;
-         * it is empty for a component bound to the entity, which draws the entity itself.
-         */
-        propertyName: {
-            type: String,
-            value: ''
-        },
+            /**
+             * The zoom for a single point, and the greatest zoom for fitting several features.
+             */
+            zoom: {
+                type: Number,
+                value: 14
+            },
 
-        /**
-         * The zoom for a single point, and the greatest zoom for fitting several features.
-         */
-        zoom: {
-            type: Number,
-            value: 14
-        },
+            /**
+             * The least height of the component, as a CSS length, which is applied by 'TgMasterComponentBehavior'.
+             */
+            minHeight: {
+                type: String,
+                value: '200px'
+            },
 
-        /**
-         * The least height of the component, as a CSS length, which is applied by 'TgMasterComponentBehavior'.
-         */
-        minHeight: {
-            type: String,
-            value: '200px'
-        },
+            /**
+             * Indicates whether the toolbar has a toggle that shows and hides the labels of map features.
+             */
+            labelsToggle: {
+                type: Boolean,
+                value: false
+            },
 
-        /**
-         * Indicates whether the toolbar has a toggle that shows and hides the labels of map features.
-         */
-        labelsToggle: {
-            type: Boolean,
-            value: false
-        },
+            /**
+             * The GIS component that draws the map, or null while the map is not created.
+             */
+            gisComponent: {
+                type: Object,
+                value: null,
+                readOnly: true
+            },
 
-        /**
-         * The GIS component that draws the map, or null while the map is not created.
-         */
-        gisComponent: {
-            type: Object,
-            value: null,
-            readOnly: true
-        },
+            _labelsShown: {
+                type: Boolean,
+                value: true,
+                observer: '_labelsShownChanged'
+            },
 
-        _labelsShown: {
-            type: Boolean,
-            value: true,
-            observer: '_labelsShownChanged'
-        },
+            _hasPropertyActions: {
+                type: Boolean,
+                value: false
+            }
+        };
+    }
 
-        _hasPropertyActions: {
-            type: Boolean,
-            value: false
-        }
-    },
+    static get observers() {
+        return [
+            '_entitiesChanged(entity, propertyName)'
+        ];
+    }
 
-    observers: [
-        '_entitiesChanged(entity, propertyName)'
-    ],
-
-    ready: function () {
+    ready() {
+        super.ready();
         this._hasPropertyActions = this._propertyActions.length > 0;
         // the toolbar moves the actions that do not fit into its dropdown, so the parent element of an action is not always this map
         this._propertyActions.forEach(action => action.masterMap = this);
-    },
+    }
 
-    attached: function () {
+    connectedCallback() {
+        super.connectedCallback();
         this._gisComponentClass = this._gisComponentClass || this._loadGisComponentClass();
         this._resizeObserver = new ResizeObserver(() => this._sizeChangedAsync());
         this._resizeObserver.observe(this.$.map);
-    },
+    }
 
-    detached: function () {
+    disconnectedCallback() {
+        super.disconnectedCallback();
         this._resizeObserver.disconnect();
         this._resizeObserver = null;
         cancelAnimationFrame(this._sizeChangedFrame);
@@ -193,45 +199,45 @@ Polymer({
             this.gisComponent.remove();
             this._setGisComponent(null);
         }
-    },
+    }
 
     /**
      * Returns the element of the map, which is made focusable as described in 'TgMasterComponentBehavior', so that the keys of the map, such as the arrows that move it, can be used.
      * The map makes the element focusable itself once it is created, which is later, once the component has a size.
      */
-    component: function () {
+    component() {
         return this.$.map;
-    },
+    }
 
-    _labelsShownChanged: function (labelsShown) {
+    _labelsShownChanged(labelsShown) {
         if (this.gisComponent) {
             this.gisComponent.showLabels(labelsShown);
         }
-    },
+    }
 
-    _hasToolbar: function (_hasPropertyActions, labelsToggle) {
+    _hasToolbar(_hasPropertyActions, labelsToggle) {
         return _hasPropertyActions || labelsToggle;
-    },
+    }
 
     /**
      * The style of the labels toggle, which is inline, as the toolbar can move the toggle into its dropdown, beyond the styles of this component.
      * The toggle is round, with a border while the labels are shown, as the labels toggle of centre maps.
      */
-    _labelsToggleStyle: function (labelsShown) {
+    _labelsToggleStyle(labelsShown) {
         return `border-radius:50%;${labelsShown ? 'border:2px solid;' : ''}`;
-    },
+    }
 
-    _entitiesChanged: function (entity, propertyName) {
+    _entitiesChanged(entity, propertyName) {
         this._entities = this._entitiesToShow(entity, propertyName);
         if (this.gisComponent) {
             this.gisComponent.show(this._entities);
         }
-    },
+    }
 
     /**
      * Returns the entities at 'path' of 'entity', or 'entity' itself for an empty path, as an array.
      */
-    _entitiesToShow: function (entity, path) {
+    _entitiesToShow(entity, path) {
         if (!entity) {
             return [];
         }
@@ -240,22 +246,22 @@ Polymer({
             return [];
         }
         return Array.isArray(value) ? value : [value];
-    },
+    }
 
     /**
      * Handles a change of size of the map in the next animation frame, as creating or updating the map changes the DOM,
      * which must not happen in a 'ResizeObserver' callback to avoid error 'ResizeObserver loop completed with undelivered notifications'.
      */
-    _sizeChangedAsync: function () {
+    _sizeChangedAsync() {
         cancelAnimationFrame(this._sizeChangedFrame);
         this._sizeChangedFrame = requestAnimationFrame(() => this._sizeChanged());
-    },
+    }
 
     /**
      * Creates the GIS component once the map has a size, and updates the map after later changes of size; the map has no size while hidden.
      * The toolbar is resized with the map, as they have the same width.
      */
-    _sizeChanged: function () {
+    _sizeChanged() {
         const mapDiv = this.$.map;
         if (mapDiv.offsetWidth === 0 || mapDiv.offsetHeight === 0) {
             return;
@@ -277,12 +283,12 @@ Polymer({
                 }
             });
         }
-    },
+    }
 
     /**
      * Loads the GIS component class, resolving to null if it cannot be loaded, in which case the component shows no map.
      */
-    _loadGisComponentClass: function () {
+    _loadGisComponentClass() {
         const uri = this.gisComponentUri, name = this.gisComponentName;
         if (!uri || !name) {
             console.error(`tg-master-map: attributes 'gis-component-uri' and 'gis-component-name' are required, but are [${uri}] and [${name}].`);
@@ -299,4 +305,6 @@ Polymer({
             return null;
         });
     }
-});
+}
+
+customElements.define('tg-master-map', TgMasterMap);

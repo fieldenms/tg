@@ -111,7 +111,7 @@ const componentStyles = `
  * The master skips the elements of the component while it is blocked, as they are inert.
  * As such a container, the component is also searched by the master for the actions of its shortcuts and for elements with the `canLeave` contract, such as an embedded centre.
  *
- * The behaviour is used with `behaviors: [...]` for an element declared with `Polymer({...})`, or with `mixinBehaviors([...], PolymerElement)` for a class-based element.
+ * The behaviour is used with `mixinBehaviors([...], PolymerElement)` for a class-based element, or with `behaviors: [...]` for an element declared with `Polymer({...})`.
  */
 const TgMasterComponentBehaviorImpl = {
 

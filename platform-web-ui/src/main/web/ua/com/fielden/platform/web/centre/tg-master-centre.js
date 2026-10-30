@@ -1,6 +1,6 @@
 import '/resources/element_loader/tg-element-loader.js';
-import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import { TgMasterComponentBehavior } from '/resources/master/tg-master-component-behavior.js';
 import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
@@ -76,101 +76,107 @@ const template = html`
  * The embedded centre follows every change of size of the component, including one by the user: the component notifies it with 'IronResizableBehavior',
  * so that its views, such as a chart in an alternative view, fit the new size.
  */
-Polymer({
-    _template: template,
+class TgMasterCentre extends mixinBehaviors([TgMasterComponentBehavior, IronResizableBehavior], PolymerElement) {
 
-    is: 'tg-master-centre',
+    static get template() {
+        return template;
+    }
 
-    behaviors: [TgMasterComponentBehavior, IronResizableBehavior],
+    static get properties() {
+        return {
 
-    properties: {
+            /**
+             * The fully-qualified name of the menu item type of the embedded centre.
+             */
+            miType: {
+                type: String
+            },
 
-        /**
-         * The fully-qualified name of the menu item type of the embedded centre.
-         */
-        miType: {
-            type: String
-        },
+            /**
+             * The least height of the component, as a CSS length, which is applied by 'TgMasterComponentBehavior'.
+             */
+            minHeight: {
+                type: String,
+                value: '250px'
+            },
 
-        /**
-         * The least height of the component, as a CSS length, which is applied by 'TgMasterComponentBehavior'.
-         */
-        minHeight: {
-            type: String,
-            value: '250px'
-        },
+            /**
+             * The function that provides the master entity as the context of the embedded centre, which the centre calls when it runs.
+             * A new function is assigned for every refresh, which loads the centre the first time and runs it again afterwards.
+             */
+            _getMasterEntity: {
+                type: Function
+            },
 
-        /**
-         * The function that provides the master entity as the context of the embedded centre, which the centre calls when it runs.
-         * A new function is assigned for every refresh, which loads the centre the first time and runs it again afterwards.
-         */
-        _getMasterEntity: {
-            type: Function
-        },
+            _centreAttrs: {
+                type: Object,
+                value: function () {
+                    return {
+                        embedded: true,
+                        uuid: generateUUID()
+                    };
+                }
+            },
 
-        _centreAttrs: {
-            type: Object,
-            value: function () {
-                return {
-                    embedded: true,
-                    uuid: generateUUID()
-                };
+            _hasPropertyActions: {
+                type: Boolean,
+                value: false
             }
-        },
+        };
+    }
 
-        _hasPropertyActions: {
-            type: Boolean,
-            value: false
-        }
-    },
-
-    ready: function () {
+    ready() {
+        super.ready();
         this._hasPropertyActions = this._propertyActions.length > 0;
-    },
+    }
 
-    attached: function () {
+    connectedCallback() {
+        super.connectedCallback();
         this._resizeObserver = new ResizeObserver(() => this._sizeChangedAsync());
         this._resizeObserver.observe(this.$.loader);
-    },
+    }
 
-    detached: function () {
+    disconnectedCallback() {
+        super.disconnectedCallback();
         this._resizeObserver.disconnect();
         this._resizeObserver = null;
         cancelAnimationFrame(this._sizeChangedFrame);
-    },
+    }
 
     /**
      * Returns the loader of the embedded centre, which is made focusable as described in 'TgMasterComponentBehavior'.
      */
-    component: function () {
+    component() {
         return this.$.loader;
-    },
+    }
 
     /**
      * Notifies the embedded centre of a change of size of the area under the caption in the next animation frame, as the centre and its views change the DOM to fit the new size,
      * which must not happen in a 'ResizeObserver' callback to avoid error 'ResizeObserver loop completed with undelivered notifications'.
      */
-    _sizeChangedAsync: function () {
+    _sizeChangedAsync() {
         cancelAnimationFrame(this._sizeChangedFrame);
         this._sizeChangedFrame = requestAnimationFrame(() => this.notifyResize());
-    },
+    }
 
-    _hasCaption: function (propTitle, _hasPropertyActions) {
+    _hasCaption(propTitle, _hasPropertyActions) {
         return !!propTitle || _hasPropertyActions;
-    },
+    }
 
-    _importUri: function (miType) {
+    _importUri(miType) {
         return `/centre_ui/${miType}`;
-    },
+    }
 
-    _elementName: function (miType) {
+    _elementName(miType) {
         return `tg-${miType.substring(miType.lastIndexOf('.') + 1)}-centre`;
-    },
+    }
 
     /**
      * Provides the current master entity as the context of the centre, which loads the centre the first time and runs it again afterwards.
      */
-    refresh: function () {
+    refresh() {
         this._getMasterEntity = () => this.masterEntityContext();
     }
-});
+}
+
+customElements.define('tg-master-centre', TgMasterCentre);
