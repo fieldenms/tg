@@ -140,6 +140,13 @@ Polymer({
     },
 
     /**
+     * Returns the loader of the embedded centre, which is made focusable as described in 'TgMasterComponentBehavior'.
+     */
+    component: function () {
+        return this.$.loader;
+    },
+
+    /**
      * Notifies the embedded centre of a change of size of the area under the caption in the next animation frame, as the centre and its views change the DOM to fit the new size,
      * which must not happen in a 'ResizeObserver' callback to avoid error 'ResizeObserver loop completed with undelivered notifications'.
      */

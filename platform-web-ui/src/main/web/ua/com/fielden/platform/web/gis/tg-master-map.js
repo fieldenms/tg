@@ -195,6 +195,14 @@ Polymer({
         }
     },
 
+    /**
+     * Returns the element of the map, which is made focusable as described in 'TgMasterComponentBehavior', so that the keys of the map, such as the arrows that move it, can be used.
+     * The map makes the element focusable itself once it is created, which is later, once the component has a size.
+     */
+    component: function () {
+        return this.$.map;
+    },
+
     _labelsShownChanged: function (labelsShown) {
         if (this.gisComponent) {
             this.gisComponent.showLabels(labelsShown);

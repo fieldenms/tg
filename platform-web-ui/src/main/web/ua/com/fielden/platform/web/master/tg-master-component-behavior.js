@@ -19,13 +19,15 @@ export const MSG_BLOCKED_FOR_NEW_ENTITY = 'A new entity is being created. Please
 export const MSG_BLOCKED_FOR_UNSAVED_CHANGES = 'Please save or cancel changes.';
 
 /**
- * The styles of the resizer and of the blocking pane.
+ * The styles of the spacing of the component, of the resizer and of the blocking pane.
  * They are the first styles of the component, so that its own styles take precedence; the host becomes a containing block for them only if the component does not position it.
+ * The spacing is that of editors, which have it from `padding: 8px 0` of `paper-input-container`; it is a margin, so that the resizer and the blocking pane cover the component exactly.
  * The resizer precedes the blocking pane, which covers it while the component is blocked.
  */
 const componentStyles = `
     :host {
         position: relative;
+        margin: 8px 0;
     }
     .tg-component-resizer {
         position: absolute;
@@ -76,6 +78,7 @@ const componentStyles = `
  * Changes that are not yet saved are those committed to the master, indicated by `entityModified`, and edits in progress, indicated by `entityEdited`.
  * `blockWhenUnsaved` may change at run time.
  *
+ * The component has the vertical spacing of editors, a margin of `8px` above and below, which a component may change in its own styles.
  * The component has no height of its own, so that it fills the height of its layout cell, and its least height is `minHeight`, which a component may give a default value by declaring the property with that value.
  * With `height` declared, as a CSS length, the component is resizable, as a rich text editor with a declared height: the user drags the resizer at its bottom right corner to change the height
  * that the component keeps at least, which is the declared height until then, and double taps the resizer to restore the declared height.
@@ -99,7 +102,9 @@ const componentStyles = `
  * whether the user or a definer changed it, but not when other properties change; the values are compared as values of properties are, such as entities by their keys.
  * A refresh asked for while the component is blocked takes place once it is unblocked, and refreshes asked for at once, such as when a save also unblocks the component, take place once.
  *
- * The component is a container of selectable elements, as an editor is, so that its focusable elements, such as its property actions and the elements of an embedded centre,
+ * A component that presents its content in an element of its own, such as the map of a map component, returns that element from `component()`, so that the element can be focused:
+ * it is given `tabindex` `0`, unless it declares its own, so that Tab stops on it in its place among the elements of the component, and a click on it focuses it.
+ * The component is a container of selectable elements, as an editor is, so that its focusable elements, such as its property actions, the element returned by `component()` and the elements of an embedded centre,
  * take part in the focus traversal of the master in their place among the editors.
  * So, the master knows its first and last focusable elements also when a component comes first or last,
  * and Tab moves on from the last of them as from the last editor, such as to the title bar of a dialog, rather than out of the master.
@@ -250,6 +255,10 @@ const TgMasterComponentBehaviorImpl = {
 
     ready: function () {
         this._ensureAttribute('tg-master-component', true);
+        const component = this.component();
+        if (component && !component.hasAttribute('tabindex')) {
+            component.setAttribute('tabindex', '0');
+        }
         this._propertyActions = [...this.querySelectorAll(':scope > [slot="property-action"]')];
         this._propertyActions.forEach((action, index) => this._setActionVisible(action, index === this.propertyActionIndex));
 
@@ -272,6 +281,14 @@ const TgMasterComponentBehaviorImpl = {
      */
     masterEntityContext: function () {
         return this.createContextHolder(null, null, 'true', null, null)['masterEntity'];
+    },
+
+    /**
+     * Returns the element in which the component presents its content, such as a map, which is made focusable once the component is ready, or `null` if there is no such element, which is the default.
+     * A component that has such an element overrides it.
+     */
+    component: function () {
+        return null;
     },
 
     /**
