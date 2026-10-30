@@ -67,7 +67,7 @@ const template = html`
         <slot slot="entity-specific-action" class="entity-specific-action" name="property-action"></slot>
     </tg-responsive-toolbar>
     <div class="map-container">
-        <div id="map" class="map"></div>
+        <div id="map" class="map" tabindex="0"></div>
     </div>
 `;
 
@@ -91,6 +91,8 @@ const template = html`
  * The title of the map is followed by a responsive toolbar, which moves the actions that do not fit into a dropdown.
  * The toolbar has the property actions, and a toggle that shows and hides the labels of map features, as the labels toggle of centre maps, if attribute 'labels-toggle' is set.
  * A property action reaches the map as 'action.masterMap', wherever the toolbar places the action, and the GIS component as 'action.masterMap.gisComponent' once the map is created.
+ *
+ * The component is focused as a whole at the map, as described in 'TgMasterComponentBehavior', and the controls of the map, such as those of zooming, are its content.
  */
 class TgMasterMap extends mixinBehaviors([TgMasterComponentBehavior], PolymerElement) {
 
@@ -202,8 +204,8 @@ class TgMasterMap extends mixinBehaviors([TgMasterComponentBehavior], PolymerEle
     }
 
     /**
-     * Returns the element of the map, which is made focusable as described in 'TgMasterComponentBehavior', so that the keys of the map, such as the arrows that move it, can be used.
-     * The map makes the element focusable itself once it is created, which is later, once the component has a size.
+     * Returns the element of the map, at which the component is focused as a whole, as described in 'TgMasterComponentBehavior', so that the keys of the map, such as the arrows that move it, can be used.
+     * The element declares 'tabindex' '0', so that it can be focused also before the map is created, which is once the component has a size.
      */
     component() {
         return this.$.map;

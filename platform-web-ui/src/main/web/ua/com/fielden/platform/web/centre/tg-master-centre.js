@@ -50,7 +50,7 @@ const template = html`
         <span class="caption-title" tooltip-text$="[[propDesc]]">[[propTitle]]</span>
         <slot name="property-action"></slot>
     </div>
-    <tg-element-loader id="loader" import="[[_importUri(miType)]]" element-name="[[_elementName(miType)]]" attrs="[[_centreAttrs]]" context="[[_getMasterEntity]]" context-property="getMasterEntity"></tg-element-loader>
+    <tg-element-loader id="loader" tabindex="0" import="[[_importUri(miType)]]" element-name="[[_elementName(miType)]]" attrs="[[_centreAttrs]]" context="[[_getMasterEntity]]" context-property="getMasterEntity"></tg-element-loader>
 `;
 
 /**
@@ -144,7 +144,8 @@ class TgMasterCentre extends mixinBehaviors([TgMasterComponentBehavior, IronResi
     }
 
     /**
-     * Returns the loader of the embedded centre, which is made focusable as described in 'TgMasterComponentBehavior'.
+     * Returns the loader of the embedded centre, at which the component is focused as a whole, as described in 'TgMasterComponentBehavior', with the elements of the centre as its content.
+     * The loader declares 'tabindex' '0', so that it can be focused.
      */
     component() {
         return this.$.loader;

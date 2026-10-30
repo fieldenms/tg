@@ -117,6 +117,39 @@ const _isInert = function (element, container) {
 };
 
 /**
+ * Determines whether 'element' is a master component, which is marked with attribute 'tg-master-component'.
+ */
+const _isComponent = function (element) {
+    return !!element && element.hasAttribute('tg-master-component');
+};
+
+/**
+ * Determines whether 'element' is the element at which a master component is focused as a whole, as returned by 'component()' of the component, which is the component itself or an element of its shadow tree.
+ */
+const _isComponentToFocus = function (element) {
+    const component = _isComponent(element) ? element : element.getRootNode().host;
+    return _isComponent(component) && component._componentToFocus() === element;
+};
+
+/**
+ * Determines whether 'element' of 'container' is in the content of a master component focused as a whole, which is within the element at which the component is focused, as described in 'TgMasterComponentBehavior':
+ * whether any of the ancestors of 'element' up to 'container', including the hosts of shadow roots, is such an element.
+ */
+const _isInComponentContent = function (element, container) {
+    const componentToFocusOrContainer = getParentAnd(element.parentElement || element.getRootNode().host, current => current === container || _isComponentToFocus(current));
+    return !!componentToFocusOrContainer && componentToFocusOrContainer !== container;
+};
+
+/**
+ * Determines whether 'element' of 'container' belongs to a master component, as the component itself and its elements do:
+ * whether 'element' or any of its ancestors up to 'container', including the hosts of shadow roots, is a master component.
+ */
+const _belongsToComponent = function (element, container) {
+    const componentOrContainer = getParentAnd(element, current => current === container || _isComponent(current));
+    return !!componentOrContainer && componentOrContainer !== container;
+};
+
+/**
  * Focuses 'inputToFocus' taking into account that it can already be focused.
  */
 const focusInput = function (inputToFocus) {
@@ -1142,10 +1175,12 @@ const TgEntityMasterBehaviorImpl = {
 
     /**
      * Returns the elements that can be focused, in the order of focus traversal, including those of the editors, the actions and the components of the master.
-     * The elements of inert subtrees, such as those of a blocked master component, are skipped, as they cannot be focused.
+     * The content of a component focused as a whole is skipped, as the focus moves to the element at which the component is focused, as to a rich text editor,
+     * and into its content only from that element, as described in `TgMasterComponentBehavior`.
+     * The elements of inert subtrees, such as a blocked master component and its elements, are skipped, as they cannot be focused.
      */
     _getCurrentFocusableElements: function () {
-        return queryElements(this, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null && !_isInert(element, this));
+        return queryElements(this, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null && !_isInert(element, this) && !_isInComponentContent(element, this));
     },
 
     wasLoaded: function () {
@@ -1174,6 +1209,12 @@ const TgEntityMasterBehaviorImpl = {
         this._focusView(e, false);
     },
 
+    /**
+     * Moves the focus on Tab (`forward`) and Shift+Tab, as asked for by the dialog of the master with `focusNextView` and `focusPreviousView` for every such key press within the master.
+     * From the last focusable element in that direction, the master asks with `tg-last-item-focused` for the focus to move on out of it, such as by the dialog to its title bar.
+     * From or to an element of a master component, the focus moves here to the adjacent focusable element, where the browser would move it into the content of a component focused as a whole instead,
+     * which the focus enters only with Enter, as described in `TgMasterComponentBehavior`; otherwise, the browser moves the focus.
+     */
     _focusView: function (e, forward) {
         if (this._hasEmbededView()) {
             const callback = forward ? this._focusNextEmbededView : this._focusPreviousEmbededView;
@@ -1188,8 +1229,15 @@ const TgEntityMasterBehaviorImpl = {
                 } else {
                     const lastIndex = forward ? focusedElements.length - 1 : 0;
                     const activeElement = deepestActiveElement();
-                    if (activeElement === focusedElements[lastIndex]) {
+                    const index = focusedElements.indexOf(activeElement);
+                    if (index === lastIndex) {
                         this.fire("tg-last-item-focused", { forward: forward, event: e });
+                    } else if (index >= 0) {
+                        const adjacentElement = focusedElements[forward ? index + 1 : index - 1];
+                        if (_belongsToComponent(activeElement, this) || _belongsToComponent(adjacentElement, this)) {
+                            adjacentElement.focus();
+                            tearDownEvent(e);
+                        }
                     }
                 }
             } else {

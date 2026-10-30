@@ -4,8 +4,8 @@ import '/resources/images/tg-icons.js';
 
 import { addListener } from '/resources/polymer/@polymer/polymer/lib/utils/gestures.js';
 import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
-import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { deepestActiveElement, isInHierarchy, tearDownEvent, localStorageKey, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
+import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
+import { deepestActiveElement, isInHierarchy, tearDownEvent, localStorageKey, getRelativePos, getParentAnd, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 
 /**
@@ -17,6 +17,15 @@ export const MSG_BLOCKED_FOR_NEW_ENTITY = 'A new entity is being created. Please
  * The message of the blocking pane while the master entity has changes that are not yet saved, as for leaving a master with such changes.
  */
 export const MSG_BLOCKED_FOR_UNSAVED_CHANGES = 'Please save or cancel changes.';
+
+/**
+ * Determines whether 'element' of 'container' is inert, as are the elements of a blocked master component, which cannot be focused:
+ * whether 'element' or any of its ancestors up to 'container', including the hosts of shadow roots, is inert.
+ */
+const _isInert = function (element, container) {
+    const inertOrContainer = getParentAnd(element, current => current === container || current.inert);
+    return !!inertOrContainer && inertOrContainer.inert === true;
+};
 
 /**
  * The styles of the spacing of the component, of the resizer and of the blocking pane.
@@ -102,14 +111,24 @@ const componentStyles = `
  * whether the user or a definer changed it, but not when other properties change; the values are compared as values of properties are, such as entities by their keys.
  * A refresh asked for while the component is blocked takes place once it is unblocked, and refreshes asked for at once, such as when a save also unblocks the component, take place once.
  *
- * A component that presents its content in an element of its own, such as the map of a map component, returns that element from `component()`, so that the element can be focused:
- * it is given `tabindex` `0`, unless it declares its own, so that Tab stops on it in its place among the elements of the component, and a click on it focuses it.
- * The component is a container of selectable elements, as an editor is, so that its focusable elements, such as its property actions, the element returned by `component()` and the elements of an embedded centre,
- * take part in the focus traversal of the master in their place among the editors.
- * So, the master knows its first and last focusable elements also when a component comes first or last,
+ * The component is focused as a whole, as a rich text editor is, at the element returned by `component()`: the component itself by default,
+ * or an element of its shadow tree in which the component presents its content, such as the map of a map component.
+ * The component declares `tabindex` on that element, such as `tabindex="0"` in its template, or on itself, so that the element can be focused, and a click on it focuses it.
+ * The content of the component is within that element: its shadow tree and its property actions for the component itself, or the elements within an element of its shadow tree,
+ * such as the controls of a map or the elements of an embedded centre.
+ * Tab and Shift+Tab move the focus among the editors of the master to that element and on from it, as well as to the focusable elements of the component outside its content,
+ * such as property actions beside a map, but not into its content.
+ * Enter moves the focus from that element to the first focusable element of its content, where Tab and Shift+Tab move the focus among the focusable elements of the content only,
+ * going round from the last to the first and from the first to the last, and Esc moves the focus back to that element.
+ * A click on an element of the content focuses it, as it does an element of a rich text editor.
+ * The master moves the focus over the component, as described in `TgEntityMasterBehavior`, so it knows its first and last focusable elements also when a component comes first or last,
  * and Tab moves on from the last of them as from the last editor, such as to the title bar of a dialog, rather than out of the master.
- * The master skips the elements of the component while it is blocked, as they are inert.
- * As such a container, the component is also searched by the master for the actions of its shortcuts and for elements with the `canLeave` contract, such as an embedded centre.
+ * A component whose element returned by `component()` cannot be focused, such as one without `tabindex`, is not focused as a whole:
+ * its focusable elements, including those of its content, take part in the focus traversal of the master in their place among the editors.
+ * The master skips the component and its elements while it is blocked, as they are inert.
+ *
+ * The component is a container of selectable elements, as an editor is, so that the master finds its focusable elements, including those of its content,
+ * and searches it for the actions of its shortcuts and for elements with the `canLeave` contract, such as an embedded centre.
  *
  * The behaviour is used with `mixinBehaviors([...], PolymerElement)` for a class-based element, or with `behaviors: [...]` for an element declared with `Polymer({...})`.
  */
@@ -255,10 +274,7 @@ const TgMasterComponentBehaviorImpl = {
 
     ready: function () {
         this._ensureAttribute('tg-master-component', true);
-        const component = this.component();
-        if (component && !component.hasAttribute('tabindex')) {
-            component.setAttribute('tabindex', '0');
-        }
+        this.addEventListener('keydown', event => this._onMoveFocus(event));
         this._propertyActions = [...this.querySelectorAll(':scope > [slot="property-action"]')];
         this._propertyActions.forEach((action, index) => this._setActionVisible(action, index === this.propertyActionIndex));
 
@@ -284,11 +300,19 @@ const TgMasterComponentBehaviorImpl = {
     },
 
     /**
-     * Returns the element in which the component presents its content, such as a map, which is made focusable once the component is ready, or `null` if there is no such element, which is the default.
-     * A component that has such an element overrides it.
+     * Returns the element at which the component is focused as a whole, which is the component itself by default.
+     * A component that presents its content in an element of its shadow tree, such as a map, overrides it to return that element, on which it declares `tabindex`.
      */
     component: function () {
-        return null;
+        return this;
+    },
+
+    /**
+     * Returns the element returned by `component()` if it can be focused, as one with `tabindex` `0` can, so that the component is focused as a whole at that element, or `null` otherwise.
+     */
+    _componentToFocus: function () {
+        const component = this.component();
+        return component && component.matches(FOCUSABLE_ELEMENTS_SELECTOR) ? component : null;
     },
 
     /**
@@ -507,6 +531,50 @@ const TgMasterComponentBehaviorImpl = {
         } else {
             action.setAttribute('hidden', '');
         }
+    },
+
+    /**
+     * Moves the focus from the keyboard as within a rich text editor, while the component is focused as a whole:
+     * Enter moves it from the element returned by `component()` to the first focusable element of its content,
+     * Tab and Shift+Tab move it among the focusable elements of the content, going round from the last to the first and from the first to the last,
+     * and Esc moves it from the content back to the element returned by `component()`.
+     * The focus is moved among the elements of the content here rather than by the browser, which would move it out of the content from its first and last elements.
+     * From the element returned by `component()`, the master moves the focus, as described in `TgEntityMasterBehavior`.
+     */
+    _onMoveFocus: function (event) {
+        const component = this._componentToFocus();
+        if (!component || event.ctrlKey || event.altKey || event.metaKey) {
+            return;
+        }
+        const focusedElement = deepestActiveElement();
+        if (focusedElement === component) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                const [firstElement] = this._getContentFocusableElements();
+                if (firstElement) {
+                    firstElement.focus();
+                    tearDownEvent(event);
+                }
+            }
+        } else if (isInHierarchy(component, focusedElement)) {
+            if (event.key === 'Escape') {
+                component.focus();
+                tearDownEvent(event);
+            } else if (event.key === 'Tab') {
+                const elements = this._getContentFocusableElements();
+                const index = elements.indexOf(focusedElement);
+                if (index >= 0) {
+                    elements[(index + (event.shiftKey ? elements.length - 1 : 1)) % elements.length].focus();
+                    tearDownEvent(event);
+                }
+            }
+        }
+    },
+
+    /**
+     * Returns the focusable elements of the content of the component, which are within the element returned by `component()`, in the order of focus traversal.
+     */
+    _getContentFocusableElements: function () {
+        return queryElements(this.component(), FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null && !_isInert(element, this));
     }
 };
 
