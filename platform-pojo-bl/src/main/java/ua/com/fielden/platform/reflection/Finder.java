@@ -76,15 +76,15 @@ public class Finder {
     private static final Cache<Class<?>, List<Field>> UNION_MEMBER_PROPERTIES = CacheBuilder.newBuilder().initialCapacity(50).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
 
     /// Types that declare fields, by the type in whose hierarchy a field is looked up, and the name of the field.
-    /// An empty value records that there is no such field, so that repeated lookups of a missing field are as cheap as those of an existing one.
+    /// Only existing fields are cached, which bounds the size of this cache by the number of fields in the hierarchy, as the names being looked up may originate from requests (e.g., the property in an autocompletion URI).
     ///
     /// The type that declares a field, rather than the field itself, is cached, because [Field] instances are mutable:
     /// callers change their accessibility, and some restore it afterwards, which would interfere with other callers if the instance were shared.
     /// [Class#getDeclaredField(String)] copies only the requested field, whereas a lookup in the hierarchy copies all fields declared by each type up to the declaring one.
     ///
-    private static final ClassValue<ConcurrentMap<String, Optional<Class<?>>>> DECLARING_TYPES = new ClassValue<>() {
+    private static final ClassValue<ConcurrentMap<String, Class<?>>> DECLARING_TYPES = new ClassValue<>() {
         @Override
-        protected ConcurrentMap<String, Optional<Class<?>>> computeValue(final Class<?> type) {
+        protected ConcurrentMap<String, Class<?>> computeValue(final Class<?> type) {
             return new ConcurrentHashMap<>();
         }
     };
@@ -423,12 +423,12 @@ public class Finder {
         final var declaringTypes = DECLARING_TYPES.get(type);
         final var cached = declaringTypes.get(name);
         if (cached != null) {
-            return cached;
+            return Optional.of(cached);
         }
         // Computed outside the map, so that no lock of the map is held during the reflective lookup, which, for a union type, continues in the type of a union member.
         final var declaringType = findDeclaringType(type, name);
-        final var previous = declaringTypes.putIfAbsent(name, declaringType);
-        return previous != null ? previous : declaringType;
+        declaringType.ifPresent(it -> declaringTypes.putIfAbsent(name, it));
+        return declaringType;
     }
 
     @SuppressWarnings("unchecked")

@@ -203,6 +203,7 @@ public class EntityContainerEnhancer {
     ///
     /// Each row carries its own container, and rows that reference the same entity carry equal containers, so only one of them for each ID (the last one) is enhanced (recursively) and then assigned to all rows with that ID.
     /// This keeps enhancement linear in the number of rows, rather than quadratic in the number of rows that share a reference.
+    /// One container per ID is also required for correctness, as the enhancement of a collectional property expects its owners to be distinct.
     ///
     private <E extends AbstractEntity<?>, T extends AbstractEntity<?>> List<EntityContainer<T>> getRetrievedPropertyInstances(
             final List<EntityContainer<E>> entities, final String propName) {

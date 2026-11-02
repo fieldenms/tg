@@ -13,9 +13,10 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 /// Tests for the enhancement of entity containers ([EntityContainerEnhancer]) of a reference that is retrieved together with the rows referencing it,
 /// where several rows reference the same entity.
 ///
-/// Entity-typed key members (and union members) are such references:
-/// each row carries its own container of the reference, populated from the same query.
-/// Here, the rows are fuel usages ([TeVehicleFuelUsage]), and the reference is key member `vehicle`.
+/// Queries constructed during fetching, unlike the main query, join entity-typed properties that have a fetch model of their own (see `ResultQuery1`),
+/// so that each row carries its own container of the reference, populated from the same query.
+/// Here, the main query retrieves fuel usages ([TeVehicleFuelUsage]), and the query for their key member `vehicle` is constructed during fetching.
+/// Its rows are vehicles, and the reference is `replacedBy`, which two of them share.
 /// Such containers are enhanced once per distinct entity, and then shared by all rows that reference it.
 ///
 /// These tests verify that sharing is confined to one property at one level of the fetch model,
@@ -88,17 +89,21 @@ public class EntityContainerEnhancerTest extends AbstractDaoTestCase {
         }
     }
 
+    /// The replaced vehicles share the replacement as `replacedBy`.
+    /// Enhancing a collectional property requires distinct owners, which holds only if the containers of `replacedBy` are reduced to one per distinct ID.
+    ///
     @Test
     public void collectional_property_of_a_reference_shared_by_several_rows_is_retrieved_for_each_row() {
         final var fetchModel = fetchKeyAndDescOnly(TeVehicleFuelUsage.class)
-                .with("vehicle", fetchKeyAndDescOnly(TeVehicle.class).with("fuelUsages", fetch(TeVehicleFuelUsage.class)));
+                .with("vehicle", fetchKeyAndDescOnly(TeVehicle.class)
+                        .with("replacedBy", fetchKeyAndDescOnly(TeVehicle.class).with("fuelUsages", fetch(TeVehicleFuelUsage.class))));
 
         final var fuelUsages = co(TeVehicleFuelUsage.class).getAllEntities(
-                from(select(TeVehicleFuelUsage.class).where().prop("vehicle.key").eq().val(REPLACEMENT).model()).with(fetchModel).model());
+                from(select(TeVehicleFuelUsage.class).where().prop("vehicle.replacedBy.key").eq().val(REPLACEMENT).model()).with(fetchModel).model());
 
-        assertThat(fuelUsages).hasSize(2);
+        assertThat(fuelUsages).hasSize(3);
         for (final var fuelUsage : fuelUsages) {
-            assertThat(fuelUsage.getVehicle().getFuelUsages())
+            assertThat(fuelUsage.getVehicle().getReplacedBy().getFuelUsages())
                     .extracting(TeVehicleFuelUsage::getQty)
                     .usingElementComparator(BigDecimal::compareTo)
                     .containsExactlyInAnyOrder(new BigDecimal("100"), new BigDecimal("120"));
