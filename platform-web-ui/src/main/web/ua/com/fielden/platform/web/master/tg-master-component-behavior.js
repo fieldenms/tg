@@ -28,13 +28,15 @@ const _isInert = function (element, container) {
 };
 
 /**
- * The styles of the spacing of the component, of the resizer, of the blocking pane and of the title while the component is focused.
+ * The styles of the spacing of the component, of the resizer, of the blocking pane, and of the title and the outline while the component is focused.
  * They are the first styles of the component, so that its own styles take precedence; the host becomes a containing block for them only if the component does not position it.
  * The spacing is that of editors, which have it from `padding: 8px 0` of `paper-input-container`; it is a margin, so that the resizer and the blocking pane cover the component exactly.
  * The resizer precedes the blocking pane, which covers it while the component is blocked.
  * While the focus is within the component, the title has the colour and the weight of the title of a focused editor:
  * `--paper-input-container-focus-color`, which `tg-editor` sets to `--paper-indigo-500`, and `font-weight: 700` of `tg-editor`.
  * The selector is more specific than that of a class, so that the colour of the title in the styles of the component does not take precedence.
+ * The focus ring of the browser on the element at which the component is focused as a whole, which has attribute `tg-component-focus`, is that colour, as the underline of a focused editor is,
+ * keeping the style and the width of the browser; the browser shows it when the element is focused from the keyboard rather than by a click.
  */
 const componentStyles = `
     :host {
@@ -75,6 +77,10 @@ const componentStyles = `
     :host(:focus-within) .tg-component-title {
         color: var(--paper-indigo-500);
         font-weight: 700;
+    }
+    [tg-component-focus]:focus-visible,
+    :host([tg-component-focus]:focus-visible) {
+        outline-color: var(--paper-indigo-500);
     }
 `;
 
@@ -135,6 +141,7 @@ const componentStyles = `
  * The master skips the component and its elements while it is blocked, as they are inert.
  * The title of the component, the element with class `tg-component-title` in its template, looks as the title of a focused editor while the focus is within the component:
  * at the element returned by `component()`, in its content or at a property action.
+ * The focus ring of the browser on the element returned by `component()`, which is shown when the element is focused from the keyboard, has the colour of the underline of a focused editor.
  *
  * The component is a container of selectable elements, as an editor is, so that the master finds its focusable elements, including those of its content,
  * and searches it for the actions of its shortcuts and for elements with the `canLeave` contract, such as an embedded centre.
@@ -296,6 +303,11 @@ const TgMasterComponentBehaviorImpl = {
             this._blockingPane = document.createElement('div');
             this._blockingPane.className = 'tg-component-blocking-pane';
             this.shadowRoot.append(this._blockingPane);
+        }
+        // marks the element at which the component is focused as a whole for the styles of its outline
+        const component = this.component();
+        if (component) {
+            component.setAttribute('tg-component-focus', '');
         }
         this._renderBlocking();
         this._renderResizer();
