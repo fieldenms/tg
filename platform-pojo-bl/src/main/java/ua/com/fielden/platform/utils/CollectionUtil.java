@@ -13,10 +13,12 @@ import ua.com.fielden.platform.types.tuples.T2;
 import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
+import static java.util.stream.Collectors.collectingAndThen;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 /// A convenience class to provide common collection related routines and algorithms.
@@ -462,6 +464,21 @@ public final class CollectionUtil {
         else {
             return Streams.stream(xs).collect(StreamUtils.partitioning(predicate));
         }
+    }
+
+    /// An extra signature of [Collectors#toUnmodifiableMap] with the parameters of [Collectors#toMap(Function, Function, BinaryOperator, Supplier)].
+    ///
+    /// @return a [Collector] which collects elements into an unmodifiable [Map] that wraps the map created with `mapFactory`
+    ///         whose keys are the result of applying `keyMapper` to the input elements, and whose values are the result
+    ///         of applying `valueMapper` to all input elements equal to the key and combining them using `mergeFunction`
+    ///
+    public static <T, K, U> Collector<T, ?, Map<K, U>> toUnmodifiableMap(
+            final Function<? super T, ? extends K> keyMapper,
+            final Function<? super T, ? extends U> valueMapper,
+            final BinaryOperator<U> mergeFunction,
+            final Supplier<? extends Map<K, U>> mapFactory)
+    {
+        return collectingAndThen(Collectors.toMap(keyMapper, valueMapper, mergeFunction, mapFactory), Collections::unmodifiableMap);
     }
 
 }
