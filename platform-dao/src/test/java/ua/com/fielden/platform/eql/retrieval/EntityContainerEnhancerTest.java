@@ -1,12 +1,16 @@
 package ua.com.fielden.platform.eql.retrieval;
 
 import org.junit.Test;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.function.Predicate;
 
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
@@ -19,9 +23,12 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 /// Its rows are vehicles, and the reference is `replacedBy`, which two of them share.
 /// Such containers are enhanced once per distinct entity, and then shared by all rows that reference it.
 ///
+/// In any query, including the main one, each row also carries its own container of a union-typed property, populated with the IDs of union members from the same row.
+///
 /// These tests verify that sharing is confined to one property at one level of the fetch model,
 /// so that the same entity, reached by another path, retains the fetch model of that path,
-/// and that a collectional property of the shared reference is retrieved.
+/// that a collectional property of the shared reference is retrieved,
+/// and that a union-typed property of the main query is retrieved for every row, whichever union member is active.
 ///
 public class EntityContainerEnhancerTest extends AbstractDaoTestCase {
 
@@ -30,7 +37,16 @@ public class EntityContainerEnhancerTest extends AbstractDaoTestCase {
             MODEL = "316",
             REPLACEMENT = "REPLACEMENT",
             REPLACED_1 = "REPLACED1",
-            REPLACED_2 = "REPLACED2";
+            REPLACED_2 = "REPLACED2",
+            WORKSHOP_1 = "WSHOP1",
+            WORKSHOP_2 = "WSHOP2",
+            WAGON = "WAGON1",
+            BOGIE_IN_WORKSHOP_1_A = "BOGIE1",
+            BOGIE_IN_WORKSHOP_1_B = "BOGIE2",
+            BOGIE_IN_WORKSHOP_1_C = "BOGIE3",
+            BOGIE_IN_WORKSHOP_2 = "BOGIE4",
+            BOGIE_IN_WAGON_SLOT = "BOGIE5",
+            BOGIE_WITHOUT_LOCATION = "BOGIE6";
 
     /// Fuel usages of the replacement vehicle reach it as `vehicle`, and fuel usages of the two replaced vehicles reach it as `vehicle.replacedBy`.
     /// The replaced vehicles share the replacement as `replacedBy`, so its containers on that path are enhanced once and shared.
@@ -110,6 +126,50 @@ public class EntityContainerEnhancerTest extends AbstractDaoTestCase {
         }
     }
 
+    /// The default fetch model retrieves union members as ID-only proxies, and each row of the main query still carries its own container of `location`.
+    /// Three rows reference the same workshop, so that at least one of them retains its own container unless the enhanced container is assigned to all of them.
+    /// The other rows ensure that the location of each row is determined by its own ID, including a different active union member and no location at all.
+    ///
+    @Test
+    public void union_typed_property_of_the_main_query_is_retrieved_for_each_row_with_the_default_fetch_model() {
+        final var bogies = bogiesByKey(fetch(TgBogie.class));
+
+        assertThat(bogies).hasSize(6);
+        final var sharedLocation = bogies.get(BOGIE_IN_WORKSHOP_1_A).getLocation();
+        assertThat(sharedLocation.getWorkshop().isIdOnlyProxy()).isTrue();
+        assertThat(sharedLocation.getWorkshop().getId()).isEqualTo(co(TgWorkshop.class).findByKey(WORKSHOP_1).getId());
+        assertThat(bogies.get(BOGIE_IN_WORKSHOP_1_B).getLocation()).isSameAs(sharedLocation);
+        assertThat(bogies.get(BOGIE_IN_WORKSHOP_1_C).getLocation()).isSameAs(sharedLocation);
+        assertThat(bogies.get(BOGIE_IN_WORKSHOP_2).getLocation().getWorkshop().getId()).isEqualTo(co(TgWorkshop.class).findByKey(WORKSHOP_2).getId());
+        assertThat(bogies.get(BOGIE_IN_WAGON_SLOT).getLocation().getWorkshop()).isNull();
+        assertThat(bogies.get(BOGIE_IN_WAGON_SLOT).getLocation().getWagonSlot()).isNotNull();
+        assertThat(bogies.get(BOGIE_WITHOUT_LOCATION).getLocation()).isNull();
+    }
+
+    /// The same as above, but with fetch models for union members, which are applied to the location of every row.
+    ///
+    @Test
+    public void union_typed_property_of_the_main_query_is_retrieved_for_each_row_with_fetch_models_for_union_members() {
+        final var bogies = bogiesByKey(fetch(TgBogie.class).with("location", fetch(TgBogieLocation.class)
+                .with("workshop", fetchKeyAndDescOnly(TgWorkshop.class))
+                .with("wagonSlot", fetch(TgWagonSlot.class).with("wagon", fetchKeyAndDescOnly(TgWagon.class)))));
+
+        assertThat(bogies).hasSize(6);
+        final var sharedLocation = bogies.get(BOGIE_IN_WORKSHOP_1_A).getLocation();
+        assertThat(sharedLocation.getWorkshop().getKey()).isEqualTo(WORKSHOP_1);
+        assertThat(bogies.get(BOGIE_IN_WORKSHOP_1_B).getLocation()).isSameAs(sharedLocation);
+        assertThat(bogies.get(BOGIE_IN_WORKSHOP_1_C).getLocation()).isSameAs(sharedLocation);
+        assertThat(bogies.get(BOGIE_IN_WORKSHOP_2).getLocation().getWorkshop().getKey()).isEqualTo(WORKSHOP_2);
+        assertThat(bogies.get(BOGIE_IN_WAGON_SLOT).getLocation().getWorkshop()).isNull();
+        assertThat(bogies.get(BOGIE_IN_WAGON_SLOT).getLocation().getWagonSlot().getWagon().getKey()).isEqualTo(WAGON);
+        assertThat(bogies.get(BOGIE_WITHOUT_LOCATION).getLocation()).isNull();
+    }
+
+    private Map<String, TgBogie> bogiesByKey(final fetch<TgBogie> fetchModel) {
+        return co(TgBogie.class).getAllEntities(from(select(TgBogie.class).model()).with(fetchModel).model())
+                .stream().collect(toMap(TgBogie::getKey, identity()));
+    }
+
     /// Whether `model` was fetched with its own properties, rather than proxied or retrieved as an ID-only proxy.
     /// Key member `vehicle` of a fuel usage is retrieved with `model` as an ID-only proxy, unless the fetch model includes `model`.
     ///
@@ -151,6 +211,16 @@ public class EntityContainerEnhancerTest extends AbstractDaoTestCase {
         save(new_composite(TeVehicleFuelUsage.class, replaced1, date("2005-01-01 00:00:00")).setQty(new BigDecimal("50")).setFuelType(fuelType));
         save(new_composite(TeVehicleFuelUsage.class, replaced1, date("2005-02-01 00:00:00")).setQty(new BigDecimal("60")).setFuelType(fuelType));
         save(new_composite(TeVehicleFuelUsage.class, replaced2, date("2005-03-01 00:00:00")).setQty(new BigDecimal("70")).setFuelType(fuelType));
+
+        final var workshop1 = save(new_(TgWorkshop.class, WORKSHOP_1, "Workshop 1"));
+        final var workshop2 = save(new_(TgWorkshop.class, WORKSHOP_2, "Workshop 2"));
+        final var wagonSlot = save(new_composite(TgWagonSlot.class, save(new_(TgWagon.class, WAGON, "Wagon 1")), 1));
+        save(new_(TgBogie.class, BOGIE_IN_WORKSHOP_1_A, "Bogie 1").setLocation(co$(TgBogieLocation.class).new_().setWorkshop(workshop1)));
+        save(new_(TgBogie.class, BOGIE_IN_WORKSHOP_1_B, "Bogie 2").setLocation(co$(TgBogieLocation.class).new_().setWorkshop(workshop1)));
+        save(new_(TgBogie.class, BOGIE_IN_WORKSHOP_1_C, "Bogie 3").setLocation(co$(TgBogieLocation.class).new_().setWorkshop(workshop1)));
+        save(new_(TgBogie.class, BOGIE_IN_WORKSHOP_2, "Bogie 4").setLocation(co$(TgBogieLocation.class).new_().setWorkshop(workshop2)));
+        save(new_(TgBogie.class, BOGIE_IN_WAGON_SLOT, "Bogie 5").setLocation(co$(TgBogieLocation.class).new_().setWagonSlot(wagonSlot)));
+        save(new_(TgBogie.class, BOGIE_WITHOUT_LOCATION, "Bogie 6"));
     }
 
 }

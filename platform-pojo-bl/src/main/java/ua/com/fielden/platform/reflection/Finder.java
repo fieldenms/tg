@@ -404,7 +404,7 @@ public class Finder {
     ///
     public static Field getFieldByName(final Class<?> type, final String name) {
         final Class<?> declaringType = declaringType(type, name)
-                .orElseThrow(() -> new ReflectionException(format("Failed to locate field [%s] in type [%s]", name, type.getName())));
+                .orElseThrow(() -> new ReflectionException("Failed to locate field [%s] in type [%s]".formatted(name, type.getName())));
         return declaredField(declaringType, name);
     }
 
@@ -456,7 +456,7 @@ public class Finder {
         try {
             return declaringType.getDeclaredField(name);
         } catch (final NoSuchFieldException ex) {
-            throw new ReflectionException(format("Failed to locate field [%s] in type [%s]", name, declaringType.getName()), ex);
+            throw new ReflectionException("Failed to locate field [%s] in type [%s]".formatted(name, declaringType.getName()), ex);
         }
     }
 

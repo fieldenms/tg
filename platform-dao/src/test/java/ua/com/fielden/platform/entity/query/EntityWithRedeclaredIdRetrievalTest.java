@@ -43,9 +43,7 @@ public class EntityWithRedeclaredIdRetrievalTest extends AbstractDaoTestCase {
     ///
     private Long persistedId() {
         final var query = select(TgEntityWithIsPropertyOverriddenId.class).where().prop("key").eq().val(KEY).yield().prop("id").as("id").modelAsAggregate();
-        final Long id = ((Number) co(EntityAggregates.class).getAllEntities(from(query).model()).getFirst().get("id")).longValue();
-        assertThat(id).isNotNull();
-        return id;
+        return ((Number) co(EntityAggregates.class).getAllEntities(from(query).model()).getFirst().get("id")).longValue();
     }
 
     @Override

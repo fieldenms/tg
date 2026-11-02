@@ -199,7 +199,7 @@ public class EntityContainerEnhancer {
                 .collect(groupingBy(e_p -> e_p._2.getId(), mapping(e_p -> e_p._1, toList())));
     }
 
-    /// Containers of property `propName` that were retrieved together with `entities` (by a join), one for each distinct ID.
+    /// Containers of property `propName` that were retrieved together with `entities`, one for each distinct ID.
     ///
     /// Each row carries its own container, and rows that reference the same entity carry equal containers, so only one of them for each ID (the last one) is enhanced (recursively) and then assigned to all rows with that ID.
     /// This keeps enhancement linear in the number of rows, rather than quadratic in the number of rows that share a reference.
