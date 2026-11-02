@@ -200,9 +200,50 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
         assertThat(vehicles).allSatisfy(vehicle -> assertEquals(Map.of("myNumber", 6), vehicle));
     }
 
-    // TODO Add tests that cover all kinds of nested access: result fields, conditions, data and aggregation queries.
     @Test
-    public void calculated_properties_added_via_MCP_cannot_be_read_via_nested_access() {
+    public void tool_add_calculated_property_adds_a_calculated_property_that_can_be_used_in_conditions_with_execute_query__top_level_access() {
+        {
+            final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
+                    TOOL_ADD_CALCULATED_PROPERTY,
+                    Map.of("type", TgVehicle.class.getSimpleName(),
+                           "name", "myNumber",
+                           "expression", "2*3")));
+            assertFalse(result.isError());
+        }
+
+        assertThat(executeQuery("{tgVehicle(order: ASC_1, where: {cond: {myNumber: {eq: 6}}}) {key} }").structuredContent())
+                .isEqualTo(Map.of("data", Map.of("tgVehicle", List.of(Map.of("key", "CAR1"), Map.of("key", "CAR2")))));
+        assertThat(executeQuery("{tgVehicle(where: {cond: {myNumber: {ne: 6}}}) {key} }").structuredContent())
+                .isEqualTo(Map.of("data", Map.of("tgVehicle", List.of())));
+        assertThat(executeQuery("{tgVehicle_agg(where: {cond: {myNumber: {eq: 6}}}) {count} }").structuredContent())
+                .isEqualTo(Map.of("data", Map.of("tgVehicle_agg", List.of(Map.of("count", 2)))));
+        assertThat(executeQuery("{tgVehicle_agg(where: {cond: {myNumber: {ne: 6}}}) {count} }").structuredContent())
+                .isEqualTo(Map.of("data", Map.of("tgVehicle_agg", List.of(Map.of("count", 0)))));
+    }
+
+    @Test
+    public void tool_add_calculated_property_adds_a_calculated_property_that_can_be_aggregated_with_execute_query__top_level_access() {
+        {
+            final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
+                    TOOL_ADD_CALCULATED_PROPERTY,
+                    Map.of("type", TgVehicle.class.getSimpleName(),
+                           "name", "myNumber",
+                           "expression", "2*3")));
+            assertFalse(result.isError());
+        }
+
+        final var result = executeQuery("{tgVehicle_agg {groupBy {myNumber} count sum {myNumber} avg {myNumber} max {myNumber} min {myNumber}} }");
+        assertThat(result.structuredContent()).isEqualTo(Map.of("data", Map.of("tgVehicle_agg", List.of(
+                Map.of("groupBy", Map.of("myNumber", 6),
+                       "count", 2,
+                       "sum", Map.of("myNumber", 12),
+                       "avg", Map.of("myNumber", 6),
+                       "max", Map.of("myNumber", 6),
+                       "min", Map.of("myNumber", 6))))));
+    }
+
+    @Test
+    public void calculated_properties_added_via_MCP_cannot_be_read_via_nested_access__result_fields_of_data_queries() {
         {
             final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
                     TOOL_ADD_CALCULATED_PROPERTY,
@@ -220,6 +261,71 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
         assertThat(errors).hasSize(1);
         assertThat(errors.getFirst()).extractingByKey("message", STRING).contains(
                 "Exception while fetching data (/tgVehicle) : The property [replacedBy.myNumber] does not exist in entity type [TgVehicle$$TgEntity_");
+    }
+
+    @Test
+    public void calculated_properties_added_via_MCP_cannot_be_read_via_nested_access__conditions_of_data_queries() {
+        {
+            final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
+                    TOOL_ADD_CALCULATED_PROPERTY,
+                    Map.of("type", TgVehicle.class.getSimpleName(),
+                           "name", "myNumber",
+                           "expression", "2*3")));
+            assertFalse(result.isError());
+        }
+
+        final var result = executeQuery("{tgVehicle(where: {cond: {replacedBy: {cond: {myNumber: {eq: 6}}}}}) {key} }");
+        assertFalse(result.isError()); // Not an MCP tool error, but a GraphQL error.
+        final Map<String, Object> structuredContent = assertInstanceOf(Map.class, result.structuredContent());
+        assertThat(structuredContent).containsKey("errors");
+        final List<Map<String, Object>> errors = assertInstanceOf(List.class, structuredContent.get("errors"));
+        assertThat(errors).hasSize(1);
+        assertThat(errors.getFirst()).extractingByKey("message", STRING).contains(
+                "Exception while fetching data (/tgVehicle) : Error during entity retrieval.");
+    }
+
+    @Test
+    public void calculated_properties_added_via_MCP_cannot_be_read_via_nested_access__result_fields_of_aggregation_queries() {
+        {
+            final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
+                    TOOL_ADD_CALCULATED_PROPERTY,
+                    Map.of("type", TgVehicle.class.getSimpleName(),
+                           "name", "myNumber",
+                           "expression", "2*3")));
+            assertFalse(result.isError());
+        }
+
+        List.of("groupBy", "sum", "avg", "max", "min").forEach(field -> {
+            final var result = executeQuery("{tgVehicle_agg {%s {replacedBy {myNumber}}} }".formatted(field));
+            assertFalse(result.isError()); // Not an MCP tool error, but a GraphQL error.
+            final Map<String, Object> structuredContent = assertInstanceOf(Map.class, result.structuredContent());
+            assertThat(structuredContent).containsKey("errors");
+            final List<Map<String, Object>> errors = assertInstanceOf(List.class, structuredContent.get("errors"));
+            assertThat(errors).hasSize(1);
+            assertThat(errors.getFirst()).extractingByKey("message", STRING).contains(
+                    "Exception while fetching data (/tgVehicle_agg) : Error during entity retrieval.");
+        });
+    }
+
+    @Test
+    public void calculated_properties_added_via_MCP_cannot_be_read_via_nested_access__conditions_of_aggregation_queries() {
+        {
+            final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
+                    TOOL_ADD_CALCULATED_PROPERTY,
+                    Map.of("type", TgVehicle.class.getSimpleName(),
+                           "name", "myNumber",
+                           "expression", "2*3")));
+            assertFalse(result.isError());
+        }
+
+        final var result = executeQuery("{tgVehicle_agg(where: {cond: {replacedBy: {cond: {myNumber: {eq: 6}}}}}) {count} }");
+        assertFalse(result.isError()); // Not an MCP tool error, but a GraphQL error.
+        final Map<String, Object> structuredContent = assertInstanceOf(Map.class, result.structuredContent());
+        assertThat(structuredContent).containsKey("errors");
+        final List<Map<String, Object>> errors = assertInstanceOf(List.class, structuredContent.get("errors"));
+        assertThat(errors).hasSize(1);
+        assertThat(errors.getFirst()).extractingByKey("message", STRING).contains(
+                "Exception while fetching data (/tgVehicle_agg) : Error during entity retrieval.");
     }
 
     @Test

@@ -645,3 +645,8 @@ A tool error means only that the request itself was malformed (e.g., no query wa
 5. A union-typed property, identified by `_Property.typeKind` of `UNION`, exposes only its members.
    Properties `key`, `desc` and `id`, as well as properties common to all members, are not available on a union-typed property.
    Read and filter through a specific member, as shown in [Union-Typed Properties](#union-typed-properties).
+
+6. A calculated property added with tool `add_calculated_property` is available only on the entity type of a root field: in the selection of `e` and `e_agg`, and in their `where`.
+   It cannot be reached through an entity-typed property: if `x` was added to `Person`, both `technician { person { x } }` and `technician(where: { cond: { person: { cond: { x: { eq: 1 } } } } })` fail.
+   Such a query passes validation, but its root field fails with an execution error.
+   To use such a value through a path, add the calculated property to the entity type of the root field instead, with an expression that follows the path (e.g., to `Technician`, with an expression over `person.…`).
