@@ -16,13 +16,20 @@ import com.google.inject.ImplementedBy;
 @ImplementedBy(DefaultUniversalConstants.class)
 public interface IUniversalConstants {
     
-    /**
-     * Returns a value indicating the current date/time.
-     * 
-     * @return
-     */
+    /// Returns the current date/time in the user's time zone during a web request, as [IDates#now()].
+    ///
+    /// For the current date/time in the server's time zone, use [#serverNow()].
+    ///
     DateTime now();
-    
+
+    /// Returns the current date/time in the server's time zone, regardless of any request time zone, as [IDates#serverNow()].
+    ///
+    /// Outside of web requests, it is the same moment as [#now()].
+    ///
+    default DateTime serverNow() {
+        return new DateTime();
+    }
+
     /**
      * The same is {@link #now()}, but with 0 time.
      */

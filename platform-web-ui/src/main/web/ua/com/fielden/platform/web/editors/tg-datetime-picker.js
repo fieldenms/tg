@@ -373,9 +373,16 @@ export class TgDatetimePicker extends TgEditor {
                         });
                     }
                 } else {
-                    // if there is no separator then only time portion is present;
-                    // try time formats only for approximation:
-                    this._validMoment = this._tryFormats(valueWithoutSpaces, this._timePortionFormats.slice() /* the copy is made  */);
+                    // If there is no separator, then only the time portion is present.
+                    // It gets today's date, which is the same date as for the 't' literal.
+                    // The date is provided explicitly, because `moment` takes today's date in its default time zone instead.
+                    // In independent time-zone mode, this is the server's time zone.
+                    // Its date differs from the browser's date around midnight.
+                    const valueWithToday = this._now().format(datePortionFormat) + ' ' + valueWithoutSpaces;
+                    this._validMoment = this._tryFormats(
+                        valueWithToday,
+                        this._timePortionFormats.map(tpFormat => datePortionFormat + ' ' + tpFormat)
+                    );
                 }
                 if (this._validMoment !== null) {
                     return this.convertToString(this._validMoment.valueOf());
@@ -419,11 +426,17 @@ export class TgDatetimePicker extends TgEditor {
         return resultFormats;
     }
 
+    /// Returns the current moment, which defines today's date for approximations.
+    /// For a property in a concrete time zone (e.g. UTC), this is the current moment in that time zone.
+    /// Otherwise, this is the time-zone-mode-specific `now()`, which takes the date and time from the browser's clock.
+    ///
+    _now () {
+        return this.timeZone ? _momentTz(this.timeZone) : now();
+    }
+
     _tryLiterals (editingValue) {
         const upperCasedValue = editingValue[0].toUpperCase();
-        // In concrete time-zone (e.g. UTC) just use standard method _momentTz for creating 'now' in that time-zone.
-        // Otherwise use standard now() function.
-        const convertedMoment = this.timeZone ? _momentTz(this.timeZone) : now();
+        const convertedMoment = this._now();
 
         if ('T' === upperCasedValue) {
             const todayMoment = convertedMoment.startOf("day");
@@ -512,7 +525,7 @@ export class TgDatetimePicker extends TgEditor {
                     return strWithoutSpaces;
                 } else {
                     const insertionPoint = firstSeparatorIndex + numberOfDigitsAfterLastSeparator + 1;
-                    const currYearStr = _momentTz(this.timeZone).format('YYYY');
+                    const currYearStr = this._now().format('YYYY');
                     return yearsOnEnding // years are only supported on beginning and ending of datePortionFormat (not in the middle, like MM-YYYY-DD)
                         ? strWithoutSpaces.slice(0, insertionPoint) + separator + currYearStr + ' ' + strWithoutSpaces.slice(insertionPoint)
                         : currYearStr + separator + strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint)

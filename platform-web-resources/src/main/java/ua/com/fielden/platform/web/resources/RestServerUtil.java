@@ -1,17 +1,13 @@
 package ua.com.fielden.platform.web.resources;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.restlet.Message;
 import org.restlet.data.Encoding;
-import org.restlet.data.Header;
 import org.restlet.data.MediaType;
 import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
-import org.restlet.util.Series;
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.continuation.NeedMoreDataException;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -23,57 +19,38 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
+import ua.com.fielden.platform.web.resources.exceptions.InvalidRequestBodyException;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
 import static org.restlet.data.MediaType.APPLICATION_JSON;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 
-/**
- * This is a convenience class providing some common routines used in the implementation of web-resources.
- *
- * @author TG Team
- *
- */
+/// Utilities used in the implementation of web-resources.
+///
 public class RestServerUtil {
-    private static final String HEADERS_KEY = "org.restlet.http.headers";
+
+    public static final String ERR_INVALID_REQUEST_BODY = "The request could not be processed, as its content is invalid.";
+
     private static final String ERR_COULD_NOT_FIND_ENTITY = "Could not find entity.";
 
-    private final ISerialiser serialiser;
     private final Logger logger = LogManager.getLogger(RestServerUtil.class);
+    private final ISerialiser serialiser;
 
     @Inject
     public RestServerUtil(final ISerialiser serialiser) {
         this.serialiser = serialiser;
     }
 
-    private static Series<Header> getMessageHeaders(final Message message) {
-        final ConcurrentMap<String, Object> attrs = message.getAttributes();
-        Series<Header> headers = (Series<Header>) attrs.get(HEADERS_KEY);
-        if (headers == null) {
-            headers = new Series<>(Header.class);
-            final Series<Header> prev = (Series<Header>) attrs.putIfAbsent(HEADERS_KEY, headers);
-            if (prev != null) {
-                headers = prev;
-            }
-        }
-        return headers;
-    }
-
-    /**
-     * Creates a JSON representation of {@link Result} reporting a cause of some error that could have occurred during request processing.
-     *
-     * @param string
-     * @return
-     * @throws JsonProcessingException
-     */
+    /// Creates a JSON representation of a [Result] whose cause will have the message `string`.
+    ///
     public Representation errorJsonRepresentation(final String string) {
         // logger.debug("Start building error JSON representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(failure(new Exception(string)), SerialiserEngines.JACKSON);
@@ -81,12 +58,8 @@ public class RestServerUtil {
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length */);
     }
 
-    /**
-     * Creates a representation of {@link Result} reporting a cause of some error that could have occurred during request processing.
-     *
-     * @param string
-     * @return
-     */
+    /// Creates a representation of a [Result] whose cause will have the message `string`.
+    ///
     public Representation errorRepresentation(final String string) {
         // logger.debug("Start building error representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(failure(new Exception(string)));
@@ -94,13 +67,8 @@ public class RestServerUtil {
         return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
-    /**
-     * Creates a JSON representation of {@link Result} reporting a cause of some error that could have occurred during request processing.
-     *
-     * @param string
-     * @return
-     * @throws JsonProcessingException
-     */
+    /// Creates a JSON representation of a [Result] reporting the error designated by `ex`.
+    ///
     public Representation errorJSONRepresentation(final Exception ex) {
         // logger.debug("Start building error JSON representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(ex instanceof Result ? ex : failure(ex), SerialiserEngines.JACKSON);
@@ -108,12 +76,8 @@ public class RestServerUtil {
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
     }
 
-    /**
-     * Creates a representation of {@link Result}.
-     *
-     * @param string
-     * @return
-     */
+    /// Creates a representation of a [Result].
+    ///
     public Representation resultRepresentation(final Result result) {
         // logger.debug("Start building result representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(result);
@@ -121,13 +85,8 @@ public class RestServerUtil {
         return new InputRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_OCTET_STREAM, bytes.length);
     }
 
-    /**
-     * Creates a JSON representation of {@link Result}.
-     *
-     * @param string
-     * @return
-     * @throws JsonProcessingException
-     */
+    /// Creates a JSON representation of a [Result].
+    ///
     public Representation resultJSONRepresentation(final Result result) {
         // logger.debug("Start building result JSON representation:" + new DateTime());
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
@@ -135,11 +94,8 @@ public class RestServerUtil {
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* , bytes.length */);
     }
 
-    /**
-     * Composes representation of a list of entities.
-     *
-     * @return
-     */
+    /// Creates a JSON representation of a list of entities.
+    ///
     public <T extends AbstractEntity<?>> Representation listJsonRepresentation(final List<T> entities) {
         // logger.debug("Start building JSON entities representation.");
         if (entities == null) {
@@ -152,14 +108,14 @@ public class RestServerUtil {
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
     }
 
-    /**
-     * Composes representation of a list of entities with {@code customObject}, serialising them without id / version properties.
-     *
-     * @param entities
-     * @param customObject -- a map of custom properties with some additional information
-     * @return
-     */
-    public <T extends AbstractEntity<?>> Representation listJsonRepresentationWithoutIdAndVersion(final List<T> entities, final Map<String, Object> customObject) {
+    /// Creates a representation of a list of entities with `customObject`, serialising them without properties `id` and `version`.
+    ///
+    /// @param customObject  a map of custom properties to be included in the result
+    ///
+    public <T extends AbstractEntity<?>> Representation listJsonRepresentationWithoutIdAndVersion(
+            final List<T> entities,
+            final Map<String, Object> customObject)
+    {
         if (entities == null) {
             throw new IllegalArgumentException("The provided list of entities is null.");
         }
@@ -178,11 +134,8 @@ public class RestServerUtil {
         }
     }
 
-    /**
-     * Composes representation of a list of entities.
-     *
-     * @return
-     */
+    /// Creates a representation of a list of entities.
+    ///
     public Representation rawListJsonRepresentation(final Object... objects) {
         // logger.debug("Start building JSON list representation.");
         if (objects.length <= 0) {
@@ -195,16 +148,14 @@ public class RestServerUtil {
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
     }
 
-    /**
-     * Composes representation of {@link IWebApi} execution results.
-     */
+    /// Creates a representation of an [IWebApi] execution result.
+    ///
     public Representation webApiResultRepresentation(final Map<String, Object> result) {
         return encodedRepresentation(new ByteArrayInputStream(serialiser.serialise(result, JACKSON)), APPLICATION_JSON);
     }
 
-    /**
-     * Composes {@link Result} from an {@code entity}.
-     */
+    /// Creates a [Result] from `entity`.
+    ///
     public <T extends AbstractEntity<?>> Result singleEntityResult(final T entity) {
         // create a Result enclosing entity list
         final Result result;
@@ -218,20 +169,15 @@ public class RestServerUtil {
         return result;
     }
 
-    /**
-     * Composes {@link SerialiserEngines#JACKSON} representation of an entity.
-     *
-     * @return
-     * @throws JsonProcessingException
-     */
+    /// Creates a [SerialiserEngines#JACKSON] representation of an entity.
+    ///
     public <T extends AbstractEntity<?>> Representation singleJsonRepresentation(final T entity) {
         final byte[] bytes = serialiser.serialise(singleEntityResult(entity), JACKSON);
         return encodedRepresentation(new ByteArrayInputStream(bytes), APPLICATION_JSON);
     }
 
-    /**
-     * Composes {@link Result} from an entity with exception.
-     */
+    /// Creates a [Result] from an entity with an exception.
+    ///
     public <T extends AbstractEntity<?>> Result singleEntityResult(final T entity, final Optional<Exception> savingException) {
         final Result result;
         if (entity != null && savingException.isPresent()) {
@@ -279,93 +225,73 @@ public class RestServerUtil {
         return result;
     }
 
-    /**
-     * Converts representation of {@link QueryExecutionModel} to an actual instance.
-     *
-     * @param representation
-     * @return
-     */
+    /// Converts representation of [QueryExecutionModel] to an actual instance.
+    ///
     public QueryExecutionModel<?, ?> restoreQueryExecutionModel(final Representation representation) {
         return serialiser.deserialise(getStream(representation), QueryExecutionModel.class);
     }
 
-    /**
-     * Converts representation to an instance of {@link LifecycleQueryContainer}.
-     *
-     * @param representation
-     * @return
-     */
+    /// Converts representation to an instance of [LifecycleQueryContainer].
+    ///
     public LifecycleQueryContainer restoreLifecycleQueryContainer(final Representation representation) {
         return serialiser.deserialise(getStream(representation), LifecycleQueryContainer.class);
     }
 
-    /**
-     * Converts representation of the export request representation in to a list.
-     *
-     * @param representation
-     * @return
-     */
+    /// Converts a [List] representation into a [List] instance.
+    ///
     public List<?> restoreList(final Representation representation) {
         return serialiser.deserialise(getStream(representation), List.class);
     }
 
-    /**
-     * Converts representation of the export request representation in to result.
-     *
-     * @param representation
-     * @return
-     */
+    /// Converts a [Result] JSON representation into a [Result] instance.
+    ///
     public Result restoreJsonResult(final Representation representation) {
-        return serialiser.deserialise(getStream(representation), Result.class, SerialiserEngines.JACKSON);
+        return restoreRequestBody(representation, stream -> serialiser.deserialise(stream, Result.class, SerialiserEngines.JACKSON));
     }
 
-    /**
-     * Converts representation of an entity to an actual instance.
-     *
-     * @param <T>
-     * @param <K>
-     * @param representation
-     * @param type
-     * @return
-     */
+    /// Converts an entity representation into an entity instance.
+    ///
+    /// @param type  the type of the represented entity
+    ///
     public <T extends AbstractEntity<?>> T restoreEntity(final Representation representation, final Class<T> type) {
         return serialiser.deserialise(getStream(representation), type);
     }
 
-    /**
-     * Converts JSON representation of an entity to an actual instance.
-     *
-     * @param <T>
-     * @param <K>
-     * @param representation
-     * @param type
-     * @return
-     */
+    /// Converts an entity JSON representation into an entity instance.
+    ///
+    /// @param type  the type of the represented entity
+    ///
     public <T extends AbstractEntity<?>> T restoreJsonEntity(final Representation representation, final Class<T> type) {
-        return serialiser.deserialise(getStream(representation), type, SerialiserEngines.JACKSON);
+        return restoreRequestBody(representation, stream -> serialiser.deserialise(stream, type, SerialiserEngines.JACKSON));
     }
 
-    /**
-     * Deserialises representation into a special map.
-     *
-     * @param representation
-     * @return
-     */
+    /// Deserialises representation into a special map.
+    ///
     public Map<?, ?> restoreMap(final Representation representation) {
-        return serialiser.deserialise(getStream(representation), Map.class);
+        return restoreRequestBody(representation, stream -> serialiser.deserialise(stream, Map.class));
     }
 
-    /**
-     * Deserialises JSON representation of JS object into Java map.
-     *
-     * @param representation
-     * @return
-     */
+    /// Deserialises JSON representation of JS object into Java map.
+    ///
     public Map<?, ?> restoreJsonMap(final Representation representation) {
-        return serialiser.deserialise(getStream(representation), Map.class, SerialiserEngines.JACKSON);
+        return restoreRequestBody(representation, stream -> serialiser.deserialise(stream, Map.class, SerialiserEngines.JACKSON));
     }
 
-    private final static InputStream getStream(final Representation representation) {
+    /// Deserialises the body of a request with `deserialiser`.
+    ///
+    /// If the body cannot be deserialised, the failure is logged, and [InvalidRequestBodyException] with a generic message is thrown.
+    /// The details of the failure, such as the types and properties involved, stay on the server, as the exception is serialised to the client.
+    ///
+    private <T> T restoreRequestBody(final Representation representation, final Function<InputStream, T> deserialiser) {
+        try {
+            return deserialiser.apply(getStream(representation));
+        } catch (final RuntimeException ex) {
+            logger.warn("The request body could not be deserialised.", ex);
+            throw new InvalidRequestBodyException(ERR_INVALID_REQUEST_BODY);
+        }
+    }
+
+    private static InputStream getStream(final Representation representation) {
         try {
             return representation.getStream();
         } catch (final IOException ioException) {
@@ -377,13 +303,8 @@ public class RestServerUtil {
         return serialiser;
     }
 
-    /**
-     * Creates representation (encoded by GZIP) for some input stream with particular media type.
-     *
-     * @param stream
-     * @param mediaType
-     * @return
-     */
+    /// Creates a representation (GZIP-encoded) for `stream` with `mediaType`.
+    ///
     public static Representation encodedRepresentation(final InputStream stream, final MediaType mediaType) {
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(stream, mediaType));
     }

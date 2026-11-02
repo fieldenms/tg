@@ -13,6 +13,8 @@ import ua.com.fielden.platform.sample.domain.AuditedEntity;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
@@ -102,6 +104,8 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
                         new Prop(auditPropertyName(AuditedEntity.Property.richText), RichText.class, PERSISTENT),
                         new Prop(auditPropertyName(AuditedEntity.Property.union), UnionEntity.class, PERSISTENT),
                         new Prop(auditPropertyName(AuditedEntity.Property.invalidate), boolean.class, PERSISTENT),
+                        new Prop(auditPropertyName(AuditedEntity.Property.colour), Colour.class, PERSISTENT),
+                        new Prop(auditPropertyName(AuditedEntity.Property.hyperlink), Hyperlink.class, PERSISTENT),
                         new Prop(auditPropertyName("str1"), String.class, PLAIN))
                 .sorted(Comparator.comparing(Prop::name))
                 .toList();

@@ -25,8 +25,11 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.filters.CsrfProtectionFilter;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.AccountLockout;
+import ua.com.fielden.platform.web.resources.webui.LoginAttemptTracker;
 import ua.com.fielden.platform.web.resources.webui.LoginResource;
 
 /**
@@ -96,6 +99,11 @@ public class LoginResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
 
+        // This resource is attached outside of CsrfProtectionFilter, and a forged login would sign the victim in to the account of the attacker.
+        if (CsrfProtectionFilter.rejectIfForged(request, response)) {
+            return;
+        }
+
         if (Method.GET.equals(request.getMethod()) || Method.POST.equals(request.getMethod())) {
             final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
 
@@ -117,6 +125,8 @@ public class LoginResourceFactory extends Restlet {
                     coUser,
                     injector.getInstance(IUserSession.class),
                     util,
+                    injector.getInstance(LoginAttemptTracker.class),
+                    injector.getInstance(AccountLockout.class),
                     injector.getInstance(IDeviceProvider.class),
                     injector.getInstance(IDates.class),
                     getContext(),

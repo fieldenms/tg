@@ -30,6 +30,7 @@ import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.provider.SecurityTestIocModule;
+import ua.com.fielden.platform.security.session.ISsoSessionController;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
@@ -70,6 +71,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
 
         bind(Ticker.class).to(TickerForSessionCache.class);
+        bind(ISsoSessionController.class).to(SsoSessionControllerForTesting.class);
         bind(IDates.class).to(DatesForTesting.class);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
         bind(IApplicationSettings.class).to(ApplicationSettingsForTesting.class);

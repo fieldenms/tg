@@ -16,8 +16,10 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
+import ua.com.fielden.platform.web.filters.CsrfProtectionFilter;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource;
+import ua.com.fielden.platform.web.resources.webui.PasswordResetCooldown;
 
 /**
  * A factory for a web resource that initiates the password recovery procedure.
@@ -36,6 +38,10 @@ public class LoginInitiateResetResourceFactory extends Restlet {
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
+        // This resource is attached outside of CsrfProtectionFilter, and a forged request would let another site initiate a password reset for any user.
+        if (CsrfProtectionFilter.rejectIfForged(request, response)) {
+            return;
+        }
         if (GET.equals(request.getMethod()) || POST.equals(request.getMethod())) {
             new LoginInitiateResetResource(
                     injector.getInstance(IWebResourceLoader.class),
@@ -43,6 +49,7 @@ public class LoginInitiateResetResourceFactory extends Restlet {
                     injector.getInstance(IUniversalConstants.class),
                     injector.getInstance(ICompanionObjectFinder.class),
                     injector.getInstance(IUserProvider.class),
+                    injector.getInstance(PasswordResetCooldown.class),
                     injector.getInstance(IDeviceProvider.class),
                     injector.getInstance(IDates.class),
                     getContext(),

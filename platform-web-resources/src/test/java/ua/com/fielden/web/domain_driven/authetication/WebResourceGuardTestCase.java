@@ -1,5 +1,6 @@
 package ua.com.fielden.web.domain_driven.authetication;
 
+import org.joda.time.DateTimeZone;
 import org.junit.*;
 import org.restlet.Client;
 import org.restlet.Context;
@@ -25,6 +26,9 @@ import ua.com.fielden.platform.web.test.TestWebApplication;
 import java.security.SignatureException;
 import java.util.Optional;
 
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.joda.time.DateTimeZone.getDefault;
 import static org.junit.Assert.*;
 
 /// A test case to ensure correct HTTP responses (HTTP codes and cookies) to requests for accessing guarded web resources.
@@ -66,6 +70,7 @@ public class WebResourceGuardTestCase extends AbstractWebResourceWithDaoTestCase
     @After
     public void tearDown() {
         webApplication.detachWebApplication(webApp);
+        constants.removeRequestTimeZone();
     }
 
     @Test
@@ -208,6 +213,34 @@ public class WebResourceGuardTestCase extends AbstractWebResourceWithDaoTestCase
         assertTrue("Returned cookie must have restricted access.", returnedCookie2.isAccessRestricted());
     }
 
+    @Test
+    public void authenticated_request_from_a_time_zone_ahead_of_the_server_is_responded_with_authenticator_cookie_that_expires_with_the_session_by_the_server_clock() {
+        constants.setNow(dateTime("2015-04-23 17:26:00"));
+        // Establish a new session from an untrusted device.
+        final User currUser = getInstance(IUserProvider.class).getUser();
+        final UserSession session = coSession.newSession(currUser, false, null);
+        final String authenticator = session.getAuthenticator().map(Authenticator::toString).orElseThrow();
+
+        // A request from a time zone 5 hours ahead of the server (in the independent time-zone mode) regenerates the session, which expires at 17:33 by the server clock.
+        constants.setRequestTimeZone(DateTimeZone.forOffsetMillis(getDefault().getOffset(constants.serverNow()) + (int) HOURS.toMillis(5)));
+        constants.setNow(dateTime("2015-04-23 17:28:00"));
+        assertNotEquals("Invalid initial conditions: the request time zone should shift 'now()'.", constants.serverNow().getMillis(), constants.now().getMillis());
+        final Request request = new Request(Method.GET, "%s/users/%s/%s/%s".formatted(baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
+        final CookieSetting cookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
+        cookie.setAccessRestricted(true);
+        request.getCookies().add(cookie);
+
+        final Response response = client.handle(request);
+
+        assertEquals(200, response.getStatus().getCode());
+        final CookieSetting returnedCookie = response.getCookieSettings().getFirst(AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME);
+        assertNotNull("Authenticator cookie is expected.", returnedCookie);
+        assertNotEquals("Returned authenticator should not match the sent one due to expected re-authentication.", authenticator, returnedCookie.getValue());
+        // The cookie is transferred with an 'Expires' date, set and read by the system clock with a precision of seconds, and so its max age may be a little less than 5 minutes.
+        final int maxAge = returnedCookie.getMaxAge();
+        assertTrue("The cookie should expire with the session, 5 minutes after the request by the server clock, but its max age is [%s] seconds.".formatted(maxAge),
+                   maxAge > MINUTES.toSeconds(5) - 10 && maxAge <= MINUTES.toSeconds(5));
+    }
 
     @Test
     public void POST_requests_with_expired_authenticators_from_untrusted_devices_should_respond_with_code_403_forbidden() {

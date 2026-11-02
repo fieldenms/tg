@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import jakarta.inject.Singleton;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -13,12 +14,8 @@ import com.google.inject.name.Named;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
-/**
- * A convenient implementation of the {@link IUniversalConstants} contract to provide flexible notion of the <code>now</code> for unit tests.
- *
- * @author TG Team
- *
- */
+/// A convenient implementation of the [IUniversalConstants] contract to provide flexible notion of the `now` for unit tests.
+///
 @Singleton
 public class UniversalConstantsForTesting implements IUniversalConstants {
 
@@ -42,7 +39,12 @@ public class UniversalConstantsForTesting implements IUniversalConstants {
 
     @Override
     public DateTime now() {
-        return getNow();
+        return dates.now();
+    }
+
+    @Override
+    public DateTime serverNow() {
+        return dates.serverNow();
     }
 
     @Override
@@ -50,41 +52,56 @@ public class UniversalConstantsForTesting implements IUniversalConstants {
         return Locale.getDefault();
     }
 
+    /// Returns the modelled time, which is the current time of the server, as [DatesForTesting#getNow()].
+    ///
     public DateTime getNow() {
         return dates.getNow();
     }
 
+    /// Sets the modelled time, which is the current time of the server, as [DatesForTesting#setNow(DateTime)].
+    ///
     public void setNow(final DateTime now) {
         dates.setNow(now);
     }
 
-    /**
-     * A convenient way to specify the model time as a function.
-     * If time supplier is not specified, value <code>now</code> is used.
-     * This provides a way to alternate between constant and changing model time.
-     * <p>
-     * Possible implementation could use {@link AtomicReference} to emulate a ticking time like this.
-     * <pre>
-         final AtomicReference<DateTime> atomicNow = new AtomicReference<>(constants.getNow());
-         constants.setTimeSupplier(() -> atomicNow.updateAndGet(time -> time.plusMillis(10)));
-     * </pre>
-     * @param timeSupplier
-     */
+    /// A convenient way to specify the model time as a function.
+    /// If time supplier is not specified, value `now` is used.
+    /// A `null` value removes a time supplier, the same as [#removeTimeSupplier()].
+    /// This provides a way to alternate between constant and changing model time.
+    ///
+    /// Possible implementation could use [AtomicReference] to emulate a ticking time like this.
+    ///
+    /// ```java
+    /// final AtomicReference<DateTime> atomicNow = new AtomicReference<>(constants.getNow());
+    /// constants.setTimeSupplier(() -> atomicNow.updateAndGet(time -> time.plusMillis(10)));
+    /// ```
+    ///
     public UniversalConstantsForTesting setTimeSupplier(final Supplier<DateTime> timeSupplier) {
         dates.setTimeSupplier(timeSupplier);
         return this;
     }
-    
-    /**
-     * A more explicit API for removing a time supplier if it was provided.
-     * 
-     * @return
-     */
+
+    /// A more explicit API for removing a time supplier if it was provided.
+    ///
     public UniversalConstantsForTesting removeTimeSupplier() {
         dates.removeTimeSupplier();
         return this;
     }
-    
+
+    /// Models a web request from `requestTimeZone`, as [DatesForTesting#setRequestTimeZone(DateTimeZone)].
+    ///
+    public UniversalConstantsForTesting setRequestTimeZone(final DateTimeZone requestTimeZone) {
+        dates.setRequestTimeZone(requestTimeZone);
+        return this;
+    }
+
+    /// Removes a modelled request time zone, as [DatesForTesting#removeRequestTimeZone()].
+    ///
+    public UniversalConstantsForTesting removeRequestTimeZone() {
+        dates.removeRequestTimeZone();
+        return this;
+    }
+
     @Override
     public String appName() {
         return appName;

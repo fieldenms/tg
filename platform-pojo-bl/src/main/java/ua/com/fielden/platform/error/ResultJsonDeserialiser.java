@@ -10,6 +10,8 @@ import ua.com.fielden.platform.web.utils.PropertyConflict;
 
 import java.io.IOException;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+
 /**
  * Deserialiser for {@link Result} type.
  * <p>
@@ -47,7 +49,8 @@ public class ResultJsonDeserialiser extends StdDeserializer<Result> {
         if (node.get(Result.EX) == null) {
             ex = null;
         } else {
-            ex = mapper.readValue(node.get(Result.EX).traverse(mapper), Exception.class);
+            // Properties other than the standard ones of Throwable, such as `typeStr` written by ThrowableJsonSerialiser, are ignored.
+            ex = mapper.readerFor(Exception.class).without(FAIL_ON_UNKNOWN_PROPERTIES).readValue(node.get(Result.EX));
         }
 
         // instantiate the result; warning type checking is required only when instance and message are not null
