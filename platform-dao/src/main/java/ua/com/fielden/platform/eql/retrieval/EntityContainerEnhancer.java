@@ -199,12 +199,21 @@ public class EntityContainerEnhancer {
                 .collect(groupingBy(e_p -> e_p._2.getId(), mapping(e_p -> e_p._1, toList())));
     }
 
+    /// Containers of property `propName` that were retrieved together with `entities` (by a join), one for each distinct ID.
+    ///
+    /// Each row carries its own container, and rows that reference the same entity carry equal containers, so only one of them for each ID (the last one) is enhanced (recursively) and then assigned to all rows with that ID.
+    /// This keeps enhancement linear in the number of rows, rather than quadratic in the number of rows that share a reference.
+    ///
     private <E extends AbstractEntity<?>, T extends AbstractEntity<?>> List<EntityContainer<T>> getRetrievedPropertyInstances(
             final List<EntityContainer<E>> entities, final String propName) {
-        return entities.stream()
-                .map(entity -> (EntityContainer<T>) entity.getEntities().get(propName))
-                .filter(prop -> prop != null && !prop.isEmpty() && !prop.notYetInitialised())
-                .toList();
+        final Map<Long, EntityContainer<T>> byId = new LinkedHashMap<>();
+        for (final var entity : entities) {
+            final var prop = (EntityContainer<T>) entity.getEntities().get(propName);
+            if (prop != null && !prop.isEmpty() && !prop.notYetInitialised()) {
+                byId.put(prop.getId(), prop);
+            }
+        }
+        return new ArrayList<>(byId.values());
     }
 
     private <E extends AbstractEntity<?> ,T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(

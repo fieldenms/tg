@@ -26,6 +26,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -72,6 +74,20 @@ public class Finder {
     /// * Value: list of union member properties.
     ///
     private static final Cache<Class<?>, List<Field>> UNION_MEMBER_PROPERTIES = CacheBuilder.newBuilder().initialCapacity(50).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+
+    /// Types that declare fields, by the type in whose hierarchy a field is looked up, and the name of the field.
+    /// An empty value records that there is no such field, so that repeated lookups of a missing field are as cheap as those of an existing one.
+    ///
+    /// The type that declares a field, rather than the field itself, is cached, because [Field] instances are mutable:
+    /// callers change their accessibility, and some restore it afterwards, which would interfere with other callers if the instance were shared.
+    /// [Class#getDeclaredField(String)] copies only the requested field, whereas a lookup in the hierarchy copies all fields declared by each type up to the declaring one.
+    ///
+    private static final ClassValue<ConcurrentMap<String, Optional<Class<?>>>> DECLARING_TYPES = new ClassValue<>() {
+        @Override
+        protected ConcurrentMap<String, Optional<Class<?>>> computeValue(final Class<?> type) {
+            return new ConcurrentHashMap<>();
+        }
+    };
 
     public static long cleanUp() {
         ENTITY_KEY_MEMBERS.cleanUp();
@@ -379,15 +395,48 @@ public class Finder {
     ///////////////////////////////////// Finding/getting fields and their values ///////////////////////////
 
     /// Finds a field (including private, protected and public) by name in the type's hierarchy.
+    /// For a common property of a union type, the field is found in the type of the first union member.
+    ///
+    /// Each call returns a new [Field] instance, so that callers may change its accessibility.
+    /// The type that declares the field is looked up once and cached (see [#DECLARING_TYPES]).
     ///
     /// Throws an exception if the field was not found.
     ///
-    @SuppressWarnings("unchecked")
     public static Field getFieldByName(final Class<?> type, final String name) {
+        final Class<?> declaringType = declaringType(type, name)
+                .orElseThrow(() -> new ReflectionException(format("Failed to locate field [%s] in type [%s]", name, type.getName())));
+        return declaredField(declaringType, name);
+    }
+
+    /// The same as [#getFieldByName(Class,String)], but returns an empty result instead of throwing an exception if there is no such field.
+    ///
+    public static Optional<Field> getFieldByNameOptionally(final Class<?> type, final String name) {
+        final Either<Exception, Optional<Class<?>>> result = Try(() -> declaringType(type, name));
+        if (result instanceof Right<?, Optional<Class<?>>>(var declaringType)) {
+            return declaringType.map(t -> declaredField(t, name));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<Class<?>> declaringType(final Class<?> type, final String name) {
+        final var declaringTypes = DECLARING_TYPES.get(type);
+        final var cached = declaringTypes.get(name);
+        if (cached != null) {
+            return cached;
+        }
+        // Computed outside the map, so that no lock of the map is held during the reflective lookup, which, for a union type, continues in the type of a union member.
+        final var declaringType = findDeclaringType(type, name);
+        final var previous = declaringTypes.putIfAbsent(name, declaringType);
+        return previous != null ? previous : declaringType;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Optional<Class<?>> findDeclaringType(final Class<?> type, final String name) {
         if (AbstractUnionEntity.class.isAssignableFrom(type)) {
             final var unionType = (Class<? extends AbstractUnionEntity>) type;
             if (commonPropertiesForUnion(unionType).contains(name)) {
-                return getFieldByName(unionProperties(unionType).getFirst().getType(), name);
+                return declaringType(unionProperties(unionType).getFirst().getType(), name);
             }
         }
 
@@ -395,23 +444,19 @@ public class Finder {
         while (klass != Object.class) {
             for (final var field : klass.getDeclaredFields()) {
                 if (name.equals(field.getName())) {
-                    return field;
+                    return Optional.of(klass);
                 }
             }
             klass = klass.getSuperclass();
         }
-
-        throw new ReflectionException(format("Failed to locate field [%s] in type [%s]", name, type.getName()));
+        return Optional.empty();
     }
 
-    /// The same as [#getFieldByName(Class,String)], but side effect free.
-    ///
-    public static Optional<Field> getFieldByNameOptionally(final Class<?> type, final String name) {
-        final Either<Exception, Field> result = Try(() -> getFieldByName(type, name));
-        if (result instanceof Right<?, Field>(var field)) {
-            return Optional.of(field);
-        } else {
-            return Optional.empty();
+    private static Field declaredField(final Class<?> declaringType, final String name) {
+        try {
+            return declaringType.getDeclaredField(name);
+        } catch (final NoSuchFieldException ex) {
+            throw new ReflectionException(format("Failed to locate field [%s] in type [%s]", name, declaringType.getName()), ex);
         }
     }
 
