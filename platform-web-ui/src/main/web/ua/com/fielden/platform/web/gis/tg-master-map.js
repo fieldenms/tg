@@ -61,7 +61,7 @@ const template = html`
             isolation: isolate;
         }
     </style>
-    <div class="caption" hidden$="[[!propTitle]]" tooltip-text$="[[propDesc]]">[[propTitle]]</div>
+    <div class="caption tg-component-title" hidden$="[[!propTitle]]" tooltip-text$="[[propDesc]]">[[propTitle]]</div>
     <tg-responsive-toolbar id="toolbar" class="toolbar" hidden$="[[!_hasToolbar(_hasPropertyActions, labelsToggle)]]">
         <paper-icon-button slot="entity-specific-action" class="entity-specific-action" style$="[[_labelsToggleStyle(_labelsShown)]]" icon="icons:label" toggles active="{{_labelsShown}}" hidden$="[[!labelsToggle]]" tooltip-text="Show / hide map labels."></paper-icon-button>
         <slot slot="entity-specific-action" class="entity-specific-action" name="property-action"></slot>

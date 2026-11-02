@@ -47,7 +47,7 @@ const template = html`
         }
     </style>
     <div class="caption" hidden$="[[!_hasCaption(propTitle, _hasPropertyActions)]]">
-        <span class="caption-title" tooltip-text$="[[propDesc]]">[[propTitle]]</span>
+        <span class="caption-title tg-component-title" tooltip-text$="[[propDesc]]">[[propTitle]]</span>
         <slot name="property-action"></slot>
     </div>
     <tg-element-loader id="loader" tabindex="0" import="[[_importUri(miType)]]" element-name="[[_elementName(miType)]]" attrs="[[_centreAttrs]]" context="[[_getMasterEntity]]" context-property="getMasterEntity"></tg-element-loader>
