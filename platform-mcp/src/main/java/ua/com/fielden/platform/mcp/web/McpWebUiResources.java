@@ -8,6 +8,7 @@ import ua.com.fielden.platform.mcp.web.oauth.IMcpOAuth;
 import ua.com.fielden.platform.mcp.web.oauth.McpAuthorisationEndpointResource;
 import ua.com.fielden.platform.mcp.web.oauth.McpAuthorisationServerMetadataResource;
 import ua.com.fielden.platform.mcp.web.oauth.McpProtectedResourceMetadataResource;
+import ua.com.fielden.platform.mcp.web.oauth.McpTokenEndpointResource;
 
 import static ua.com.fielden.platform.utils.MiscUtilities.mkUri;
 
@@ -20,6 +21,7 @@ public class McpWebUiResources implements IMcpWebUiResources {
     private final McpProtectedResourceMetadataResource.Factory mcpProtectedResourceMetadataResourceFactory;
     private final McpAuthorisationServerMetadataResource.Factory mcpAuthorisationServerMetadataResourceFactory;
     private final McpAuthorisationEndpointResource.Factory mcpAuthorisationEndpointResourceFactory;
+    private final McpTokenEndpointResource.Factory mcpTokenEndpointResourceFactory;
 
     @Inject
     protected McpWebUiResources(
@@ -29,7 +31,8 @@ public class McpWebUiResources implements IMcpWebUiResources {
             final IMcpOAuth mcpOAuth,
             final McpProtectedResourceMetadataResource.Factory mcpProtectedResourceMetadataResourceFactory,
             final McpAuthorisationServerMetadataResource.Factory mcpAuthorisationServerMetadataResourceFactory,
-            final McpAuthorisationEndpointResource.Factory mcpAuthorisationEndpointResourceFactory)
+            final McpAuthorisationEndpointResource.Factory mcpAuthorisationEndpointResourceFactory,
+            final McpTokenEndpointResource.Factory mcpTokenEndpointResourceFactory)
     {
         this.mcpWebResourceGuardFactory = mcpWebResourceGuardFactory;
         this.mcpProtectedResourceMetadataResourceFactory = mcpProtectedResourceMetadataResourceFactory;
@@ -38,6 +41,7 @@ public class McpWebUiResources implements IMcpWebUiResources {
         this.mcpOAuth = mcpOAuth;
         this.mcpAuthorisationServerMetadataResourceFactory = mcpAuthorisationServerMetadataResourceFactory;
         this.mcpAuthorisationEndpointResourceFactory = mcpAuthorisationEndpointResourceFactory;
+        this.mcpTokenEndpointResourceFactory = mcpTokenEndpointResourceFactory;
     }
 
     public void registerUnguarded(final Router router, final Context context) {
@@ -47,6 +51,8 @@ public class McpWebUiResources implements IMcpWebUiResources {
 
         router.attach(mcpOAuth.protectedResourceMetadataPath(), mcpProtectedResourceMetadataResourceFactory);
         router.attach(mcpOAuth.authorisationServerMetadataPath(), mcpAuthorisationServerMetadataResourceFactory);
+        // Assuming the application server is also the authorisation server.
+        router.attach(mkUri(mcpOAuth.authorisationServerMetadata().tokenEndpoint()).getRawPath(), mcpTokenEndpointResourceFactory);
     }
 
     @Override

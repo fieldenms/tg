@@ -32,6 +32,8 @@ public interface IMcpOAuth {
     ///
     IAuthorisationServerMetadata authorisationServerMetadata();
 
+    Result validateClient(@Nullable String clientId);
+
     Result validateClient(@Nullable String clientId, @Nullable String redirectUri);
 
     interface IAuthorisationServerMetadata {

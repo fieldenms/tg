@@ -93,6 +93,12 @@ public class DefaultMcpOAuth implements IMcpOAuth {
     }
 
     @Override
+    public Result validateClient(@Nullable final String clientId) {
+        // TODO
+        return Result.successful();
+    }
+
+    @Override
     public Result validateClient(@Nullable final String clientId, @Nullable final String redirectUri) {
         // TODO
         return Result.successful();
