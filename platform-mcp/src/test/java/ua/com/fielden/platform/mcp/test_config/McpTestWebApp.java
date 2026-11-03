@@ -25,7 +25,8 @@ public class McpTestWebApp extends Application {
     public synchronized Restlet getInboundRoot() {
         final Router router = new Router(getContext());
 
-        mcpWebUiResources.register(router, getContext());
+        mcpWebUiResources.registerUnguarded(router, getContext());
+        mcpWebUiResources.registerGuarded(router, getContext());
 
         return router;
     }

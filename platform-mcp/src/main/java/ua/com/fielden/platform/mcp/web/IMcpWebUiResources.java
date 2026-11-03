@@ -8,7 +8,8 @@ import ua.com.fielden.platform.web.application.AbstractWebUiResources;
 /// Web UI resources configuration for the Model Context Protocol (MCP) integration.
 ///
 /// The platform does not register these resources.
-/// An application should register them by itself by calling [#register] within [AbstractWebUiResources#registerUnguardedDomainWebResources].
+/// An application should register them by itself by calling [#registerUnguarded] within [AbstractWebUiResources#registerUnguardedDomainWebResources]
+/// and [#registerGuarded] within [AbstractWebUiResources#registerDomainWebResources].
 ///
 public interface IMcpWebUiResources {
 
@@ -18,6 +19,10 @@ public interface IMcpWebUiResources {
     ///
     /// Each request is processed under an application user as specified by [McpConfig#MCP_USER].
     ///
-    void register(Router router, Context context);
+    void registerUnguarded(Router router, Context context);
+
+    /// Registers guarded MCP web resources.
+    ///
+    void registerGuarded(Router router, Context context);
 
 }

@@ -34,13 +34,18 @@ public class McpWebUiResources implements IMcpWebUiResources {
         this.mcpAuthorisationServerMetadataResourceFactory = mcpAuthorisationServerMetadataResourceFactory;
     }
 
-    public void register(final Router router, final Context context) {
+    public void registerUnguarded(final Router router, final Context context) {
         final var mcpWebResourceGuard = mcpWebResourceGuardFactory.create(context);
         mcpWebResourceGuard.setNext(mcpResourceFactory);
         router.attach(mcpConfig.resourcePath(), mcpWebResourceGuard);
 
         router.attach(mcpOAuth.protectedResourceMetadataPath(), mcpProtectedResourceMetadataResourceFactory);
         router.attach(mcpOAuth.authorisationServerMetadataPath(), mcpAuthorisationServerMetadataResourceFactory);
+    }
+
+    @Override
+    public void registerGuarded(final Router router, final Context context) {
+
     }
 
 }
