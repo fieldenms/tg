@@ -161,6 +161,11 @@ const template = html`
             max-height: 100%;
             overflow: hidden;
         }
+        /* the selection view and its card fill the height of the centre, so that the buttons of the view are at the bottom of the centre */
+        :host([selection-view-fill-height]) .selection-material,
+        :host([selection-view-fill-height]) tg-selection-view {
+            flex: 1;
+        }
         paper-spinner {
             position: absolute;
             top: 0px;
@@ -245,7 +250,7 @@ const template = html`
     <iron-pages id="views" selected="[[_selectedView]]">
         <div class="fit layout vertical">
             <div class="paper-material selection-material layout vertical" elevation="1">
-                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _reset-autocompleter-state="[[_resetAutocompleterState]]" _show-dialog="[[_showDialog]]" _long-help-tap-handler="[[_longHelpTapHandler]]" _short-help-tap-handler="[[_shortHelpTapHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]">
+                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _reset-autocompleter-state="[[_resetAutocompleterState]]" _show-dialog="[[_showDialog]]" _long-help-tap-handler="[[_longHelpTapHandler]]" _short-help-tap-handler="[[_shortHelpTapHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]" fill-height$="[[selectionViewFillHeight]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
                     <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
@@ -353,6 +358,15 @@ Polymer({
         _centreDirtyOrEdited: Boolean,
         _viewerDisabled: Boolean,
         embedded: Boolean,
+        /**
+         * Indicates whether the selection view fills the height of this centre, with the selection criteria growing to the height that is left by the toolbar and the buttons of the view, so that the buttons are at the bottom of the centre.
+         * Otherwise, the selection view has the height of its content, up to the height of this centre.
+         */
+        selectionViewFillHeight: {
+            type: Boolean,
+            value: false,
+            reflectToAttribute: true
+        },
         discard: Function,
         run: Function,
         leftSplitterPosition: String,

@@ -75,6 +75,8 @@ const template = html`
  * With a height declared with 'withHeight' in the Entity Master DSL, the component is resizable by the user, and keeps that height, or the height set by the user, at least, as described in 'TgMasterComponentBehavior'.
  * The embedded centre follows every change of size of the component, including one by the user: the component notifies it with 'IronResizableBehavior',
  * so that its views, such as a chart in an alternative view, fit the new size.
+ * Its selection view fills the component, with the selection criteria growing to the height that is left by the toolbar and the buttons of the view,
+ * so that the buttons are always at the bottom of the component.
  */
 class TgMasterCentre extends mixinBehaviors([TgMasterComponentBehavior, IronResizableBehavior], PolymerElement) {
 
@@ -113,7 +115,8 @@ class TgMasterCentre extends mixinBehaviors([TgMasterComponentBehavior, IronResi
                 value: function () {
                     return {
                         embedded: true,
-                        uuid: generateUUID()
+                        uuid: generateUUID(),
+                        selectionViewFillHeight: true
                     };
                 }
             },
