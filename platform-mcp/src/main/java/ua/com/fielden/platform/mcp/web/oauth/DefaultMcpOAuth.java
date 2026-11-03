@@ -5,8 +5,9 @@ import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.mcp.McpConfig;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
-import java.nio.file.Path;
 import java.util.List;
+
+import static ua.com.fielden.platform.utils.MiscUtilities.uriPath;
 
 public class DefaultMcpOAuth implements IMcpOAuth {
 
@@ -21,7 +22,7 @@ public class DefaultMcpOAuth implements IMcpOAuth {
 
     @Override
     public String protectedResourceMetadataPath() {
-        return Path.of("/.well-known/oauth-protected-resource", mcpConfig.resourcePath()).toString();
+        return uriPath("/.well-known/oauth-protected-resource", mcpConfig.resourcePath());
     }
 
     @Override
@@ -29,7 +30,7 @@ public class DefaultMcpOAuth implements IMcpOAuth {
         return new IProtectedResourceMetadata() {
             @Override
             public String resource() {
-                return Path.of(appUri, mcpConfig.resourcePath()).toString();
+                return uriPath(appUri, mcpConfig.resourcePath());
             }
 
             @Override
@@ -54,12 +55,12 @@ public class DefaultMcpOAuth implements IMcpOAuth {
 
             @Override
             public String authorisationEndpoint() {
-                return Path.of(appUri, "/oauth/authorize").toString();
+                return uriPath(appUri, "/oauth/authorize");
             }
 
             @Override
             public String tokenEndpoint() {
-                return Path.of(appUri, "/oauth/token").toString();
+                return uriPath(appUri, "/oauth/token");
             }
 
             @Override

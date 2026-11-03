@@ -1,13 +1,15 @@
 package ua.com.fielden.platform.utils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import org.junit.Test;
 
 import java.io.InputStream;
 import java.util.MissingFormatArgumentException;
 import java.util.function.Function;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static ua.com.fielden.platform.utils.MiscUtilities.pathWith;
+import static ua.com.fielden.platform.utils.MiscUtilities.uriPath;
 
 /**
  * 
@@ -41,6 +43,52 @@ public class MiscUtilitiesTest {
         // the number of special format characters should be equal to the number of arguments given to stringFormatter()
         assertThrows("Incorrect number of special format characters should produce an exception.",
                 MissingFormatArgumentException.class, () -> formatter.apply("The numbers are %s and %s."));
+    }
+
+    @Test
+    public void uriPath_with_a_single_component_returns_that_component() {
+        assertEquals("/a/", uriPath("/a/"));
+    }
+
+    @Test
+    public void uriPath_separates_components_with_a_slash() {
+        assertEquals("a/b/c", uriPath("a", "b", "c"));
+    }
+
+    @Test
+    public void uriPath_does_not_duplicate_a_slash_that_ends_a_component() {
+        assertEquals("a/b/c", uriPath("a/", "b/", "c"));
+    }
+
+    @Test
+    public void uriPath_does_not_duplicate_a_slash_that_starts_a_component() {
+        assertEquals("a/b/c", uriPath("a", "/b", "/c"));
+    }
+
+    @Test
+    public void uriPath_does_not_duplicate_slashes_that_end_and_start_adjacent_components() {
+        assertEquals("a/b/c", uriPath("a/", "/b/", "/c"));
+    }
+
+    @Test
+    public void uriPath_preserves_slashes_inside_components_and_at_the_ends_of_the_path() {
+        assertEquals("https://app.com/mcp", uriPath("https://app.com", "/mcp"));
+        assertEquals("/.well-known/oauth-protected-resource/mcp/", uriPath("/.well-known/oauth-protected-resource", "mcp/"));
+    }
+
+    @Test
+    public void pathWith_separates_components_with_a_multi_character_separator() {
+        assertEquals("a::b::c", pathWith("::", "a", "b", "c"));
+    }
+
+    @Test
+    public void pathWith_does_not_duplicate_a_multi_character_separator_that_ends_or_starts_a_component() {
+        assertEquals("a::b::c::d", pathWith("::", "a::", "b", "::c::", "::d"));
+    }
+
+    @Test
+    public void pathWith_adds_a_multi_character_separator_after_a_component_ending_with_its_part() {
+        assertEquals("a:::b", pathWith("::", "a:", "b"));
     }
 
 }

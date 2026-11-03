@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.types.either.Either;
@@ -197,6 +198,38 @@ public class MiscUtilities {
             throw new InvalidStateException("Could not read Java resource [%s].".formatted(path), e);
         }
     }
+
+    /// Creates a URI path from the specified components.
+    /// The resulting path will consist of the components separated by exactly one slash (`/`).
+    ///
+    /// @see #pathWith
+    ///
+    public static String uriPath(final CharSequence first, final CharSequence... rest) {
+        return pathWith("/", first, rest);
+    }
+
+    /// Creates a URI path from the specified components.
+    /// The resulting path will consist of the components separated by exactly one instance of the separator.
+    ///
+    public static String pathWith(final CharSequence separator, final CharSequence first, final CharSequence... rest) {
+        final var sep = separator.toString();
+        if (sep.isEmpty()) {
+            throw new InvalidArgumentException("Separator must not be empty.");
+        }
+        final var sb = new StringBuilder(first);
+        for (final var x : rest) {
+            while (Strings.CS.endsWith(sb, sep)) {
+                sb.setLength(sb.length() - sep.length());
+            }
+            var component = x;
+            while (Strings.CS.startsWith(component, sep)) {
+                component = component.subSequence(sep.length(), component.length());
+            }
+            sb.append(sep).append(component);
+        }
+        return sb.toString();
+    }
+
 
     private static final Optional<Boolean> OPTIONAL_FALSE = Optional.of(Boolean.FALSE);
     private static final Optional<Boolean> OPTIONAL_TRUE = Optional.of(Boolean.TRUE);
