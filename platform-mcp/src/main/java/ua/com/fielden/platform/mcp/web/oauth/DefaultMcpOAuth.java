@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.mcp.web.oauth;
 
 import jakarta.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.mcp.McpConfig;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
@@ -14,7 +15,7 @@ public class DefaultMcpOAuth implements IMcpOAuth {
 
     @Inject
     protected DefaultMcpOAuth(final @AppUri String appUri, final McpConfig mcpConfig) {
-        this.appUri = appUri;
+        this.appUri = StringUtils.stripEnd(appUri, "/");
         this.mcpConfig = mcpConfig;
     }
 
@@ -34,6 +35,56 @@ public class DefaultMcpOAuth implements IMcpOAuth {
             @Override
             public List<String> authorisationServers() {
                 return List.of(appUri);
+            }
+        };
+    }
+
+    @Override
+    public String authorisationServerMetadataPath() {
+        return "/.well-known/oauth-authorization-server";
+    }
+
+    @Override
+    public IAuthorisationServerMetadata authorisationServerMetadata() {
+        return new IAuthorisationServerMetadata() {
+            @Override
+            public String issuer() {
+                return appUri;
+            }
+
+            @Override
+            public String authorisationEndpoint() {
+                return Path.of(appUri, "/oauth/authorize").toString();
+            }
+
+            @Override
+            public String tokenEndpoint() {
+                return Path.of(appUri, "/oauth/token").toString();
+            }
+
+            @Override
+            public List<String> responseTypesSupported() {
+                return List.of("code");
+            }
+
+            @Override
+            public List<String> codeChallengeMethodsSupported() {
+                return List.of("S256");
+            }
+
+            @Override
+            public List<String> grantTypesSupported() {
+                return List.of("authorization_code");
+            }
+
+            @Override
+            public List<String> tokenEndpointAuthMethodsSupported() {
+                return List.of("none");
+            }
+
+            @Override
+            public boolean authorisationResponseIssParameterSupported() {
+                return true;
             }
         };
     }
