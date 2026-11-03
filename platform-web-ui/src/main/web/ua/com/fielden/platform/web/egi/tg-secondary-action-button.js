@@ -9,7 +9,7 @@ import '/resources/actions/tg-ui-action.js';
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 
 const template = html`
     <style>
@@ -26,13 +26,18 @@ const template = html`
         <paper-icon-button id="dropDownButton" icon="more-vert" on-tap="_showDropdown" tooltip-text="Opens list of available actions"></paper-icon-button>
     </template>`;
 
+/**
+ * The button of the secondary actions of a row of the grid: the single secondary action itself, or the button that opens the dropdown with the secondary actions.
+ * It exposes the elements of its shadow tree to the selection of elements of `TgElementSelectorBehavior`,
+ * so that the focus traversals that select the focusable elements with it, such as that of the content of a master component, include the button.
+ */
 Polymer({
 
     _template: template,
 
     is: "tg-secondary-action-button",
-    
-    behaviors: [ TgFocusRestorationBehavior ],
+
+    behaviors: [ TgElementSelectorBehavior ],
 
     properties: {
         actions: Array,
@@ -77,8 +82,10 @@ Polymer({
         this.currentIndices = this.currentIndices || this.actions.map(action => 0);
     },
 
+    /**
+     * Opens the dropdown of secondary actions, which returns the focus to its button once it closes.
+     */
     _showDropdown: function (e, detail) {
-        this.persistActiveElement();
         this.dropdownTrigger(this.currentEntity, this.chosenEntity, this.currentIndices, this);
     }
 });
