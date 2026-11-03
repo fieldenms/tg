@@ -8,11 +8,15 @@ import ua.com.fielden.platform.types.either.Either;
 
 import javax.swing.filechooser.FileFilter;
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+
+import static java.lang.String.format;
 
 public class MiscUtilities {
 
@@ -230,6 +234,13 @@ public class MiscUtilities {
         return sb.toString();
     }
 
+    public static URI mkUri(final String uri) {
+        try {
+            return new URI(uri);
+        } catch (final URISyntaxException ex) {
+            throw new InvalidArgumentException(format("A URI could not be constructed from [%s].", uri), ex);
+        }
+    }
 
     private static final Optional<Boolean> OPTIONAL_FALSE = Optional.of(Boolean.FALSE);
     private static final Optional<Boolean> OPTIONAL_TRUE = Optional.of(Boolean.TRUE);

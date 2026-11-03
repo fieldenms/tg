@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.mcp.web.oauth;
 
 import com.google.inject.ImplementedBy;
+import jakarta.annotation.Nullable;
+import ua.com.fielden.platform.error.Result;
 
 import java.util.List;
 
@@ -29,6 +31,8 @@ public interface IMcpOAuth {
     /// Contents of the Authorization Server Metadata document.
     ///
     IAuthorisationServerMetadata authorisationServerMetadata();
+
+    Result validateClient(@Nullable String clientId, @Nullable String redirectUri);
 
     interface IAuthorisationServerMetadata {
 

@@ -2,6 +2,8 @@ package ua.com.fielden.platform.mcp.web.oauth;
 
 import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.Nullable;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.mcp.McpConfig;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
@@ -88,6 +90,12 @@ public class DefaultMcpOAuth implements IMcpOAuth {
                 return true;
             }
         };
+    }
+
+    @Override
+    public Result validateClient(@Nullable final String clientId, @Nullable final String redirectUri) {
+        // TODO
+        return Result.successful();
     }
 
 }
