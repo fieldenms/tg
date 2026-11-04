@@ -8,6 +8,12 @@ For security tokens and authorization, see `security/quick-reference.md`.
 JUnit 4 with integration tests against PostgreSQL and SQL Server.
 Test data fixtures using `DbDrivenTestCase` pattern with test-specific Guice modules.
 
+### Test class layout
+
+Test methods come before the helper methods they use: fixture factories, builders of test data, assertion helpers.
+A reader opens a test class to learn what is tested, and looks up helpers only as needed.
+Fields and constants stay at the top, as in any class.
+
 ### Assertions
 
 Both JUnit and AssertJ are acceptable.

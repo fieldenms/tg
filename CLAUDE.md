@@ -170,6 +170,7 @@ public static final String
     ERR_GAPS_IN_DAY_NUMBERS = "Cannot activate: there are gaps in Day numbers. Day count is [%s] but the highest Day number is [%s].";
 ```
 Common cases: validator error messages, named query aliases, related token strings.
+When the whole set is also needed as a collection, use an enum instead (see `conventions/quick-reference.md`).
 
 **Use `StandardActions` and `Compound` helpers** for common centre/master actions.
 
@@ -191,9 +192,10 @@ Cross-links from a quick-reference should prefer another quick-reference; from a
 | `entity-model/` | Hierarchy, annotations, property patterns, companions, calculated/synthetic, metamodel | `reference.md` — composite keys, activatable, validators/definers, union entities, producers, ISaveWithFetch, MetaProperty, declarative filters, generative entities |
 | `eql/` | Query construction, operators, functions, fetch models | `reference.md` — JOIN patterns, pivot, CASE WHEN, critCondition, QEM. `design.md` — EQL internals, adding new functions |
 | `web-ui/` | Standard actions, criterion/editor types, centre/master options | `reference.md` — full builder APIs, action config, query enhancers, insertion points, rendering customisers |
-| `testing/` | Fetch patterns, indirect testing, current time in tests, test data caching | `reference.md` — DynamicQueryBuilder testing, test configurations (e.g., SSO mode), test clock (fixed and ticking time), web resource testing |
+| `testing/` | Fetch patterns, indirect testing, current time in tests, test data caching | `reference.md` — test class layout, DynamicQueryBuilder testing, test configurations (e.g., SSO mode), test clock (fixed and ticking time), web resource testing |
 | `security/` | Token templates, `@Authorise` usage, CSRF protection, login lockout and password reset cooldown | `reference.md` — `@Authorise` + AOP infrastructure, authorization scopes (DAO/Producer/Property/Action), CSRF protection (cookie attributes, reverse proxy requirements, wiring), login attempt counting, lockout and reset link rules, runtime-generated audit tokens |
 | `auditing/` | @Audited basics, generated types, test config | `reference.md` — full type hierarchy, versioning, runtime plumbing, GenAudit, Web UI |
+| `conventions/` | Code structure conventions: closed sets of names as enums | — |
 
 ## Development Guidelines
 
