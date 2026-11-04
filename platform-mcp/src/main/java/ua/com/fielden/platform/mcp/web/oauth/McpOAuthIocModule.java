@@ -28,7 +28,6 @@ public class McpOAuthIocModule extends AbstractPlatformIocModule {
         super.configure();
 
         newOptionalBinder(binder(), IMcpAuthenticationModel.class);
-        newOptionalBinder(binder(), McpResource.Factory.class);
 
         final var maybeMcpResourcePath = findProperty(MCP_RESOURCE_PATH, properties(props), system(), env());
         if (maybeMcpResourcePath.isPresent()) {
