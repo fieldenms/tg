@@ -136,6 +136,8 @@ const componentStyles = `
  * A click on an element of the content focuses it, as it does an element of a rich text editor.
  * The master moves the focus over the component, as described in `TgEntityMasterBehavior`, so it knows its first and last focusable elements also when a component comes first or last,
  * and Tab moves on from the last of them as from the last editor, such as to the title bar of a dialog, rather than out of the master.
+ * When the master shows an entity, it focuses the component as a whole as it does an editor: as the preferred input if the component represents the preferred property,
+ * as the first input if the component comes first, and as the input that the user focused last, which the component reports to the master as an editor does, as described in `focusEnabledInputIfAny`.
  * A component whose element returned by `component()` cannot be focused, such as one without `tabindex`, is not focused as a whole:
  * its focusable elements, including those of its content, take part in the focus traversal of the master in their place among the editors.
  * The master skips the component and its elements while it is blocked, as they are inert.
@@ -291,6 +293,8 @@ const TgMasterComponentBehaviorImpl = {
     ready: function () {
         this._ensureAttribute('tg-master-component', true);
         this.addEventListener('keydown', event => this._onMoveFocus(event));
+        this.addEventListener('focusin', event => this._reportFocus(event.composedPath()[0]));
+        this.addEventListener('focusout', event => this._reportFocus(event.relatedTarget));
         this._propertyActions = [...this.querySelectorAll(':scope > [slot="property-action"]')];
         this._propertyActions.forEach((action, index) => this._setActionVisible(action, index === this.propertyActionIndex));
 
@@ -334,6 +338,19 @@ const TgMasterComponentBehaviorImpl = {
     _componentToFocus: function () {
         const component = this.component();
         return component && component.matches(FOCUSABLE_ELEMENTS_SELECTOR) ? component : null;
+    },
+
+    /**
+     * Reports to the master the input that the user focused, as an editor does with `_updateManuallyFocusedInputWith`, which the master provides:
+     * the element at which the component is focused as a whole, while the focus is at that element or in its content, and none while the focus is elsewhere,
+     * such as at a property action outside that element or out of the component, so that the master focuses the component as a whole again, such as after a save, as described in `TgEntityMasterBehavior`.
+     * The component receives `focusin` and `focusout` as the focus enters or leaves it, or moves between its shadow tree and its property actions, but not as it moves within its shadow tree.
+     */
+    _reportFocus: function (focusedElement) {
+        if (this._updateManuallyFocusedInputWith) {
+            const component = this._componentToFocus();
+            this._updateManuallyFocusedInputWith(component && focusedElement && isInHierarchy(component, focusedElement) ? component : null);
+        }
     },
 
     /**

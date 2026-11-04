@@ -28,11 +28,17 @@ const CanLeaveOptions  = {
  * Otherwise returns first enabled input if there is one.
  * Otherwise returns null.
  * 
+ * The editors include the master components, as returned by `getEditors()`.
+ * A master component takes part with the element at which it is focused as a whole, if it can be focused, as returned by `_componentToFocus()`, unless it is blocked, as its elements are then inert, much as a disabled editor does not take part:
+ * it is the first input if it comes first, and the preferred one if it represents the preferred property, but it is never invalid, as it is read-only.
+ *
  * If returned input is present, returns whether it is 'preferred'.
  *
  * @param preferredOnly -- consider only preferred inputs (independent from invalid)
+ * @param editors -- the editors to choose from, including the master components, in the order of the layout
+ * @param preferredProperty -- the preferred property of the entity of the master, if any
  */
-const findFirstInputToFocus = (preferredOnly, editors) => {
+const findFirstInputToFocus = (preferredOnly, editors, preferredProperty) => {
     const selectEnabledEditor = editor => {
         const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
         if (selectedElement && selectedElement.shadowRoot) {
@@ -43,20 +49,22 @@ const findFirstInputToFocus = (preferredOnly, editors) => {
         }
         return selectedElement;
     };
+    const selectEnabledComponent = component => component.blocked ? null : component._componentToFocus();
     
     let firstInput, firstPreferredInput, firstInvalidInput;
     for (let editorIndex = 0; editorIndex < editors.length; editorIndex++) {
         const currentEditor = editors[editorIndex];
         if (currentEditor.offsetParent !== null) {
-            const selectedElement = selectEnabledEditor(currentEditor);
+            const isComponent = _isComponent(currentEditor);
+            const selectedElement = isComponent ? selectEnabledComponent(currentEditor) : selectEnabledEditor(currentEditor);
             if (selectedElement) {
                 if (!firstInput) {
                     firstInput = selectedElement;
                 }
-                if (!firstPreferredInput && currentEditor.propertyName && currentEditor.propertyName === currentEditor.entity['@@origin'].preferredProperty()) {
+                if (!firstPreferredInput && currentEditor.propertyName && currentEditor.propertyName === preferredProperty) {
                     firstPreferredInput = selectedElement;
                 }
-                if (!firstInvalidInput && currentEditor._error && !currentEditor.isInWarning() && !currentEditor.isWithInformative()) {
+                if (!firstInvalidInput && !isComponent && currentEditor._error && !currentEditor.isInWarning() && !currentEditor.isWithInformative()) {
                     firstInvalidInput = selectedElement;
                 }
             }
@@ -172,6 +180,10 @@ const focusInput = function (inputToFocus) {
  * 
  * If preferred input is getting focus, the contents of the input gets selected.
  * 
+ * The inputs include those of the master components, which `getEditors()` returns together with the editors, as described in `findFirstInputToFocus`.
+ * A master component is focused as a whole as an editor is, except that, for a persisted entity, a component that is the first input is focused itself rather than the element before it, as focusing a component cannot change the entity.
+ * A blocked component is passed over, both as the first or preferred input and as the previously focused input, as its elements are inert.
+ *
  * @param preferredOnly -- consider only preferred inputs (independent from invalid)
  * @param manuallyFocusedInput -- previous manually focused input to be focused only in the absence of invalid / preferred one
  * @param orElseFocus -- function for focusing in case if there is no enabled input to focus
@@ -180,7 +192,7 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
     const editors = this.getEditors();
 
     if (_updateManuallyFocusedInputWith) {
-        // Provide editors with ability to update `manuallyFocusedInput` of the master.
+        // Provide editors, including master components, with ability to update `manuallyFocusedInput` of the master.
         for (const editor of editors) {
             if (!editor._updateManuallyFocusedInputWith) {
                 editor._updateManuallyFocusedInputWith = _updateManuallyFocusedInputWith;
@@ -199,7 +211,8 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
         }
     }
 
-    const inputToFocus = findFirstInputToFocus(preferredOnly, editors);
+    const preferredProperty = this._currBindingEntity && this._currBindingEntity['@@origin'].preferredProperty();
+    const inputToFocus = findFirstInputToFocus(preferredOnly, editors, preferredProperty);
     if (inputToFocus) {
         // Enforce focusing of invalid / preferred input regardless of any conditions.
         // If found input is not invalid / preferred, skip focusing for new entities.
@@ -227,9 +240,13 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
             }
         } else {
             // If manuallyFocusedInput is present, focus it.
-            // If it is disabled (<input> / <textarea>), fallback to focus element before first enabled input ('else' branch).
-            if (_updateManuallyFocusedInputWith && manuallyFocusedInput && !manuallyFocusedInput.disabled) {
+            // If it is disabled (<input> / <textarea>), or inert, as the element of a blocked master component is, fallback to focus element before first enabled input ('else' branch).
+            if (_updateManuallyFocusedInputWith && manuallyFocusedInput && !manuallyFocusedInput.disabled && !_isInert(manuallyFocusedInput, this)) {
                 focusInput(manuallyFocusedInput);
+            }
+            // Otherwise, if the first enabled input is a master component, focus the component as a whole rather than the element before it, as focusing a component cannot change the entity.
+            else if (_isComponentToFocus(inputToFocus.inputToFocus)) {
+                focusInput(inputToFocus.inputToFocus);
             }
             // Otherwise, take the first significant parent node, namely `tg-custom-action-dialog`, if it is present.
             // Skip insertion points, because they will likely only have non-persisted instances in a master.
@@ -1248,7 +1265,8 @@ const TgEntityMasterBehaviorImpl = {
 
     /**
      * Updates `manuallyFocusedInput` based on next manually focused `elementToFocus`.
-     * We only consider real editor internal inputs and skip property actions or other elements.
+     * We only consider real editor internal inputs, and the elements at which master components are focused as a whole, which the components report while the focus is at them or in their content,
+     * and skip property actions or other elements.
      * Skipped elements would trigger `manuallyFocusedInput` clearing and would cause focusing of first element before first input.
      */
     _updateManuallyFocusedInputWith: function (elementToFocus) {
@@ -1261,7 +1279,7 @@ const TgEntityMasterBehaviorImpl = {
         if (!isTouchEnabled() && this.currentState === 'EDIT') {
             // Please note, that tg-multiline-text-editor is special and its <text-area> does not have 'custom-input' class.
             // Only, <iron-autogrow-text-area> above has it.
-            this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host)) ? elementToFocus : null;
+            this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host) || _isComponentToFocus(elementToFocus)) ? elementToFocus : null;
         }
     },
 
@@ -1331,8 +1349,11 @@ const TgEntityMasterBehaviorImpl = {
         });
     },
 
+    /**
+     * Returns the editors of the master together with its master components, in the order of the layout, from which the input to focus is chosen, as described in `focusEnabledInputIfAny`.
+     */
     getEditors: function () {
-        return this.shadowRoot.querySelectorAll('[tg-editor]');
+        return this.shadowRoot.querySelectorAll('[tg-editor], [tg-master-component]');
     },
 
     /**
