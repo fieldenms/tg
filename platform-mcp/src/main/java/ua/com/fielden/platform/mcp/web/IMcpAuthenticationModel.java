@@ -1,14 +1,16 @@
 package ua.com.fielden.platform.mcp.web;
 
-import com.google.inject.ImplementedBy;
 import org.restlet.Request;
 import org.restlet.Response;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.mcp.web.oauth.McpOAuthIocModule;
 import ua.com.fielden.platform.security.user.User;
 
 /// Authenticates HTTP requests to the MCP server.
 ///
-@ImplementedBy(DefaultMcpAuthenticationModel.class)
+/// There is no default implementation.
+/// An application that enables MCP must choose one, for example, by installing [McpOAuthIocModule].
+///
 public interface IMcpAuthenticationModel {
 
     /// Authenticates an HTTP request to the MCP server.

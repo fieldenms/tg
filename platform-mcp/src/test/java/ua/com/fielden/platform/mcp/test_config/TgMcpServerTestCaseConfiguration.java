@@ -11,6 +11,7 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.mcp.McpConfig;
 import ua.com.fielden.platform.mcp.ioc.McpIocModule;
+import ua.com.fielden.platform.mcp.web.IMcpAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
@@ -20,12 +21,10 @@ import java.util.List;
 import java.util.Properties;
 
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
-import static ua.com.fielden.platform.test_config.AbstractDaoTestCase.UNIT_TEST_USER;
 
 public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
 
     public static final String PATH_MCP = "/mcp";
-    public static final String TEST_WEB_API_KEY_MCP = "secret";
     public static final String TEST_CLIENT_ID = "test_client";
     public static final String TEST_CLIENT_REDIRECT_URI = "http://localhost/callback";
 
@@ -70,8 +69,6 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
         props.setProperty("web.path", "/");
         // MCP
         props.setProperty(McpConfig.MCP_RESOURCE_PATH, PATH_MCP);
-        props.setProperty(McpConfig.WEB_API_KEY_MCP, TEST_WEB_API_KEY_MCP);
-        props.setProperty(McpConfig.MCP_USER, UNIT_TEST_USER);
         props.setProperty("mcp.clientRegistry.test.clientId", TEST_CLIENT_ID);
         props.setProperty("mcp.clientRegistry.test.redirectUri", TEST_CLIENT_REDIRECT_URI);
         return props;
@@ -103,6 +100,7 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
                     // Use SharedUserProvider so that the user set in test methods is visible to all threads (Restlet,
                     // Reactor, etc.).
                     bind(IUserProvider.class).to(SharedUserProvider.class);
+                    bind(IMcpAuthenticationModel.class).to(TestMcpAuthenticationModel.class);
                 }
             };
         }

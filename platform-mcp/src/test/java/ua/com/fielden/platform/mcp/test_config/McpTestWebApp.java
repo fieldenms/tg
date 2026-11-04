@@ -10,7 +10,7 @@ import ua.com.fielden.platform.mcp.web.IMcpWebUiResources;
 ///
 /// The MCP resource is registered in the same way as an application registers it, through [IMcpWebUiResources],
 /// which puts the MCP web resource behind a guard.
-/// Therefore, requests made by tests must carry a valid API key.
+/// The guard authenticates requests by means of [TestMcpAuthenticationModel].
 ///
 public class McpTestWebApp extends Application {
 

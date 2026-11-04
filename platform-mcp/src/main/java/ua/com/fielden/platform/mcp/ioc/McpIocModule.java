@@ -7,7 +7,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
-import ua.com.fielden.platform.ioc.exceptions.MissingParameterDependencyException;
 import ua.com.fielden.platform.mcp.McpConfig;
 import ua.com.fielden.platform.mcp.TgMcpServer;
 import ua.com.fielden.platform.mcp.web.IMcpWebUiResources;
@@ -15,14 +14,12 @@ import ua.com.fielden.platform.mcp.web.McpResource;
 import ua.com.fielden.platform.mcp.web.McpWebResourceGuard;
 import ua.com.fielden.platform.mcp.web.McpWebUiResources;
 import ua.com.fielden.platform.mcp.web.oauth.McpOAuthClientRegistry;
-import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Properties;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.mcp.McpConfig.*;
 import static ua.com.fielden.platform.utils.ImmutableListUtils.prepend;
@@ -60,12 +57,7 @@ public class McpIocModule extends AbstractPlatformIocModule {
         final var maybeMcpResourcePath = findProperty(MCP_RESOURCE_PATH, PropertySource.APPLICATION, PropertySource.SYSTEM, PropertySource.ENV);
         if (maybeMcpResourcePath.isPresent()) {
             LOGGER.info(() -> "Model Context Protocol (MCP) is enabled.");
-            final var mcpResourcePath = maybeMcpResourcePath.get();
-            final var mcpConfig = new McpConfig(
-                    mcpResourcePath,
-                    getProperty(WEB_API_KEY_MCP, PropertySource.APPLICATION, PropertySource.SYSTEM, PropertySource.ENV),
-                    getProperty(MCP_USER, PropertySource.APPLICATION, PropertySource.SYSTEM, PropertySource.ENV));
-            bind(McpConfig.class).toInstance(mcpConfig);
+            bind(McpConfig.class).toInstance(new McpConfig(maybeMcpResourcePath.get()));
             bind(McpOAuthClientRegistry.class).toInstance(McpOAuthClientRegistry.fromProperties(properties));
             bind(IMcpWebUiResources.class).to(McpWebUiResources.class);
             install(new FactoryModuleBuilder().build(McpResource.Factory.class));
@@ -85,17 +77,6 @@ public class McpIocModule extends AbstractPlatformIocModule {
 
     private Optional<String> findProperty(final String key, final PropertySource source, final PropertySource... sources) {
         return findProperty(key, prepend(source, Arrays.asList(sources)));
-    }
-
-    private String getProperty(final String key, final PropertySource source, final PropertySource... sources) {
-        return getProperty(key, prepend(source, Arrays.asList(sources)));
-    }
-
-    private String getProperty(final String key, final Collection<PropertySource> sources) {
-        return findProperty(key, sources)
-                .orElseThrow(() -> new MissingParameterDependencyException(format(
-                        "Configuration parameter [%s] cannot be empty. Scanned these sources: %s.",
-                        key, CollectionUtil.toString(sources, PropertySource::desc, ", "))));
     }
 
     private Optional<String> findProperty(final String key, final Collection<PropertySource> sources) {

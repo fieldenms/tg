@@ -189,8 +189,9 @@ The LLM formats and presents the results to the user.
 
 ### Authorisation
 
-Access to the MCP server as a whole is controlled by an API key, configured as `web.api.key.mcp` and supplied in HTTP header `X-API-Key`.
-Every request runs as the application user configured as `mcp.user`, and from there the MCP server inherits the TG authorisation model:
+Requests to the MCP server are authenticated by `IMcpAuthenticationModel`, which has no default implementation.
+An application that enables MCP chooses one, typically by installing `McpOAuthIocModule`, which authenticates requests with OAuth access tokens.
+Every request runs as the user who granted the access token, and from there the MCP server inherits the TG authorisation model:
 - `Entity_CanRead_Token` — controls per-entity query access.
 - `Entity_CanReadModel_Token` — controls model visibility: which entities and properties appear in the schema and in `_entityType`.
 

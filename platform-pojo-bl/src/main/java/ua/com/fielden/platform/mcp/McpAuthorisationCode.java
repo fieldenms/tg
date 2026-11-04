@@ -11,7 +11,7 @@ import java.util.Date;
 /// MCP authorisation code, generated when a client accesses the authorisation endpoint.
 ///
 /// This entity type is not registered by the platform.
-/// Therefore, applications that enable MCP must register it themselves.
+/// Therefore, applications that enable OAuth-based authentication of MCP requests must register it themselves.
 ///
 @DenyIntrospection
 @EntityTitle("MCP Authorisation Code")

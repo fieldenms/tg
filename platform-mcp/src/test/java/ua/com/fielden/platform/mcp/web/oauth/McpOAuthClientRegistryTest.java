@@ -201,7 +201,7 @@ public class McpOAuthClientRegistryTest {
     private static DefaultMcpOAuth mcpOAuth() {
         return new DefaultMcpOAuth(
                 "https://app.com",
-                new McpConfig("/mcp", "key", "USER"),
+                new McpConfig("/mcp"),
                 McpOAuthClientRegistry.fromProperties(props(
                         "mcp.clientRegistry.claudeCode.clientId", "claude_code",
                         "mcp.clientRegistry.claudeCode.redirectUri", "http://localhost/callback")));

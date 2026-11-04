@@ -15,9 +15,7 @@ public interface IMcpWebUiResources {
 
     /// Registers the MCP web resource at [McpConfig#MCP_RESOURCE_PATH].
     ///
-    /// Access to the resource is guarded by the API key ([McpConfig#WEB_API_KEY_MCP]).
-    ///
-    /// Each request is processed under an application user as specified by [McpConfig#MCP_USER].
+    /// Each request is authenticated by [IMcpAuthenticationModel], and is processed under the authenticated user.
     ///
     void registerUnguarded(Router router, Context context);
 

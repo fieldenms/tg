@@ -10,7 +10,7 @@ import java.util.Date;
 /// MCP access token, issued by the token endpoint in exchange for an authorisation code.
 ///
 /// This entity type is not registered by the platform.
-/// Therefore, applications that enable MCP must register it themselves.
+/// Therefore, applications that enable OAuth-based authentication of MCP requests must register it themselves.
 ///
 @DenyIntrospection
 @EntityTitle("MCP Access Token")
