@@ -6,18 +6,19 @@ import org.restlet.Restlet;
 import org.restlet.routing.Router;
 import ua.com.fielden.platform.mcp.web.IMcpWebUiResources;
 
+import java.util.Set;
+
 /// This is a web application specific to testing of the MCP server.
 ///
-/// The MCP resource is registered in the same way as an application registers it, through [IMcpWebUiResources],
-/// which puts the MCP web resource behind a guard.
-/// The guard authenticates requests by means of [TestMcpAuthenticationModel].
+/// The MCP web resources are registered in the same way as an application registers them, through every instance of [IMcpWebUiResources].
+/// The MCP resource is put behind a guard, which authenticates requests by means of [TestMcpAuthenticationModel].
 ///
 public class McpTestWebApp extends Application {
 
-    private final IMcpWebUiResources mcpWebUiResources;
+    private final Set<IMcpWebUiResources> mcpWebUiResources;
 
     @Inject
-    protected McpTestWebApp(final IMcpWebUiResources mcpWebUiResources) {
+    protected McpTestWebApp(final Set<IMcpWebUiResources> mcpWebUiResources) {
         this.mcpWebUiResources = mcpWebUiResources;
     }
 
@@ -25,8 +26,8 @@ public class McpTestWebApp extends Application {
     public synchronized Restlet getInboundRoot() {
         final Router router = new Router(getContext());
 
-        mcpWebUiResources.registerUnguarded(router, getContext());
-        mcpWebUiResources.registerGuarded(router, getContext());
+        mcpWebUiResources.forEach(it -> it.registerUnguarded(router, getContext()));
+        mcpWebUiResources.forEach(it -> it.registerGuarded(router, getContext()));
 
         return router;
     }

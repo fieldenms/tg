@@ -10,13 +10,13 @@ import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.mcp.McpConfig;
 import ua.com.fielden.platform.mcp.TgMcpServer;
 import ua.com.fielden.platform.mcp.web.*;
-import ua.com.fielden.platform.mcp.web.oauth.McpOAuthClientRegistry;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Properties;
 
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.mcp.McpConfig.MCP_RESOURCE_PATH;
 import static ua.com.fielden.platform.utils.ImmutableListUtils.prepend;
@@ -29,10 +29,10 @@ import static ua.com.fielden.platform.utils.ImmutableListUtils.prepend;
 ///
 /// The following bindings are installed:
 ///
-/// * [McpConfig], [IMcpWebUiResources], [McpResource.Factory], [McpWebResourceGuard.Factory] -- all optional bindings,
+/// * [McpConfig], [McpResource.Factory], [McpWebResourceGuard.Factory] -- all optional bindings,
 ///    present if MCP is enabled.
-/// * [McpOAuthClientRegistry] -- present if MCP is enabled.
-///   The registered clients are read only from the application properties.
+/// * [IMcpAuthenticationModel] -- an optional binding, which an application must provide if MCP is enabled.
+/// * [IMcpWebUiResources] -- a multibinding, which includes [McpWebUiResources] if MCP is enabled.
 ///
 public class McpIocModule extends AbstractPlatformIocModule {
 
@@ -47,17 +47,16 @@ public class McpIocModule extends AbstractPlatformIocModule {
     @Override
     protected void configure() {
         OptionalBinder.newOptionalBinder(binder(), McpConfig.class);
-        OptionalBinder.newOptionalBinder(binder(), IMcpWebUiResources.class);
         OptionalBinder.newOptionalBinder(binder(), McpResource.Factory.class);
         OptionalBinder.newOptionalBinder(binder(), McpWebResourceGuard.Factory.class);
         OptionalBinder.newOptionalBinder(binder(), IMcpAuthenticationModel.class);
+        final var mcpWebUiResourcesBinder = newSetBinder(binder(), IMcpWebUiResources.class);
 
         final var maybeMcpResourcePath = findProperty(MCP_RESOURCE_PATH, PropertySource.APPLICATION, PropertySource.SYSTEM, PropertySource.ENV);
         if (maybeMcpResourcePath.isPresent()) {
             LOGGER.info(() -> "Model Context Protocol (MCP) is enabled.");
             bind(McpConfig.class).toInstance(new McpConfig(maybeMcpResourcePath.get()));
-            bind(McpOAuthClientRegistry.class).toInstance(McpOAuthClientRegistry.fromProperties(properties));
-            bind(IMcpWebUiResources.class).to(McpWebUiResources.class);
+            mcpWebUiResourcesBinder.addBinding().to(McpWebUiResources.class);
             install(new FactoryModuleBuilder().build(McpResource.Factory.class));
             install(new FactoryModuleBuilder().build(McpWebResourceGuard.Factory.class));
 

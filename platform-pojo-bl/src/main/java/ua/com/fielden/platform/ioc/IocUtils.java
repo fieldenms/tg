@@ -9,10 +9,7 @@ import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.ioc.exceptions.MissingParameterDependencyException;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -30,6 +27,18 @@ public final class IocUtils {
     @SuppressWarnings("unchecked")
     public static <T> Optional<T> optional(final Injector injector, final Class<T> type) {
         return (Optional<T>) injector.getInstance(Key.get(Types.newParameterizedType(Optional.class, type)));
+    }
+
+    /// Retrieves a multibinding for `type`.
+    ///
+    /// This method provides an imperative equivalent to the declarative `Set<T>`.
+    ///
+    /// @throws ConfigurationException if the injector cannot find the binding.
+    /// @throws ProvisionException if there was a runtime failure while providing an instance.
+    ///
+    @SuppressWarnings("unchecked")
+    public static <T> Set<T> multi(final Injector injector, final Class<T> type) {
+        return (Set<T>) injector.getInstance(Key.get(Types.newParameterizedType(Set.class, type)));
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

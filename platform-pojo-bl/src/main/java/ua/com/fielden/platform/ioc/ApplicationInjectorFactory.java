@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.ioc;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import com.google.inject.*;
-
 import com.google.inject.Module;
 import ua.com.fielden.platform.basic.config.Workflows;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A factory for instantiation of Guice injector with correctly initialised TG applications modules, which support contract {@link IModuleWithInjector}.
@@ -40,12 +40,16 @@ public final class ApplicationInjectorFactory {
         this(Workflows.development);
     }
     
-    public ApplicationInjectorFactory add(final Module... otherModules) {
+    public ApplicationInjectorFactory add(final Module... modules) {
+        return addAll(Arrays.asList(modules));
+    }
+
+    public ApplicationInjectorFactory addAll(final Iterable<? extends Module> modules) {
         if (injector != null) {
             throw new IllegalStateException("Injector has already been created. No module modification is permitted.");
         }
 
-        for (final Module module : otherModules) {
+        for (final Module module : modules) {
             this.modules.add(module);
         }
 

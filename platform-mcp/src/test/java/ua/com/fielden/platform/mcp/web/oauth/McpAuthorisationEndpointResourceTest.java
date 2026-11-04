@@ -4,16 +4,16 @@ import org.junit.Test;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.*;
-import ua.com.fielden.platform.mcp.test_config.AbstractTgMcpServerTestCase;
+import ua.com.fielden.platform.mcp.test_config.AbstractTgMcpOAuthTestCase;
 
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static ua.com.fielden.platform.mcp.test_config.TgMcpServerTestCaseConfiguration.TEST_CLIENT_ID;
-import static ua.com.fielden.platform.mcp.test_config.TgMcpServerTestCaseConfiguration.TEST_CLIENT_REDIRECT_URI;
+import static ua.com.fielden.platform.mcp.test_config.TgMcpOAuthTestCaseConfiguration.TEST_CLIENT_ID;
+import static ua.com.fielden.platform.mcp.test_config.TgMcpOAuthTestCaseConfiguration.TEST_CLIENT_REDIRECT_URI;
 import static ua.com.fielden.platform.mcp.web.oauth.McpAuthorisationEndpointResource.ERR_INVALID_CLIENT;
 
-public class McpAuthorisationEndpointResourceTest extends AbstractTgMcpServerTestCase {
+public class McpAuthorisationEndpointResourceTest extends AbstractTgMcpOAuthTestCase {
 
     private static final String INJECTED_TEXT = "<script>alert(1)</script> Your session has expired.";
     private static final String ENDPOINT_URI = "http://localhost/oauth/authorize";

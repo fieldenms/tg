@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.mcp.web.oauth;
 
+import com.google.inject.multibindings.OptionalBinder;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.mcp.McpAccessToken;
 import ua.com.fielden.platform.mcp.McpAuthorisationCode;
@@ -8,6 +9,8 @@ import ua.com.fielden.platform.mcp.web.IMcpWebUiResources;
 
 import java.util.Properties;
 
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
+import static com.google.inject.multibindings.OptionalBinder.newOptionalBinder;
 import static ua.com.fielden.platform.ioc.IocUtils.PropertySource.*;
 import static ua.com.fielden.platform.ioc.IocUtils.findProperty;
 import static ua.com.fielden.platform.mcp.McpConfig.MCP_RESOURCE_PATH;
@@ -18,7 +21,9 @@ import static ua.com.fielden.platform.mcp.McpConfig.MCP_RESOURCE_PATH;
 /// MCP clients obtain access tokens through the OAuth 2.1 authorisation code grant, in which the application acts as both the authorisation server and the protected resource.
 /// A request to the MCP server is processed under the user who granted the access token, and is subject to that user's authorisation.
 ///
-/// This module can be installed even if MCP is disabled, but it will create only empty, optional bindings.
+/// [IMcpAuthenticationModel] is bound as the default of an optional binding, so that it can be replaced with [OptionalBinder#setBinding].
+///
+/// This module can be installed even if MCP is disabled, in which case it creates no bindings.
 ///
 /// ##### Requirements
 ///
@@ -26,7 +31,7 @@ import static ua.com.fielden.platform.mcp.McpConfig.MCP_RESOURCE_PATH;
 /// * Register entity types [McpAuthorisationCode] and [McpAccessToken], and create their tables in the database.
 /// * Register the MCP clients that may request access in the application properties, as described in [McpOAuthClientRegistry].
 ///   Requests of clients that are not registered are rejected.
-/// * Register the MCP web resources with both [IMcpWebUiResources#registerUnguarded] and [IMcpWebUiResources#registerGuarded].
+/// * Register every instance of [IMcpWebUiResources], which include the OAuth web resources added by this module.
 ///
 /// ##### Web resources
 ///
@@ -55,7 +60,9 @@ public class McpOAuthIocModule extends AbstractPlatformIocModule {
 
         final var maybeMcpResourcePath = findProperty(MCP_RESOURCE_PATH, properties(props), system(), env());
         if (maybeMcpResourcePath.isPresent()) {
-            bind(IMcpAuthenticationModel.class).to(McpOAuthAuthenticationModel.class);
+            bind(McpOAuthClientRegistry.class).toInstance(McpOAuthClientRegistry.fromProperties(props));
+            newOptionalBinder(binder(), IMcpAuthenticationModel.class).setDefault().to(McpOAuthAuthenticationModel.class);
+            newSetBinder(binder(), IMcpWebUiResources.class).addBinding().to(McpOAuthWebUiResources.class);
         }
     }
 

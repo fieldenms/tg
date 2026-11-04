@@ -20,24 +20,17 @@ import ua.com.fielden.platform.test.ioc.PlatformTestServerIocModule;
 import java.util.List;
 import java.util.Properties;
 
+import static com.google.inject.multibindings.OptionalBinder.newOptionalBinder;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 
 public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
 
     public static final String PATH_MCP = "/mcp";
-    public static final String TEST_CLIENT_ID = "test_client";
-    public static final String TEST_CLIENT_REDIRECT_URI = "http://localhost/callback";
 
     private final Injector injector;
 
     public TgMcpServerTestCaseConfiguration(final Properties properties) {
-        final var appProperties = getProperties(properties);
-        final var appDomain = new PlatformTestDomainTypes();
-        injector = new ApplicationInjectorFactory()
-                .add(IocModule.create(appDomain, appDomain.entityTypes(), appProperties))
-                .add(new McpIocModule(appProperties))
-                .add(new NewUserEmailNotifierTestIocModule())
-                .getInjector();
+        injector = new ApplicationInjectorFactory().addAll(iocModules(getProperties(properties))).getInjector();
     }
 
     @Override
@@ -45,7 +38,16 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
         return injector.getInstance(type);
     }
 
-    private static Properties getProperties(final Properties hbc) {
+    /// All IoC modules used in this configuration.
+    ///
+    static List<Module> iocModules(final Properties appProperties) {
+        final var appDomain = new PlatformTestDomainTypes();
+        return List.of(IocModule.create(appDomain, appDomain.entityTypes(), appProperties));
+    }
+
+    /// Creates the application properties of this configuration, which are backed by `hbc`.
+    ///
+    static Properties getProperties(final Properties hbc) {
         final Properties props = new Properties(hbc);
         // application properties
         props.setProperty("workflow", "development");
@@ -69,12 +71,12 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
         props.setProperty("web.path", "/");
         // MCP
         props.setProperty(McpConfig.MCP_RESOURCE_PATH, PATH_MCP);
-        props.setProperty("mcp.clientRegistry.test.clientId", TEST_CLIENT_ID);
-        props.setProperty("mcp.clientRegistry.test.redirectUri", TEST_CLIENT_REDIRECT_URI);
         return props;
     }
 
     private static class IocModule extends PlatformTestServerIocModule {
+
+        private final Properties props;
 
         public static Module create(
                 final IApplicationDomainProvider applicationDomainProvider,
@@ -91,6 +93,16 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
                 final Properties props)
         {
             super(applicationDomainProvider, domainEntityTypes, props);
+            this.props = props;
+        }
+
+        @Override
+        protected void configure() {
+            super.configure();
+
+            install(new McpIocModule(props));
+            newOptionalBinder(binder(), IMcpAuthenticationModel.class).setBinding().to(TestMcpAuthenticationModel.class);
+            install(new NewUserEmailNotifierTestIocModule());
         }
 
         private static Module moduleWithOverrides() {
@@ -100,7 +112,6 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
                     // Use SharedUserProvider so that the user set in test methods is visible to all threads (Restlet,
                     // Reactor, etc.).
                     bind(IUserProvider.class).to(SharedUserProvider.class);
-                    bind(IMcpAuthenticationModel.class).to(TestMcpAuthenticationModel.class);
                 }
             };
         }
