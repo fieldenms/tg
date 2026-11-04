@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Authorise Access</title>
+    <style>
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif';
+            font-size: 12pt;
+            background: #eee;
+            -webkit-font-smoothing: antialiased;
+            margin: 0px;
+        }
+        hgroup {
+            text-align: center;
+            margin-top: 4em;
+        }
+        h1 {
+            font-weight: 700;
+            color: #333;
+        }
+        form {
+            width: 320px;
+            margin: 2em auto;
+            padding: 2em;
+            background: #fafafa;
+            border: 1px solid #ebebeb;
+            box-shadow: rgba(0, 0, 0, 0.14902) 0px 1px 1px 0px, rgba(0, 0, 0, 0.09804) 0px 1px 2px 0px;
+            line-height: 1.5;
+        }
+        .value {
+            font-weight: 500;
+            word-break: break-all;
+        }
+        .buttons {
+            display: flex;
+            gap: 1em;
+            margin-top: 2em;
+        }
+        button {
+            flex: 1;
+            padding: 0.7em;
+            border: none;
+            border-radius: 3px;
+            font: inherit;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.2) 0px 1px 5px 0px;
+        }
+        .allow {
+            background: #4285f4;
+            color: white;
+        }
+        .deny {
+            background: #e0e0e0;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <hgroup>
+        <h1>Authorise Access</h1>
+    </hgroup>
+    <form action="@action" method="post">
+        <p>Application <span class="value">@client</span> requests access to <span class="value">@resource</span> on behalf of user <span class="value">@user</span>.</p>
+        <p>Allow it to act on your behalf?</p>
+        @hidden.fields
+        <div class="buttons">
+            <button type="submit" name="decision" value="deny" class="deny">Deny</button>
+            <button type="submit" name="decision" value="allow" class="allow">Allow</button>
+        </div>
+    </form>
+</body>
+
+</html>
