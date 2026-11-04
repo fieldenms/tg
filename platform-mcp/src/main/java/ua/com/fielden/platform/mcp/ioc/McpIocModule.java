@@ -14,6 +14,7 @@ import ua.com.fielden.platform.mcp.web.IMcpWebUiResources;
 import ua.com.fielden.platform.mcp.web.McpResource;
 import ua.com.fielden.platform.mcp.web.McpWebResourceGuard;
 import ua.com.fielden.platform.mcp.web.McpWebUiResources;
+import ua.com.fielden.platform.mcp.web.oauth.McpOAuthClientRegistry;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.Arrays;
@@ -36,6 +37,8 @@ import static ua.com.fielden.platform.utils.ImmutableListUtils.prepend;
 ///
 /// * [McpConfig], [IMcpWebUiResources], [McpResource.Factory], [McpWebResourceGuard.Factory] -- all optional bindings,
 ///    present if MCP is enabled.
+/// * [McpOAuthClientRegistry] -- present if MCP is enabled.
+///   The registered clients are read only from the application properties.
 ///
 public class McpIocModule extends AbstractPlatformIocModule {
 
@@ -63,6 +66,7 @@ public class McpIocModule extends AbstractPlatformIocModule {
                     getProperty(WEB_API_KEY_MCP, PropertySource.APPLICATION, PropertySource.SYSTEM, PropertySource.ENV),
                     getProperty(MCP_USER, PropertySource.APPLICATION, PropertySource.SYSTEM, PropertySource.ENV));
             bind(McpConfig.class).toInstance(mcpConfig);
+            bind(McpOAuthClientRegistry.class).toInstance(McpOAuthClientRegistry.fromProperties(properties));
             bind(IMcpWebUiResources.class).to(McpWebUiResources.class);
             install(new FactoryModuleBuilder().build(McpResource.Factory.class));
             install(new FactoryModuleBuilder().build(McpWebResourceGuard.Factory.class));

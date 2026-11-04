@@ -32,8 +32,17 @@ public interface IMcpOAuth {
     ///
     IAuthorisationServerMetadata authorisationServerMetadata();
 
+    /// Validates that `clientId` identifies a registered client.
+    ///
+    /// @return  a successful result with the [McpOAuthClient] identified by `clientId`, or a failure
+    ///
     Result validateClient(@Nullable String clientId);
 
+    /// Validates that `clientId` identifies a registered client, and that `redirectUri` is one of its registered redirect URIs.
+    ///
+    /// @return  a successful result with the [McpOAuthClient] identified by `clientId`, or a failure
+    /// @see McpOAuthClient#isRedirectUriRegistered(String)
+    ///
     Result validateClient(@Nullable String clientId, @Nullable String redirectUri);
 
     interface IAuthorisationServerMetadata {

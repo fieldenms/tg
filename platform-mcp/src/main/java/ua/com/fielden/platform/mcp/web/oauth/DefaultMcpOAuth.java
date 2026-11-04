@@ -9,17 +9,21 @@ import ua.com.fielden.platform.web.annotations.AppUri;
 
 import java.util.List;
 
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.utils.MiscUtilities.uriPath;
 
 public class DefaultMcpOAuth implements IMcpOAuth {
 
     private final String appUri;
     private final McpConfig mcpConfig;
+    private final McpOAuthClientRegistry clientRegistry;
 
     @Inject
-    protected DefaultMcpOAuth(final @AppUri String appUri, final McpConfig mcpConfig) {
+    protected DefaultMcpOAuth(final @AppUri String appUri, final McpConfig mcpConfig, final McpOAuthClientRegistry clientRegistry) {
         this.appUri = StringUtils.stripEnd(appUri, "/");
         this.mcpConfig = mcpConfig;
+        this.clientRegistry = clientRegistry;
     }
 
     @Override
@@ -94,14 +98,28 @@ public class DefaultMcpOAuth implements IMcpOAuth {
 
     @Override
     public Result validateClient(@Nullable final String clientId) {
-        // TODO
-        return Result.successful();
+        if (clientId == null) {
+            return failure("Missing client identifier.");
+        }
+        return clientRegistry.find(clientId)
+                .map(Result::successful)
+                .orElseGet(() -> failuref("Unknown client [%s].", clientId));
     }
 
     @Override
     public Result validateClient(@Nullable final String clientId, @Nullable final String redirectUri) {
-        // TODO
-        return Result.successful();
+        final var result = validateClient(clientId);
+        if (!result.isSuccessful()) {
+            return result;
+        }
+        if (redirectUri == null) {
+            return failure("Missing redirect URI.");
+        }
+        final McpOAuthClient client = result.getInstanceOrElseThrow();
+        if (!client.isRedirectUriRegistered(redirectUri)) {
+            return failuref("Redirect URI [%s] is not registered for client [%s].", redirectUri, clientId);
+        }
+        return result;
     }
 
 }

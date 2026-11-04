@@ -207,9 +207,12 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
         // TODO Handle requests without an established user session.
 
         final var params = Param.collect(getQuery());
-        return validateClient(params)
-                .or(() -> validateRequest(params))
-                .orElseGet(() -> consentPage(params));
+        final var clientResult = validateClient(params);
+        if (!clientResult.isSuccessful()) {
+            return invalidClient(clientResult);
+        }
+        final McpOAuthClient client = clientResult.getInstanceOrElseThrow();
+        return validateRequest(params).orElseGet(() -> consentPage(client, params));
     }
 
     /// Handles a submission of the consent form by issuing an authorisation code if the user allowed access.
@@ -225,9 +228,9 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
         }
 
         final var params = Param.collect(new Form(input));
-        final var clientError = validateClient(params);
-        if (clientError.isPresent()) {
-            return clientError.get();
+        final var clientResult = validateClient(params);
+        if (!clientResult.isSuccessful()) {
+            return invalidClient(clientResult);
         }
         if (!List.of("allow").equals(params.get(Param.decision))) {
             return errorRedirect(params, "access_denied", Optional.of("The user denied access."));
@@ -239,14 +242,10 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
     /// This validation must precede any other, as errors can be reported to the client by redirecting to its URI only after it is validated.
     /// Otherwise, the server could be used for open redirect attacks.
     ///
-    /// @return an error response, if the client is invalid
+    /// @return a successful result with the [McpOAuthClient], or a failure to be reported with [#invalidClient(Result)]
     ///
-    private Optional<Representation> validateClient(final Map<Param, List<String>> params) {
-        final var result = mcpOAuth.validateClient(Param.client_id.firstValueIn(params), Param.redirect_uri.firstValueIn(params));
-        if (!result.isSuccessful()) {
-            return Optional.of(invalidClient(result));
-        }
-        return Optional.empty();
+    private Result validateClient(final Map<Param, List<String>> params) {
+        return mcpOAuth.validateClient(Param.client_id.firstValueIn(params), Param.redirect_uri.firstValueIn(params));
     }
 
     /// Creates an error response for a failed client validation.
@@ -332,7 +331,7 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
     /// Each value is HTML-escaped, as the parameters are controlled by the client.
     /// Placeholders are replaced in a single pass, so that a value that contains a placeholder is not replaced in turn.
     ///
-    private Representation consentPage(final Map<Param, List<String>> params) {
+    private Representation consentPage(final McpOAuthClient client, final Map<Param, List<String>> params) {
         final var hiddenFields = params.keySet().stream()
                 .filter(param -> param != Param.decision)
                 .filter(param -> param.firstValueIn(params) != null)
@@ -343,8 +342,7 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
                 new String[] {"@action", "@client", "@resource", "@user", "@hidden.fields"},
                 new String[] {
                         escapeHtml(MiscUtilities.mkUri(mcpOAuth.authorisationServerMetadata().authorisationEndpoint()).getRawPath()),
-                        // TODO Use the display name of the client.
-                        escapeHtml(Param.client_id.firstValueIn(params)),
+                        escapeHtml(client.displayName()),
                         escapeHtml(Param.resource.firstValueIn(params)),
                         escapeHtml(userProvider.getUser().getKey()),
                         hiddenFields});
