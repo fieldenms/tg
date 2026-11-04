@@ -61,12 +61,12 @@ public class DefaultMcpOAuth implements IMcpOAuth {
 
             @Override
             public String authorisationEndpoint() {
-                return uriPath(appUri, "/oauth/authorize");
+                return uriPath(appUri, McpOAuthIocModule.AUTHORISATION_ENDPOINT_PATH);
             }
 
             @Override
             public String tokenEndpoint() {
-                return uriPath(appUri, "/oauth/token");
+                return uriPath(appUri, McpOAuthIocModule.TOKEN_ENDPOINT_PATH);
             }
 
             @Override
