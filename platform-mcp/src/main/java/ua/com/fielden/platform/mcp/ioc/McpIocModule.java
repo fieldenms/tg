@@ -9,10 +9,7 @@ import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.mcp.McpConfig;
 import ua.com.fielden.platform.mcp.TgMcpServer;
-import ua.com.fielden.platform.mcp.web.IMcpWebUiResources;
-import ua.com.fielden.platform.mcp.web.McpResource;
-import ua.com.fielden.platform.mcp.web.McpWebResourceGuard;
-import ua.com.fielden.platform.mcp.web.McpWebUiResources;
+import ua.com.fielden.platform.mcp.web.*;
 import ua.com.fielden.platform.mcp.web.oauth.McpOAuthClientRegistry;
 
 import java.util.Arrays;
@@ -21,7 +18,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ua.com.fielden.platform.mcp.McpConfig.*;
+import static ua.com.fielden.platform.mcp.McpConfig.MCP_RESOURCE_PATH;
 import static ua.com.fielden.platform.utils.ImmutableListUtils.prepend;
 
 /// An IoC module that provides the Model Context Protocol (MCP) server.
@@ -53,6 +50,7 @@ public class McpIocModule extends AbstractPlatformIocModule {
         OptionalBinder.newOptionalBinder(binder(), IMcpWebUiResources.class);
         OptionalBinder.newOptionalBinder(binder(), McpResource.Factory.class);
         OptionalBinder.newOptionalBinder(binder(), McpWebResourceGuard.Factory.class);
+        OptionalBinder.newOptionalBinder(binder(), IMcpAuthenticationModel.class);
 
         final var maybeMcpResourcePath = findProperty(MCP_RESOURCE_PATH, PropertySource.APPLICATION, PropertySource.SYSTEM, PropertySource.ENV);
         if (maybeMcpResourcePath.isPresent()) {

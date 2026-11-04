@@ -8,7 +8,6 @@ import ua.com.fielden.platform.mcp.web.IMcpWebUiResources;
 
 import java.util.Properties;
 
-import static com.google.inject.multibindings.OptionalBinder.newOptionalBinder;
 import static ua.com.fielden.platform.ioc.IocUtils.PropertySource.*;
 import static ua.com.fielden.platform.ioc.IocUtils.findProperty;
 import static ua.com.fielden.platform.mcp.McpConfig.MCP_RESOURCE_PATH;
@@ -53,8 +52,6 @@ public class McpOAuthIocModule extends AbstractPlatformIocModule {
     @Override
     protected void configure() {
         super.configure();
-
-        newOptionalBinder(binder(), IMcpAuthenticationModel.class);
 
         final var maybeMcpResourcePath = findProperty(MCP_RESOURCE_PATH, properties(props), system(), env());
         if (maybeMcpResourcePath.isPresent()) {
