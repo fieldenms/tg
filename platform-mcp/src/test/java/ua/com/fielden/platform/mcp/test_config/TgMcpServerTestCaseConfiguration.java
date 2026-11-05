@@ -9,9 +9,12 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
+import ua.com.fielden.platform.mcp.McpAccessToken;
+import ua.com.fielden.platform.mcp.McpAuthorisationCode;
 import ua.com.fielden.platform.mcp.McpConfig;
 import ua.com.fielden.platform.mcp.ioc.McpIocModule;
 import ua.com.fielden.platform.mcp.web.IMcpAuthenticationModel;
+import ua.com.fielden.platform.reflection.CompanionObjectAutobinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
@@ -22,6 +25,7 @@ import java.util.Properties;
 
 import static com.google.inject.multibindings.OptionalBinder.newOptionalBinder;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
+import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 
 public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
 
@@ -76,6 +80,11 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
 
     private static class IocModule extends PlatformTestServerIocModule {
 
+        private static final List<Class<? extends AbstractEntity<?>>> EXTRA_DOMAIN_TYPES = List.of(
+                McpAuthorisationCode.class,
+                McpAccessToken.class
+        );
+
         private final Properties props;
 
         public static Module create(
@@ -92,7 +101,7 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
                 final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
                 final Properties props)
         {
-            super(applicationDomainProvider, domainEntityTypes, props);
+            super(addTypes(applicationDomainProvider, EXTRA_DOMAIN_TYPES), domainEntityTypes, props);
             this.props = props;
         }
 
@@ -103,6 +112,9 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
             install(new McpIocModule(props));
             newOptionalBinder(binder(), IMcpAuthenticationModel.class).setBinding().to(TestMcpAuthenticationModel.class);
             install(new NewUserEmailNotifierTestIocModule());
+
+            // At present, companions have to be bound by hand in test configurations.
+            EXTRA_DOMAIN_TYPES.forEach(ty -> CompanionObjectAutobinder.bindCo(ty, binder()));
         }
 
         private static Module moduleWithOverrides() {
@@ -114,6 +126,14 @@ public final class TgMcpServerTestCaseConfiguration implements IDomainDrivenTest
                     bind(IUserProvider.class).to(SharedUserProvider.class);
                 }
             };
+        }
+
+        private static IApplicationDomainProvider addTypes(
+                final IApplicationDomainProvider applicationDomainProvider,
+                final List<Class<? extends AbstractEntity<?>>> types)
+        {
+            final var newTypes = concatList(applicationDomainProvider.entityTypes(), types);
+            return () -> newTypes;
         }
 
     }
