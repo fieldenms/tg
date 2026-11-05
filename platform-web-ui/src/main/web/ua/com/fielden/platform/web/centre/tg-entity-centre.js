@@ -367,6 +367,14 @@ Polymer({
             value: false,
             reflectToAttribute: true
         },
+        /**
+         * Indicates whether this centre focuses its views only when the user selects them, as described in `noAutoFocus` of `TgEntityCentreBehavior`.
+         * Then the view that this centre selects is not focused here, and the view that the user selects is focused by `TgEntityCentreBehavior`.
+         */
+        noAutoFocus: {
+            type: Boolean,
+            value: false
+        },
         discard: Function,
         run: Function,
         leftSplitterPosition: String,
@@ -778,14 +786,16 @@ Polymer({
     },
 
     /**
-     * Configures current view binding; removes view binding for previous view; focuses first focusable element in current view.
+     * Configures current view binding; removes view binding for previous view; focuses first focusable element in current view, unless this centre focuses its views only when the user selects them, as described in `noAutoFocus`.
      */
     _pageSelectionChanged: function (event) {
         if (event.target === this.$.views) {
             const prevView = this._allViews[this._previousView];
             const currentView = this._allViews[this._selectedView];
             this._configViewBindings(prevView, currentView);
-            this.focusSelectedView();
+            if (!this.noAutoFocus) {
+                this.focusSelectedView();
+            }
             tearDownEvent(event);
             (this._selectedView === 1 ? this.$.centreResultContainer : this._allViews[this._selectedView]).fire("tg-centre-page-was-selected");
         }

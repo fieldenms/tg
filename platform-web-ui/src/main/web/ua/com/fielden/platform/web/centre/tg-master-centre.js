@@ -77,6 +77,8 @@ const template = html`
  * so that its views, such as a chart in an alternative view, fit the new size.
  * Its selection view fills the component, with the selection criteria growing to the height that is left by the toolbar and the buttons of the view,
  * so that the buttons are always at the bottom of the component.
+ * The centre focuses its views only when the user selects them, such as by running it or by going back to its selection criteria, and not when it selects them by itself, as when it loads or the component refreshes it,
+ * so that it does not take the focus from the master, which focuses its editors and components when it shows the entity, as described in 'TgEntityMasterBehavior'.
  */
 class TgMasterCentre extends mixinBehaviors([TgMasterComponentBehavior, IronResizableBehavior], PolymerElement) {
 
@@ -116,7 +118,8 @@ class TgMasterCentre extends mixinBehaviors([TgMasterComponentBehavior, IronResi
                     return {
                         embedded: true,
                         uuid: generateUUID(),
-                        selectionViewFillHeight: true
+                        selectionViewFillHeight: true,
+                        noAutoFocus: true
                     };
                 }
             },

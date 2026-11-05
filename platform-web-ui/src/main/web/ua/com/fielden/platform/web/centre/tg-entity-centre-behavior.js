@@ -395,6 +395,17 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
+         * Indicates whether this centre focuses its views only when the user selects them, rather than also when it selects them by itself.
+         * The user selects a view with the buttons, the shortcuts and the view switcher that activate views, such as the button that goes back to the selection criteria, and selects the result view by running the centre.
+         * The centre selects a view by itself once its selection criteria are loaded, and when it runs automatically, as an embedded centre does for the master entity.
+         * It is set for the centres embedded by 'tg-master-centre', so that the centre, which loads and runs after the master has focused its editors and components, does not take the focus from the master.
+         */
+        noAutoFocus: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * Indicates whether this entity centre is runAutomatically and allows customisation.
          *
          * For standalone centre it means that no criteria clearing will be performed during auto-run for default configurations.
@@ -954,8 +965,13 @@ const TgEntityCentreBehaviorImpl = {
 
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
+                        // with 'noAutoFocus', '_pageSelectionChanged' does not focus the selected view, so the result view that the user selects by pressing Run is focused here
+                        const focusesResultView = this.noAutoFocus && this._triggerRunByUser;
                         this.async(function () {
                             this._selectedView = this.preferredView;
+                            if (focusesResultView) {
+                                this.focusView();
+                            }
                         }, 100);
                     }
                     this._triggerRun = false;
@@ -1102,6 +1118,7 @@ const TgEntityCentreBehaviorImpl = {
             self._actionInProgress = true;
             self.$.egi.clearSelection();
             self._triggerRun = true;
+            self._triggerRunByUser = !isAutoRunning;
             self.dynamicColumns = {};
 
             // let's register a timer to kickoff a spinner if the run action is taking too long...
@@ -1397,6 +1414,10 @@ const TgEntityCentreBehaviorImpl = {
                     this.allViews[this._selectedView].leave();
                     this._previousView = this._selectedView;
                     this._selectedView = index;
+                    // with 'noAutoFocus', '_pageSelectionChanged' does not focus the selected view, so the view that the user selects is focused here
+                    if (this.noAutoFocus) {
+                        this.focusView();
+                    }
                     if (this._selectedView !== 0 && this.preferredView !== this._selectedView) {
                         this.preferredView = this._selectedView;
                         this._preferredViewUpdaterAction._run();
