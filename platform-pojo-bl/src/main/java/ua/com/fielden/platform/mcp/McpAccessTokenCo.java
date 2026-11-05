@@ -25,6 +25,10 @@ public interface McpAccessTokenCo extends IEntityDao<McpAccessToken> {
     ///
     Optional<McpAccessToken> findByTokenValue(String tokenValue);
 
+    /// Finds the access token issued in exchange for `authorisationCode`.
+    ///
+    Optional<McpAccessToken> findByAuthorisationCode(McpAuthorisationCode authorisationCode);
+
     /// Determines whether `accessToken` has expired, based on the current server time.
     ///
     boolean isExpired(McpAccessToken accessToken);

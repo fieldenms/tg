@@ -9,6 +9,8 @@ import java.util.Optional;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static ua.com.fielden.platform.cypher.Checksum.sha256;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @EntityType(McpAccessToken.class)
 public class McpAccessTokenDao extends CommonEntityDao<McpAccessToken> implements McpAccessTokenCo {
@@ -26,6 +28,12 @@ public class McpAccessTokenDao extends CommonEntityDao<McpAccessToken> implement
     @Override
     public Optional<McpAccessToken> findByTokenValue(final String tokenValue) {
         return Optional.ofNullable(findByKeyAndFetch(FETCH_PROVIDER.fetchModel(), tokenHash(tokenValue)));
+    }
+
+    @Override
+    public Optional<McpAccessToken> findByAuthorisationCode(final McpAuthorisationCode authorisationCode) {
+        final var query = select(McpAccessToken.class).where().prop(McpAccessToken.AUTHORISATION_CODE).eq().val(authorisationCode).model();
+        return getEntityOptional(from(query).with(FETCH_PROVIDER.fetchModel()).model());
     }
 
     @Override

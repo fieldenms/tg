@@ -200,12 +200,11 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         if (authCode == null || !dates.serverNow().toDate().before(authCode.getExpirationDate())) {
             return error("invalid_grant", "Authorisation code is invalid or expired.");
         }
-        if (!authCode.isActive()) {
-            // TODO Revoke the access token issued from the code.
-            return error("invalid_grant", "Authorisation code was already redeemed.");
-        }
         final IUser coUser = coFinder.find(User.class, true);
         final var user = coUser.findUser(authCode.getUser().getKey());
+        if (!authCode.isActive()) {
+            return rejectReplay(authCode, user, clientId, codeVerifier);
+        }
 
         // The code is redeemed before the remaining checks, as any of them failing may indicate that the code was compromised.
         // Of concurrent redemptions, all but one fail with an error, as conflicting changes to the code are not resolved automatically.
@@ -244,6 +243,21 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         return new JsonRepresentation(accessToken.toJSONObject());
     }
 
+    /// Rejects a request that presents `code` again.
+    ///
+    /// A replay that passes the checks of the client and the code verifier comes from the client that started the authorisation,
+    /// which means that this client either lost the token response or was compromised.
+    /// Either way, the access token issued from the code must not remain in use, so it is revoked.
+    /// Other replays revoke nothing, so that a party that has only seen the code cannot revoke the user's access token.
+    ///
+    private Representation rejectReplay(final McpAuthorisationCode code, final User user, final String clientId, final @Nullable String codeVerifier) {
+        if (clientId.equals(code.getClientId()) && codeVerifier != null && matches(codeVerifier, code.getCodeChallenge())) {
+            final McpAccessTokenCo coAccessToken = coFinder.find(McpAccessToken.class, true);
+            coAccessToken.findByAuthorisationCode(code).ifPresent(accessToken -> asUserDo(user, () -> coAccessToken.revoke(accessToken)));
+        }
+        return error("invalid_grant", "Authorisation code was already redeemed.");
+    }
+
     /// Determines whether `codeVerifier` matches `codeChallenge`, as described in [RFC 7636, 4.6.](https://datatracker.ietf.org/doc/html/rfc7636#section-4.6).
     /// The comparison takes constant time, so that its duration reveals nothing about the code challenge.
     ///
@@ -252,13 +266,25 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         return MessageDigest.isEqual(expectedCodeChallenge.getBytes(US_ASCII), codeChallenge.getBytes(US_ASCII));
     }
 
-    /// Performs `action` on behalf of `user`, which is required to save entities.
+    /// Performs `action` on behalf of `user`.
     ///
     private <T> T asUser(final User user, final Supplier<T> action) {
         final var prevUser = userProvider.getUser();
         userProvider.setUser(user);
         try {
             return action.get();
+        } finally {
+            userProvider.setUser(prevUser);
+        }
+    }
+
+    /// Performs `action` on behalf of `user`.
+    ///
+    private void asUserDo(final User user, final Runnable action) {
+        final var prevUser = userProvider.getUser();
+        userProvider.setUser(user);
+        try {
+            action.run();
         } finally {
             userProvider.setUser(prevUser);
         }
