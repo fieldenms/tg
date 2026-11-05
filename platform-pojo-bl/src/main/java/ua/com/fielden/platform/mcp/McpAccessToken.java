@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.mcp.validators.McpAccessTokenActiveUserValidator;
 import ua.com.fielden.platform.mcp.validators.McpAccessTokenAuthorisationCodeValidator;
 import ua.com.fielden.platform.mcp.validators.McpAccessTokenResourceValidator;
@@ -32,11 +33,13 @@ public class McpAccessToken extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty
     @MapTo
+    @Final
     @CompositeKeyMember(1)
     private String tokenHash;
 
     @IsProperty
     @MapTo
+    @Final
     @Required
     @PersistentType(userType = IUtcDateTimeType.class)
     private Date expirationDate;
@@ -45,6 +48,7 @@ public class McpAccessToken extends AbstractPersistentEntity<DynamicEntityKey> {
     ///
     @IsProperty
     @MapTo
+    @Final
     @Required
     @Unique
     @SkipEntityExistsValidation(skipActiveOnly = true)
@@ -57,6 +61,7 @@ public class McpAccessToken extends AbstractPersistentEntity<DynamicEntityKey> {
     ///
     @IsProperty
     @MapTo
+    @Final
     @Required
     @BeforeChange(@Handler(McpAccessTokenResourceValidator.class))
     private String resource;

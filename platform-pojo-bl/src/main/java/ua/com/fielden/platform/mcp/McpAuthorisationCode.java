@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.ActivePropertyValidator;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
@@ -37,11 +38,13 @@ public class McpAuthorisationCode extends ActivatableAbstractEntity<DynamicEntit
 
     @IsProperty
     @MapTo
+    @Final
     @CompositeKeyMember(1)
     private String code;
 
     @IsProperty
     @MapTo
+    @Final
     @Required
     @PersistentType(userType = IUtcDateTimeType.class)
     private Date expirationDate;
@@ -51,6 +54,7 @@ public class McpAuthorisationCode extends ActivatableAbstractEntity<DynamicEntit
     ///
     @IsProperty
     @MapTo
+    @Final
     @Required
     @SkipActivatableTracking
     @Title("The user who granted the authorisation.")
@@ -58,6 +62,7 @@ public class McpAuthorisationCode extends ActivatableAbstractEntity<DynamicEntit
 
     @IsProperty
     @MapTo
+    @Final
     @Required
     private String clientId;
 
@@ -65,16 +70,19 @@ public class McpAuthorisationCode extends ActivatableAbstractEntity<DynamicEntit
     ///
     @IsProperty
     @MapTo
+    @Final
     @Required
     private String codeChallenge;
 
     @IsProperty
     @MapTo
+    @Final
     @Required
     private String redirectUri;
 
     @IsProperty
     @MapTo
+    @Final
     @Required
     private String resource;
 
