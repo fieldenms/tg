@@ -181,7 +181,7 @@ const focusInput = function (inputToFocus) {
  * If preferred input is getting focus, the contents of the input gets selected.
  * 
  * The inputs include those of the master components, which `getEditors()` returns together with the editors, as described in `findFirstInputToFocus`.
- * A master component is focused as a whole as an editor is, except that, for a persisted entity, a component that is the first input is focused itself rather than the element before it, as focusing a component cannot change the entity.
+ * A master component is focused as a whole as an editor is: for a persisted entity, a component that is the first input is not focused, but the element before it is, as before the first editor.
  * A blocked component is passed over, both as the first or preferred input and as the previously focused input, as its elements are inert.
  *
  * @param preferredOnly -- consider only preferred inputs (independent from invalid)
@@ -243,10 +243,6 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
             // If it is disabled (<input> / <textarea>), or inert, as the element of a blocked master component is, fallback to focus element before first enabled input ('else' branch).
             if (_updateManuallyFocusedInputWith && manuallyFocusedInput && !manuallyFocusedInput.disabled && !_isInert(manuallyFocusedInput, this)) {
                 focusInput(manuallyFocusedInput);
-            }
-            // Otherwise, if the first enabled input is a master component, focus the component as a whole rather than the element before it, as focusing a component cannot change the entity.
-            else if (_isComponentToFocus(inputToFocus.inputToFocus)) {
-                focusInput(inputToFocus.inputToFocus);
             }
             // Otherwise, take the first significant parent node, namely `tg-custom-action-dialog`, if it is present.
             // Skip insertion points, because they will likely only have non-persisted instances in a master.

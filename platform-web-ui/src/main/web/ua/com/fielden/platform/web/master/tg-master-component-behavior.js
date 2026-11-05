@@ -137,7 +137,7 @@ const componentStyles = `
  * The master moves the focus over the component, as described in `TgEntityMasterBehavior`, so it knows its first and last focusable elements also when a component comes first or last,
  * and Tab moves on from the last of them as from the last editor, such as to the title bar of a dialog, rather than out of the master.
  * When the master shows an entity, it focuses the component as a whole as it does an editor: as the preferred input if the component represents the preferred property,
- * as the first input if the component comes first, and as the input that the user focused last, which the component reports to the master as an editor does, as described in `focusEnabledInputIfAny`.
+ * as the first input of a new entity if the component comes first, and as the input that the user focused last, which the component reports to the master as an editor does, as described in `focusEnabledInputIfAny`.
  * A component whose element returned by `component()` cannot be focused, such as one without `tabindex`, is not focused as a whole:
  * its focusable elements, including those of its content, take part in the focus traversal of the master in their place among the editors.
  * The master skips the component and its elements while it is blocked, as they are inert.
