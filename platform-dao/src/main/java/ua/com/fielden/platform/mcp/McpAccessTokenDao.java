@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.mcp;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 
@@ -11,6 +12,11 @@ import static ua.com.fielden.platform.cypher.Checksum.sha256;
 
 @EntityType(McpAccessToken.class)
 public class McpAccessTokenDao extends CommonEntityDao<McpAccessToken> implements McpAccessTokenCo {
+
+    @Override
+    public McpAccessToken new_() {
+        return super.new_().setActive(true);
+    }
 
     @Override
     public String tokenHash(final String tokenValue) {
@@ -25,6 +31,13 @@ public class McpAccessTokenDao extends CommonEntityDao<McpAccessToken> implement
     @Override
     public boolean isExpired(final McpAccessToken accessToken) {
         return !serverNow().toDate().before(accessToken.getExpirationDate());
+    }
+
+    @Override
+    @SessionRequired
+    public void revoke(final McpAccessToken accessToken) {
+        final McpAccessTokenCo co$ = co$(McpAccessToken.class);
+        co$.save(co$.findById(accessToken.getId(), FETCH_PROVIDER.fetchModel()).setActive(false));
     }
 
     @Override

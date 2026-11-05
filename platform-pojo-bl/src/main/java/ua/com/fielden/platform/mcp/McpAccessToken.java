@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.mcp;
 
-import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.validation.ActivePropertyValidator;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.mcp.validators.McpAccessTokenActiveUserValidator;
 import ua.com.fielden.platform.mcp.validators.McpAccessTokenAuthorisationCodeValidator;
@@ -23,7 +24,7 @@ import java.util.Date;
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
 @CompanionObject(McpAccessTokenCo.class)
-public class McpAccessToken extends AbstractPersistentEntity<DynamicEntityKey> {
+public class McpAccessToken extends ActivatableAbstractEntity<DynamicEntityKey> {
 
     public static final String
             TOKEN_HASH = "tokenHash",
@@ -66,6 +67,14 @@ public class McpAccessToken extends AbstractPersistentEntity<DynamicEntityKey> {
     @BeforeChange(@Handler(McpAccessTokenResourceValidator.class))
     private String resource;
 
+    /// Redeclared to exclude it from automatic conflict resolution, so that of concurrent changes to the active status of the same token, only one succeeds.
+    ///
+    @IsProperty
+    @MapTo(autoConflictResolution = false)
+    @Title(value = "Active?", desc = "Designates whether this token can be used. An inactive token is revoked or expired.")
+    @BeforeChange(@Handler(ActivePropertyValidator.class))
+    private boolean active;
+
     public String getTokenHash() {
         return tokenHash;
     }
@@ -103,6 +112,18 @@ public class McpAccessToken extends AbstractPersistentEntity<DynamicEntityKey> {
     @Observable
     public McpAccessToken setResource(final String resource) {
         this.resource = resource;
+        return this;
+    }
+
+    @Override
+    public boolean isActive() {
+        return active;
+    }
+
+    @Override
+    @Observable
+    public McpAccessToken setActive(final boolean active) {
+        this.active = active;
         return this;
     }
 

@@ -86,8 +86,12 @@ class McpOAuthAuthenticationModel implements IMcpAuthenticationModel {
             return reject(response, CLIENT_ERROR_UNAUTHORIZED, "invalid_token", "The access token expired.");
         }
 
-        // TODO Check that neither the access token, nor the client's grant, nor the client registration was revoked.
-        //      If any was, error code invalid_token.
+        if (!accessToken.isActive()) {
+            return reject(response, CLIENT_ERROR_UNAUTHORIZED, "invalid_token", "The access token was revoked.");
+        }
+        if (!mcpOAuth.validateClient(accessToken.getAuthorisationCode().getClientId()).isSuccessful()) {
+            return reject(response, CLIENT_ERROR_UNAUTHORIZED, "invalid_token", "The client of the access token is not registered.");
+        }
 
         if (!accessToken.getResource().equals(mcpOAuth.protectedResourceMetadata().resource())) {
             return reject(response, CLIENT_ERROR_UNAUTHORIZED, "invalid_token", "The access token was issued for another resource.");
@@ -97,7 +101,6 @@ class McpOAuthAuthenticationModel implements IMcpAuthenticationModel {
         final var user = coUser.findUser(accessToken.getAuthorisationCode().getUser().getKey());
         // TODO Check that the user is allowed to use MCP.
         if (!user.isActive()) {
-            // TODO Revoke the access token.
             return reject(response, CLIENT_ERROR_UNAUTHORIZED, "invalid_token", "The user of the access token is inactive.");
         }
 
