@@ -11,6 +11,7 @@ import { queryElements } from '/resources/components/tg-element-selector-behavio
 import { enhanceStateRestoration, UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
+import { isInMasterComponent } from '/resources/master/tg-master-component-behavior.js';
 
 export const LeaveReason = {
     CLOSED: "CLOSED",
@@ -1367,11 +1368,15 @@ const TgEntityMasterBehaviorImpl = {
      * Mobile: triggers focusing of preferred enabled input, if there is any.
      * 
      * In case of preferred input focusing, the contents of the input gets selected.
+     *
+     * A master in the content of a master component, such as the master of an alternative view of a centre embedded by 'tg-master-centre', is not focused,
+     * so that it does not take the focus from the master of the component when its entity appears, as described in `isInMasterComponent`.
+     * The inline master of a grid overrides this method, so it is focused also there, as it is opened by the user.
      */
     focusView: function () {
         this.async(() => {
             const insertionPoint = getParentAnd(this, parent => parent.matches('tg-entity-centre-insertion-point'));
-            if (!insertionPoint || (insertionPoint.offsetParent !== null && insertionPoint.alternativeView)) { 
+            if (!isInMasterComponent(this) && (!insertionPoint || (insertionPoint.offsetParent !== null && insertionPoint.alternativeView))) {
                 if (this._hasEmbededView()) {
                     this._focusEmbededView()
                 } else {

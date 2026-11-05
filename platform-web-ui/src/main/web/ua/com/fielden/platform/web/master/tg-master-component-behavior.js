@@ -28,6 +28,16 @@ const _isInert = function (element, container) {
 };
 
 /**
+ * Determines whether 'element' is in the content of a master component, as are a centre embedded by 'tg-master-centre' and the masters of its views:
+ * whether any of the ancestors of 'element', including the hosts of shadow roots, is a master component, which is marked with attribute 'tg-master-component'.
+ * Such centres and masters do not take the focus by themselves, as when they load or the component refreshes them,
+ * so that they do not take it from the master of the component, which focuses its editors and components when it shows the entity, as described in 'TgEntityMasterBehavior'.
+ */
+export const isInMasterComponent = function (element) {
+    return !!getParentAnd(element.parentElement || element.getRootNode().host, current => current.hasAttribute('tg-master-component'));
+};
+
+/**
  * The styles of the spacing of the component, of the resizer, of the blocking pane, and of the title and the outline while the component is focused.
  * They are the first styles of the component, so that its own styles take precedence; the host becomes a containing block for them only if the component does not position it.
  * The spacing is that of editors, which have it from `padding: 8px 0` of `paper-input-container`; it is a margin, so that the resizer and the blocking pane cover the component exactly.
@@ -144,6 +154,8 @@ const componentStyles = `
  * The title of the component, the element with class `tg-component-title` in its template, looks as the title of a focused editor while the focus is within the component:
  * at the element returned by `component()`, in its content or at a property action.
  * The focus ring of the browser on the element returned by `component()`, which is shown when the element is focused from the keyboard, has the colour of the underline of a focused editor.
+ * The centres and masters in the content of the component, such as an embedded centre and the masters of its views, do not take the focus by themselves, as when they load or the component refreshes them,
+ * but only when the user acts on them, so that they do not take the focus from the master, as `isInMasterComponent` describes.
  *
  * The component is a container of selectable elements, as an editor is, so that the master finds its focusable elements, including those of its content,
  * and searches it for the actions of its shortcuts and for elements with the `canLeave` contract, such as an embedded centre.

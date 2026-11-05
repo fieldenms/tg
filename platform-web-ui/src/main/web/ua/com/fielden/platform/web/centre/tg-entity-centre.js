@@ -18,6 +18,7 @@ import { TgElementSelectorBehavior, queryElements} from '/resources/components/t
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 import { resetCustomSettings } from '/resources/centre/tg-entity-centre-insertion-point.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
+import { isInMasterComponent } from '/resources/master/tg-master-component-behavior.js';
 
 import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
@@ -366,14 +367,6 @@ Polymer({
             type: Boolean,
             value: false,
             reflectToAttribute: true
-        },
-        /**
-         * Indicates whether this centre focuses its views only when the user selects them, as described in `noAutoFocus` of `TgEntityCentreBehavior`.
-         * Then the view that this centre selects is not focused here, and the view that the user selects is focused by `TgEntityCentreBehavior`.
-         */
-        noAutoFocus: {
-            type: Boolean,
-            value: false
         },
         discard: Function,
         run: Function,
@@ -786,14 +779,16 @@ Polymer({
     },
 
     /**
-     * Configures current view binding; removes view binding for previous view; focuses first focusable element in current view, unless this centre focuses its views only when the user selects them, as described in `noAutoFocus`.
+     * Configures current view binding; removes view binding for previous view; focuses first focusable element in current view,
+     * unless this centre is in the content of a master component, such as a centre embedded by 'tg-master-centre', as described in `isInMasterComponent`.
+     * Such a centre focuses only the views that the user selects, as described in `_activateView` and `_postRun` of `TgEntityCentreBehavior`.
      */
     _pageSelectionChanged: function (event) {
         if (event.target === this.$.views) {
             const prevView = this._allViews[this._previousView];
             const currentView = this._allViews[this._selectedView];
             this._configViewBindings(prevView, currentView);
-            if (!this.noAutoFocus) {
+            if (!isInMasterComponent(this)) {
                 this.focusSelectedView();
             }
             tearDownEvent(event);
