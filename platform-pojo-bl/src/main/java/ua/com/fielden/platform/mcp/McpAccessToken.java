@@ -3,6 +3,10 @@ package ua.com.fielden.platform.mcp;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.mcp.validators.McpAccessTokenActiveUserValidator;
+import ua.com.fielden.platform.mcp.validators.McpAccessTokenAuthorisationCodeValidator;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 import java.util.Date;
@@ -42,6 +46,8 @@ public class McpAccessToken extends AbstractPersistentEntity<DynamicEntityKey> {
     @Required
     @Unique
     @SkipEntityExistsValidation(skipActiveOnly = true)
+    @BeforeChange({@Handler(McpAccessTokenAuthorisationCodeValidator.class),
+                   @Handler(McpAccessTokenActiveUserValidator.class)})
     private McpAuthorisationCode authorisationCode;
 
     public String getTokenHash() {
