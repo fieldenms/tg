@@ -5,6 +5,7 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.Duration;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -270,7 +271,7 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         final McpAccessTokenCo co = coFinder.find(McpAccessToken.class, false);
         return co.save(co.new_()
                          .setTokenHash(co.tokenHash(accessToken.getValue()))
-                         .setExpirationDate(dates.serverNow().plusHours(ACCESS_TOKEN_LIFETIME_HOURS).toDate())
+                         .setExpirationDate(dates.serverNow().plus(Duration.standardSeconds(accessToken.getLifetime())).toDate())
                          .setAuthorisationCode(authorisationCode));
     }
 
