@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.mcp.web.oauth;
 
+import com.google.common.hash.Hashing;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
@@ -13,26 +14,30 @@ import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.mcp.*;
+import ua.com.fielden.platform.mcp.McpAccessToken;
+import ua.com.fielden.platform.mcp.McpAccessTokenCo;
+import ua.com.fielden.platform.mcp.McpAuthorisationCode;
+import ua.com.fielden.platform.mcp.McpAuthorisationCodeCo;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.web.annotations.AppUri;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 
+import java.security.MessageDigest;
+import java.util.Base64;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.utils.MiscUtilities.uriPath;
 
 /// Web resource for the [OAuth 2.1. Token Endpoint](https://www.ietf.org/archive/id/draft-ietf-oauth-v2-1-13.html#name-token-endpoint).
 ///
@@ -84,8 +89,6 @@ public class McpTokenEndpointResource extends AbstractWebResource {
     private static final int ACCESS_TOKEN_LIFETIME_HOURS = 72;
 
     private final IMcpOAuth mcpOAuth;
-    private final McpConfig mcpConfig;
-    private final String appUri;
     private final ICompanionObjectFinder coFinder;
     private final IUserProvider userProvider;
 
@@ -93,8 +96,6 @@ public class McpTokenEndpointResource extends AbstractWebResource {
             final IDeviceProvider deviceProvider,
             final IDates dates,
             final IMcpOAuth mcpOAuth,
-            final McpConfig mcpConfig,
-            final String appUri,
             final ICompanionObjectFinder coFinder,
             final IUserProvider userProvider,
             final Context context,
@@ -103,8 +104,6 @@ public class McpTokenEndpointResource extends AbstractWebResource {
     {
         super(context, request, response, deviceProvider, dates);
         this.mcpOAuth = mcpOAuth;
-        this.mcpConfig = mcpConfig;
-        this.appUri = appUri;
         this.coFinder = coFinder;
         this.userProvider = userProvider;
     }
@@ -114,8 +113,6 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         private final IDeviceProvider deviceProvider;
         private final IDates dates;
         private final IMcpOAuth mcpOAuth;
-        private final McpConfig mcpConfig;
-        private final String appUri;
         private final ICompanionObjectFinder coFinder;
         private final IUserProvider userProvider;
 
@@ -124,16 +121,12 @@ public class McpTokenEndpointResource extends AbstractWebResource {
                 final IDeviceProvider deviceProvider,
                 final IDates dates,
                 final IMcpOAuth mcpOAuth,
-                final McpConfig mcpConfig,
-                final @AppUri String appUri,
                 final ICompanionObjectFinder coFinder,
                 final IUserProvider userProvider)
         {
             this.deviceProvider = deviceProvider;
             this.dates = dates;
             this.mcpOAuth = mcpOAuth;
-            this.mcpConfig = mcpConfig;
-            this.appUri = appUri;
             this.coFinder = coFinder;
             this.userProvider = userProvider;
         }
@@ -147,8 +140,6 @@ public class McpTokenEndpointResource extends AbstractWebResource {
                         deviceProvider,
                         dates,
                         mcpOAuth,
-                        mcpConfig,
-                        appUri,
                         coFinder,
                         userProvider,
                         getContext(),
@@ -203,15 +194,24 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         if (code == null) {
             return error("invalid_request", "Missing parameter [%s].".formatted(Param.code));
         }
-        // TODO Redeem the code atomically before the remaining checks.
-        //      If it was already redeemed, error code invalid_grant and revoke the access token issued from it.
-        final McpAuthorisationCodeCo coCode = coFinder.find(McpAuthorisationCode.class, true);
-        final var authorisationCode = coCode.findByKeyAndFetch(fetch(McpAuthorisationCode.class).with(McpAuthorisationCode.USER, fetchKeyAndDescOnly(User.class)), code);
-        if (authorisationCode == null || !dates.serverNow().toDate().before(authorisationCode.getExpirationDate())) {
+        final McpAuthorisationCodeCo coCode = coFinder.find(McpAuthorisationCode.class, false);
+        final var authCode = coCode.findByKeyAndFetch(McpAuthorisationCodeCo.FETCH_PROVIDER.fetchModel(), code);
+        if (authCode == null || !dates.serverNow().toDate().before(authCode.getExpirationDate())) {
             return error("invalid_grant", "Authorisation code is invalid or expired.");
         }
-        // TODO Check that the code was issued to client_id.
-        //      If not, error code invalid_grant.
+        if (!authCode.isActive()) {
+            // TODO Revoke the access token issued from the code.
+            return error("invalid_grant", "Authorisation code was already redeemed.");
+        }
+        final IUser coUser = coFinder.find(User.class, true);
+        final var user = coUser.findUser(authCode.getUser().getKey());
+
+        // The code is redeemed before the remaining checks, as any of them failing may indicate that the code was compromised.
+        // Of concurrent redemptions, all but one fail with an error, as conflicting changes to the code are not resolved automatically.
+        final var redeemedCode = asUser(user, () -> coCode.save(authCode.setActive(false)));
+        if (!clientId.equals(redeemedCode.getClientId())) {
+            return error("invalid_grant", "Authorisation code was issued to another client.");
+        }
 
         if (codeVerifier == null) {
             return error("invalid_request", "Missing parameter [%s].".formatted(Param.code_verifier));
@@ -219,35 +219,48 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         if (!CODE_VERIFIER.matcher(codeVerifier).matches()) {
             return error("invalid_request", "Parameter [%s] is malformed.".formatted(Param.code_verifier));
         }
-        // TODO Compare BASE64URL(SHA-256(code_verifier)) with the code challenge stored with the code, in constant time.
-        //      If they differ, error code invalid_grant.
+        if (!matches(codeVerifier, redeemedCode.getCodeChallenge())) {
+            return error("invalid_grant", "Parameter [%s] does not match the code challenge.".formatted(Param.code_verifier));
+        }
 
-        if (redirectUri != null) {
-            // TODO Compare with the redirect URI stored with the code.
-            final var r = mcpOAuth.validateClient(clientId, redirectUri);
-            if (!r.isSuccessful()) {
-                return error("invalid_grant", "Invalid redirect URI. %s".formatted(r.getMessage()));
-            }
+        if (redirectUri != null && !redirectUri.equals(redeemedCode.getRedirectUri())) {
+            return error("invalid_grant", "Parameter [%s] does not match the authorisation request.".formatted(Param.redirect_uri));
         }
 
         if (resource == null) {
             return error("invalid_request", "Missing parameter [%s].".formatted(Param.resource));
         }
-        // TODO Compare with the resource stored with the code.
-        if (!resource.equals(uriPath(appUri, mcpConfig.resourcePath()))) {
-            return error("invalid_target", "Parameter [%s] does not represent a valid target.".formatted(Param.resource));
+        if (!resource.equals(redeemedCode.getResource())) {
+            return error("invalid_target", "Parameter [%s] does not match the authorisation request.".formatted(Param.resource));
+        }
+
+        if (!user.isActive()) {
+            return error("invalid_grant", "The user who granted the authorisation is inactive.");
         }
 
         final var accessToken = new BearerAccessToken(ACCESS_TOKEN_BYTE_LENGTH, ACCESS_TOKEN_LIFETIME_HOURS * 3600L, null);
-        // The access token is saved on behalf of the user who granted the authorisation.
+        asUser(user, () -> saveAccessToken(accessToken, redeemedCode));
+        return new JsonRepresentation(accessToken.toJSONObject());
+    }
+
+    /// Determines whether `codeVerifier` matches `codeChallenge`, as described in [RFC 7636, 4.6.](https://datatracker.ietf.org/doc/html/rfc7636#section-4.6).
+    /// The comparison takes constant time, so that its duration reveals nothing about the code challenge.
+    ///
+    private static boolean matches(final String codeVerifier, final String codeChallenge) {
+        final var expectedCodeChallenge = Base64.getUrlEncoder().withoutPadding().encodeToString(Hashing.sha256().hashString(codeVerifier, US_ASCII).asBytes());
+        return MessageDigest.isEqual(expectedCodeChallenge.getBytes(US_ASCII), codeChallenge.getBytes(US_ASCII));
+    }
+
+    /// Performs `action` on behalf of `user`, which is required to save entities.
+    ///
+    private <T> T asUser(final User user, final Supplier<T> action) {
         final var prevUser = userProvider.getUser();
+        userProvider.setUser(user);
         try {
-            userProvider.setUsername(authorisationCode.getUser().getKey(), coFinder.find(User.class, true));
-            saveAccessToken(accessToken, authorisationCode);
+            return action.get();
         } finally {
             userProvider.setUser(prevUser);
         }
-        return new JsonRepresentation(accessToken.toJSONObject());
     }
 
     /// Saves `accessToken` issued in exchange for `authorisationCode`.

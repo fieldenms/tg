@@ -360,19 +360,25 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
     /// Generates and saves an authorisation code for a valid authorisation request, and redirects to the client with it.
     ///
     private Representation issueCode(final Map<Param, List<String>> params) {
-        final var code = saveAuthorisationCode(newAuthorisationCode(userProvider.getUser()));
+        final var code = saveAuthorisationCode(newAuthorisationCode(userProvider.getUser(), params));
         return redirect(Param.redirect_uri.firstValueIn(params),
                         Stream.of(t2("code", code.getCode()),
                                   t2("state", Param.state.firstValueIn(params)),
                                   t2("iss", mcpOAuth.authorisationServerMetadata().issuer())));
     }
 
-    private McpAuthorisationCode newAuthorisationCode(final User user) {
+    /// Creates an authorisation code, bound to the parameters of a valid authorisation request.
+    ///
+    private McpAuthorisationCode newAuthorisationCode(final User user, final Map<Param, List<String>> params) {
         final McpAuthorisationCodeCo co = coFinder.find(McpAuthorisationCode.class, false);
         return co.new_()
                 .setCode(new AuthorizationCode(32).getValue())
                 .setExpirationDate(dates.serverNow().plusMinutes(10).toDate())
-                .setUser(user);
+                .setUser(user)
+                .setClientId(Param.client_id.firstValueIn(params))
+                .setCodeChallenge(Param.code_challenge.firstValueIn(params))
+                .setRedirectUri(Param.redirect_uri.firstValueIn(params))
+                .setResource(Param.resource.firstValueIn(params));
     }
 
     private McpAuthorisationCode saveAuthorisationCode(final McpAuthorisationCode code) {

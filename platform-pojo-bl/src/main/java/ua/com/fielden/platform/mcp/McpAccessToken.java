@@ -35,10 +35,13 @@ public class McpAccessToken extends AbstractPersistentEntity<DynamicEntityKey> {
     @PersistentType(userType = IUtcDateTimeType.class)
     private Date expirationDate;
 
+    /// The code that was redeemed for this token, and therefore is inactive.
+    ///
     @IsProperty
     @MapTo
     @Required
     @Unique
+    @SkipEntityExistsValidation(skipActiveOnly = true)
     private McpAuthorisationCode authorisationCode;
 
     public String getTokenHash() {
