@@ -82,7 +82,7 @@ public class McpAuthorisationCode extends ActivatableAbstractEntity<DynamicEntit
     ///
     @IsProperty
     @MapTo(autoConflictResolution = false)
-    @Title(value = "Active?", desc = "Designates whether this code is redeemed.")
+    @Title(value = "Active?", desc = "Designates whether this code is active.")
     @BeforeChange(@Handler(ActivePropertyValidator.class))
     private boolean active;
 

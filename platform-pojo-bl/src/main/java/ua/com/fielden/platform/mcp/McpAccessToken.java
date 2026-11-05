@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.mcp.validators.McpAccessTokenActiveUserValidator;
 import ua.com.fielden.platform.mcp.validators.McpAccessTokenAuthorisationCodeValidator;
+import ua.com.fielden.platform.mcp.validators.McpAccessTokenResourceValidator;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 import java.util.Date;
@@ -26,7 +27,8 @@ public class McpAccessToken extends AbstractPersistentEntity<DynamicEntityKey> {
     public static final String
             TOKEN_HASH = "tokenHash",
             EXPIRATION_DATE = "expirationDate",
-            AUTHORISATION_CODE = "authorisationCode";
+            AUTHORISATION_CODE = "authorisationCode",
+            RESOURCE = "resource";
 
     @IsProperty
     @MapTo
@@ -46,9 +48,18 @@ public class McpAccessToken extends AbstractPersistentEntity<DynamicEntityKey> {
     @Required
     @Unique
     @SkipEntityExistsValidation(skipActiveOnly = true)
+    @Dependent(RESOURCE)
     @BeforeChange({@Handler(McpAccessTokenAuthorisationCodeValidator.class),
                    @Handler(McpAccessTokenActiveUserValidator.class)})
     private McpAuthorisationCode authorisationCode;
+
+    /// Resource identifier of the MCP server that this token was issued for.
+    ///
+    @IsProperty
+    @MapTo
+    @Required
+    @BeforeChange(@Handler(McpAccessTokenResourceValidator.class))
+    private String resource;
 
     public String getTokenHash() {
         return tokenHash;
@@ -77,6 +88,16 @@ public class McpAccessToken extends AbstractPersistentEntity<DynamicEntityKey> {
     @Observable
     public McpAccessToken setAuthorisationCode(final McpAuthorisationCode authorisationCode) {
         this.authorisationCode = authorisationCode;
+        return this;
+    }
+
+    public String getResource() {
+        return resource;
+    }
+
+    @Observable
+    public McpAccessToken setResource(final String resource) {
+        this.resource = resource;
         return this;
     }
 

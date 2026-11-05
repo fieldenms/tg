@@ -9,9 +9,10 @@ import java.util.Optional;
 public interface McpAccessTokenCo extends IEntityDao<McpAccessToken> {
 
     IFetchProvider<McpAccessToken> FETCH_PROVIDER = EntityUtils.fetch(McpAccessToken.class)
-            .with(McpAccessToken.TOKEN_HASH, McpAccessToken.EXPIRATION_DATE)
+            .with(McpAccessToken.TOKEN_HASH, McpAccessToken.EXPIRATION_DATE, McpAccessToken.RESOURCE)
             .with(McpAccessToken.AUTHORISATION_CODE + "." + McpAuthorisationCode.USER,
-                  McpAccessToken.AUTHORISATION_CODE + "." + McpAuthorisationCode.EXPIRATION_DATE);
+                  McpAccessToken.AUTHORISATION_CODE + "." + McpAuthorisationCode.EXPIRATION_DATE,
+                  McpAccessToken.AUTHORISATION_CODE + "." + McpAuthorisationCode.RESOURCE);
 
     /// Returns the hash of an access token value, which is what [McpAccessToken#getTokenHash()] holds.
     ///

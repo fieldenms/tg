@@ -272,7 +272,8 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         return co.save(co.new_()
                          .setTokenHash(co.tokenHash(accessToken.getValue()))
                          .setExpirationDate(dates.serverNow().plus(Duration.standardSeconds(accessToken.getLifetime())).toDate())
-                         .setAuthorisationCode(authorisationCode));
+                         .setAuthorisationCode(authorisationCode)
+                         .setResource(authorisationCode.getResource()));
     }
 
     /// Creates an error response, as described in [OAuth 2.1, Section 3.2.4](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-13#section-3.2.4).

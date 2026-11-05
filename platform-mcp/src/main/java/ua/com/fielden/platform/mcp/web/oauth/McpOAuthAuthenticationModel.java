@@ -89,8 +89,9 @@ class McpOAuthAuthenticationModel implements IMcpAuthenticationModel {
         // TODO Check that neither the access token, nor the client's grant, nor the client registration was revoked.
         //      If any was, error code invalid_token.
 
-        // TODO Check that the resource of the access token equals the resource of this MCP server.
-        //      If not, error code invalid_token.
+        if (!accessToken.getResource().equals(mcpOAuth.protectedResourceMetadata().resource())) {
+            return reject(response, CLIENT_ERROR_UNAUTHORIZED, "invalid_token", "The access token was issued for another resource.");
+        }
 
         final IUser coUser = coFinder.find(User.class, true);
         final var user = coUser.findUser(accessToken.getAuthorisationCode().getUser().getKey());
