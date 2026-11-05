@@ -10,6 +10,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.CookieSetting;
 import org.restlet.data.Method;
+import org.restlet.data.Reference;
 import org.restlet.data.Status;
 import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.resources.webui.AppIndexResource;
 import ua.com.fielden.platform.web.sse.SseUtils;
 
 import java.util.Comparator;
@@ -31,6 +33,7 @@ import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.RESOURCES_URL_SUFFIX;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.CHECKSUM_URL_SUFFIX;
 import static ua.com.fielden.platform.web.resources.webui.LoginResource.BINDING_PATH;
+import static ua.com.fielden.platform.web.resources.webui.LoginResource.loginUriContinuingTo;
 
 /// This is a guard that is based on the new TG authentication scheme, developed as part of the Web UI initiative.
 /// It is used to restrict access to sensitive web resources.
@@ -137,10 +140,22 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
         // "?resources=true" carries the list of deployment resources; a login page in its stead would make every cached resource look redundant, clearing the whole Cache Storage.
         final String resourceRef = request.getResourceRef().toString();
         if (Method.GET.equals(request.getMethod()) && !resourceRef.contains(CHECKSUM_URL_SUFFIX) && !resourceRef.contains(RESOURCES_URL_SUFFIX)) {
-            response.redirectTemporary(BINDING_PATH);
+            response.redirectTemporary(loginUri(request.getResourceRef()));
         } else {
             forbid(response);
         }
+    }
+
+    /// Returns the URI of the login page for a request to `resourceRef`.
+    ///
+    /// The login page continues to the requested resource after a successful login.
+    /// The exception is the application index, whose location is in the fragment of its URI, which the browser carries over to a login URI without a fragment.
+    ///
+    private static String loginUri(final Reference resourceRef) {
+        if (!AppIndexResource.BINDING_PATH.equals(resourceRef.getRemainingPart(false, false))) {
+            return loginUriContinuingTo(resourceRef.hasQuery() ? resourceRef.getPath() + "?" + resourceRef.getQuery() : resourceRef.getPath());
+        }
+        return BINDING_PATH;
     }
 
     /// Extracts the latest user authenticator from the provided request.

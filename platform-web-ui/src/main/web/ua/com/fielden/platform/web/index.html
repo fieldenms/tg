@@ -6,7 +6,26 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>TG App</title>
-    
+
+    <!-- A request for a resource without a session is redirected to the login page, with fragment `#/continue/<percent-encoded path and query of the resource>` (see `LoginResource.loginUriContinuingTo`). -->
+    <!-- After login, the browser lands here with that fragment, and continues to the resource, provided it is on this origin, so that this page cannot redirect elsewhere. -->
+    <!-- This happens before anything else is loaded, as the application is not needed. -->
+    <script>
+        (function () {
+            const prefix = '#/continue/';
+            if (window.location.hash.startsWith(prefix)) {
+                try {
+                    const target = new URL(decodeURIComponent(window.location.hash.substring(prefix.length)), window.location.origin);
+                    if (target.origin === window.location.origin) {
+                        window.location.replace(target.href);
+                    }
+                } catch (e) {
+                    console.warn('Invalid continuation target: ', e);
+                }
+            }
+        })();
+    </script>
+
     <!-- Load Roboto font (as in roboto.js) as soon as possible to be used by the 'Loading...' message -->
     <link rel="stylesheet" type="text/css" crossorigin="anonymous" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700|Roboto:400,300,300italic,400italic,500,500italic,700,700italic"></link>
     <script type="module" crossorigin="use-credentials">

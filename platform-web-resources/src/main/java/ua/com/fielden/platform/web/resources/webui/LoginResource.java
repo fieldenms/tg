@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import com.google.common.escape.Escaper;
+import com.google.common.net.PercentEscaper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
@@ -49,6 +51,24 @@ public class LoginResource extends AbstractWebResource {
     public static final String BINDING_PATH = "/login";
     public static final String SSO_BINDING_PATH = "/sso";
     private static final Logger LOGGER = LogManager.getLogger(LoginResource.class);
+
+    /// Percent-encodes all characters except the unreserved ones ([RFC 3986, 2.3.](https://datatracker.ietf.org/doc/html/rfc3986#section-2.3)).
+    ///
+    private static final Escaper CONTINUATION_TARGET_ESCAPER = new PercentEscaper("-._~", false);
+
+    /// Returns the URI of the login page that continues to `target` after a successful login.
+    ///
+    /// `target` is the path of a resource on this server, optionally with a query.
+    /// It is carried in the fragment `#/continue/<target>`, which the browser does not send to the server.
+    /// All characters of `target` except the unreserved ones are percent-encoded, so that `target` cannot alter the URI.
+    /// This also lets the login page in the SSO mode pass the fragment to the SSO resource as a query parameter value.
+    ///
+    /// Both login modes end with the browser on the application index, with the fragment carried over.
+    /// The index page then navigates to `target`, provided that it resolves to a URI on the same origin (see `index.html`).
+    ///
+    public static String loginUriContinuingTo(final String target) {
+        return BINDING_PATH + "#/continue/" + CONTINUATION_TARGET_ESCAPER.escape(target);
+    }
 
     private final String domainName;
     private final String path;

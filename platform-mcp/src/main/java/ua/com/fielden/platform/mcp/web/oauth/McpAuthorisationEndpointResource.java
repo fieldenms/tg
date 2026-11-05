@@ -204,8 +204,6 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
     ///
     @Get
     public Representation get() {
-        // TODO Handle requests without an established user session.
-
         final var params = Param.collect(getQuery());
         final var clientResult = validateClient(params);
         if (!clientResult.isSuccessful()) {

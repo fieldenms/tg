@@ -136,6 +136,19 @@ Resources that an application attaches elsewhere — e.g. to the `Component` def
 The factories of the login and password reset resources (`LoginResourceFactory`, `LoginInitiateResetResourceFactory`, `LoginCompleteResetResourceFactory`) apply the same check with `CsrfProtectionFilter.rejectIfForged`, which protects against login CSRF, where another site signs the victim in to the account of an attacker.
 `LogoutResourceFactory` does not apply the check: `LogoutResource` handles `GET` only, as identity providers call it cross-site for front-channel logout.
 
+## Returning to a Resource After Login
+
+`AbstractWebResourceGuard` redirects an unauthenticated `GET` to the login page (`307`) and forbids other unauthenticated requests (`403`), as well as Service Worker requests (`?checksum=true`, `?resources=true`).
+The login URI carries the path and query of the request in its fragment: `/login#/continue/<target>` (`LoginResource.loginUriContinuingTo`).
+All characters of the target except the unreserved ones are percent-encoded, as the login page in the SSO mode passes the fragment to the SSO resource as a query parameter value: `/sso?hash=/continue/<target>`.
+Both login modes end on the application index, with the fragment carried over:
+- RSO -- `login.html` reloads after a successful login, and `GET /login` with a valid session responds `303 /`;
+- SSO -- the SSO resource of the application responds `303 /#<hash>`, which requires it to return the value of `hash` unchanged.
+
+A script at the top of `index.html` then navigates to the target, provided that it resolves to the same origin, before anything else is loaded.
+The application index itself is redirected to plain `/login`: its location is in the browser's fragment, which a redirect without a fragment carries over.
+`WebResourceGuardTestCase` verifies the login URIs.
+
 ## Login Lockout and Password Reset Cooldown
 
 Both are held in memory by `@Singleton` services in `platform-web-resources` (package `web.resources.webui`): they apply per application server and start afresh when it restarts.

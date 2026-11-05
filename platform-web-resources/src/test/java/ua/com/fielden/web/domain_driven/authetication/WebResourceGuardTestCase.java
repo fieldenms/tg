@@ -9,6 +9,8 @@ import org.restlet.Response;
 import org.restlet.data.CookieSetting;
 import org.restlet.data.Method;
 import org.restlet.data.Protocol;
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.UserSession;
@@ -16,13 +18,17 @@ import ua.com.fielden.platform.security.session.UserSessionDao;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.test.ioc.ApplicationSettingsForTesting;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.resources.test.AbstractWebResourceWithDaoTestCase;
+import ua.com.fielden.platform.web.resources.webui.AppIndexResource;
+import ua.com.fielden.platform.web.resources.webui.LoginResource;
 import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
 import ua.com.fielden.platform.web.test.TestWebApplication;
 
+import java.net.URI;
 import java.security.SignatureException;
 import java.util.Optional;
 
@@ -59,6 +65,9 @@ public class WebResourceGuardTestCase extends AbstractWebResourceWithDaoTestCase
         client.getContext().getParameters().add("followRedirects", "false");
     }
     private final IUser coUser = co$(User.class);
+    private final ApplicationSettingsForTesting settings = (ApplicationSettingsForTesting) getInstance(IApplicationSettings.class);
+    private final AuthMode initialAuthMode = settings.authMode();
+    private final String targetWithEncodedQuery = "/v1/users/%s/%s/%s?redirect_uri=http%%3A%%2F%%2Flocalhost%%2Fcallback&state=a+b".formatted(User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L);
 
     @Before
     public void startUp() {
@@ -71,6 +80,7 @@ public class WebResourceGuardTestCase extends AbstractWebResourceWithDaoTestCase
     public void tearDown() {
         webApplication.detachWebApplication(webApp);
         constants.removeRequestTimeZone();
+        settings.setAuthMode(initialAuthMode);
     }
 
     @Test
@@ -95,6 +105,56 @@ public class WebResourceGuardTestCase extends AbstractWebResourceWithDaoTestCase
         final Response response = client.handle(request);
 
         assertEquals(307, response.getStatus().getCode());
+    }
+
+    @Test
+    public void in_RSO_mode_unauthenticated_GET_request_is_redirected_to_login_page_that_continues_to_requested_resource() {
+        assertEquals("Invalid initial conditions for this test.", AuthMode.RSO, settings.authMode());
+
+        final Response response = client.handle(new Request(Method.GET, "http://localhost:%s%s".formatted(PORT, targetWithEncodedQuery)));
+
+        assertEquals(307, response.getStatus().getCode());
+        // A fragment is decoded as by the index page, so that it yields the path and query of the request exactly as they were sent.
+        final URI location = URI.create(response.getLocationRef().toString());
+        assertEquals(LoginResource.BINDING_PATH, location.getPath());
+        assertEquals("/continue/" + targetWithEncodedQuery, location.getFragment());
+    }
+
+    @Test
+    public void in_SSO_mode_unauthenticated_GET_request_is_redirected_to_login_page_that_continues_to_requested_resource() {
+        settings.setAuthMode(AuthMode.SSO);
+
+        final Response response = client.handle(new Request(Method.GET, "http://localhost:%s%s".formatted(PORT, targetWithEncodedQuery)));
+
+        assertEquals(307, response.getStatus().getCode());
+        final URI location = URI.create(response.getLocationRef().toString());
+        assertEquals(LoginResource.BINDING_PATH, location.getPath());
+        assertEquals("/continue/" + targetWithEncodedQuery, location.getFragment());
+    }
+
+    @Test
+    public void login_URI_carries_requested_path_and_query_with_all_but_unreserved_characters_percent_encoded() {
+        // The login page in the SSO mode passes the fragment to the SSO resource as a query parameter value, which reserved characters, such as `&` and `=`, would split.
+        final String target = "/v1/users/%s/%s/%s?scope=a:b@c&state=d+e;f,g!h$i*j(k)".formatted(User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L);
+
+        final Response response = client.handle(new Request(Method.GET, "http://localhost:%s%s".formatted(PORT, target)));
+
+        assertEquals(307, response.getStatus().getCode());
+        final URI location = URI.create(response.getLocationRef().toString());
+        assertEquals("/continue/" + target, location.getFragment());
+        final String encodedTarget = location.getRawFragment().substring("/continue/".length());
+        assertTrue("Only unreserved characters and percent-encodings are expected, but was [%s].".formatted(encodedTarget),
+                   encodedTarget.matches("([A-Za-z0-9._~-]|%[0-9A-F]{2})*"));
+    }
+
+    @Test
+    public void unauthenticated_GET_request_for_application_index_is_redirected_to_login_page_without_fragment() {
+        final Response response = client.handle(new Request(Method.GET, baseUri + AppIndexResource.BINDING_PATH));
+
+        assertEquals(307, response.getStatus().getCode());
+        final URI location = URI.create(response.getLocationRef().toString());
+        assertEquals(LoginResource.BINDING_PATH, location.getPath());
+        assertNull(location.getFragment());
     }
 
     @Test
