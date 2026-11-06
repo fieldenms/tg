@@ -351,6 +351,22 @@ final Either<Long, WorkOrder> result = super.save(wo, Optional.of(customFetchMod
 final WorkOrder saved = result.right;
 ```
 
+### Why the refetch after save exists
+
+The refetch refreshes the whole fetched subtree, not just the saved entity.
+Saving an entity changes the persisted state, and therefore the `version`, of *other* entities in the same transaction.
+`refCount` is incremented or decremented on every referenced activatable, and deactivating an entity recursively saves its `@DeactivatableDependencies`.
+The caller's in-memory graph is therefore stale in exactly the places the save itself touched.
+
+Returning that graph unchanged would hand back related entities carrying superseded versions, and saving any one of them next would fail with `EntityWasUpdatedOrDeletedConcurrently` — against a change the caller had just caused themselves.
+The refetch re-reads the entire subtree defined by the fetch model, so every relationship comes back at its current version and the returned graph is safe to save again.
+Its scope is self-limiting for the same reason: the reconstructed model mirrors what the caller had fetched, so an association never fetched is neither refreshed nor returned.
+
+**Consequence for `Optional.empty()` and `quickSave`.**
+Skipping the refetch is a performance choice that gives up version freshness.
+The instance passed in to `save` is *not* updated with the new version either, which is why `save` is documented as: "New or already persisted entity instances should not be reused after successful saving."
+After a save without a refetch, treat both the passed-in entity and anything reachable from it as stale — re-read before mutating any of it again.
+
 ## Transaction Isolation for Batch Operations
 
 For batch operations where each item must succeed or fail independently (e.g., generating PMs for multiple assets), use the wrapper + non-nested session pattern:

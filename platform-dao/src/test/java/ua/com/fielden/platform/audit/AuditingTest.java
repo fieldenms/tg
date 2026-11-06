@@ -269,7 +269,7 @@ public class AuditingTest extends AbstractDaoTestCase {
         final CommonAuditEntityDao<AuditedEntity> coAudit = co(auditEntityType);
         final var insertStmt = coAudit.sqlInsertAuditRecordStmt();
         final var expectedInsertFromSelect = """
-                INSERT INTO AUDITEDENTITY_A3T_2_( -- Audit table.
+                INSERT INTO AUDITEDENTITY_A3T_3_( -- Audit table.
                     _ID,
                     _VERSION,
                     AUDITEDENTITY_,
@@ -278,8 +278,10 @@ public class AuditingTest extends AbstractDaoTestCase {
                     AUDITDATE_,
                     AUDITEDTRANSACTIONGUID_,
                     A3T_BOOL1_,
+                    A3T_COLOUR_,
                     A3T_DATE1_,
                     A3T_DATE2_,
+                    A3T_HYPERLINK_,
                     A3T_INVALIDATE_,
                     A3T_KEY_,
                     A3T_RICHTEXT_FORMATTEDTEXT,
@@ -298,8 +300,10 @@ public class AuditingTest extends AbstractDaoTestCase {
                     ?  AS AUDITDATE_,
                     ?  AS AUDITEDTRANSACTIONGUID_,
                     BOOL1_ AS A3T_BOOL1_,
+                    COLOUR_ AS A3T_COLOUR_,
                     DATE1_ AS A3T_DATE1_,
                     DATE2_ AS A3T_DATE2_,
+                    HYPERLINK_ AS A3T_HYPERLINK_,
                     INVALIDATE_ AS A3T_INVALIDATE_,
                     KEY_ AS A3T_KEY_,
                     RICHTEXT_FORMATTEDTEXT AS A3T_RICHTEXT_FORMATTEDTEXT,

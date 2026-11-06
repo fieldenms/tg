@@ -38,6 +38,25 @@ If an interactive check contradicts such a passing test, suspect the environment
 
 Do not use `FETCH_PROVIDER` for read-only access to basic properties.
 
+## Asserting on Query Results
+
+A test class typically shares one `populateDomain()` dataset across all its tests, so assert over the rows a test depends on rather than over every row by default.
+Scope the query to fixtures the test owns (`where().prop("key").in().values("CAR1", "CAR2")`), order explicitly (`orderBy().prop("key").asc()`), and assert exact values with `extracting(...).containsExactly(tuple(...), ...)`.
+Asserting over the whole result is appropriate when the dataset is designed as a whole for the test case and the test means to verify its full shape; keep the assertion exact so that a fixture change updates the test deliberately.
+An unordered `containsExactly` is flaky either way; an unscoped `allSatisfy` with a conditional on the key neither pins the rows nor fails clearly.
+See `reference.md`, Assertions, for the worked example.
+
+## Current Time in Tests
+
+Take the current time from `UniversalConstantsForTesting` (the test binding of `IUniversalConstants`), fixed with `setNow(...)` in a `@Before` method, rather than from `new Date()` or `System.currentTimeMillis()`.
+It shares its time with the test binding of `IDates`, so code under test that reads the time through either sees the test's time; code that takes the time as a parameter is passed `constants.now()`.
+Production code that operates in server time uses `serverNow()`, which returns the test's time as well; to test that it does, model a request time zone (see `reference.md`, Modelling a request time zone).
+Production code that reads a clock directly (e.g., a `Ticker`) takes the time, or the clock, as a parameter instead, so that tests can control it.
+A fixed time makes every run assert the same instants, and lets boundary cases be written as concrete times.
+Where successive operations need distinct times (e.g., ordering by `createdDate`, audit records of successive saves), install a ticker after `setNow` — `constants.setTimeSupplier(constants.mkMillisTicker(stepInMillis))` — which advances the time on every call of `now()`, and remove it in an `@After` method with `constants.removeTimeSupplier()`; `setNow` itself removes any ticker.
+Use the system clock only where a test depends on real elapsed time.
+See `reference.md`, Test clock control, for the details of fixed and ticking time.
+
 ## Test Data Caching
 
 `saveDataPopulationScriptToFile()` and `useSavedDataPopulationScript()` — both must return `false` before committing.

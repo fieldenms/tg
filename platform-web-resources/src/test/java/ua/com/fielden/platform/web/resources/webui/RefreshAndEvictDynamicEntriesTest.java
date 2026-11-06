@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import org.joda.time.DateTime;
 import org.junit.Test;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToResultTickManager;
@@ -40,18 +41,21 @@ public class RefreshAndEvictDynamicEntriesTest {
     public void evicts_orphan_after_30_days_keeps_active_keys_alive_no_io_when_nothing_to_do() {
         final var tick = new AddToResultTickManager();
         final var nowMillis = currentTimeMillis();
+        // Ages are calendar days in the default time zone, as counted by the eviction sweep.
+        // Multiples of `DAY_MS` would be an hour short of whole calendar days across a daylight-saving transition.
+        final var now = new DateTime(nowMillis);
 
         // A: active key, lastSeen 100 days ago — should be bumped, not evicted (active wins over staleness).
         tick.setDynamicWidth(ROOT, "A", 100);
-        tick.setDynamicLastSeen(ROOT, "A", nowMillis - 100 * DAY_MS);
+        tick.setDynamicLastSeen(ROOT, "A", now.minusDays(100).getMillis());
 
         // B: orphan, lastSeen 31 days ago — past the 30-day threshold, should be evicted.
         tick.setDynamicWidth(ROOT, "B", 200);
-        tick.setDynamicLastSeen(ROOT, "B", nowMillis - 31 * DAY_MS);
+        tick.setDynamicLastSeen(ROOT, "B", now.minusDays(31).getMillis());
 
         // C: orphan, lastSeen 5 days ago — within the 30-day window, kept.
         tick.setDynamicWidth(ROOT, "C", 300);
-        tick.setDynamicLastSeen(ROOT, "C", nowMillis - 5 * DAY_MS);
+        tick.setDynamicLastSeen(ROOT, "C", now.minusDays(5).getMillis());
 
         // Recording silent adjuster that applies the mutation directly to the test tick.
         final var invocations = new AtomicInteger();
@@ -80,7 +84,7 @@ public class RefreshAndEvictDynamicEntriesTest {
 
         // C unchanged — within the 30-day window.
         assertEquals(Optional.of(300), tick.getDynamicWidth(ROOT, "C"));
-        assertEquals(Optional.of(nowMillis - 5 * DAY_MS), tick.getDynamicLastSeen(ROOT, "C"));
+        assertEquals(Optional.of(now.minusDays(5).getMillis()), tick.getDynamicLastSeen(ROOT, "C"));
 
         // Second sweep: no overrides this run. Remaining keys (A bumped to "now", C still 5 days ago) are not stale.
         // Nothing to bump, nothing to evict — the silent-tick-adjuster must not fire.

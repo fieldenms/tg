@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 
+import java.util.stream.Stream;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -13,19 +16,29 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
-/**
- * An abstract resource implementation for TG web resources (except login / logout resources and attachment download resource).
- * Contains device profile differentiation logic that can be used in those resources that need specific handling for different {@link DeviceProfile}s.
- * <p>
- * WARNING: every server resource should invoke one of {@code DefaultDates.setRequestTimeZone} methods to redefine its thread-local request time-zone (potentially empty);<br>
- *          this is because threads can be reused for different resources and, if not redefined, previous request time-zone will be taken, potentially from other user and other time-zone;<br>
- *          for {@link AbstractWebResource} descendants this will be done automatically;<br>
- *          keep in mind that client must send 'Time-Zone' header with tz database time-zone ID for such resources
- *
- * @author TG Team
- *
- */
+/// An abstract resource implementation for TG web resources (except login / logout resources and attachment download resource).
+///
+/// Resolves the [DeviceProfile] of each request from the [#DEVICE_PROFILE_HEADER] header sent by the client,
+/// and exposes it via [#device()] to those resources that need specific handling for different [DeviceProfile]s.
+///
+/// **WARNING:** every server resource should invoke one of `DefaultDates.setRequestTimeZone` methods to redefine
+/// its thread-local request time-zone (potentially empty).
+/// This is because threads can be reused for different resources and, if not redefined, a previous request
+/// time-zone will be taken, potentially from another user and another time-zone.
+/// For [AbstractWebResource] descendants this is done automatically.
+///
+/// Keep in mind that the client must send a `Time-Zone` header with a tz database time-zone ID for such resources.
+/// It sends [#DEVICE_PROFILE_HEADER] alongside it, from the same helper.
+///
 public abstract class AbstractWebResource extends ServerResource {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    /// Name of the request header carrying the [DeviceProfile] resolved by the client.
+    /// Client-side counterpart is `DEVICE_PROFILE_HEADER` in `tg-polymer-utils.js`.
+    ///
+    public static final String DEVICE_PROFILE_HEADER = "Device-Profile";
+
     private final DeviceProfile deviceProfile;
     protected final IDates dates;
 
@@ -38,28 +51,41 @@ public abstract class AbstractWebResource extends ServerResource {
         this.dates = dates;
     }
 
-    /**
-     * Calculates the {@link DeviceProfile} that is relevant to the specified <code>request</code>.
-     *
-     * @param request
-     * @return
-     */
-    private static DeviceProfile calculateDeviceProfile(final Request request) {
-        // It is recommended to use word "Mobi" for mobile device detection, see https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent for more info.
-        // At this stage "Tablet" token will be skipped for 'Mozilla (Gecko, Firefox)' browsers -- this will direct the page to the desktop version.
-        final String agent = request.getClientInfo().getAgent();
-        if (agent != null && agent.contains("Mobi")) {
-            return MOBILE;
-        } else {
+    /// Calculates the [DeviceProfile] that is relevant to the specified `request`.
+    ///
+    /// The client is the single source of truth: it resolves the profile from hardware capabilities and sends it in
+    /// the [#DEVICE_PROFILE_HEADER] header together with `Time-Zone` (see `deviceProfile` in `tg-polymer-utils.js`
+    /// and `_requestHeaders` in `tg-request-headers.js`).
+    /// Within a page, the client sends the same profile with every request issued through `_requestHeaders`,
+    /// so the server resolves the profile the client assumes.
+    ///
+    /// Requests without the header are those not issued through `_requestHeaders` -- the generated index resource,
+    /// the login page, the application configuration, static resources, Service Worker requests and server-sent events.
+    /// None of them is profile-specific, so [DeviceProfile#DESKTOP] is returned for them.
+    ///
+    /// @return the profile named by [#DEVICE_PROFILE_HEADER], or [DeviceProfile#DESKTOP] if the header is absent or unrecognised;
+    ///         an unrecognised value is logged as a warning.
+    ///
+    /// Package-private for testability.
+    ///
+    static DeviceProfile calculateDeviceProfile(final Request request) {
+        final String profile = request.getHeaders().getFirstValue(DEVICE_PROFILE_HEADER, /*ignore case*/ true);
+        if (profile == null) {
             return DESKTOP;
         }
+        return Stream.of(DeviceProfile.values())
+                .filter(p -> p.name().equalsIgnoreCase(profile))
+                .findFirst()
+                .orElseGet(() -> {
+                    LOGGER.warn("Unrecognised [{}] header value [{}], resolving to [{}].", DEVICE_PROFILE_HEADER, profile, DESKTOP);
+                    return DESKTOP;
+                });
     }
 
-    /**
-     * Returns the {@link DeviceProfile} that is associated with this source request.
-     *
-     * @return
-     */
+    /// Returns the [DeviceProfile] that is associated with this source request.
+    ///
+    /// @return the profile resolved once for this request in the constructor.
+    ///
     protected DeviceProfile device() {
         return deviceProfile;
     }

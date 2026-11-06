@@ -481,6 +481,32 @@
             })();
 
         });
+
+        /// The handling of a response with no content to a search, which a timeout can produce.
+        /// The response is dispatched to the `iron-ajax` of the search as its `response` event.
+        ///
+        suite('entity editor search', function () {
+            let master;
+
+            setup(function () {
+                master = fixture('MasterFixture');
+            });
+
+            test('with a response with no content is handled as a failed search, which closes the search', function () {
+                const editor = master.$.editor_4_compositeProp;
+                const searchedErrors = [], retrievedErrors = [];
+                master._postSearchedDefaultError = errorResult => searchedErrors.push(errorResult);
+                master.postRetrievedError = errorResult => retrievedErrors.push(errorResult);
+                editor.opened = true;
+
+                editor.$.ajaxSearcher.dispatchEvent(new CustomEvent('response', { detail: { xhr: { status: 200 }, response: null } }));
+
+                assert.deepEqual(searchedErrors, ['Request could not be dispatched.'], 'The error handler of searching should be invoked.');
+                assert.deepEqual(retrievedErrors, [], 'The error handler of retrieval should not be invoked.');
+                assert.isFalse(editor.opened, 'The search should be closed.');
+            });
+
+        });
     </script>
 </body>
 

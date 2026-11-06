@@ -56,7 +56,8 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     private static final DateFormat DATE_TIME_FORMAT_WITH_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
-    // The following three static fields are reflectively assigned only once, by the platform test runner.
+    // The following three static fields are reflectively assigned by the platform test runner, which refers them to the configuration of the running test case:
+    // when the runner is created, and again before its test case runs (see `AbstractDomainDrivenTestCaseRunner`).
     private static ICompanionObjectFinder coFinder;
     private static EntityFactory factory;
     private static Function<Class<?>, Object> instantiator;

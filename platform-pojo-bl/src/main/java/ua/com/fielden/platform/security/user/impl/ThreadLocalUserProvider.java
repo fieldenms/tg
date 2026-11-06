@@ -36,7 +36,7 @@ public class ThreadLocalUserProvider implements IUserProvider {
 
     @Override
     public void clearUser() {
-        // `remove()` (rather than `set(null)`) ensures the thread-local entry does not linger on a pooled worker thread.
+        // `remove()` (rather than `set(null)`) ensures the thread-local entry does not stay on a pooled worker thread.
         users.remove();
     }
 
