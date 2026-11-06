@@ -19,8 +19,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 /// This prevents a pooled thread from carrying a previous request's values into subsequent work that reads them.
 ///
 /// The user is set during authentication by the guard; the other two are set later, by `AbstractWebResource`.
-/// The device profile and the time-zone are also cleared before handling, as authentication relies on `now()`.
-/// Otherwise, it could see a time-zone left by a resource outside this chain, such as a Web API resource.
+/// All three are cleared here, at the top of the chain, on the same thread that handled the request.
 ///
 public class RequestStateCleanupFilter extends Filter {
 
@@ -43,7 +42,6 @@ public class RequestStateCleanupFilter extends Filter {
 
     @Override
     protected int doHandle(final Request request, final Response response) {
-        clearDeviceProfileAndTimeZone();
         try {
             return super.doHandle(request, response);
         } finally {
