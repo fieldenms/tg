@@ -7,6 +7,8 @@ import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
@@ -27,7 +29,9 @@ import java.util.Date;
 public class AuditedEntity extends AbstractPersistentEntity<String> {
 
     public enum Property implements IConvertableToPath {
-        date1, date2, bool1, str2, str3, richText, union, invalidate;
+        key, date1, date2, bool1, str2, str3, richText, union, invalidate, colour, hyperlink,
+        // Removed properties that are retained by previous audit-entity types.
+        str1;
 
         @Override
         public String toPath() {
@@ -72,6 +76,34 @@ public class AuditedEntity extends AbstractPersistentEntity<String> {
     @MapTo
     @AfterChange(AuditedEntityInvalidateDefiner.class)
     private boolean invalidate;
+
+    @IsProperty
+    @MapTo
+    private Colour colour;
+
+    @IsProperty
+    @MapTo
+    private Hyperlink hyperlink;
+
+    public Colour getColour() {
+        return colour;
+    }
+
+    @Observable
+    public AuditedEntity setColour(final Colour colour) {
+        this.colour = colour;
+        return this;
+    }
+
+    public Hyperlink getHyperlink() {
+        return hyperlink;
+    }
+
+    @Observable
+    public AuditedEntity setHyperlink(final Hyperlink hyperlink) {
+        this.hyperlink = hyperlink;
+        return this;
+    }
 
     public boolean getInvalidate() {
         return invalidate;

@@ -16,6 +16,7 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.*;
+import ua.com.fielden.platform.web.filters.CsrfProtectionFilter;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.AppIndexResource;
@@ -138,7 +139,9 @@ public abstract class AbstractWebUiResources extends Application {
         attachResources(mainRouter);
         mainRouter.attach("/service-worker.js", new ServiceWorkerResourceFactory(webResourceLoader, deviceProvider, dates));
 
-        mainRouter.attach(guard);
+        // Guarded resources are authenticated by a cookie, which makes them a target for CSRF.
+        // Cross-site requests with unsafe methods are rejected before they reach the guard.
+        mainRouter.attach(new CsrfProtectionFilter(getContext(), guard));
 
         // Jetty/Restlet reuse worker threads across requests, and the current user is held in a thread-local (see `IUserProvider`).
         // Wrap the whole application chain so that the current user is always cleared once a request has been fully handled — including when handling throws.

@@ -10,6 +10,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.web.filters.CsrfProtectionFilter;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.LoginCompleteResetResource;
 
@@ -32,6 +33,11 @@ public class LoginCompleteResetResourceFactory extends Restlet {
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
+
+        // Like the other login resources, this resource is attached outside of CsrfProtectionFilter, and applies the same check.
+        if (CsrfProtectionFilter.rejectIfForged(request, response)) {
+            return;
+        }
 
         if (Method.GET.equals(request.getMethod()) || Method.POST.equals(request.getMethod())) {
             new LoginCompleteResetResource(

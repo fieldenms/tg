@@ -23,11 +23,10 @@ import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
 
-import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.*;
@@ -77,22 +76,22 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
     @Override
     public EntityCentre<?> createEmbeddedCentre(final Class<? extends AbstractEntity<?>> auditedType) {
         final var baseAuditedType = baseEntityType(auditedType);
+        return new EntityCentre<>(miTypeForEmbeddedCentre(auditedType),
+                                  createEmbeddedCentreConfig(auditTypeFinder.navigate(baseAuditedType).synAuditEntityType()),
+                                  injector);
+    }
 
-        // Must exist
-        final var synAuditType = auditTypeFinder.navigate(baseAuditedType).synAuditEntityType();
-
+    <T extends AbstractSynAuditEntity<?>> EntityCentreConfig<T> createEmbeddedCentreConfig(final Class<T> synAuditType) {
         final var auditProperties = domainMetadata.forEntity(synAuditType)
                 .properties()
                 .stream()
                 .filter(p -> p.has(AUDIT_PROPERTY))
                 .collect(toImmutableList());
 
-        final var layout = LayoutComposer.mkGridForCentre(4 + auditProperties.size(), 1);
-
         final EntityActionConfig standardExportAction = EXPORT_EMBEDDED_CENTRE_ACTION.mkAction(synAuditType);
         final EntityActionConfig standardSortAction = CUSTOMISE_COLUMNS_ACTION.mkAction();
 
-        IAlsoCrit centreBuilder1 = centreFor((Class) synAuditType)
+        IAlsoCrit<T> centreBuilder1 = centreFor(synAuditType)
                 .runAutomatically()
                 .addTopAction(standardSortAction).also()
                 .addTopAction(standardExportAction)
@@ -102,10 +101,17 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .addCrit(AUDITED_VERSION).asRange().integer().also()
                 .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType));
 
+        // Not every audit property can be a criterion, so the layout is sized by the number of criteria actually added.
+        int auditCritCount = 0;
         for (final var prop : auditProperties) {
-            final var result = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
-            centreBuilder1 = result == null ? centreBuilder1 : result;
+            final var maybeResult = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
+            if (maybeResult.isPresent()) {
+                centreBuilder1 = maybeResult.get();
+                auditCritCount++;
+            }
         }
+
+        final var layout = LayoutComposer.mkGridForCentre(4 + auditCritCount, 1);
 
         var centreBuilder2 = centreBuilder1
                 .setLayoutFor(DESKTOP, empty(), layout)
@@ -124,17 +130,23 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
             centreBuilder2 = centreBuilder2.also().addProp(prop.name());
         }
 
-        final EntityCentreConfig centre = centreBuilder2.setRenderingCustomiser(AuditEntityRenderingCustomiser.class)
-                .setQueryEnhancer(AuditEntityQueryEnhancer.class, context().withMasterEntity().build())
+        return centreBuilder2
+                .setRenderingCustomiser(AuditEntityRenderingCustomiser.class)
+                .setQueryEnhancer(AuditEntityQueryEnhancer.klass(), context().withMasterEntity().build())
                 .build();
-
-        return new EntityCentre<>(miTypeForEmbeddedCentre(auditedType), centre, injector);
     }
 
     private EntityCentre<?> createCentre(
             final Class<? extends AbstractEntity<?>> auditedType,
             final Class<? extends AbstractSynAuditEntity<?>> synAuditType,
             final Class<? extends MiWithConfigurationSupport<?>> miType)
+    {
+        return new EntityCentre<>(miType, createCentreConfig(auditedType, synAuditType), injector);
+    }
+
+    <T extends AbstractSynAuditEntity<?>> EntityCentreConfig<T> createCentreConfig(
+            final Class<? extends AbstractEntity<?>> auditedType,
+            final Class<T> synAuditType)
     {
         final var standardExportAction = StandardActions.EXPORT_ACTION.mkAction(synAuditType);
         final var standardSortAction = CentreConfigurationWebUiConfig.CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
@@ -145,9 +157,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .filter(p -> p.has(AUDIT_PROPERTY))
                 .collect(toImmutableList());
 
-        final var layout = LayoutComposer.mkGridForCentre(5 + auditProperties.size(), 1);
-
-        IAlsoCrit centreBuilder1 = EntityCentreBuilder.centreFor(synAuditType)
+        IAlsoCrit<T> centreBuilder1 = EntityCentreBuilder.centreFor(synAuditType)
                 .addTopAction(standardExportAction).also()
                 .addTopAction(standardSortAction)
 
@@ -157,10 +167,17 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .addCrit(AUDITED_VERSION).asRange().integer().also()
                 .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType));
 
+        // Not every audit property can be a criterion, so the layout is sized by the number of criteria actually added.
+        int auditCritCount = 0;
         for (final var prop : auditProperties) {
-            final var result = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
-            centreBuilder1 = result == null ? centreBuilder1 : result;
+            final var maybeResult = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
+            if (maybeResult.isPresent()) {
+                centreBuilder1 = maybeResult.get();
+                auditCritCount++;
+            }
         }
+
+        final var layout = LayoutComposer.mkGridForCentre(5 + auditCritCount, 1);
 
         var centreBuilder2 = centreBuilder1
                 .setLayoutFor(DESKTOP, empty(), layout)
@@ -181,47 +198,47 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
             centreBuilder2 = centreBuilder2.also().addProp(prop.name());
         }
 
-        final var centreBuilder3 = centreBuilder2.setRenderingCustomiser(AuditEntityRenderingCustomiser.class);
-
-        final var ecc = centreBuilder3.build();
-
-        return new EntityCentre<>(miType, ecc, injector);
+        return centreBuilder2.setRenderingCustomiser(AuditEntityRenderingCustomiser.class).build();
     }
 
-    private static @Nullable IAlsoCrit addAuditPropertyAsCrit(
-            final ISelectionCriteriaBuilder builder,
+    /// Adds `property` as a criterion if its type is supported for criteria.
+    ///
+    /// @return the builder with the criterion added, or an empty `Optional` if the property type is not supported, in which case nothing is added.
+    ///
+    private static <T extends AbstractEntity<?>> Optional<IAlsoCrit<T>> addAuditPropertyAsCrit(
+            final ISelectionCriteriaBuilder<T> builder,
             final PropertyMetadata property)
     {
         final var propType = property.type();
 
         if (propType.isEntity()) {
-            return builder.addCrit(property.name()).asMulti().autocompleter(propType.javaType());
+            return Optional.of(builder.addCrit(property.name()).asMulti().autocompleter(propType.asEntity().orElseThrow().javaType()));
         }
         else if (isDate(propType.javaType())) {
-            return builder.addCrit(property.name()).asRange().dateTime();
+            return Optional.of(builder.addCrit(property.name()).asRange().dateTime());
         }
         else if (propType.javaType() == Integer.class || propType.javaType() == Long.class) {
-            return builder.addCrit(property.name()).asRange().integer();
+            return Optional.of(builder.addCrit(property.name()).asRange().integer());
         }
         else if (propType.javaType() == BigDecimal.class) {
-            return builder.addCrit(property.name()).asRange().decimal();
+            return Optional.of(builder.addCrit(property.name()).asRange().decimal());
         }
         else if (propType.javaType() == String.class) {
-            return builder.addCrit(property.name()).asMulti().text();
+            return Optional.of(builder.addCrit(property.name()).asMulti().text());
         }
         else if (propType.javaType() == boolean.class) {
-            return builder.addCrit(property.name()).asMulti().bool();
+            return Optional.of(builder.addCrit(property.name()).asMulti().bool());
         }
         else if (propType.javaType() == Money.class) {
-            return builder.addCrit(property.name()).asRange().decimal();
+            return Optional.of(builder.addCrit(property.name()).asRange().decimal());
         }
         else if (propType.javaType() == RichText.class) {
-            return builder.addCrit(property.name()).asMulti().text();
+            return Optional.of(builder.addCrit(property.name()).asMulti().text());
         }
         else {
-            LOGGER.warn(() -> format("Audit-property [%s] will not be added to centre criteria. Unexpected property type [%s].",
-                                     property.name(), property.type().genericJavaType().getTypeName()));
-            return null;
+            LOGGER.warn(() -> "Audit-property [%s] will not be added to centre criteria as its type [%s] is not among supported criteria types."
+                              .formatted(property.name(), property.type().genericJavaType().getTypeName()));
+            return Optional.empty();
         }
     }
 

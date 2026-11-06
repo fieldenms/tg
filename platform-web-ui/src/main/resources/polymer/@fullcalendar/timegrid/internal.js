@@ -1,5 +1,5 @@
 import { DayTable } from '../daygrid/internal.js';
-import { x as createFormatter, z as memoize, bI as DayHeader, bM as DaySeriesModel, bT as DayTableModel, ct as injectStyles, bc as DateComponent, bj as diffDays, a_ as buildNavLinkAttrs, cn as WeekNumberContainer, C as ContentContainer, ca as getStickyHeaderDates, bZ as SimpleScrollGrid, cq as ViewContainer, c9 as getStickyFooterScrollbar, a6 as NowTimer, ch as NowIndicatorContainer, c8 as renderScrollShim, d as createDuration, bq as asRoughMs, br as wholeDivideDurations, bs as formatIsoTimeString, bn as addDurations, aW as Splitter, bN as hasBgRendering, B as BaseComponent, V as ViewContextType, bm as multiplyDuration, bU as Slicer, o as intersectRanges, cd as RefMap, b8 as PositionCache, G as rangeContainsMarker, q as startOfDay, bP as sortEventSegs, cj as hasCustomDayCellContent, ci as DayCellContainer, bQ as getSegMeta, bu as buildIsoString, cp as computeEarliestSegStart, cm as BgEvent, cl as renderFill, bR as buildEventRangeKey, co as MoreLinkContainer, cg as StandardEvent, by as SegHierarchy, bC as groupIntersectingEntries, bB as binarySearch, bA as getEntrySpanEnd, bz as buildEntryKey } from '../core/internal-common.js';
+import { y as createFormatter, A as memoize, bK as DayHeader, bO as DaySeriesModel, bV as DayTableModel, cv as injectStyles, be as DateComponent, bl as diffDays, b0 as buildNavLinkAttrs, cp as WeekNumberContainer, C as ContentContainer, cc as getStickyHeaderDates, b$ as SimpleScrollGrid, cs as ViewContainer, cb as getStickyFooterScrollbar, a8 as NowTimer, cj as NowIndicatorContainer, ca as renderScrollShim, d as createDuration, bs as asRoughMs, bt as wholeDivideDurations, bu as formatIsoTimeString, bp as addDurations, aY as Splitter, bP as hasBgRendering, B as BaseComponent, V as ViewContextType, bo as multiplyDuration, bW as Slicer, o as intersectRanges, cf as RefMap, ba as PositionCache, q as startOfDay, t as addDays, H as rangeContainsMarker, bR as sortEventSegs, cl as hasCustomDayCellContent, ck as DayCellContainer, bS as getSegMeta, bw as buildIsoString, cr as computeEarliestSegStart, co as BgEvent, cn as renderFill, bT as buildEventRangeKey, cq as MoreLinkContainer, ci as StandardEvent, bA as SegHierarchy, bE as groupIntersectingEntries, bD as binarySearch, bC as getEntrySpanEnd, bB as buildEntryKey } from '../core/internal-common.js';
 import { createElement as y, createRef as d, Fragment as _ } from '../../preact/dist/preact.module.js';
 
 class AllDaySplitter extends Splitter {
@@ -331,14 +331,21 @@ class TimeColsSlatsCoords {
         this.dateProfile = dateProfile;
         this.slotDuration = slotDuration;
     }
+    /*
+    Tries the date's own day first. When slotMaxTime extends past midnight, or slotMinTime is negative,
+    the date might only be visible within the previous or next day's column (#6394)
+    */
     safeComputeTop(date) {
         let { dateProfile } = this;
-        if (rangeContainsMarker(dateProfile.currentRange, date)) {
-            let startOfDayDate = startOfDay(date);
-            let timeMs = date.valueOf() - startOfDayDate.valueOf();
-            if (timeMs >= asRoughMs(dateProfile.slotMinTime) &&
-                timeMs < asRoughMs(dateProfile.slotMaxTime)) {
-                return this.computeTimeTop(createDuration(timeMs));
+        let ownDayDate = startOfDay(date);
+        let dayDates = [ownDayDate, addDays(ownDayDate, -1), addDays(ownDayDate, 1)];
+        for (let dayDate of dayDates) {
+            if (rangeContainsMarker(dateProfile.currentRange, dayDate)) {
+                let timeMs = date.valueOf() - dayDate.valueOf();
+                if (timeMs >= asRoughMs(dateProfile.slotMinTime) &&
+                    timeMs < asRoughMs(dateProfile.slotMaxTime)) {
+                    return this.computeTimeTop(createDuration(timeMs));
+                }
             }
         }
         return null;

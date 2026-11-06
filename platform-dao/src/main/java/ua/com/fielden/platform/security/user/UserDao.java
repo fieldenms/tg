@@ -16,7 +16,6 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -54,7 +53,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.security.user.User.*;
 import static ua.com.fielden.platform.security.user.UserAndRoleAssociation.USER;
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
-import static ua.com.fielden.platform.security.user.UserSecretCo.newUserPasswordRestExpirationTime;
+import static ua.com.fielden.platform.security.user.UserSecretCo.INITIAL_USER_UUID_EXPIRATION_IN_MINUTES;
+import static ua.com.fielden.platform.security.user.UserSecretCo.resetUuidExpirationTime;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
 
@@ -74,6 +74,20 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     private static final fetch<User> FETCH_USER_WITH_ROLES = fetch(User.class)
             .with(ACTIVE_ROLES, fetch(SynUserAndRoleAssociationActive.class))
             .with(INACTIVE_ROLES, fetch(SynUserAndRoleAssociationInactive.class));
+
+    private static final String PARAM_USERNAME = "username";
+
+    /// Queries for the active user identified by parameter [#PARAM_USERNAME] (case-insensitive) who can sign in with a password, in the RSO and SSO authentication modes.
+    ///
+    private static final EntityResultQueryModel<User>
+            QUERY_PASSWORD_LOGIN_RSO = mkPasswordLoginQuery(false),
+            QUERY_PASSWORD_LOGIN_SSO = mkPasswordLoginQuery(true);
+
+    /// Queries for the secret of the user identified by parameter [#PARAM_USERNAME] (case-insensitive) who is inactive or can sign in with a password, in the RSO and SSO authentication modes.
+    ///
+    private static final EntityResultQueryModel<UserSecret>
+            QUERY_LOCKOUT_USER_SECRET_RSO = mkLockoutUserSecretQuery(false),
+            QUERY_LOCKOUT_USER_SECRET_SSO = mkLockoutUserSecretQuery(true);
 
     private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;
@@ -156,7 +170,9 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             ( user.isPersisted() && user.isActive() && notRestrictedToSsoOnly(user) && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
             savedUser = super.save(user, Optional.of(reconstruct(user).unionWith(maybeFetch)));
             final Function<Long, EntityCompanionException> error = (Long id) -> new EntityCompanionException(ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE.formatted(id, user));
-            newUserNotifier.notify(assignPasswordResetUuid(savedUser.orElseThrow(error).getKey(), newUserPasswordRestExpirationTime()).orElseThrow(() -> new SecurityException(ERR_INITIATING_PASSWORD_RESET)));
+            // The activation link expires by the server clock, against which reset links are validated.
+            final Date expirationTime = serverNow().plusMinutes(INITIAL_USER_UUID_EXPIRATION_IN_MINUTES).toDate();
+            newUserNotifier.notify(assignPasswordResetUuid(savedUser.orElseThrow(error).getKey(), expirationTime).orElseThrow(() -> new SecurityException(ERR_INITIATING_PASSWORD_RESET)));
         } else {
             savedUser = super.save(user, maybeFetch);
         }
@@ -286,19 +302,69 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     }
 
     @Override
-    @SessionRequired(allowNestedScope = false)
+    // @SessionRequired(allowNestedScope = false) -- not here to keep user deactivation and deletion of user secrets in separate transactions.
     @Authorise(AlwaysAccessibleToken.class)
     public void lockoutUser(final String username) {
-        // deactivate user if found
-        final User user = co$(User.class).findByKeyAndFetch(getFetchProvider().fetchModel(), username);
-        if (user != null) {
-            save(user.setActive(false));
+        // Each step runs in its own transaction, which is rolled back if the step fails, so that the other step is still performed.
+        // Deletion of the secret makes the lockout effective even if deactivation fails, as the user can no longer sign in with a password.
+        try {
+            deactivateLockoutUser(username);
+        } catch (final Exception ex) {
+            LOGGER.error(() -> "Could not deactivate user [%s].".formatted(username), ex);
         }
+        try {
+            deleteLockoutUserSecrets(username);
+        } catch (final Exception ex) {
+            LOGGER.error(() -> "Could not delete the secrets of user [%s].".formatted(username), ex);
+        }
+    }
 
-        // An attempt to delete user secrets regardless of whether user exists or not.
-        // This is to reduce the difference in the computation time that is required for processing existing and non-existing accounts.
+    @SessionRequired(allowNestedScope = false)
+    protected void deactivateLockoutUser(final String username) {
+        // Deactivate the user if they can sign in with a password; deactivation also removes their secret.
+        final IUser co$User = co$(User.class);
+        co$User.getEntityOptional(from(passwordLoginQuery()).with(getFetchProvider().fetchModel()).with(PARAM_USERNAME, username).model())
+                .ifPresent(user -> save(user.setActive(false), empty()));
+    }
+
+    @SessionRequired(allowNestedScope = false)
+    protected void deleteLockoutUserSecrets(final String username) {
+        // Delete the secret of the user who can sign in with a password, in case their deactivation failed, or who is inactive.
         final UserSecretCo coUserSecret = co(UserSecret.class);
-        coUserSecret.batchDelete(select(UserSecret.class).where().prop("key.key").eq().val(username).model());
+        coUserSecret.batchDelete(ssoMode() ? QUERY_LOCKOUT_USER_SECRET_SSO : QUERY_LOCKOUT_USER_SECRET_RSO, Map.of(PARAM_USERNAME, username));
+    }
+
+    @Override
+    public boolean canSignInWithPassword(final String username) {
+        return exists(passwordLoginQuery(), Map.of(PARAM_USERNAME, username));
+    }
+
+    /// The query for the user who can sign in with a password in the current authentication mode.
+    ///
+    private EntityResultQueryModel<User> passwordLoginQuery() {
+        return ssoMode() ? QUERY_PASSWORD_LOGIN_SSO : QUERY_PASSWORD_LOGIN_RSO;
+    }
+
+    /// Creates a query for the active user identified by parameter [#PARAM_USERNAME] (case-insensitive) who, in the SSO authentication mode, is not restricted to SSO only.
+    ///
+    private static EntityResultQueryModel<User> mkPasswordLoginQuery(final boolean ssoMode) {
+        return select(User.class).where()
+                .prop(ACTIVE).eq().val(true)
+                .and().lowerCase().prop(KEY).eq().lowerCase().param(PARAM_USERNAME)
+                .and().condition(ssoMode ? cond().prop(User.SSO_ONLY).eq().val(false).model() : emptyCondition())
+                .model();
+    }
+
+    /// Creates a query for the secret of the user identified by parameter [#PARAM_USERNAME] (case-insensitive) who is inactive or, as determined by [#mkPasswordLoginQuery(boolean)], can sign in with a password.
+    ///
+    private static EntityResultQueryModel<UserSecret> mkLockoutUserSecretQuery(final boolean ssoMode) {
+        return select(UserSecret.class).where()
+                .lowerCase().prop("key.key").eq().lowerCase().param(PARAM_USERNAME)
+                .and().begin()
+                    .prop("key.active").eq().val(false)
+                    .or().prop(KEY).in().model(mkPasswordLoginQuery(ssoMode))
+                .end()
+                .model();
     }
 
     @Override
@@ -367,32 +433,46 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail, final Date expirationTime) {
-        // Let's try to find a user by username or email.
-        // In the SSO authentication mode, it is necessary to exclude those users who are restricted to SSO only.
-        final ICompoundCondition0<User> rsoCondition = select(User.class)
+        return findUserForPasswordReset(usernameOrEmail).map(user -> assignPasswordResetUuid(user, expirationTime));
+    }
+
+    @Override
+    public Optional<User> findUserForPasswordReset(final String usernameOrEmail) {
+        final var query = select(User.class)
                 .where()
                 .prop(ACTIVE).eq().val(true)
                 .and()
                 .begin()
                     .lowerCase().prop(KEY).eq().lowerCase().val(usernameOrEmail).or()
                     .lowerCase().prop(EMAIL).eq().lowerCase().val(usernameOrEmail)
-                .end();
-        final EntityResultQueryModel<User> query = (ssoMode() ? rsoCondition.and().prop(User.SSO_ONLY).eq().val(false) : rsoCondition).model();
+                .end()
+                // In SSO mode exclude users restricted to SSO only.
+                .and().condition(ssoMode() ? cond().prop(User.SSO_ONLY).eq().val(false).model() : emptyCondition())
+                .model();
+        return ofNullable(getEntity(from(query).with(fetchAll(User.class)).model()));
+    }
 
-        final User user = getEntity(from(query).with(fetchAll(User.class)).model());
+    @Override
+    public UserSecret assignPasswordResetUuid(final User user, final Date expirationTime) {
+        final UserSecretCo co$UserSecret = co$(UserSecret.class);
+        return assignPasswordResetUuid(user, findOrCreateNewSecret(user, co$UserSecret), expirationTime, co$UserSecret);
+    }
 
-        // if the user was found then a password reset request UUID needs to be generated
-        // and associated wit the identified user
-        if (user != null) {
-            final UserSecretCo co$UserSecret = co$(UserSecret.class);
-            final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
-            final long expirationTimeMillis = expirationTime.getTime();
-            final String uuid = "%s%s%s%s%s".formatted(user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, expirationTimeMillis);
-            final var encodedUuid = UrlEscapers.urlFragmentEscaper().escape(uuid);
-            return of(co$UserSecret.save(secret.setResetUuid(encodedUuid)));
-        }
+    @Override
+    public UserSecret findOrAssignPasswordResetUuid(final User user, final Date validUntil, final Date expirationTime) {
+        final UserSecretCo co$UserSecret = co$(UserSecret.class);
+        final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
+        final boolean keepAssigned = resetUuidExpirationTime(secret.getResetUuid())
+                .filter(assignedExpirationTime -> validUntil.before(assignedExpirationTime) && !assignedExpirationTime.after(expirationTime))
+                .isPresent();
+        return keepAssigned ? secret : assignPasswordResetUuid(user, secret, expirationTime, co$UserSecret);
+    }
 
-        return empty();
+    private UserSecret assignPasswordResetUuid(final User user, final UserSecret secret, final Date expirationTime, final UserSecretCo co$UserSecret) {
+        final long expirationTimeMillis = expirationTime.getTime();
+        final String uuid = "%s%s%s%s%s".formatted(user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, expirationTimeMillis);
+        final var encodedUuid = UrlEscapers.urlFragmentEscaper().escape(uuid);
+        return co$UserSecret.save(secret.setResetUuid(encodedUuid));
     }
 
     @Override
@@ -404,10 +484,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             return false;
         } else {
             // If a corresponding user was found, then UUID needs to be checked for expiration.
-            final String[] uuidParts = uuid.split(SECRET_RESET_UUID_SEPERATOR);
-            final long expirationTime = Long.parseLong(uuidParts[2]);
-
-            final boolean expired = now.getTime() >= expirationTime;
+            final boolean expired = resetUuidExpirationTime(uuid).map(expirationTime -> !now.before(expirationTime)).orElse(true);
             if (expired) {
                 // Remove expired UUID.
                 final UserSecretCo co$UserSecret = co$(UserSecret.class);
