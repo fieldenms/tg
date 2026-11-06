@@ -57,7 +57,7 @@ public class McpAuthorisationCode extends ActivatableAbstractEntity<DynamicEntit
     @Final
     @Required
     @SkipActivatableTracking
-    @Title("The user who granted the authorisation.")
+    @Title(value = "User", desc = "The user who granted the authorisation.")
     private User user;
 
     @IsProperty
