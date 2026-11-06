@@ -4,11 +4,13 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.security.user.User;
 
 import java.util.Optional;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static ua.com.fielden.platform.cypher.Checksum.sha256;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -46,6 +48,19 @@ public class McpAccessTokenDao extends CommonEntityDao<McpAccessToken> implement
     public void revoke(final McpAccessToken accessToken) {
         final McpAccessTokenCo co$ = co$(McpAccessToken.class);
         co$.save(co$.findById(accessToken.getId(), FETCH_PROVIDER.fetchModel()).setActive(false));
+    }
+
+    @Override
+    public void revokeAllForUser(final User user) {
+        final McpAccessTokenCo co$ = co$(McpAccessToken.class);
+        try (final var stream = co$.stream(from(select(McpAccessToken.class)
+                                                .where().prop(McpAccessToken.AUTHORISATION_CODE + "." + McpAuthorisationCode.USER).eq().val(user)
+                                                        .and().prop(ACTIVE).eq().val(true)
+                                                .model())
+                                           .with(co$.getFetchProvider().fetchModel())
+                                           .model())) {
+            stream.forEach(token -> co$.save(token.setActive(false)));
+        }
     }
 
     @Override

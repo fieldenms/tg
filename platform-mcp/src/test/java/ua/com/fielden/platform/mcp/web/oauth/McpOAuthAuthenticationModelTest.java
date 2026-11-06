@@ -113,11 +113,13 @@ public class McpOAuthAuthenticationModelTest extends AbstractTgMcpOAuthTestCase 
 
     @Test
     public void access_token_of_inactive_user_is_rejected() {
+        // Deactivating a user deactivates their access tokens, so an access token of an inactive user is active only if it was issued concurrently with the deactivation.
+        // This is modelled by issuing the token in exchange for a code retrieved before the deactivation.
         final User user = save(new_(User.class, "MCP_USER").setBase(true).setEmail("mcp_user@unit-test.software").setActive(true));
-        saveAccessToken("token_of_inactive_user", user, TEST_CLIENT_ID, mcpResource);
+        final var redeemedCode = saveRedeemedCode("code_of_inactive_user", user, TEST_CLIENT_ID, mcpResource);
         final IUser coUser = co$(User.class);
         save(coUser.findUser("MCP_USER").setActive(false));
-        final var accessToken = findAccessToken("token_of_inactive_user");
+        final var accessToken = saveAccessToken("token_of_inactive_user", redeemedCode);
         assertThat(accessToken.isActive()).isTrue();
         assertThat(accessToken.getAuthorisationCode().getUser().isActive()).isFalse();
         assertThat(isExpired(accessToken)).isFalse();
@@ -156,21 +158,31 @@ public class McpOAuthAuthenticationModelTest extends AbstractTgMcpOAuthTestCase 
     /// Saves an access token with value `tokenValue`, issued for `resource` in exchange for a code granted by `user` to `clientId`.
     ///
     private McpAccessToken saveAccessToken(final String tokenValue, final User user, final String clientId, final String resource) {
-        final var code = save(new_composite(McpAuthorisationCode.class, "code_for_" + tokenValue)
+        return saveAccessToken(tokenValue, saveRedeemedCode("code_for_" + tokenValue, user, clientId, resource));
+    }
+
+    /// Saves an access token with value `tokenValue`, issued for the resource of `redeemedCode` in exchange for it.
+    ///
+    private McpAccessToken saveAccessToken(final String tokenValue, final McpAuthorisationCode redeemedCode) {
+        final McpAccessTokenCo co = co$(McpAccessToken.class);
+        return save(co.new_()
+                      .setTokenHash(co.tokenHash(tokenValue))
+                      .setExpirationDate(date("2026-10-24 10:00:00"))
+                      .setAuthorisationCode(redeemedCode)
+                      .setResource(redeemedCode.getResource()));
+    }
+
+    /// Saves code `code` for `resource`, granted by `user` to `clientId`, and redeems it.
+    ///
+    private McpAuthorisationCode saveRedeemedCode(final String code, final User user, final String clientId, final String resource) {
+        final var savedCode = save(new_composite(McpAuthorisationCode.class, code)
                 .setExpirationDate(date("2026-10-21 10:10:00"))
                 .setUser(user)
                 .setClientId(clientId)
                 .setCodeChallenge("A".repeat(43))
                 .setRedirectUri(TEST_CLIENT_REDIRECT_URI)
                 .setResource(resource));
-        final var redeemedCode = save(code.setActive(false));
-
-        final McpAccessTokenCo co = co$(McpAccessToken.class);
-        return save(co.new_()
-                      .setTokenHash(co.tokenHash(tokenValue))
-                      .setExpirationDate(date("2026-10-24 10:00:00"))
-                      .setAuthorisationCode(redeemedCode)
-                      .setResource(resource));
+        return save(savedCode.setActive(false));
     }
 
     private McpAccessToken findAccessToken(final String tokenValue) {

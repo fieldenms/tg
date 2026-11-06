@@ -2,6 +2,7 @@ package ua.com.fielden.platform.mcp;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.util.Optional;
@@ -36,5 +37,9 @@ public interface McpAccessTokenCo extends IEntityDao<McpAccessToken> {
     /// Revokes `accessToken`, so that it can no longer be used.
     ///
     void revoke(McpAccessToken accessToken);
+
+    /// Revokes all access tokens issued to the user.
+    ///
+    void revokeAllForUser(User user);
 
 }

@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.nulabinc.zxcvbn.Strength;
 import com.nulabinc.zxcvbn.Zxcvbn;
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
@@ -20,6 +21,10 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.mcp.McpAccessToken;
+import ua.com.fielden.platform.mcp.McpAccessTokenCo;
+import ua.com.fielden.platform.mcp.McpAuthorisationCode;
+import ua.com.fielden.platform.mcp.McpAuthorisationCodeCo;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibilityCo;
 import ua.com.fielden.platform.pagination.IPage;
@@ -92,16 +97,19 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;
     private final IApplicationSettings appSettings;
+    private final IApplicationDomainProvider appDomain;
 
     @Inject
     public UserDao(
             final INewUserNotifier newUserNotifier,
             final SessionIdentifierGenerator crypto,
-            final IApplicationSettings appSettings)
+            final IApplicationSettings appSettings,
+            final IApplicationDomainProvider appDomain)
     {
         this.newUserNotifier = newUserNotifier;
         this.crypto = crypto;
         this.appSettings = appSettings;
+        this.appDomain = appDomain;
     }
 
     private boolean ssoMode() {
@@ -141,12 +149,19 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         }
 
         user.isValid().ifFailure(Result::throwRuntime);
-        // Remove all authenticated sessions in case the user is being deactivated.
         if (user.isPersisted() && !user.isActive() && user.getProperty(ACTIVE).isDirty()) {
+            // Remove all authenticated sessions if the user is being deactivated.
             final IUserSession coUserSession = co(UserSession.class);
             coUserSession.clearAll(user);
             final UserSecretCo coUserSecrete = co(UserSecret.class);
             coUserSecrete.batchDelete(listOf(user.getId()));
+
+            if (appDomain.contains(McpAccessToken.class)) {
+                final McpAccessTokenCo coMcpAccessToken = co(McpAccessToken.class);
+                coMcpAccessToken.revokeAllForUser(user);
+                final McpAuthorisationCodeCo coMcpAuthorisationCode = co(McpAuthorisationCode.class);
+                coMcpAuthorisationCode.revokeAllForUser(user);
+            }
         }
 
         // User becomes a based-on user or has its base user changed -- need to handle menu invisibility.

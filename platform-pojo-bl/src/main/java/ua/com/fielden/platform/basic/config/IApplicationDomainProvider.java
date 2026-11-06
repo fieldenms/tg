@@ -16,5 +16,13 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * 
  */
 public interface IApplicationDomainProvider {
+
     List<Class<? extends AbstractEntity<?>>> entityTypes();
+
+    /// True if the application domain contains the specified type.
+    ///
+    default boolean contains(final Class<?> type) {
+        return entityTypes().contains(type);
+    }
+
 }
