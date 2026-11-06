@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +34,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
 
     private final IMenuRetriever menuRetriever;
     private final IUserProvider userProvider;
+    private final IDeviceProvider deviceProvider;
     private final WebMenuItemInvisibilityCo miInvisible;
 
     @Inject
@@ -40,25 +42,33 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
             final IMenuRetriever menuRetriever,
             final WebMenuItemInvisibilityCo miInvisible,
             final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
             final ICompanionObjectFinder coFinder,
             final EntityFactory entityFactory) {
         super(entityFactory, Menu.class, coFinder);
         this.menuRetriever = menuRetriever;
         this.miInvisible = miInvisible;
         this.userProvider = userProvider;
+        this.deviceProvider = deviceProvider;
     }
 
+    /// Builds the main menu for the device profile of the current request, as provided by [IDeviceProvider].
+    ///
+    /// The profile is tested by [IDeviceProvider#isMobile()], as in `StandardMastersWebUiConfig.createMenuMaster`.
+    /// The latter resolves the actions of the served menu.
+    /// This way, the menu and the actions invoked from it are always resolved against the same profile.
+    ///
     @Override
     protected Menu provideDefaultValues(final Menu entity) {
         final Menu menu;
-        if (chosenPropertyEqualsTo("desktop")) {
-            menu = buildMenuConfiguration();
-        }
-        // Otherwise, chosenPropertyEqualsTo("mobile")
-        else {
+        if (deviceProvider.isMobile()) {
             // At this stage all items are visible for mobile profile.
-            // In case where invisibility logic should be implemented, there is a need to extend persistent WebMenuItemInvisibility entity.
+            // Invisibility logic for it would require extending the persistent `WebMenuItemInvisibility` entity.
             menu = menuRetriever.getMenuEntity(MOBILE).setUserName(userProvider.getUser().getKey()).setCanEdit(false);
+        }
+        // Otherwise, the desktop profile.
+        else {
+            menu = buildMenuConfiguration();
         }
         return menu.copyTo(entity);
     }
