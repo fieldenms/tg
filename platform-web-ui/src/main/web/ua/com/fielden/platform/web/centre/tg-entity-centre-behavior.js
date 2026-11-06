@@ -387,15 +387,6 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
-         * Indicates whether the selection view fills the height of this centre, with the selection criteria growing to the height that is left by the toolbar and the buttons of the view, so that the buttons are at the bottom of the centre.
-         * It is set for the centres embedded by 'tg-master-centre', so that the buttons are at the bottom of the component.
-         */
-        selectionViewFillHeight: {
-            type: Boolean,
-            value: false
-        },
-
-        /**
          * Indicates whether this entity centre is runAutomatically and allows customisation.
          *
          * For standalone centre it means that no criteria clearing will be performed during auto-run for default configurations.

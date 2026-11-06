@@ -32,6 +32,8 @@ const _isInert = function (element, container) {
  * whether any of the ancestors of 'element', including the hosts of shadow roots, is a master component, which is marked with attribute 'tg-master-component'.
  * Such centres and masters do not take the focus by themselves, as when they load or the component refreshes them,
  * so that they do not take it from the master of the component, which focuses its editors and components when it shows the entity, as described in 'TgEntityMasterBehavior'.
+ * The selection view of such a centre fills the height of the centre, with the selection criteria growing to the height that is left by the toolbar and the buttons of the view,
+ * so that the buttons are at the bottom of the component, as described in '_selectionViewFillHeight' of 'tg-entity-centre'.
  */
 export const isInMasterComponent = function (element) {
     return !!getParentAnd(element.parentElement || element.getRootNode().host, current => current.hasAttribute('tg-master-component'));
