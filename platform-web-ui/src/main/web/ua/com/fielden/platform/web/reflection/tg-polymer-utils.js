@@ -373,6 +373,18 @@ export const deviceProfile = function () {
     return _deviceProfile;
 };
 
+/// Assigns `htmlText` to `element`, as markup, or as plain text if it contains restricted tags.
+/// Such markup then becomes visible instead of being rendered, which makes an attempted injection evident.
+/// This is the way to assign caller-supplied or server-supplied markup, rather than assigning `innerHTML` directly.
+///
+export const setHtmlOrText = function (element, htmlText) {
+    if (containsRestrictedTags(htmlText)) {
+        element.textContent = htmlText;
+    } else {
+        element.innerHTML = htmlText;
+    }
+};
+
 /// Returns `true` if client application was loaded on a phone, `false` otherwise (see `AbstractWebResource` and `DeviceProfile` for more details).
 ///
 /// The same profile is sent to the server in the `Device-Profile` header with every request issued through

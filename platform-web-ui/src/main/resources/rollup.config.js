@@ -21,6 +21,8 @@ export default {
         'node_modules/lib/antlr-lib.js',
         'node_modules/lib/fullcalendar-lib.js',
         'node_modules/lib/moment-lib.js',
+        'node_modules/lib/toastui-editor-contents-styles-lib.js',
+        'node_modules/lib/toastui-editor-ui-styles-lib.js',
         'node_modules/lib/toastui-editor-lib.js',
         'node_modules/lib/html5-qrcode-lib.js',
 

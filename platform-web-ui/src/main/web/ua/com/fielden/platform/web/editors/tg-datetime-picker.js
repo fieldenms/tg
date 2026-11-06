@@ -40,7 +40,6 @@ const pickerStyle = html`
             }
         </style>
     </custom-style>`;
-pickerStyle.setAttribute('style', 'display: none;');
 document.head.appendChild(pickerStyle.content);
 
 const additionalTemplate = html`

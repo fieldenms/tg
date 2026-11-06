@@ -36,7 +36,6 @@ const criterionBehaviorStyle = html`
         </style>
     </custom-style>
 `;
-criterionBehaviorStyle.setAttribute('style', 'display: none;');
 document.head.appendChild(criterionBehaviorStyle.content);
 
 const TgAbstractCriterionBehaviorImpl = {
