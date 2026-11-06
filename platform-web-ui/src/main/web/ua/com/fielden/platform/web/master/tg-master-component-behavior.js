@@ -45,8 +45,8 @@ export const isInMasterComponent = function (element) {
  * While the focus is within the component, the title has the colour and the weight of the title of a focused editor:
  * `--paper-input-container-focus-color`, which `tg-editor` sets to `--paper-indigo-500`, and `font-weight: 700` of `tg-editor`.
  * The selector is more specific than that of a class, so that the colour of the title in the styles of the component does not take precedence.
- * The focus ring of the browser on the element at which the component is focused as a whole, which has attribute `tg-component-focus`, is that colour, as the underline of a focused editor is,
- * keeping the style and the width of the browser; the browser shows it when the element is focused from the keyboard rather than by a click.
+ * The element at which the component is focused as a whole, which has attribute `tg-component-focus`, has a focus ring of that colour, as the underline of a focused editor is, with the style and the width of the ring of the browser.
+ * The ring is shown whenever the element is focused, as the underline of an editor is, rather than only when the browser would show its own ring, such as when the element is focused from the keyboard but not by a click.
  */
 const componentStyles = `
     :host {
@@ -88,9 +88,9 @@ const componentStyles = `
         color: var(--paper-indigo-500);
         font-weight: 700;
     }
-    [tg-component-focus]:focus-visible,
-    :host([tg-component-focus]:focus-visible) {
-        outline-color: var(--paper-indigo-500);
+    [tg-component-focus]:focus,
+    :host([tg-component-focus]:focus) {
+        outline: auto 1px var(--paper-indigo-500);
     }
 `;
 
@@ -153,7 +153,7 @@ const componentStyles = `
  * The master skips the component and its elements while it is blocked, as they are inert.
  * The title of the component, the element with class `tg-component-title` in its template, looks as the title of a focused editor while the focus is within the component:
  * at the element returned by `component()`, in its content or at a property action.
- * The focus ring of the browser on the element returned by `component()`, which is shown when the element is focused from the keyboard, has the colour of the underline of a focused editor.
+ * The element returned by `component()` has a focus ring of the colour of the underline of a focused editor whenever it is focused: from the keyboard, by a click, or by the master as it shows the entity.
  * The centres and masters in the content of the component, such as an embedded centre and the masters of its views, do not take the focus by themselves, as when they load or the component refreshes them,
  * but only when the user acts on them, so that they do not take the focus from the master, as `isInMasterComponent` describes.
  *
