@@ -111,7 +111,6 @@ import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSe
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.RunAutomaticallyOptions.ALLOW_CUSTOMISED;
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
 import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.selectView;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
@@ -851,7 +850,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (user == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(EntityFactory.class), postCentreCreated);
         } else {
-            return updateCentre(user, miType, FRESH_CENTRE_NAME, empty(), DESKTOP, webUiConfig, companionFinder);
+            return updateCentre(user, miType, FRESH_CENTRE_NAME, empty(), webUiConfig, companionFinder);
         }
     }
 
