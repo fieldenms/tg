@@ -1,13 +1,17 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.empty;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.applyDifferences;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.createDifferences;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.createEmptyDifferences;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.createPreviouslyRunDiffString;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.propDiff;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.restorePreviouslyRunCentre;
 import static ua.com.fielden.platform.web.centre.EntityCentre.createDefaultCentreFrom;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.range;
@@ -104,6 +108,8 @@ public class CentreUpdaterTestMixin {
         .addCrit("moneyPropCritSingle").asSingle().decimal()
         .setLayoutFor(DESKTOP, empty(), mkGridForCentre(42, 1))
         .addProp("stringProp")
+        .also()
+        .addProp("integerProp")
         .build();
     
     /**
@@ -228,6 +234,49 @@ public class CentreUpdaterTestMixin {
             propDiff(property, expectedDiff).put(categoryAndValue._1, categoryAndValue._2);
         }
         return expectedDiff;
+    }
+    
+    /// Creates the expected diff with a single top-level `value` under `key`, such as page capacity or sorting.
+    ///
+    static Map<String, Object> expectedDiffWithTopLevelValue(final String key, final Object value) {
+        final var expectedDiff = createEmptyDifferences();
+        expectedDiff.put(key, value);
+        return expectedDiff;
+    }
+    
+    /// Checks that a centre survives the trip to the client and back as a PREVIOUSLY_RUN centre.
+    ///
+    /// Creates a default centre and mutates it with `centreMutator`.
+    /// The mutated centre must differ from the default one, so that the check is not trivial.
+    /// Creates the diff string of the mutated centre, which the client keeps.
+    /// The diff deserialised from that string must equal `expectedDiff`.
+    /// The centre restored from that string must equal the mutated centre.
+    ///
+    static void testPreviouslyRunCentreRestoration(
+        final Consumer<ICentreDomainTreeManagerAndEnhancer> centreMutator,
+        final Map<String, Object> expectedDiff,
+        final ICompanionObjectFinder companionFinder
+    ) {
+        final var mutatedCentre = create();
+        centreMutator.accept(mutatedCentre);
+        assertNotEquals(create(), mutatedCentre);
+        
+        final var previouslyRunDiffString = createPreviouslyRunDiffString(mutatedCentre, create(), ROOT);
+        final var previouslyRunDiff = CENTRE_DIFF_SERIALISER.deserialise(previouslyRunDiffString.getBytes(UTF_8));
+        assertEquals(expectedDiff, previouslyRunDiff);
+        
+        final var restoredCentre = restorePreviouslyRunCentre(previouslyRunDiffString, create(), ROOT, companionFinder);
+        assertEquals(mutatedCentre, restoredCentre);
+    }
+    
+    /// The same as [#testPreviouslyRunCentreRestoration(Consumer, Map, ICompanionObjectFinder)].
+    /// It should be used only where crit-only single entity-typed values are not involved.
+    ///
+    static void testPreviouslyRunCentreRestoration(
+        final Consumer<ICentreDomainTreeManagerAndEnhancer> centreMutator,
+        final Map<String, Object> expectedDiff
+    ) {
+        testPreviouslyRunCentreRestoration(centreMutator, expectedDiff, null);
     }
     
 }

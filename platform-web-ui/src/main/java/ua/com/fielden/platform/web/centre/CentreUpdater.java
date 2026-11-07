@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
@@ -34,6 +35,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.*;
@@ -50,6 +52,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -57,6 +60,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isLink;
+import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.*;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
@@ -82,6 +86,11 @@ public class CentreUpdater {
     public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN";
     public static final String SAVED_CENTRE_NAME = "__________SAVED";
     
+    /// The message of the failure to restore a PREVIOUSLY_RUN centre from the diff string that the client keeps.
+    /// It is used when the client sent no diff string, or a string that is not a centre diff.
+    ///
+    public static final String ERR_PREVIOUSLY_RUN_NOT_AVAILABLE = "The last run is not available. Please run again.";
+    
     /**
      * A type of meta values.
      *
@@ -101,28 +110,28 @@ public class CentreUpdater {
     /**
      * Key of diff pertaining to result-set column visibility and order. Contains all snapshot and exists only if visibility / order is changed.
      */
-    private static final String VISIBILITY_AND_ORDER = "VISIBILITY_AND_ORDER";
+    static final String VISIBILITY_AND_ORDER = "VISIBILITY_AND_ORDER";
     /**
      * Key of diff pertaining to result-set sorting. Result-set can be sorted by 'invisible' columns. Contains all snapshot and exists only if sorting is changed.
      */
-    private static final String SORTING = "SORTING";
+    static final String SORTING = "SORTING";
     /**
      * Key of diff pertaining to result-set page capacity.
      */
-    private static final String PAGE_CAPACITY = "PAGE_CAPACITY";
+    static final String PAGE_CAPACITY = "PAGE_CAPACITY";
     /**
      * Key of diff pertaining to result-set visible rows count.
      */
-    private static final String VISIBLE_ROWS_COUNT = "VISIBLE_ROWS_COUNT";
+    static final String VISIBLE_ROWS_COUNT = "VISIBLE_ROWS_COUNT";
     /**
      * Key of diff pertaining to result-set number of header lines.
      */
-    private static final String NUMBER_OF_HEADER_LINES = "NUMBER_OF_HEADER_LINES";
+    static final String NUMBER_OF_HEADER_LINES = "NUMBER_OF_HEADER_LINES";
     
     /**
      * Key of diff pertaining to entity centre's preferred view.
      */
-    private static final String PREFERRED_VIEW = "PREFERRED_VIEW";
+    static final String PREFERRED_VIEW = "PREFERRED_VIEW";
     
     /* Following functions are used for conversion of criteria values to / from strings. Some implementations could have been used directly but left here for clarity and consistency. */
     static final String ID_PREFIX = "__________ID__________";
@@ -203,6 +212,84 @@ public class CentreUpdater {
         final var saveAsSpecificName = saveAsSpecific(name, saveAsName);
         final var updatedDiff = updateDifferences(miType, user, saveAsSpecificName, name, saveAsName, webUiConfig, companionFinder);
         return loadCentreFromDefaultAndDiff(miType, updatedDiff, webUiConfig, companionFinder);
+    }
+    
+    /// Creates the diff string of a PREVIOUSLY_RUN centre, which the client keeps.
+    ///
+    /// The diff string is the diff of `previouslyRunCentre` against the default centre, serialised to JSON.
+    /// It is the same JSON that is persisted as the body of a surrogate centre, but as a [String] instead of bytes.
+    /// The client keeps the diff string as is, without reading it, and sends it back.
+    /// The centre is then restored with [#restorePreviouslyRunCentre(String, Class, IWebUiConfig, ICompanionObjectFinder)].
+    ///
+    public static String createPreviouslyRunDiffString(
+        final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IWebUiConfig webUiConfig
+    ) {
+        return createPreviouslyRunDiffString(previouslyRunCentre, getDefaultCentre(miType, webUiConfig), getEntityType(miType));
+    }
+    
+    /// Creates the diff string of a PREVIOUSLY_RUN centre against `defaultCentre` of `root` type.
+    ///
+    static String createPreviouslyRunDiffString(
+        final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre,
+        final ICentreDomainTreeManagerAndEnhancer defaultCentre,
+        final Class<AbstractEntity<?>> root
+    ) {
+        final var previouslyRunDiff = createDifferences(previouslyRunCentre, defaultCentre, root);
+        final var previouslyRunDiffBytes = CENTRE_DIFF_SERIALISER.serialise(previouslyRunDiff);
+        return new String(previouslyRunDiffBytes, UTF_8);
+    }
+    
+    /// Restores a PREVIOUSLY_RUN centre from the diff string that the client keeps.
+    /// The diff string is created by [#createPreviouslyRunDiffString(ICentreDomainTreeManagerAndEnhancer, Class, IWebUiConfig)].
+    ///
+    /// The centre is the default centre with the diff applied, in the same way as a persisted surrogate centre is loaded.
+    /// Fails with [#ERR_PREVIOUSLY_RUN_NOT_AVAILABLE] if the diff string is missing or is not a centre diff.
+    ///
+    public static ICentreDomainTreeManagerAndEnhancer restorePreviouslyRunCentre(
+        final String previouslyRunDiffString,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder
+    ) {
+        final var previouslyRunDiff = deserialisePreviouslyRunDiff(previouslyRunDiffString);
+        return loadCentreFromDefaultAndDiff(miType, previouslyRunDiff, webUiConfig, companionFinder);
+    }
+    
+    /// Restores a PREVIOUSLY_RUN centre from the diff string that the client keeps.
+    /// The diff is applied to `defaultCentre` of `root` type.
+    ///
+    static ICentreDomainTreeManagerAndEnhancer restorePreviouslyRunCentre(
+        final String previouslyRunDiffString,
+        final ICentreDomainTreeManagerAndEnhancer defaultCentre,
+        final Class<AbstractEntity<?>> root,
+        final ICompanionObjectFinder companionFinder
+    ) {
+        final var previouslyRunDiff = deserialisePreviouslyRunDiff(previouslyRunDiffString);
+        return applyDifferences(defaultCentre, previouslyRunDiff, root, companionFinder);
+    }
+    
+    /// Deserialises the diff of a PREVIOUSLY_RUN centre from the diff string that the client keeps.
+    /// Fails with [#ERR_PREVIOUSLY_RUN_NOT_AVAILABLE] if the diff string is missing or is not a centre diff.
+    ///
+    private static Map<String, Object> deserialisePreviouslyRunDiff(final String previouslyRunDiffString) {
+        if (isEmpty(previouslyRunDiffString)) {
+            logger.warn("The client has not sent the diff string of its PREVIOUSLY_RUN centre.");
+            throw failure(ERR_PREVIOUSLY_RUN_NOT_AVAILABLE);
+        }
+        try {
+            final var previouslyRunDiffBytes = previouslyRunDiffString.getBytes(UTF_8);
+            final var previouslyRunDiff = CENTRE_DIFF_SERIALISER.deserialise(previouslyRunDiffBytes);
+            if (previouslyRunDiff == null || !(previouslyRunDiff.get(PROPERTIES) instanceof Map)) {
+                logger.warn("The diff string of the PREVIOUSLY_RUN centre sent by the client is not a centre diff.");
+                throw failure(ERR_PREVIOUSLY_RUN_NOT_AVAILABLE);
+            }
+            return previouslyRunDiff;
+        } catch (final SerialisationException ex) {
+            logger.warn("The diff string of the PREVIOUSLY_RUN centre sent by the client could not be deserialised.", ex);
+            throw failure(ERR_PREVIOUSLY_RUN_NOT_AVAILABLE);
+        }
     }
     
     /// Updates (retrieves) current version of centre description.
