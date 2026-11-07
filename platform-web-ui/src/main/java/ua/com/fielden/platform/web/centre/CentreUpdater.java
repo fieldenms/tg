@@ -67,7 +67,7 @@ import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChange
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.*;
 
-/// Represents a set of utility methods for updating / committing of surrogate centres, for e.g. 'fresh', 'previouslyRun' etc.
+/// Represents a set of utility methods for updating / committing of surrogate centres, 'fresh' and 'saved'.
 ///
 /// Every surrogate centre has its own diff centre.
 /// It is saved into the database by `commitCentreWithoutConflicts` or `commitCentreDiffWithoutConflicts`.
@@ -83,7 +83,6 @@ public class CentreUpdater {
     private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
     
     public static final String FRESH_CENTRE_NAME = "__________FRESH";
-    public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN";
     public static final String SAVED_CENTRE_NAME = "__________SAVED";
     
     /// The message of the failure to restore a PREVIOUSLY_RUN centre from the diff string that the client keeps.
@@ -199,7 +198,7 @@ public class CentreUpdater {
     ///
     /// Centre on its own is never saved, but it is used to create 'differences' (when committing is performed).
     ///
-    /// @param name  surrogate name of the centre (fresh, previouslyRun etc.);
+    /// @param name  surrogate name of the centre (fresh or saved);
     /// @param saveAsName  user-defined title of 'saveAs' centre configuration or empty [Optional] for unnamed centre
     ///
     public static ICentreDomainTreeManagerAndEnhancer updateCentre(
@@ -412,10 +411,8 @@ public class CentreUpdater {
             final ICompanionObjectFinder companionFinder) {
         final var currentNameFresh = NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName);
         final var currentNameSaved = NAME_OF.apply(SAVED_CENTRE_NAME).apply(saveAsName);
-        final var currentNamePreviouslyRun = NAME_OF.apply(PREVIOUSLY_RUN_CENTRE_NAME).apply(saveAsName);
         final EntityCentreConfig freshConfig = findConfig(miType, user, currentNameFresh, companionFinder);
         final EntityCentreConfig savedConfig = findConfig(miType, user, currentNameSaved, companionFinder);
-        final EntityCentreConfig previouslyRunConfig = findConfig(miType, user, currentNamePreviouslyRun, companionFinder);
         if (freshConfig == null || savedConfig == null) {
             throw failuref("Fresh or saved configuration for configuration [%s] does not exist.", saveAsName);
         }
@@ -424,10 +421,6 @@ public class CentreUpdater {
         final var newSaveAsName = of(newTitle);
         freshConfig.setTitle(NAME_OF.apply(FRESH_CENTRE_NAME).apply(newSaveAsName));
         savedConfig.setTitle(NAME_OF.apply(SAVED_CENTRE_NAME).apply(newSaveAsName));
-        final var previouslyRunNewTitle = NAME_OF.apply(PREVIOUSLY_RUN_CENTRE_NAME).apply(newSaveAsName);
-        if (previouslyRunConfig != null) { // previouslyRun centre may not exist
-            previouslyRunConfig.setTitle(previouslyRunNewTitle);
-        }
         // newDesc / newDashboardable / newDashboardRefreshFrequency
         freshConfig.setDesc(newDesc);
         freshConfig.setDashboardable(newDashboardable);
@@ -435,16 +428,13 @@ public class CentreUpdater {
         
         // clear all centres with the same name in the case where title has been changed -- new title potentially can be in conflict with another configuration and that another configuration should be deleted
         if (!equalsEx(saveAsName, of(newTitle))) {
-            CentreUpdaterUtils.removeCentres(user, miType, companionFinder, freshConfig.getTitle(), savedConfig.getTitle(), previouslyRunNewTitle);
+            CentreUpdaterUtils.removeCentres(user, miType, companionFinder, freshConfig.getTitle(), savedConfig.getTitle());
         }
 
         final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
         // save
         co$EntityCentreConfig.saveWithRetry(freshConfig); // editCentreTitleAndDesc is not used inside other transaction scopes (i.e. CentreConfigEditActionDao.performSave and AbstractCentreConfigCommitActionDao.save do not have @SessionRequired) -- saveWithRetry can be used
         co$EntityCentreConfig.saveWithRetry(savedConfig);
-        if (previouslyRunConfig != null) { // previouslyRun centre may not exist
-            co$EntityCentreConfig.saveWithRetry(previouslyRunConfig);
-        }
     }
     
     /// Changes configuration's runAutomatically and saves these changes to persistent storage.
@@ -473,7 +463,7 @@ public class CentreUpdater {
     /// Preferred state and custom description need to be maintained properly.
     ///
     /// @param saveAsName  user-defined title of 'saveAs' centre configuration or empty [Optional] for unnamed centre
-    /// @param names  surrogate names of the centres (fresh, previouslyRun etc.).
+    /// @param names  surrogate names of the centres (fresh or saved).
     ///
     public static void removeCentres(
         final User user,
@@ -495,7 +485,7 @@ public class CentreUpdater {
     /// IMPORTANT WARNING: avoids centre config self-conflict checks.
     /// ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
     ///
-    /// @param name  surrogate name of the centre (fresh, previouslyRun etc.).
+    /// @param name  surrogate name of the centre (fresh or saved).
     /// @param saveAsName  user-defined title of 'saveAs' centre configuration or empty [Optional] for unnamed centre
     /// @param centre  the centre manager to commit
     /// @param newDesc  new description to be saved into persistent storage
@@ -530,7 +520,7 @@ public class CentreUpdater {
     /// IMPORTANT WARNING: avoids centre config self-conflict checks.
     /// ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
     ///
-    /// @param name  surrogate name of the centre (fresh, previouslyRun etc.).
+    /// @param name  surrogate name of the centre (fresh or saved).
     /// @param saveAsName  user-defined title of 'saveAs' centre configuration or empty [Optional] for unnamed centre
     /// @param defaultCentre  centre instance to be used for constructing desired centre manager from `diff` object
     /// @param diff  differences object being committed (diffs comparing to default centre)
@@ -915,7 +905,7 @@ public class CentreUpdater {
     /// Looks only for named / link configurations, default configurations are avoided.
     ///
     /// @param miType  menu item type to which the centre configurations belong
-    /// @param surrogateName  surrogate name of the centre, for example fresh or previouslyRun
+    /// @param surrogateName  surrogate name of the centre, fresh or saved
     ///
     static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(
         final Class<? extends MiWithConfigurationSupport<?>> miType,
@@ -930,7 +920,7 @@ public class CentreUpdater {
     ///
     /// Looks only for named / link configurations, default configurations are avoided.
     ///
-    /// @param surrogateName  surrogate name of the centre (fresh, previouslyRun etc.)
+    /// @param surrogateName  surrogate name of the centre (fresh or saved)
     ///
     static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(
         final User user,
@@ -1004,7 +994,7 @@ public class CentreUpdater {
     /// In case of non-base user the diff is initialised from base user's corresponding SAVED_CENTRE_NAMEd diff centre.
     ///
     /// @param saveAsSpecificName  surrogate name combined with save-as name, see [#saveAsSpecific(String, Optional)]
-    /// @param name  surrogate name of the centre (fresh, previouslyRun etc.);
+    /// @param name  surrogate name of the centre (fresh or saved);
     /// @param saveAsName  user-defined title of 'saveAs' centre configuration or empty [Optional] for unnamed centre
     ///
     private static Map<String, Object> updateDifferences(

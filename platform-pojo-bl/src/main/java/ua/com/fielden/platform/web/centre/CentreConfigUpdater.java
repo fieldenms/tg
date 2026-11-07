@@ -56,6 +56,10 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     private boolean centreDirty;
 
     @IsProperty
+    @Title(value = "Previously Run Diff String", desc = "The PREVIOUSLY_RUN diff string that the client keeps, with the applied changes.")
+    private String previouslyRunDiffString;
+
+    @IsProperty
     @Title(value = "Page Capacity", desc = "The maximum number of entities retrieved.")
     @Required
     @BeforeChange({@Handler(value = GreaterValidator.class, str = {@StrParam(name = "limit", value = "0")}),
@@ -131,6 +135,16 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
 
     public boolean isCentreDirty() {
         return centreDirty;
+    }
+
+    @Observable
+    public CentreConfigUpdater setPreviouslyRunDiffString(final String previouslyRunDiffString) {
+        this.previouslyRunDiffString = previouslyRunDiffString;
+        return this;
+    }
+
+    public String getPreviouslyRunDiffString() {
+        return previouslyRunDiffString;
     }
 
     @Observable

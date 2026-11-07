@@ -28,6 +28,10 @@ public class CentrePreferredViewUpdater extends AbstractFunctionalEntityWithCent
     @Title(value = "Centre dirty?", desc = "Indicates whether successful saving of this entity actually changed the centre configuration or it is 'new' (i.e. default, link or inherited).")
     private boolean centreDirty;
 
+    @IsProperty
+    @Title(value = "Previously Run Diff String", desc = "The PREVIOUSLY_RUN diff string that the client keeps, with the new preferred view.")
+    private String previouslyRunDiffString;
+
     public CentrePreferredViewUpdater() {
         setKey(NO_KEY);
     }
@@ -50,6 +54,16 @@ public class CentrePreferredViewUpdater extends AbstractFunctionalEntityWithCent
 
     public boolean isCentreDirty() {
         return centreDirty;
+    }
+
+    @Observable
+    public CentrePreferredViewUpdater setPreviouslyRunDiffString(final String previouslyRunDiffString) {
+        this.previouslyRunDiffString = previouslyRunDiffString;
+        return this;
+    }
+
+    public String getPreviouslyRunDiffString() {
+        return previouslyRunDiffString;
     }
 
 }

@@ -636,7 +636,7 @@ public class CriteriaResource extends AbstractWebResource {
                 createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                 appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(() -> updatedFreshCentre),
                 createCriteriaIndication(
-                    (String) modifiedPropertiesHolder.get("@@wasRun"),
+                    (String) modifiedPropertiesHolder.get(PREVIOUSLY_RUN_DIFF_STRING_KEY),
                     updatedFreshCentre,
                     miType,
                     saveAsName,
@@ -739,27 +739,27 @@ public class CriteriaResource extends AbstractWebResource {
         );
     }
 
+    /// Creates the indication of the selection criteria: STALE, CHANGED or NONE.
+    ///
+    /// STALE compares `freshCentre` with the PREVIOUSLY_RUN centre.
+    /// The centre is restored from `previouslyRunDiffString`, which the client keeps.
+    /// If the centre has not been run in the client, `previouslyRunDiffString` is `null`, and there is no indication.
+    ///
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> CriteriaIndication createCriteriaIndication(
-            final String wasRun,
+            final String previouslyRunDiffString,
             final ICentreDomainTreeManagerAndEnhancer freshCentre,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final Optional<String> saveAsName,
             final User user,
             final ICompanionObjectFinder companionFinder,
             final IWebUiConfig webUiConfig) {
-        if (wasRun != null) {
+        if (previouslyRunDiffString != null) {
             // When changing centre we can change selection criteria and mnemonics, but also columns sorting, order, visibility and width / grow factors.
             // From end-user perspective it is only relevant to 'know' whether selection criteria change was not applied against currently visible result-set.
             // Thus need to only compare 'firstTick's (criteria data only) of centre managers.
             // Please be careful when adding some new contracts to 'firstTick' not to violate this premise (see selectionCriteriaEquals method).
-            final var isCriteriaStale = !updateCentre(
-                user,
-                miType,
-                PREVIOUSLY_RUN_CENTRE_NAME,
-                saveAsName,
-                webUiConfig,
-                companionFinder
-            ).getFirstTick()
+            final var isCriteriaStale = !restorePreviouslyRunCentre(previouslyRunDiffString, miType, webUiConfig, companionFinder)
+                .getFirstTick()
                 .selectionCriteriaEquals(freshCentre.getFirstTick());
             return isCriteriaStale ? STALE : createChangedCriteriaIndication(
                 freshCentre,
@@ -827,8 +827,8 @@ public class CriteriaResource extends AbstractWebResource {
                         // ... and fill it in with non-intrusive changes from second tick (compare previousFreshCentre with empty default centre)
                         extendDiffsWithNonIntrusiveDifferences(diff, previousFreshCentre.getSecondTick(), defaultCentre.getSecondTick(), centre.getEntityType());
 
-                        // clear all surrogate centres except 'fresh', which requires special treatment
-                        removeCentres(user, miType, saveAsName, companionFinder, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+                        // clear 'saved' surrogate centre; 'fresh' one requires special treatment
+                        removeCentres(user, miType, saveAsName, companionFinder, SAVED_CENTRE_NAME);
                         // it is necessary to make change to the 'fresh' centre as atomic as possible (i.e. not captureDiffs + remove + createNew + applyDiffs + commit, but instead captureDiffsObject + commit)
                         // this is necessary because self-concurrent running for the same user is possible
                         // commit newly constructed diff object into 'fresh' configuration and apply it against 'defaultCentre'
@@ -875,7 +875,7 @@ public class CriteriaResource extends AbstractWebResource {
                     if (!validationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (validation failed).");
                         final var criteriaIndication = createCriteriaIndication(
-                            (String) centreContextHolder.getModifHolder().get("@@wasRun"),
+                            (String) customObject.get(PREVIOUSLY_RUN_DIFF_STRING_KEY),
                             updatedFreshCentre,
                             miType,
                             saveAsName,
@@ -890,7 +890,7 @@ public class CriteriaResource extends AbstractWebResource {
                     if (!authorisationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run failed (authorisation validation failed).");
                         final var criteriaIndication = createCriteriaIndication(
-                            (String) centreContextHolder.getModifHolder().get("@@wasRun"),
+                            (String) customObject.get(PREVIOUSLY_RUN_DIFF_STRING_KEY),
                             updatedFreshCentre,
                             miType,
                             saveAsName,
@@ -934,7 +934,7 @@ public class CriteriaResource extends AbstractWebResource {
                     if (!generationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run finished (generation failed).");
                         final var criteriaIndication = createCriteriaIndication(
-                            (String) centreContextHolder.getModifHolder().get("@@wasRun"),
+                            (String) customObject.get(PREVIOUSLY_RUN_DIFF_STRING_KEY),
                             updatedFreshCentre,
                             miType,
                             saveAsName,
@@ -947,27 +947,13 @@ public class CriteriaResource extends AbstractWebResource {
                     }
                 }
 
-                if (isRunning) {
-                    commitCentreWithoutConflicts(
-                        user,
-                        miType,
-                        PREVIOUSLY_RUN_CENTRE_NAME,
-                        saveAsName,
-                        updatedFreshCentre,
-                        null,
-                        webUiConfig,
-                        companionFinder
-                    );
-                }
-
-                final var previouslyRunCentre = updateCentre(
-                    user,
-                    miType,
-                    PREVIOUSLY_RUN_CENTRE_NAME,
-                    saveAsName,
-                    webUiConfig,
-                    companionFinder
-                );
+                // The client keeps the PREVIOUSLY_RUN centre of its last run as a diff string.
+                // Run creates the diff string from FRESH centre, and refresh / navigate take it from the client.
+                // Refresh / navigate fail with a message for the user if the client has not sent it.
+                final var previouslyRunDiffString = isRunning
+                    ? createPreviouslyRunDiffString(updatedFreshCentre, miType, webUiConfig)
+                    : (String) customObject.get(PREVIOUSLY_RUN_DIFF_STRING_KEY);
+                final var previouslyRunCentre = restorePreviouslyRunCentre(previouslyRunDiffString, miType, webUiConfig, companionFinder);
                 final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(
                     miType,
                     saveAsName,
@@ -979,14 +965,20 @@ public class CriteriaResource extends AbstractWebResource {
                     webUiConfig,
                     sharingModel
                 );
-                // Performs criteria validation on centre refresh / navigate.
-                // It is needed if the user changed token role association between run and refresh actions.
+                // The diff string is kept in the criteria entity, so that the housekeeping of dynamic columns can adjust it.
+                previouslyRunCriteriaEntity.setPreviouslyRunDiffString(previouslyRunDiffString);
+                // Performs criteria validation and authorisation on centre refresh / navigate.
+                // Validation is needed because the criteria come from the client.
+                // Authorisation is needed if the user changed token role association between run and refresh actions.
                 if (!isRunning) {
-                    final Result authorisationResult = authoriseCriteriaEntity(previouslyRunCriteriaEntity);
-                    if (!authorisationResult.isSuccessful()) {
-                        LOGGER.debug("CRITERIA_RESOURCE: refresh failed (authorisation validation failed).");
+                    final var validationResult = previouslyRunCriteriaEntity.isValid();
+                    final var validationAndAuthorisationResult = validationResult.isSuccessful()
+                        ? authoriseCriteriaEntity(previouslyRunCriteriaEntity)
+                        : validationResult;
+                    if (!validationAndAuthorisationResult.isSuccessful()) {
+                        LOGGER.debug("CRITERIA_RESOURCE: refresh failed (validation or authorisation failed).");
                         return restUtil.resultJSONRepresentation(
-                            authorisationResult.copyWith(List.of(
+                            validationAndAuthorisationResult.copyWith(List.of(
                                 previouslyRunCriteriaEntity,
                                 updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, previouslyRunCentre, new LinkedHashMap<>(), empty()))
                             )
@@ -1038,6 +1030,9 @@ public class CriteriaResource extends AbstractWebResource {
                     centre.getEntityType(),
                     previouslyRunCriteriaEntity
                 ));
+                // The diff string is returned after the housekeeping of dynamic columns, which may have adjusted it.
+                // The client keeps it for its next refresh / navigate and actions.
+                pair.getKey().put(PREVIOUSLY_RUN_DIFF_STRING, previouslyRunCriteriaEntity.previouslyRunDiffString());
 
                 Stream<AbstractEntity<?>> processedEntities = enhanceResultEntitiesWithCustomPropertyValues(
                         centre,
@@ -1242,7 +1237,8 @@ public class CriteriaResource extends AbstractWebResource {
     /// Day arithmetic uses Joda `Days.daysBetween` in [DateTimeZone#getDefault] time-zone.
     ///
     /// `silentTickAdjuster` receives a `Consumer<IAddToResultTickManager>` to apply silently across surrogate centres.
-    /// Production wires it to `criteriaEntity::adjustCentreSilently` (so the mutation lands on `FRESH`, `PREVIOUSLY_RUN` and `SAVED`).
+    /// Production wires it to `criteriaEntity::adjustCentreSilently`.
+    /// So the mutation lands on `FRESH`, `SAVED` and the `PREVIOUSLY_RUN` diff string.
     /// Tests can pass a lambda that captures invocations and/or applies the mutation directly to a single tick.
     /// Package-private for testability.
     ///

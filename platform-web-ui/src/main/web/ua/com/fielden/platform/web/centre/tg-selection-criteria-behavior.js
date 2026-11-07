@@ -174,6 +174,19 @@ const TgSelectionCriteriaBehaviorImpl = {
             notify: true
         },
 
+        /// The diff string of the PREVIOUSLY_RUN centre of the last run in this client.
+        /// It is `null` if the centre has not been run here.
+        /// It arrives with run, refresh and navigate.
+        /// It also arrives with the actions that change columns, their widths or the preferred view.
+        /// It is kept as is, without reading it.
+        /// It is sent back with every centre context, validation and discard.
+        /// This way the server uses the last run of this client, whatever is run in other tabs or devices.
+        ///
+        _previouslyRunDiffString: {
+            type: String,
+            value: null
+        },
+
         ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -324,6 +337,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                     dynamicColumns: customObject.dynamicColumns || {},
                     summary: customObject.summary,
                     criteriaIndication: customObject.criteriaIndication,
+                    previouslyRunDiffString: customObject.previouslyRunDiffString,
                     columnWidths: customObject.columnWidths,
                     resultConfig: customObject.resultConfig,
                     primaryActionIndices: customObject.primaryActionIndices,
@@ -345,6 +359,10 @@ const TgSelectionCriteriaBehaviorImpl = {
 
             if (typeof result.criteriaIndication !== 'undefined') { // if criteriaIndication is defined -- then populate it into config button tooltip / colour
                 this.criteriaIndication = result.criteriaIndication;
+            }
+            // The diff string arrives only with successful run, refresh and navigate.
+            if (typeof result.previouslyRunDiffString === 'string') {
+                this._previouslyRunDiffString = result.previouslyRunDiffString;
             }
             if (typeof result.pageCount !== 'undefined') {
                 this.pageCount = result.pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
@@ -487,6 +505,10 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (typeof oldConfigUuid === 'string' && this._wasRun === 'yes') {
             this._wasRun = null; // reset _wasRun if configuration has been changed
         }
+        if (typeof oldConfigUuid === 'string') {
+            // The last run belongs to the previous configuration.
+            this._previouslyRunDiffString = null;
+        }
         this.fire('tg-config-uuid-changed', newConfigUuid);
     },
 
@@ -498,7 +520,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         const modPropHolder = TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _originalBindingEntity);
         if (this._reflector().isEntity(bindingEntity)) {
             modPropHolder["@@metaValues"] = {};
-            modPropHolder["@@wasRun"] = this._wasRun;
+            modPropHolder["@@previouslyRunDiffString"] = this._previouslyRunDiffString;
             // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
             for (let property in this.propertyModel) {
                 if (this.propertyModel.hasOwnProperty(property)) {
@@ -859,6 +881,8 @@ const TgSelectionCriteriaBehaviorImpl = {
         this._reflector().setCustomProperty(contextHolder, "@@saveAsName", this.saveAsName);
         this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
         this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
+        // The server takes the criteria of the last run in this client from this diff string.
+        this._reflector().setCustomProperty(contextHolder, "@@previouslyRunDiffString", this._previouslyRunDiffString);
         return contextHolder;
     },
 

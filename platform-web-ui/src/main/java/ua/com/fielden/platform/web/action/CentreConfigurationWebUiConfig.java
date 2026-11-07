@@ -125,6 +125,9 @@ public class CentreConfigurationWebUiConfig {
                                     // if pageCapacity has been changed then self.$.selection_criteria.pageCapacity will be updated after re-running in tg-entity-centre-behavior._postRun; otherwise -- no need to update it
                                     + "    self.$.egi.visibleRowsCount = functionalEntity.get('visibleRowsCount');\n"
                                     + "    self.$.egi.numberOfHeaderLines = functionalEntity.get('numberOfHeaderLines');\n"
+                                    // Keep the PREVIOUSLY_RUN diff string with the applied changes.
+                                    // Re-running replaces it anyway.
+                                    + "    self._keepPreviouslyRunDiffString(functionalEntity);\n"
                                     + "    if (functionalEntity.get('triggerRerun') === true) {\n"
                                     + "        return self.retrieve().then(function () { self.run(undefined, true); });\n"
                                     + "    } else {\n"

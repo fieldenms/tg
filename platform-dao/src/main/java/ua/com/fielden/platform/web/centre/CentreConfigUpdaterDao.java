@@ -40,13 +40,17 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntityBeingUpdated = actionAndCriteriaBeingUpdated._2;
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
 
-        // use centreAdjuster to update centre managers ('fresh' and 'previously_run') with columns visibility / order / sorting / pageCapacity / visibleRowsCount / numberOfHeaderLines information; also commit them to the database
+        // Use centreAdjuster to apply columns visibility, order and sorting.
+        // It also applies pageCapacity, visibleRowsCount and numberOfHeaderLines.
+        // They are applied to the FRESH centre, which is committed to the database, and to the PREVIOUSLY_RUN diff string.
+        // The new diff string is returned to the client, which keeps it.
         criteriaEntityBeingUpdated.adjustCentre(centreManager -> {
             applyNewOrderVisibilityAndSorting(centreManager.getSecondTick(), root, actionToSave.getChosenIds(), actionToSave.getSortingVals());
             centreManager.getSecondTick().setPageCapacity(actionToSave.getPageCapacity());
             centreManager.getSecondTick().setVisibleRowsCount(actionToSave.getVisibleRowsCount());
             centreManager.getSecondTick().setNumberOfHeaderLines(actionToSave.getNumberOfHeaderLines());
         });
+        actionToSave.setPreviouslyRunDiffString(criteriaEntityBeingUpdated.previouslyRunDiffString());
 
         // in case where sorting or pageCapacity has been changed from previous value, we need to trigger running from client-side using 'triggerRerun' property
         actionToSave.setTriggerRerun(actionToSave.getProperty("pageCapacity").isChangedFromOriginal() || actionToSave.getProperty("sortingVals").isChangedFromOriginal());
