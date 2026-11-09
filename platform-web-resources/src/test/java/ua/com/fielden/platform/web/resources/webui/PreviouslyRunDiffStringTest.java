@@ -6,6 +6,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
 
 import java.util.function.Consumer;
@@ -64,7 +65,15 @@ public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestC
 
         assertNull(criteriaEntity.previouslyRunDiffString());
         assertEquals(33, pageCapacityOf(criteriaEntity.getCentreDomainTreeMangerAndEnhancer()));
-        assertEquals(33, pageCapacityOf(criteriaEntity.previouslyRunCentre()));
+    }
+
+    @Test
+    public void previously_run_centre_of_a_client_that_has_not_run_the_centre_is_not_available() {
+        final var criteriaEntity = previouslyRunCriteriaEntity(null);
+
+        final var failure = assertThrows(Result.class, criteriaEntity::previouslyRunCentre);
+
+        assertEquals(ERR_PREVIOUSLY_RUN_NOT_AVAILABLE, failure.getMessage());
     }
 
     //////////////////////////////////// Adjusting the centre ////////////////////////////////////
@@ -109,16 +118,21 @@ public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestC
     }
 
     @Test
-    public void column_widths_of_a_client_that_has_not_run_the_centre_go_to_FRESH_centre() {
+    public void column_widths_of_a_client_that_has_not_run_the_centre_are_not_available_for_change() {
         final var criteriaEntity = previouslyRunCriteriaEntity(null);
         final var root = criteriaEntity.getEntityClass();
-        final var column = criteriaEntity.previouslyRunCentre().getSecondTick().checkedProperties(root).getFirst();
+        final var column = criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().checkedProperties(root).getFirst();
+        final var originalWidth = criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getWidth(root, column);
 
-        criteriaEntity.adjustColumnWidths(centre -> centre.getSecondTick().setWidth(root, column, 345));
+        final var failure = assertThrows(
+            Result.class,
+            () -> criteriaEntity.adjustColumnWidths(centre -> centre.getSecondTick().setWidth(root, column, originalWidth + 345))
+        );
 
+        assertEquals(ERR_PREVIOUSLY_RUN_NOT_AVAILABLE, failure.getMessage());
         assertNull(criteriaEntity.previouslyRunDiffString());
         final var freshCentre = updateCentre(user, MI_TYPE, FRESH_CENTRE_NAME, empty(), webUiConfig, coFinder);
-        assertEquals(345, freshCentre.getSecondTick().getWidth(root, column));
+        assertEquals("FRESH centre must not be changed.", originalWidth, freshCentre.getSecondTick().getWidth(root, column));
         assertNoPreviouslyRunCentreIsPersisted();
     }
 

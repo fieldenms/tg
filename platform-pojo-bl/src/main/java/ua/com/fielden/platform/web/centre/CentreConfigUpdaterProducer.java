@@ -51,7 +51,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         // They are also applied against 'previouslyRun' diff string.
         // They are not applied against 'saved' centre.
         // The 'previouslyRun' centre is restored from the diff string that the client keeps for its last run.
-        // It is 'fresh' if the centre has not been run in the client.
+        // Customise Columns is on the results view, so the client has run the centre.
         // Thus Discard button on selection criteria can be used to Discard all centre changes including those made in Customise Columns dialog.
         // Very similar situation is with Change Columns Width action.
         final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = masterEntity.previouslyRunCentre();

@@ -555,11 +555,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setFreshCentreSupplier(() -> updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, webUiConfig, companionFinder));
         validationPrototype.setSavedCentreSupplier(() -> updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, webUiConfig, companionFinder));
         // Returns PREVIOUSLY_RUN centre restored from the diff string that the client keeps.
-        // Returns FRESH centre if the centre has not been run in the client.
+        // It is used by actions on the results view, which the client shows only after a run.
+        // Fails with `ERR_PREVIOUSLY_RUN_NOT_AVAILABLE` if the client has not sent the diff string.
         validationPrototype.setPreviouslyRunCentreSupplier(() ->
-            validationPrototype.previouslyRunDiffString() != null
-            ? restorePreviouslyRunCentre(validationPrototype.previouslyRunDiffString(), miType, webUiConfig, companionFinder)
-            : updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, webUiConfig, companionFinder)
+            restorePreviouslyRunCentre(validationPrototype.previouslyRunDiffString(), miType, webUiConfig, companionFinder)
         );
 
         // returns whether centre (defined by 'specificSaveAsName, freshCentreSupplier' arguments) is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
@@ -618,6 +617,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // Also performs it against PREVIOUSLY_RUN diff string, if the client keeps one.
         // The diff string is then replaced with the result.
         // Returns applied FRESH centre.
+        //
+        // Without a diff string, only FRESH centre is mutated.
+        // This is always so for *active only* in criteria autocompleters (`CriteriaEntityAutocompletionResource`).
+        // Their criteria entity has no diff string, and their response does not return one.
+        // *Active only* affects neither the query nor the results, so the last run in the client stays valid.
+        // It is also the case for the preferred view, corrected on loading if it no longer exists in Centre DSL.
+        // This can happen before a run.
         validationPrototype.setCentreAdjuster(centreConsumer -> {
             final var centre = loadMutateAndCommitCentre(FRESH_CENTRE_NAME, centreConsumer, user, miType, saveAsName, webUiConfig, companionFinder);
             mutatePreviouslyRunDiffString(validationPrototype, centreConsumer, miType, webUiConfig, companionFinder);
@@ -625,47 +631,45 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // Performs mutation function centreConsumer (column widths adjustments) against PREVIOUSLY_RUN diff string.
         // Then copies column widths / grow factors to FRESH centre, which is saved into persistent storage.
+        // Columns are resized on the results view, which the client shows only after a run.
+        // Fails with `ERR_PREVIOUSLY_RUN_NOT_AVAILABLE` if the client has not sent the diff string.
         validationPrototype.setCentreColumnWidthsAdjuster(centreConsumer -> {
-            final var maybePreviouslyRunCentre = mutatePreviouslyRunDiffString(
+            final var previouslyRunCentre = mutatePreviouslyRunDiffString(
                 validationPrototype,
                 centreConsumer,
                 miType,
                 webUiConfig,
                 companionFinder
+            ).orElseThrow(() -> failure(ERR_PREVIOUSLY_RUN_NOT_AVAILABLE));
+            // The diffs are not applicable to 'fresh' centre.
+            // This is due to ability of 'fresh' centre to differ from 'previouslyRun' centre.
+            // Such mismatch appears after pressing Discard on selection criteria, or after changing columns elsewhere.
+            // That's why we need to carefully override only widths and grow factors of 'fresh' centre.
+            // They are taken from 'previouslyRun' centre.
+            // All other unrelated to CentreColumnWidthConfigUpdater information should remain 'as is'.
+            final var freshCentre = updateCentre(
+                user,
+                miType,
+                FRESH_CENTRE_NAME,
+                saveAsName,
+                webUiConfig,
+                companionFinder
             );
-            if (maybePreviouslyRunCentre.isEmpty()) {
-                // The centre has not been run in the client, so its columns are those of FRESH centre.
-                loadMutateAndCommitCentre(FRESH_CENTRE_NAME, centreConsumer, user, miType, saveAsName, webUiConfig, companionFinder);
-            } else {
-                // The diffs are not applicable to 'fresh' centre.
-                // This is due to ability of 'fresh' centre to differ from 'previouslyRun' centre.
-                // Such mismatch appears after pressing Discard on selection criteria, or after changing columns elsewhere.
-                // That's why we need to carefully override only widths and grow factors of 'fresh' centre.
-                // They are taken from 'previouslyRun' centre.
-                // All other unrelated to CentreColumnWidthConfigUpdater information should remain 'as is'.
-                final var previouslyRunCentre = maybePreviouslyRunCentre.get();
-                final var freshCentre = updateCentre(
-                    user,
-                    miType,
-                    FRESH_CENTRE_NAME,
-                    saveAsName,
-                    webUiConfig,
-                    companionFinder
-                );
-                freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre.getSecondTick().getWidthsAndGrowFactors());
-                freshCentre.getSecondTick().setDynamicWidthsAndGrowFactors(previouslyRunCentre.getSecondTick().getDynamicWidthsAndGrowFactors());
-                freshCentre.getSecondTick().setDynamicLastSeenMap(previouslyRunCentre.getSecondTick().getDynamicLastSeenMap());
-                commitCentreWithoutConflicts(
-                    user,
-                    miType,
-                    FRESH_CENTRE_NAME,
-                    saveAsName,
-                    freshCentre,
-                    null /* newDesc */,
-                    webUiConfig,
-                    companionFinder
-                );
-            }
+            freshCentre.getSecondTick().setWidthsAndGrowFactors(previouslyRunCentre.getSecondTick().getWidthsAndGrowFactors());
+            freshCentre.getSecondTick().setDynamicWidthsAndGrowFactors(
+                previouslyRunCentre.getSecondTick().getDynamicWidthsAndGrowFactors()
+            );
+            freshCentre.getSecondTick().setDynamicLastSeenMap(previouslyRunCentre.getSecondTick().getDynamicLastSeenMap());
+            commitCentreWithoutConflicts(
+                user,
+                miType,
+                FRESH_CENTRE_NAME,
+                saveAsName,
+                freshCentre,
+                null /* newDesc */,
+                webUiConfig,
+                companionFinder
+            );
         });
         // SAVED-half of the silent adjuster — the FRESH and PREVIOUSLY_RUN halves are covered by `centreAdjuster`.
         // `EnhancedCentreEntityQueryCriteria.adjustCentreSilently` composes the two so all three surrogates are kept in sync.
@@ -1142,8 +1146,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     ///
     /// The criteria entity represents the last run in the client.
     /// It is created from the PREVIOUSLY_RUN diff string in the custom object of `centreContextHolder`.
+    ///
     /// If the centre has not been run in the client, there is no diff string.
-    /// The criteria entity is then created from FRESH centre.
+    /// This is also the case after moving to another configuration, until it is run.
+    /// The criteria entity is then created from FRESH centre, which the selection criteria view shows.
+    /// Without a run, the client shows only the selection criteria view.
+    /// Its actions that require selection criteria are:
+    ///
+    /// - Configuration actions: New, Duplicate, Load, Edit, Delete, Configure and Save.
+    ///   They use the criteria entity for its functions, such as saving or loading configurations.
+    ///   They apply the modifHolder of `centreContextHolder` to FRESH centre (see `CentreConfigUtils.applyCriteria`).
+    /// - Front actions.
+    ///   In standard New and locator actions, selection criteria is the context part before `withComputation`.
+    ///   It is chosen because every centre has selection criteria. (refs https://github.com/fieldenms/tg/issues/2025)
+    ///   Their producers use the computation.
+    ///   Application front actions that read criteria values get those of FRESH centre.
+    ///
+    /// Actions on the results view always have the diff string.
+    /// Tiny hyperlinks created before the diff string was introduced have no diff string, and use FRESH centre.
     ///
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(
         final CentreContextHolder centreContextHolder,
@@ -1316,6 +1336,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     ///
     /// If the centre has not been run in the client, `previouslyRunDiffString` is `null`.
     /// The criteria entity is then created from FRESH centre.
+    /// See `createCriteriaEntityForContext` for the actions that use it before a run.
     ///
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createPreviouslyRunCriteriaEntity(
         final String previouslyRunDiffString,

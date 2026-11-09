@@ -88,7 +88,7 @@ public class CentreUpdater {
     /// The message of the failure to restore a PREVIOUSLY_RUN centre from the diff string that the client keeps.
     /// It is used when the client sent no diff string, or a string that is not a centre diff.
     ///
-    public static final String ERR_PREVIOUSLY_RUN_NOT_AVAILABLE = "The last run is not available. Please run again.";
+    public static final String ERR_PREVIOUSLY_RUN_NOT_AVAILABLE = "Reload app. Last run unavailable.";
     
     /**
      * A type of meta values.

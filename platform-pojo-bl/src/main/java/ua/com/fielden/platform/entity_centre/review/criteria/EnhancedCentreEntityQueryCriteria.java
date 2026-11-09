@@ -40,6 +40,8 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier;
     /// The diff string of the PREVIOUSLY_RUN centre, which the client keeps for its last run.
     /// It is `null` if the centre has not been run in the client.
+    /// It is also `null` for the criteria entity of a criteria autocompleter.
+    /// So *active only* is applied to FRESH centre only.
     /// [#adjustCentre(Consumer)] and [#adjustColumnWidths(Consumer)] replace it with the diff string of the adjusted centre.
     /// See `CentreUpdater.createPreviouslyRunDiffString` for its format.
     ///
@@ -165,7 +167,8 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     }
 
     /// The PREVIOUSLY_RUN centre restored from [#previouslyRunDiffString()].
-    /// If the centre has not been run in the client, this is the FRESH centre.
+    /// It is used by actions on the results view, which the client shows only after a run.
+    /// Fails if the client has not sent the diff string.
     ///
     public ICentreDomainTreeManagerAndEnhancer previouslyRunCentre() {
         return previouslyRunCentreSupplier.get();
