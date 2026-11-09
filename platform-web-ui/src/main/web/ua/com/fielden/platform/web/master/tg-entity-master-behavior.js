@@ -99,11 +99,9 @@ const findFirstViewWithNewAction = function (dialog, viewWithAction) {
  * @see https://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
  */
 const _isElementInViewport = function (el) {
-    let parent = el;
-    while (parent && parent.tagName !== 'TG-SCROLLABLE-COMPONENT') {
-        // go through parent elements (including going out from shadow DOM)
-        parent = parent.assignedSlot || parent.parentElement || parent.getRootNode().host; // tg-flex-layout should be distributed into slot with tg-scrollable-component ancestor; fallback to standard lookup in case if not [yet] distributed
-    }
+    // go through parent elements in the flattened tree, including going out from shadow DOM;
+    // tg-flex-layout should be distributed into slot with tg-scrollable-component ancestor; fallback to standard lookup in case if not [yet] distributed
+    const parent = getFlattenedParentAnd(el, current => current.tagName === 'TG-SCROLLABLE-COMPONENT');
     const root = parent ? parent.$.scrollablePanel : null;
     if (!root) {
         return true;

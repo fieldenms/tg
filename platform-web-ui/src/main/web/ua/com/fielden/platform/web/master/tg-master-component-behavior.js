@@ -5,7 +5,7 @@ import '/resources/images/tg-icons.js';
 import { addListener } from '/resources/polymer/@polymer/polymer/lib/utils/gestures.js';
 import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
-import { deepestActiveElement, isInHierarchy, isInFlattenedHierarchy, tearDownEvent, localStorageKey, getRelativePos, getParentAnd, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import { deepestActiveElement, isInHierarchy, isInFlattenedHierarchy, tearDownEvent, localStorageKey, getRelativePos, getParentAnd, getFlattenedParentAnd, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 
 /**
@@ -546,11 +546,7 @@ const TgMasterComponentBehaviorImpl = {
      * Returns the nearest ancestor of the component that scrolls, through the slots and shadow roots on the way.
      */
     _scrollingParent: function () {
-        let parent = this;
-        while (parent && parent.offsetHeight === parent.scrollHeight) {
-            parent = parent.assignedSlot || parent.parentElement || parent.getRootNode().host;
-        }
-        return parent;
+        return getFlattenedParentAnd(this, current => current.offsetHeight !== current.scrollHeight);
     },
 
     _heightKey: function () {

@@ -8,7 +8,7 @@ import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/c
 
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
 import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
-import { tearDownEvent, localStorageKey, getRelativePos, allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, localStorageKey, getRelativePos, allDefined, getFlattenedParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
     <style>
@@ -270,12 +270,8 @@ export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior
     }
 
     _getScrollingParent() {
-        let parent = this;
-        while (parent && parent.offsetHeight === parent.scrollHeight) {
-            // go through parent elements (including going out from shadow DOM)
-            parent = parent.assignedSlot || parent.parentElement || parent.getRootNode().host;
-        }
-        return parent;
+        // go through parent elements in the flattened tree, including going out from shadow DOM
+        return getFlattenedParentAnd(this, current => current.offsetHeight !== current.scrollHeight);
     }
 
     _makeInputUnselectable(e) {
