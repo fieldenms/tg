@@ -79,6 +79,7 @@ import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreContext.CHOSENENTITY_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreContext.INSTANCEBASEDCONTINUATION_PROPERTY_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.FRONT;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.CHANGED;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.NONE;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
@@ -121,6 +122,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     /// It is sent in the custom object of a centre context, and in the modifications holder of the selection criteria.
     /// It is absent if the centre has not been run in the client.
     static final String PREVIOUSLY_RUN_DIFF_STRING_KEY = "@@previouslyRunDiffString";
+
+    /// The key of the kind of the action, whose centre context is sent in the custom object.
+    /// Its values are the names of `FunctionalActionKind` constants.
+    ///
+    static final String ACTION_KIND_KEY = "@@actionKind";
 
     /// The key for customObject's value containing the preferred view index.
     static final String PREFERRED_VIEW = "preferredView";
@@ -1146,23 +1152,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     ///
     /// The criteria entity represents the last run in the client.
     /// It is created from the PREVIOUSLY_RUN diff string in the custom object of `centreContextHolder`.
+    /// Actions on the results view always have the diff string, because the client shows this view only after a run.
     ///
-    /// If the centre has not been run in the client, there is no diff string.
+    /// Front actions (`FunctionalActionKind.FRONT`) are on the selection criteria view, which shows FRESH centre.
+    /// Their criteria entity is always created from FRESH centre, whether the client has run the centre or not.
+    /// This holds for front actions of both standalone and embedded centres.
+    /// In standard New and locator actions, selection criteria is the context part before `withComputation`.
+    /// It is chosen because every centre has selection criteria. (refs https://github.com/fieldenms/tg/issues/2025)
+    /// Their producers use the computation.
+    ///
+    /// For other actions, there is no diff string if the centre has not been run in the client.
     /// This is also the case after moving to another configuration, until it is run.
-    /// The criteria entity is then created from FRESH centre, which the selection criteria view shows.
+    /// The criteria entity is then created from FRESH centre too.
     /// Without a run, the client shows only the selection criteria view.
-    /// Its actions that require selection criteria are:
+    /// Its other actions that require selection criteria are configuration actions.
+    /// These are New, Duplicate, Load, Edit, Delete, Configure and Save.
+    /// They use the criteria entity for its functions, such as saving or loading configurations.
+    /// They apply the modifHolder of `centreContextHolder` to FRESH centre (see `CentreConfigUtils.applyCriteria`).
     ///
-    /// - Configuration actions: New, Duplicate, Load, Edit, Delete, Configure and Save.
-    ///   They use the criteria entity for its functions, such as saving or loading configurations.
-    ///   They apply the modifHolder of `centreContextHolder` to FRESH centre (see `CentreConfigUtils.applyCriteria`).
-    /// - Front actions.
-    ///   In standard New and locator actions, selection criteria is the context part before `withComputation`.
-    ///   It is chosen because every centre has selection criteria. (refs https://github.com/fieldenms/tg/issues/2025)
-    ///   Their producers use the computation.
-    ///   Application front actions that read criteria values get those of FRESH centre.
-    ///
-    /// Actions on the results view always have the diff string.
     /// Tiny hyperlinks created before the diff string was introduced have no diff string, and use FRESH centre.
     ///
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(
@@ -1182,8 +1189,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final String saveAsNameString = (String) centreContextHolder.getCustomObject().get("@@saveAsName");
         final Optional<String> saveAsName = "".equals(saveAsNameString) ? empty() : of(saveAsNameString);
 
+        // A `null` diff string creates the criteria entity from FRESH centre.
+        final var previouslyRunDiffString = isFrontAction(centreContextHolder)
+            ? null
+            : (String) centreContextHolder.getCustomObject().get(PREVIOUSLY_RUN_DIFF_STRING_KEY);
         final M criteriaEntity = (M) createPreviouslyRunCriteriaEntity(
-            (String) centreContextHolder.getCustomObject().get(PREVIOUSLY_RUN_DIFF_STRING_KEY),
+            previouslyRunDiffString,
             companionFinder,
             critGenerator,
             miType,
@@ -1206,6 +1217,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             )
         );
         return criteriaEntity;
+    }
+
+    /// Determines whether `centreContextHolder` is the context of a front action of a centre.
+    ///
+    private static boolean isFrontAction(final CentreContextHolder centreContextHolder) {
+        return FRONT.name().equals(centreContextHolder.getCustomObject().get(ACTION_KIND_KEY));
     }
 
     /// A method to stream entities based on the centre query, including various transformations such as custom properties etc.
