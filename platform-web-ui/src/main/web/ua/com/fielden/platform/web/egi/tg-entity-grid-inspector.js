@@ -28,6 +28,7 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 import { TgEgiDataRetrievalBehavior } from '/resources/egi/tg-egi-data-retrieval-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
+import { isInMasterComponent } from '/resources/master/tg-master-component-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages, getFirstEntityTypeAndProperty } from '/resources/reflection/tg-polymer-utils.js';
@@ -45,7 +46,7 @@ const template = html`
         :host {
             @apply --layout-vertical;
         }
-        :host([fit-to-height]) {
+        :host([_fits-to-height]) {
             position: absolute;
             top:0;
             bottom:0;
@@ -398,7 +399,7 @@ const template = html`
     <slot id="default_property_action" name="defaultPropertyAction" hidden></slot>
     <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
-    <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
+    <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[_fitsToHeight]]">
         <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
         <!--Table toolbar-->
         <tg-responsive-toolbar id="egiToolbar" show-top-shadow$="[[_toolbarShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcToolbarStyle(canDragFrom)]]">
@@ -516,7 +517,7 @@ const template = html`
                 </div>
             </div>
             <!-- Table footer -->
-            <div id="bottom_egi" class="footer" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" style$="[[_calcFooterStyle(summaryFixed, fitToHeight)]]">
+            <div id="bottom_egi" class="footer" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" style$="[[_calcFooterStyle(summaryFixed, _fitsToHeight)]]">
                 <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                     <div class="table-footer-row">
                         <div class="drag-anchor cell" show-left-shadow$="[[_dragAnchorShadowVisible(canDragFrom, dragAnchorFixed, checkboxesFixed, _showLeftShadow)]]" hidden$="[[!canDragFrom]]" style$="[[_calcDragBoxStyle(dragAnchorFixed)]]"></div>
@@ -789,10 +790,31 @@ Polymer({
         },
         /**
          * Indicates whether content should be extended to EGI's height or not.
+         * An EGI in the content of a master component fits to height whatever this property is, as described in '_fitsToHeight'.
          */
         fitToHeight: {
             type: Boolean,
             value: false
+        },
+        /**
+         * Indicates whether this EGI is in the content of a master component, such as the EGI of a centre embedded by 'tg-master-centre', as described in `isInMasterComponent`.
+         * Such an EGI always fits to height, as described in '_fitsToHeight', and 'constantHeight' and 'visibleRowsCount' do not apply to it,
+         * so that it fills the component, as the component stretches the grid to its height with mixin '--tg-grid-container', which collapses the grid of an EGI that does not fit to height, leaving no rows visible.
+         * It is determined once this EGI is attached.
+         */
+        _inMasterComponent: {
+            type: Boolean,
+            value: false
+        },
+        /**
+         * Indicates whether this EGI fits to height, filling the nearest positioned ancestor, such as the result view of its centre, with its content extended to its height:
+         * whether 'fitToHeight' is set or this EGI is in the content of a master component, as described in '_inMasterComponent'.
+         * It is derived from both rather than set in 'fitToHeight', so that an EGI in the content of a master component keeps fitting to height whatever is assigned to 'fitToHeight'.
+         */
+        _fitsToHeight: {
+            type: Boolean,
+            computed: '_computeFitsToHeight(fitToHeight, _inMasterComponent)',
+            reflectToAttribute: true
         },
         //Controls visibility of the toolbar.
         toolbarVisible: {
@@ -887,7 +909,7 @@ Polymer({
 
     observers: [
         "_columnsChanged(columns, fixedColumns)",
-        "_heightRelatedPropertiesChanged(visibleRowsCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"
+        "_heightRelatedPropertiesChanged(visibleRowsCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _inMasterComponent)"
     ],
 
     created: function () {
@@ -988,6 +1010,7 @@ Polymer({
     },
 
     attached: function () {
+        this._inMasterComponent = isInMasterComponent(this);
         this._updateTableSizeAsync();
         this._ownKeyBindings = {};
         if (this.customShortcuts) {
@@ -1980,9 +2003,13 @@ Polymer({
         return secondaryActionsFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; right: 0;" : "";
     },
 
-    _calcFooterStyle: function (summaryFixed, fitToHeight) {
+    _calcFooterStyle: function (summaryFixed, fitsToHeight) {
         const style = summaryFixed ? "position: sticky; position: -webkit-sticky; z-index: 1; bottom: 0;" : "";
-        return style + (fitToHeight ? "margin-top:auto;" : "");
+        return style + (fitsToHeight ? "margin-top:auto;" : "");
+    },
+
+    _computeFitsToHeight: function (fitToHeight, _inMasterComponent) {
+        return fitToHeight || _inMasterComponent;
     },
 
     _isSortingVisible: function (sortable, sorting) {
@@ -2133,13 +2160,15 @@ Polymer({
         this._totalsRows = gridSummary;
     },
 
-    _heightRelatedPropertiesChanged: function (visibleRowsCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount) {
+    _heightRelatedPropertiesChanged: function (visibleRowsCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount, _inMasterComponent) {
         //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
         this.$.paperMaterial.style.removeProperty("height");
         this.$.paperMaterial.style.removeProperty("min-height");
         this.$.baseContainer.style.removeProperty("height");
         this.$.baseContainer.style.removeProperty("max-height");
-        if (constantHeight) { //Set the height for the egi
+        if (_inMasterComponent) {
+            //Neither constant height nor visible row count applies, as the EGI fills the master component, as described in '_inMasterComponent'
+        } else if (constantHeight) { //Set the height for the egi
             this.$.paperMaterial.style["height"] = "calc(" + constantHeight + " - 20px)";
         } else if (visibleRowsCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
             this.$.paperMaterial.style["min-height"] = "fit-content";
