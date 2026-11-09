@@ -155,10 +155,30 @@ export function isInHierarchy (parent, descendant) {
     return !!current;
 };
 
+/**
+ * Returns true if the descendant has the parent as an ancestor in the flattened tree, in which a slotted element is within the slot that it is assigned to, otherwise returns false.
+ * Unlike 'isInHierarchy', it holds for an element that is slotted into the parent, such as a property action of a master component in the toolbar of the component.
+ */
+export function isInFlattenedHierarchy (parent, descendant) {
+    return !!getFlattenedParentAnd(descendant, current => current === parent);
+};
+
 export function getParentAnd(element, predicate) {
     let current = element;
     while (current && !predicate(current)) {
         current = current.parentElement || current.getRootNode().host;
+    }
+    return current;
+}
+
+/**
+ * Returns 'element' or its nearest ancestor in the flattened tree for which 'predicate' holds, or a falsy value if there is none;
+ * in the flattened tree, a slotted element is within the slot that it is assigned to, rather than within its parent element, as in 'getParentAnd'.
+ */
+export function getFlattenedParentAnd(element, predicate) {
+    let current = element;
+    while (current && !predicate(current)) {
+        current = current.assignedSlot || current.parentElement || current.getRootNode().host;
     }
     return current;
 }

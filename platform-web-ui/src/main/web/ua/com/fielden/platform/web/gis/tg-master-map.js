@@ -24,6 +24,13 @@ const template = html`
         .caption[hidden] {
             display: none;
         }
+        /* the element at which the component is focused as a whole, which holds the toolbar and the map under the caption, so that its focus ring surrounds them, but not the title */
+        .content {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
         /* the toolbar under the caption, which moves the actions that do not fit into a dropdown, as the toolbar of a map in an alternative view of a centre */
         .toolbar {
             flex-shrink: 0;
@@ -62,12 +69,14 @@ const template = html`
         }
     </style>
     <div class="caption tg-component-title" hidden$="[[!propTitle]]" tooltip-text$="[[propDesc]]">[[propTitle]]</div>
-    <tg-responsive-toolbar id="toolbar" class="toolbar" hidden$="[[!_hasToolbar(_hasPropertyActions, labelsToggle)]]">
-        <paper-icon-button slot="entity-specific-action" class="entity-specific-action" style$="[[_labelsToggleStyle(_labelsShown)]]" icon="icons:label" toggles active="{{_labelsShown}}" hidden$="[[!labelsToggle]]" tooltip-text="Show / hide map labels."></paper-icon-button>
-        <slot slot="entity-specific-action" class="entity-specific-action" name="property-action"></slot>
-    </tg-responsive-toolbar>
-    <div class="map-container">
-        <div id="map" class="map" tabindex="0"></div>
+    <div id="content" class="content" tabindex="0">
+        <tg-responsive-toolbar id="toolbar" class="toolbar" hidden$="[[!_hasToolbar(_hasPropertyActions, labelsToggle)]]">
+            <paper-icon-button slot="entity-specific-action" class="entity-specific-action" style$="[[_labelsToggleStyle(_labelsShown)]]" icon="icons:label" toggles active="{{_labelsShown}}" hidden$="[[!labelsToggle]]" tooltip-text="Show / hide map labels."></paper-icon-button>
+            <slot slot="entity-specific-action" class="entity-specific-action" name="property-action"></slot>
+        </tg-responsive-toolbar>
+        <div class="map-container">
+            <div id="map" class="map"></div>
+        </div>
     </div>
 `;
 
@@ -92,7 +101,10 @@ const template = html`
  * The toolbar has the property actions, and a toggle that shows and hides the labels of map features, as the labels toggle of centre maps, if attribute 'labels-toggle' is set.
  * A property action reaches the map as 'action.masterMap', wherever the toolbar places the action, and the GIS component as 'action.masterMap.gisComponent' once the map is created.
  *
- * The component is focused as a whole at the map, as described in 'TgMasterComponentBehavior', and the controls of the map, such as those of zooming, are its content.
+ * The component is focused as a whole at the element that holds the toolbar and the map, below the title, as described in 'TgMasterComponentBehavior', so that its focus ring surrounds them, as that of an embedded centre surrounds the centre.
+ * The actions of the toolbar, including the property actions, and the map with its controls, such as those of zooming, are its content:
+ * Enter moves the focus into it, and the map itself, which the map makes focusable once it is created, can then be focused, so that the keys of the map, such as the arrows that move it, can be used.
+ * A click on the map focuses the map, as an element of the content, and a click elsewhere in the toolbar focuses the component as a whole.
  */
 class TgMasterMap extends mixinBehaviors([TgMasterComponentBehavior], PolymerElement) {
 
@@ -204,11 +216,11 @@ class TgMasterMap extends mixinBehaviors([TgMasterComponentBehavior], PolymerEle
     }
 
     /**
-     * Returns the element of the map, at which the component is focused as a whole, as described in 'TgMasterComponentBehavior', so that the keys of the map, such as the arrows that move it, can be used.
+     * Returns the element that holds the toolbar and the map, below the title, at which the component is focused as a whole, as described in 'TgMasterComponentBehavior'.
      * The element declares 'tabindex' '0', so that it can be focused also before the map is created, which is once the component has a size.
      */
     component() {
-        return this.$.map;
+        return this.$.content;
     }
 
     _labelsShownChanged(labelsShown) {

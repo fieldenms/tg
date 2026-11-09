@@ -5,7 +5,7 @@ import '/resources/images/tg-icons.js';
 import { addListener } from '/resources/polymer/@polymer/polymer/lib/utils/gestures.js';
 import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
-import { deepestActiveElement, isInHierarchy, tearDownEvent, localStorageKey, getRelativePos, getParentAnd, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import { deepestActiveElement, isInHierarchy, isInFlattenedHierarchy, tearDownEvent, localStorageKey, getRelativePos, getParentAnd, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 
 /**
@@ -138,12 +138,13 @@ const componentStyles = `
  * A refresh asked for while the component is blocked takes place once it is unblocked, and refreshes asked for at once, such as when a save also unblocks the component, take place once.
  *
  * The component is focused as a whole, as a rich text editor is, at the element returned by `component()`: the component itself by default,
- * or an element of its shadow tree in which the component presents its content, such as the map of a map component.
+ * or an element of its shadow tree in which the component presents its content, such as the element of a map component that holds its toolbar and the map, below its title.
  * The component declares `tabindex` on that element, such as `tabindex="0"` in its template, or on itself, so that the element can be focused, and a click on it focuses it.
- * The content of the component is within that element: its shadow tree and its property actions for the component itself, or the elements within an element of its shadow tree,
- * such as the controls of a map or the elements of an embedded centre.
+ * The content of the component is within that element in the flattened tree, in which a slotted element is within the slot that it is assigned to:
+ * its shadow tree and its property actions for the component itself, or the elements within an element of its shadow tree, including the elements slotted into it,
+ * such as the toolbar and the controls of a map, with the property actions slotted into the toolbar, or the elements of an embedded centre.
  * Tab and Shift+Tab move the focus among the editors of the master to that element and on from it, as well as to the focusable elements of the component outside its content,
- * such as property actions beside a map, but not into its content.
+ * such as the property actions in the caption of an embedded centre, but not into its content.
  * Enter moves the focus from that element to the first focusable element of its content, where Tab and Shift+Tab move the focus among the focusable elements of the content only,
  * going round from the last to the first and from the first to the last, and Esc moves the focus back to that element.
  * A click on an element of the content focuses it, as it does an element of a rich text editor.
@@ -364,7 +365,7 @@ const TgMasterComponentBehaviorImpl = {
     _reportFocus: function (focusedElement) {
         if (this._updateManuallyFocusedInputWith) {
             const component = this._componentToFocus();
-            this._updateManuallyFocusedInputWith(component && focusedElement && isInHierarchy(component, focusedElement) ? component : null);
+            this._updateManuallyFocusedInputWith(component && focusedElement && isInFlattenedHierarchy(component, focusedElement) ? component : null);
         }
     },
 
@@ -608,7 +609,7 @@ const TgMasterComponentBehaviorImpl = {
                     tearDownEvent(event);
                 }
             }
-        } else if (isInHierarchy(component, focusedElement)) {
+        } else if (isInFlattenedHierarchy(component, focusedElement)) {
             if (event.key === 'Escape') {
                 component.focus();
                 tearDownEvent(event);
@@ -624,7 +625,7 @@ const TgMasterComponentBehaviorImpl = {
     },
 
     /**
-     * Returns the focusable elements of the content of the component, which are within the element returned by `component()`, in the order of focus traversal.
+     * Returns the focusable elements of the content of the component, which are within the element returned by `component()`, including those slotted into it, in the order of focus traversal.
      */
     _getContentFocusableElements: function () {
         return queryElements(this.component(), FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null && !_isInert(element, this));

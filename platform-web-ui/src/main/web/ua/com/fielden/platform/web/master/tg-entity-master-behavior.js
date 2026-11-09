@@ -1,7 +1,7 @@
 import '/resources/egi/tg-custom-action-dialog.js';
 import '/resources/components/postal-lib.js';
 
-import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isTouchEnabled, getParentAnd, isIPhoneOs, isIPadOs, isMacSafari } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isTouchEnabled, getParentAnd, getFlattenedParentAnd, isIPhoneOs, isIPadOs, isMacSafari } from '/resources/reflection/tg-polymer-utils.js';
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
@@ -142,10 +142,11 @@ const _isComponentToFocus = function (element) {
 
 /**
  * Determines whether 'element' of 'container' is in the content of a master component focused as a whole, which is within the element at which the component is focused, as described in 'TgMasterComponentBehavior':
- * whether any of the ancestors of 'element' up to 'container', including the hosts of shadow roots, is such an element.
+ * whether any of the ancestors of 'element' up to 'container', from its parent element or the host of its shadow root on in the flattened tree, including the hosts of shadow roots and the slots of slotted elements, is such an element,
+ * as it is for a property action that the component slots into that element, such as into the toolbar of a map.
  */
 const _isInComponentContent = function (element, container) {
-    const componentToFocusOrContainer = getParentAnd(element.parentElement || element.getRootNode().host, current => current === container || _isComponentToFocus(current));
+    const componentToFocusOrContainer = getFlattenedParentAnd(element.parentElement || element.getRootNode().host, current => current === container || _isComponentToFocus(current));
     return !!componentToFocusOrContainer && componentToFocusOrContainer !== container;
 };
 
