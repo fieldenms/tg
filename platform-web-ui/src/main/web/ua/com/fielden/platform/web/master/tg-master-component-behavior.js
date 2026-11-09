@@ -5,7 +5,7 @@ import '/resources/images/tg-icons.js';
 import { addListener } from '/resources/polymer/@polymer/polymer/lib/utils/gestures.js';
 import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
-import { deepestActiveElement, isInHierarchy, isInFlattenedHierarchy, tearDownEvent, localStorageKey, getRelativePos, getParentAnd, getFlattenedParentAnd, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import { deepestActiveElement, isInHierarchy, isInFlattenedHierarchy, tearDownEvent, localStorageKey, getRelativePos, getFlattenedParentAnd, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 
 /**
@@ -20,16 +20,18 @@ export const MSG_BLOCKED_FOR_UNSAVED_CHANGES = 'Please save or cancel changes.';
 
 /**
  * Determines whether 'element' of 'container' is inert, as are the elements of a blocked master component, which cannot be focused:
- * whether 'element' or any of its ancestors up to 'container', including the hosts of shadow roots, is inert.
+ * whether 'element' or any of its ancestors up to 'container' in the flattened tree, including the hosts of shadow roots and the slots of slotted elements, is inert,
+ * as the browser makes inert the elements within an inert element in the flattened tree.
  */
 const _isInert = function (element, container) {
-    const inertOrContainer = getParentAnd(element, current => current === container || current.inert);
+    const inertOrContainer = getFlattenedParentAnd(element, current => current === container || current.inert);
     return !!inertOrContainer && inertOrContainer.inert === true;
 };
 
 /**
  * Determines whether 'element' is in the content of a master component, as are a centre embedded by 'tg-master-centre' and the masters of its views:
- * whether any of the ancestors of 'element', including the hosts of shadow roots, is a master component, which is marked with attribute 'tg-master-component'.
+ * whether any of the ancestors of 'element', from its parent element or the host of its shadow root on in the flattened tree, including the hosts of shadow roots and the slots of slotted elements,
+ * is a master component, which is marked with attribute 'tg-master-component'.
  * Such centres and masters do not take the focus by themselves, as when they load or the component refreshes them,
  * so that they do not take it from the master of the component, which focuses its editors and components when it shows the entity, as described in 'TgEntityMasterBehavior'.
  * The selection view of such a centre fills the height of the centre, with the selection criteria growing to the height that is left by the toolbar and the buttons of the view,
@@ -37,7 +39,7 @@ const _isInert = function (element, container) {
  * The grid of such a centre always fits to height, filling the component, whatever height or number of visible rows the centre declares, as described in '_inMasterComponent' of 'tg-entity-grid-inspector'.
  */
 export const isInMasterComponent = function (element) {
-    return !!getParentAnd(element.parentElement || element.getRootNode().host, current => current.hasAttribute('tg-master-component'));
+    return !!getFlattenedParentAnd(element.parentElement || element.getRootNode().host, current => current.hasAttribute('tg-master-component'));
 };
 
 /**

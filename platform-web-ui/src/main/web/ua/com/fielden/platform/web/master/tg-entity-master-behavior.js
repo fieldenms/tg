@@ -116,10 +116,11 @@ const _isElementInViewport = function (el) {
 
 /**
  * Determines whether 'element' of 'container' is inert, as are the elements of a blocked master component, which cannot be focused:
- * whether 'element' or any of its ancestors up to 'container', including the hosts of shadow roots, is inert.
+ * whether 'element' or any of its ancestors up to 'container' in the flattened tree, including the hosts of shadow roots and the slots of slotted elements, is inert,
+ * as the browser makes inert the elements within an inert element in the flattened tree.
  */
 const _isInert = function (element, container) {
-    const inertOrContainer = getParentAnd(element, current => current === container || current.inert);
+    const inertOrContainer = getFlattenedParentAnd(element, current => current === container || current.inert);
     return !!inertOrContainer && inertOrContainer.inert === true;
 };
 
@@ -150,10 +151,10 @@ const _isInComponentContent = function (element, container) {
 
 /**
  * Determines whether 'element' of 'container' belongs to a master component, as the component itself and its elements do:
- * whether 'element' or any of its ancestors up to 'container', including the hosts of shadow roots, is a master component.
+ * whether 'element' or any of its ancestors up to 'container' in the flattened tree, including the hosts of shadow roots and the slots of slotted elements, is a master component.
  */
 const _belongsToComponent = function (element, container) {
-    const componentOrContainer = getParentAnd(element, current => current === container || _isComponent(current));
+    const componentOrContainer = getFlattenedParentAnd(element, current => current === container || _isComponent(current));
     return !!componentOrContainer && componentOrContainer !== container;
 };
 
