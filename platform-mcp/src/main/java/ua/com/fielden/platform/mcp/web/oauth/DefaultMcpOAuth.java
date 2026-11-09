@@ -122,4 +122,9 @@ public class DefaultMcpOAuth implements IMcpOAuth {
         return result;
     }
 
+    @Override
+    public String resourceFromParam(@Nullable final String resource) {
+        return resource != null ? resource : protectedResourceMetadata().resource();
+    }
+
 }

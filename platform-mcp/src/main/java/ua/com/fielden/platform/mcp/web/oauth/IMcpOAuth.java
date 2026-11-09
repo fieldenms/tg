@@ -12,6 +12,7 @@ import java.util.List;
 /// * [The OAuth 2.1 Authorization Framework](https://www.ietf.org/archive/id/draft-ietf-oauth-v2-1-13.html)
 /// * [RFC 9278 - OAuth 2.0 Protected Resource Metadata](https://datatracker.ietf.org/doc/html/rfc9728)
 /// * [RFC 8414 - OAuth 2.0 Authorization Server Metadata](https://datatracker.ietf.org/doc/html/rfc8414)
+/// * [RFC 8707 - Resource Indicators for OAuth 2.0](https://www.rfc-editor.org/rfc/rfc8707.html)
 ///
 @ImplementedBy(DefaultMcpOAuth.class)
 public interface IMcpOAuth {
@@ -44,6 +45,14 @@ public interface IMcpOAuth {
     /// @see McpOAuthClient#isRedirectUriRegistered(String)
     ///
     Result validateClient(@Nullable String clientId, @Nullable String redirectUri);
+
+    /// Returns the resource targeted by a request to the authorisation server, given the value of its parameter `resource`.
+    ///
+    /// A request without this parameter (`resource == null`) targets the MCP server, which is the only protected resource.
+    /// MCP requires clients to send this parameter, but some clients omit it, and [RFC 8707, 2.1.](https://www.rfc-editor.org/rfc/rfc8707.html#section-2.1)
+    /// lets the authorisation server assume a default resource.
+    ///
+    String resourceFromParam(@Nullable String resource);
 
     interface IAuthorisationServerMetadata {
 

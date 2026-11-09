@@ -175,7 +175,7 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         final var code = Param.code.firstValueIn(params);
         final var codeVerifier = Param.code_verifier.firstValueIn(params);
         final var redirectUri = Param.redirect_uri.firstValueIn(params);
-        final var resource = Param.resource.firstValueIn(params);
+        final var resource = mcpOAuth.resourceFromParam(Param.resource.firstValueIn(params));
 
         if (grantType == null) {
             return error("invalid_request", "Missing parameter [%s].".formatted(Param.grant_type));
@@ -227,9 +227,6 @@ public class McpTokenEndpointResource extends AbstractWebResource {
             return error("invalid_grant", "Parameter [%s] does not match the authorisation request.".formatted(Param.redirect_uri));
         }
 
-        if (resource == null) {
-            return error("invalid_request", "Missing parameter [%s].".formatted(Param.resource));
-        }
         if (!resource.equals(redeemedCode.getResource())) {
             return error("invalid_target", "Parameter [%s] does not match the authorisation request.".formatted(Param.resource));
         }

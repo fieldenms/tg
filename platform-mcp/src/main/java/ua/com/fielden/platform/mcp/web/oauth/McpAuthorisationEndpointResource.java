@@ -21,7 +21,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.mcp.McpAuthorisationCode;
 import ua.com.fielden.platform.mcp.McpAuthorisationCodeCo;
-import ua.com.fielden.platform.mcp.McpConfig;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -29,7 +28,6 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.annotations.AppUri;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 
@@ -44,7 +42,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T2.toMap;
-import static ua.com.fielden.platform.utils.MiscUtilities.uriPath;
 
 /// Web resource for the [OAuth 2.1. Authorization Endpoint](https://www.ietf.org/archive/id/draft-ietf-oauth-v2-1-13.html#name-authorization-endpoint).
 ///
@@ -119,8 +116,6 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
 
     private final String consentPage;
     private final IMcpOAuth mcpOAuth;
-    private final McpConfig mcpConfig;
-    private final String appUri;
     private final ICompanionObjectFinder coFinder;
     private final IUserProvider userProvider;
 
@@ -129,8 +124,6 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
             final IDeviceProvider deviceProvider,
             final IDates dates,
             final IMcpOAuth mcpOAuth,
-            final McpConfig mcpConfig,
-            final String appUri,
             final ICompanionObjectFinder coFinder,
             final IUserProvider userProvider,
             final Context context,
@@ -140,8 +133,6 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
         super(context, request, response, deviceProvider, dates);
         this.consentPage = consentPage;
         this.mcpOAuth = mcpOAuth;
-        this.mcpConfig = mcpConfig;
-        this.appUri = appUri;
         this.coFinder = coFinder;
         this.userProvider = userProvider;
     }
@@ -153,8 +144,6 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
         private final IDeviceProvider deviceProvider;
         private final IDates dates;
         private final IMcpOAuth mcpOAuth;
-        private final McpConfig mcpConfig;
-        private final String appUri;
         private final ICompanionObjectFinder coFinder;
         private final IUserProvider userProvider;
 
@@ -163,16 +152,12 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
                 final IDeviceProvider deviceProvider,
                 final IDates dates,
                 final IMcpOAuth mcpOAuth,
-                final McpConfig mcpConfig,
-                final @AppUri String appUri,
                 final ICompanionObjectFinder coFinder,
                 final IUserProvider userProvider)
         {
             this.deviceProvider = deviceProvider;
             this.dates = dates;
             this.mcpOAuth = mcpOAuth;
-            this.mcpConfig = mcpConfig;
-            this.appUri = appUri;
             this.coFinder = coFinder;
             this.userProvider = userProvider;
         }
@@ -187,8 +172,6 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
                         deviceProvider,
                         dates,
                         mcpOAuth,
-                        mcpConfig,
-                        appUri,
                         coFinder,
                         userProvider,
                         getContext(),
@@ -309,11 +292,7 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
             return Optional.of(errorRedirect(params, "invalid_request", Optional.of("Scopes are not supported.")));
         }
 
-        final var resource = Param.resource.firstValueIn(params);
-        if (resource == null) {
-            return Optional.of(errorRedirect(params, "invalid_request", Optional.of("Missing parameter [%s].".formatted(Param.resource))));
-        }
-        if (!resource.equals(uriPath(appUri, mcpConfig.resourcePath()))) {
+        if (!effectiveResource(params).equals(mcpOAuth.protectedResourceMetadata().resource())) {
             return Optional.of(errorRedirect(params, "invalid_target", Optional.of("Parameter [%s] does not represent a valid target.".formatted(Param.resource))));
         }
 
@@ -341,7 +320,7 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
                 new String[] {
                         escapeHtml(MiscUtilities.mkUri(mcpOAuth.authorisationServerMetadata().authorisationEndpoint()).getRawPath()),
                         escapeHtml(client.displayName()),
-                        escapeHtml(Param.resource.firstValueIn(params)),
+                        escapeHtml(effectiveResource(params)),
                         escapeHtml(userProvider.getUser().getKey()),
                         hiddenFields});
 
@@ -376,7 +355,11 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
                 .setClientId(Param.client_id.firstValueIn(params))
                 .setCodeChallenge(Param.code_challenge.firstValueIn(params))
                 .setRedirectUri(Param.redirect_uri.firstValueIn(params))
-                .setResource(Param.resource.firstValueIn(params));
+                .setResource(effectiveResource(params));
+    }
+
+    private String effectiveResource(final Map<Param, List<String>> params) {
+        return mcpOAuth.resourceFromParam(Param.resource.firstValueIn(params));
     }
 
     private McpAuthorisationCode saveAuthorisationCode(final McpAuthorisationCode code) {

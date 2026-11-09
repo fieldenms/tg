@@ -4,6 +4,8 @@ import org.junit.Test;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.*;
+import ua.com.fielden.platform.mcp.McpAuthorisationCode;
+import ua.com.fielden.platform.mcp.McpAuthorisationCodeCo;
 import ua.com.fielden.platform.mcp.test_config.AbstractTgMcpOAuthTestCase;
 
 import java.io.IOException;
@@ -17,6 +19,9 @@ public class McpAuthorisationEndpointResourceTest extends AbstractTgMcpOAuthTest
 
     private static final String INJECTED_TEXT = "<script>alert(1)</script> Your session has expired.";
     private static final String ENDPOINT_URI = "http://localhost/oauth/authorize";
+    private static final String OTHER_RESOURCE = "https://other.com/mcp";
+
+    private final String mcpResource = getInstance(IMcpOAuth.class).protectedResourceMetadata().resource();
 
     @Test
     public void authorisation_request_from_unknown_client_is_rejected_without_reflecting_request_values() throws IOException {
@@ -47,6 +52,47 @@ public class McpAuthorisationEndpointResourceTest extends AbstractTgMcpOAuthTest
         assertThat(response.getLocationRef().toString()).startsWith(TEST_CLIENT_REDIRECT_URI + "?");
     }
 
+    @Test
+    public void authorisation_request_without_resource_is_answered_with_consent_page_naming_mcp_server() throws IOException {
+        final var form = authorisationRequest();
+        assertThat(form.getFirstValue("resource")).isNull();
+
+        final var response = handle(new Request(Method.GET, ENDPOINT_URI + "?" + form.getQueryString()));
+
+        assertThat(response.getStatus()).isEqualTo(Status.SUCCESS_OK);
+        assertThat(response.getEntity().getMediaType()).isEqualTo(MediaType.TEXT_HTML);
+        assertThat(response.getEntity().getText()).contains("requests access to <span class=\"value\">%s</span>".formatted(mcpResource));
+    }
+
+    @Test
+    public void authorisation_request_with_resource_other_than_mcp_server_is_rejected() {
+        final var form = authorisationRequest();
+        form.add("resource", OTHER_RESOURCE);
+        assertThat(OTHER_RESOURCE).isNotEqualTo(mcpResource);
+
+        final var response = handle(new Request(Method.GET, ENDPOINT_URI + "?" + form.getQueryString()));
+
+        assertThat(response.getStatus()).isEqualTo(Status.REDIRECTION_FOUND);
+        assertThat(response.getLocationRef().getQueryAsForm().getFirstValue("error")).isEqualTo("invalid_target");
+    }
+
+    @Test
+    public void consent_submission_without_resource_issues_code_for_mcp_server() {
+        final var form = authorisationRequest();
+        form.add("decision", "allow");
+        assertThat(form.getFirstValue("resource")).isNull();
+
+        final var response = handle(new Request(Method.POST, ENDPOINT_URI, form.getWebRepresentation()));
+
+        assertThat(response.getStatus()).isEqualTo(Status.REDIRECTION_SEE_OTHER);
+        final var code = response.getLocationRef().getQueryAsForm().getFirstValue("code");
+        assertThat(code).isNotNull();
+        final McpAuthorisationCodeCo coCode = co(McpAuthorisationCode.class);
+        final var savedCode = coCode.findByKeyAndFetch(McpAuthorisationCodeCo.FETCH_PROVIDER.fetchModel(), code);
+        assertThat(savedCode.getUser()).isEqualTo(getUser());
+        assertThat(savedCode.getResource()).isEqualTo(mcpResource);
+    }
+
     private Response handle(final Request request) {
         final var response = new Response(request);
         getInstance(McpAuthorisationEndpointResource.Factory.class).handle(request, response);
@@ -57,6 +103,16 @@ public class McpAuthorisationEndpointResourceTest extends AbstractTgMcpOAuthTest
         final var form = new Form();
         form.add("client_id", clientId);
         form.add("redirect_uri", redirectUri);
+        return form;
+    }
+
+    /// A valid authorisation request from the test client, without parameter `resource`.
+    ///
+    private static Form authorisationRequest() {
+        final var form = form(TEST_CLIENT_ID, TEST_CLIENT_REDIRECT_URI);
+        form.add("response_type", "code");
+        form.add("code_challenge", "A".repeat(43));
+        form.add("code_challenge_method", "S256");
         return form;
     }
 
