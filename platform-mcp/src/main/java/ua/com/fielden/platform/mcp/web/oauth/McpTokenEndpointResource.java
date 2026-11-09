@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.mcp.web.oauth;
 
-import com.google.common.hash.Hashing;
-import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
@@ -28,7 +26,6 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 
 import java.security.MessageDigest;
-import java.util.Base64;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +36,8 @@ import java.util.stream.Stream;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
+import static ua.com.fielden.platform.mcp.web.oauth.OAuthCommon.AccessTokenModel.*;
+import static ua.com.fielden.platform.mcp.web.oauth.OAuthCommon.ErrorCode.*;
 
 /// Web resource for the [OAuth 2.1. Token Endpoint](https://www.ietf.org/archive/id/draft-ietf-oauth-v2-1-13.html#name-token-endpoint).
 ///
@@ -92,11 +91,13 @@ public class McpTokenEndpointResource extends AbstractWebResource {
     private final IMcpOAuth mcpOAuth;
     private final ICompanionObjectFinder coFinder;
     private final IUserProvider userProvider;
+    private final OAuthCommon oAuthCommon;
 
     private McpTokenEndpointResource(
             final IDeviceProvider deviceProvider,
             final IDates dates,
             final IMcpOAuth mcpOAuth,
+            final OAuthCommon oAuthCommon,
             final ICompanionObjectFinder coFinder,
             final IUserProvider userProvider,
             final Context context,
@@ -107,6 +108,7 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         this.mcpOAuth = mcpOAuth;
         this.coFinder = coFinder;
         this.userProvider = userProvider;
+        this.oAuthCommon = oAuthCommon;
     }
 
     public static class Factory extends Restlet {
@@ -114,6 +116,7 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         private final IDeviceProvider deviceProvider;
         private final IDates dates;
         private final IMcpOAuth mcpOAuth;
+        private final OAuthCommon oAuthCommon;
         private final ICompanionObjectFinder coFinder;
         private final IUserProvider userProvider;
 
@@ -122,12 +125,14 @@ public class McpTokenEndpointResource extends AbstractWebResource {
                 final IDeviceProvider deviceProvider,
                 final IDates dates,
                 final IMcpOAuth mcpOAuth,
+                final OAuthCommon oAuthCommon,
                 final ICompanionObjectFinder coFinder,
                 final IUserProvider userProvider)
         {
             this.deviceProvider = deviceProvider;
             this.dates = dates;
             this.mcpOAuth = mcpOAuth;
+            this.oAuthCommon = oAuthCommon;
             this.coFinder = coFinder;
             this.userProvider = userProvider;
         }
@@ -141,6 +146,7 @@ public class McpTokenEndpointResource extends AbstractWebResource {
                         deviceProvider,
                         dates,
                         mcpOAuth,
+                        oAuthCommon,
                         coFinder,
                         userProvider,
                         getContext(),
@@ -157,7 +163,7 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         getResponse().setCacheDirectives(List.of(CacheDirective.noStore()));
 
         if (input == null || !MediaType.APPLICATION_WWW_FORM.equals(input.getMediaType(), true)) {
-            return error("invalid_request", "Content type must be [%s].".formatted(MediaType.APPLICATION_WWW_FORM));
+            return error(invalid_request, "Content type must be [%s].".formatted(MediaType.APPLICATION_WWW_FORM));
         }
 
         final var params = Param.collect(new Form(input));
@@ -167,7 +173,7 @@ public class McpTokenEndpointResource extends AbstractWebResource {
                 .map(Map.Entry::getKey)
                 .toList();
         if (!duplicateParams.isEmpty()) {
-            return error("invalid_request", "Duplicate parameters: %s".formatted(CollectionUtil.toString(duplicateParams, ", ")));
+            return error(invalid_request, "Duplicate parameters: %s".formatted(CollectionUtil.toString(duplicateParams, ", ")));
         }
 
         final var grantType = Param.grant_type.firstValueIn(params);
@@ -178,27 +184,27 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         final var resource = mcpOAuth.resourceFromParam(Param.resource.firstValueIn(params));
 
         if (grantType == null) {
-            return error("invalid_request", "Missing parameter [%s].".formatted(Param.grant_type));
+            return error(invalid_request, "Missing parameter [%s].".formatted(Param.grant_type));
         }
         if (!"authorization_code".equals(grantType)) {
-            return error("unsupported_grant_type", "Parameter [%s] must have value [authorization_code].".formatted(Param.grant_type));
+            return error(unsupported_grant_type, "Parameter [%s] must have value [authorization_code].".formatted(Param.grant_type));
         }
 
         if (clientId == null) {
-            return error("invalid_request", "Missing parameter [%s].".formatted(Param.client_id));
+            return error(invalid_request, "Missing parameter [%s].".formatted(Param.client_id));
         }
         final var validateClientResult = mcpOAuth.validateClient(clientId);
         if (!validateClientResult.isSuccessful()) {
-            return error("invalid_client", "Invalid client. %s".formatted(validateClientResult.getMessage()));
+            return error(invalid_client, "Invalid client. %s".formatted(validateClientResult.getMessage()));
         }
 
         if (code == null) {
-            return error("invalid_request", "Missing parameter [%s].".formatted(Param.code));
+            return error(invalid_request, "Missing parameter [%s].".formatted(Param.code));
         }
         final McpAuthorisationCodeCo coCode = coFinder.find(McpAuthorisationCode.class, false);
         final var authCode = coCode.findByKeyAndFetch(McpAuthorisationCodeCo.FETCH_PROVIDER.fetchModel(), code);
         if (authCode == null || !dates.serverNow().toDate().before(authCode.getExpirationDate())) {
-            return error("invalid_grant", "Authorisation code is invalid or expired.");
+            return error(invalid_grant, "Authorisation code is invalid or expired.");
         }
         final IUser coUser = coFinder.find(User.class, true);
         final var user = coUser.findUser(authCode.getUser().getKey());
@@ -210,34 +216,38 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         // Of concurrent redemptions, all but one fail with an error, as conflicting changes to the code are not resolved automatically.
         final var redeemedCode = asUser(user, () -> coCode.save(authCode.setActive(false)));
         if (!clientId.equals(redeemedCode.getClientId())) {
-            return error("invalid_grant", "Authorisation code was issued to another client.");
+            return error(invalid_grant, "Authorisation code was issued to another client.");
         }
 
         if (codeVerifier == null) {
-            return error("invalid_request", "Missing parameter [%s].".formatted(Param.code_verifier));
+            return error(invalid_request, "Missing parameter [%s].".formatted(Param.code_verifier));
         }
         if (!CODE_VERIFIER.matcher(codeVerifier).matches()) {
-            return error("invalid_request", "Parameter [%s] is malformed.".formatted(Param.code_verifier));
+            return error(invalid_request, "Parameter [%s] is malformed.".formatted(Param.code_verifier));
         }
         if (!matches(codeVerifier, redeemedCode.getCodeChallenge())) {
-            return error("invalid_grant", "Parameter [%s] does not match the code challenge.".formatted(Param.code_verifier));
+            return error(invalid_grant, "Parameter [%s] does not match the code challenge.".formatted(Param.code_verifier));
         }
 
         if (redirectUri != null && !redirectUri.equals(redeemedCode.getRedirectUri())) {
-            return error("invalid_grant", "Parameter [%s] does not match the authorisation request.".formatted(Param.redirect_uri));
+            return error(invalid_grant, "Parameter [%s] does not match the authorisation request.".formatted(Param.redirect_uri));
         }
 
         if (!resource.equals(redeemedCode.getResource())) {
-            return error("invalid_target", "Parameter [%s] does not match the authorisation request.".formatted(Param.resource));
+            return error(invalid_target, "Parameter [%s] does not match the authorisation request.".formatted(Param.resource));
         }
 
         if (!user.isActive()) {
-            return error("invalid_grant", "The user who granted the authorisation is inactive.");
+            return error(invalid_grant, "The user who granted the authorisation is inactive.");
         }
 
-        final var accessToken = new BearerAccessToken(ACCESS_TOKEN_BYTE_LENGTH, ACCESS_TOKEN_LIFETIME_HOURS * 3600L, null);
-        asUser(user, () -> saveAccessToken(accessToken, redeemedCode));
-        return new JsonRepresentation(accessToken.toJSONObject());
+        final var tokenValue = mcpOAuth.generateAccessToken();
+        final var lifetime = ACCESS_TOKEN_LIFETIME_HOURS * 3600L;
+        asUser(user, () -> saveAccessToken(tokenValue, lifetime, redeemedCode));
+        return new JsonRepresentation(Map.of(
+                access_token.toString(), tokenValue,
+                token_type.toString(), "Bearer",
+                expires_in.toString(), lifetime));
     }
 
     /// Rejects a request that presents `code` again.
@@ -252,14 +262,14 @@ public class McpTokenEndpointResource extends AbstractWebResource {
             final McpAccessTokenCo coAccessToken = coFinder.find(McpAccessToken.class, true);
             coAccessToken.findByAuthorisationCode(code).ifPresent(accessToken -> asUserDo(user, () -> coAccessToken.revoke(accessToken)));
         }
-        return error("invalid_grant", "Authorisation code was already redeemed.");
+        return error(invalid_grant, "Authorisation code was already redeemed.");
     }
 
     /// Determines whether `codeVerifier` matches `codeChallenge`, as described in [RFC 7636, 4.6.](https://datatracker.ietf.org/doc/html/rfc7636#section-4.6).
     /// The comparison takes constant time, so that its duration reveals nothing about the code challenge.
     ///
-    private static boolean matches(final String codeVerifier, final String codeChallenge) {
-        final var expectedCodeChallenge = Base64.getUrlEncoder().withoutPadding().encodeToString(Hashing.sha256().hashString(codeVerifier, US_ASCII).asBytes());
+    private boolean matches(final String codeVerifier, final String codeChallenge) {
+        final var expectedCodeChallenge = oAuthCommon.codeChallenge(OAuthCommon.CodeChallengeMethod.S256, codeVerifier);
         return MessageDigest.isEqual(expectedCodeChallenge.getBytes(US_ASCII), codeChallenge.getBytes(US_ASCII));
     }
 
@@ -287,14 +297,16 @@ public class McpTokenEndpointResource extends AbstractWebResource {
         }
     }
 
-    /// Saves `accessToken` issued in exchange for `authorisationCode`.
+    /// Saves an access token issued in exchange for `authorisationCode`.
     /// Only the hash of the token value is saved.
     ///
-    private McpAccessToken saveAccessToken(final BearerAccessToken accessToken, final McpAuthorisationCode authorisationCode) {
+    /// @param lifetime  token lifetime in seconds
+    ///
+    private McpAccessToken saveAccessToken(final String tokenValue, final long lifetime, final McpAuthorisationCode authorisationCode) {
         final McpAccessTokenCo co = coFinder.find(McpAccessToken.class, false);
         return co.save(co.new_()
-                         .setTokenHash(co.tokenHash(accessToken.getValue()))
-                         .setExpirationDate(dates.serverNow().plus(Duration.standardSeconds(accessToken.getLifetime())).toDate())
+                         .setTokenHash(co.tokenHash(tokenValue))
+                         .setExpirationDate(dates.serverNow().plus(Duration.standardSeconds(lifetime)).toDate())
                          .setAuthorisationCode(authorisationCode)
                          .setResource(authorisationCode.getResource()));
     }
@@ -308,10 +320,10 @@ public class McpTokenEndpointResource extends AbstractWebResource {
     /// {"error": <code>, "error_description": <text>}
     /// ```
     ///
-    private Representation error(final String errorCode, final String errorDesc) {
+    private Representation error(final OAuthCommon.ErrorCode errorCode, final String errorDesc) {
         getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-        return new JsonRepresentation(Map.<String, Object>of(
-                "error", errorCode,
+        return new JsonRepresentation(Map.of(
+                "error", errorCode.toString(),
                 "error_description", errorDesc));
     }
 

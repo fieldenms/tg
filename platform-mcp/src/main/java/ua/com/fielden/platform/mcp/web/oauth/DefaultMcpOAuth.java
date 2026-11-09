@@ -3,10 +3,12 @@ package ua.com.fielden.platform.mcp.web.oauth;
 import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
+import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.mcp.McpConfig;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
+import java.util.Base64;
 import java.util.List;
 
 import static ua.com.fielden.platform.error.Result.failure;
@@ -18,12 +20,14 @@ public class DefaultMcpOAuth implements IMcpOAuth {
     private final String appUri;
     private final McpConfig mcpConfig;
     private final McpOAuthClientRegistry clientRegistry;
+    private final Base64.Encoder base64UrlEncoder;
 
     @Inject
     protected DefaultMcpOAuth(final @AppUri String appUri, final McpConfig mcpConfig, final McpOAuthClientRegistry clientRegistry) {
         this.appUri = StringUtils.stripEnd(appUri, "/");
         this.mcpConfig = mcpConfig;
         this.clientRegistry = clientRegistry;
+        this.base64UrlEncoder = Base64.getUrlEncoder().withoutPadding();
     }
 
     @Override
@@ -125,6 +129,16 @@ public class DefaultMcpOAuth implements IMcpOAuth {
     @Override
     public String resourceFromParam(@Nullable final String resource) {
         return resource != null ? resource : protectedResourceMetadata().resource();
+    }
+
+    @Override
+    public String generateAuthorisationCode() {
+        return base64UrlEncoder.encodeToString(SessionIdentifierGenerator.genBytes(32));
+    }
+
+    @Override
+    public String generateAccessToken() {
+        return base64UrlEncoder.encodeToString(SessionIdentifierGenerator.genBytes(32));
     }
 
 }

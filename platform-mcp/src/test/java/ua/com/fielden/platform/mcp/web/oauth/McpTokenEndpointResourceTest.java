@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.mcp.web.oauth;
 
-import com.nimbusds.oauth2.sdk.pkce.CodeChallenge;
-import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
-import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import jakarta.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +34,7 @@ public class McpTokenEndpointResourceTest extends AbstractTgMcpOAuthTestCase {
     private final IUserProvider userProvider = getInstance(IUserProvider.class);
     private final String mcpResource = getInstance(IMcpOAuth.class).protectedResourceMetadata().resource();
     private final IDates dates = getInstance(IDates.class);
+    private final OAuthCommon oAuthCommon = getInstance(OAuthCommon.class);
 
     @Before
     public void setNow() {
@@ -230,8 +228,8 @@ public class McpTokenEndpointResourceTest extends AbstractTgMcpOAuthTestCase {
         return co(McpAccessToken.class);
     }
 
-    private static String codeChallenge(final String codeVerifier) {
-        return CodeChallenge.compute(CodeChallengeMethod.S256, new CodeVerifier(codeVerifier)).getValue();
+    private String codeChallenge(final String codeVerifier) {
+        return oAuthCommon.codeChallenge(OAuthCommon.CodeChallengeMethod.S256, codeVerifier);
     }
 
 }

@@ -1,7 +1,19 @@
 package ua.com.fielden.platform.cypher;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
+import org.apache.logging.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.security.exceptions.SecurityException;
 
+import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -11,19 +23,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.crypto.KeyGenerator;
-import javax.crypto.Mac;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
-
-import org.apache.logging.log4j.Logger;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
-import org.joda.time.format.PeriodFormatter;
-import org.joda.time.format.PeriodFormatterBuilder;
-import ua.com.fielden.platform.security.exceptions.SecurityException;
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
  * A generator of cryptographically random series identifiers for user session, and 2-factor authentication pin codes.
@@ -80,6 +81,18 @@ public final class SessionIdentifierGenerator {
     public UUID genUuid() {
         return new UUID(random.get().nextLong(), random.get().nextLong());
     }
+
+    /// Generates `n` random bytes.
+    ///
+    public static byte[] genBytes(final int n) {
+        if (n < 0) {
+            throw new InvalidArgumentException(format("Number of bytes must be positive: %s", n));
+        }
+        byte[] bytes = new byte[n];
+        random.get().nextBytes(bytes);
+        return bytes;
+    }
+
     /**
      * Generates a 4096 bit key using the HMAC-SHA256 algorithm.
      *

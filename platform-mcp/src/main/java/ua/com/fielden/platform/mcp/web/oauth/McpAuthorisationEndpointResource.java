@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.mcp.web.oauth;
 
 import com.google.common.html.HtmlEscapers;
-import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
@@ -40,6 +39,7 @@ import java.util.stream.Stream;
 
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
+import static ua.com.fielden.platform.mcp.web.oauth.OAuthCommon.ErrorCode.*;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T2.toMap;
 
@@ -214,7 +214,7 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
             return invalidClient(clientResult);
         }
         if (!List.of("allow").equals(params.get(Param.decision))) {
-            return errorRedirect(params, "access_denied", Optional.of("The user denied access."));
+            return errorRedirect(params, access_denied, Optional.of("The user denied access."));
         }
         return validateRequest(params).orElseGet(() -> issueCode(params));
     }
@@ -251,7 +251,7 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
     private Optional<Representation> validateRequest(final Map<Param, List<String>> params) {
         if (userProvider.getUser() == null) {
             LOGGER.error("The current user is missing in a request to the authorisation endpoint.");
-            return Optional.of(errorRedirect(params, "server_error", Optional.empty()));
+            return Optional.of(errorRedirect(params, server_error, Optional.empty()));
         }
 
         final var duplicateParams = params.entrySet()
@@ -260,40 +260,40 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
                 .map(Map.Entry::getKey)
                 .toList();
         if (!duplicateParams.isEmpty()) {
-            return Optional.of(errorRedirect(params, "invalid_request", Optional.of("Duplicate parameters: %s".formatted(CollectionUtil.toString(duplicateParams, ", ")))));
+            return Optional.of(errorRedirect(params, invalid_request, Optional.of("Duplicate parameters: %s".formatted(CollectionUtil.toString(duplicateParams, ", ")))));
         }
 
         final var responseType = Param.response_type.firstValueIn(params);
         if (responseType == null) {
-            return Optional.of(errorRedirect(params, "invalid_request", Optional.of("Missing parameter [%s].".formatted(Param.response_type))));
+            return Optional.of(errorRedirect(params, invalid_request, Optional.of("Missing parameter [%s].".formatted(Param.response_type))));
         }
         if (!"code".equals(responseType)) {
-            return Optional.of(errorRedirect(params, "unsupported_response_type", Optional.of("Parameter [%s] must have value [code].".formatted(Param.response_type))));
+            return Optional.of(errorRedirect(params, unsupported_response_type, Optional.of("Parameter [%s] must have value [code].".formatted(Param.response_type))));
         }
 
         final var codeChallengeMethod = Param.code_challenge_method.firstValueIn(params);
         if (codeChallengeMethod == null) {
-            return Optional.of(errorRedirect(params, "invalid_request", Optional.of("Missing parameter [%s].".formatted(Param.code_challenge_method))));
+            return Optional.of(errorRedirect(params, invalid_request, Optional.of("Missing parameter [%s].".formatted(Param.code_challenge_method))));
         }
         if (!"S256".equals(codeChallengeMethod)) {
-            return Optional.of(errorRedirect(params, "invalid_request", Optional.of("Parameter [%s] must have value [S256].".formatted(Param.code_challenge_method))));
+            return Optional.of(errorRedirect(params, invalid_request, Optional.of("Parameter [%s] must have value [S256].".formatted(Param.code_challenge_method))));
         }
 
         final var codeChallenge = Param.code_challenge.firstValueIn(params);
         if (codeChallenge == null) {
-            return Optional.of(errorRedirect(params, "invalid_request", Optional.of("Missing parameter [%s].".formatted(Param.code_challenge))));
+            return Optional.of(errorRedirect(params, invalid_request, Optional.of("Missing parameter [%s].".formatted(Param.code_challenge))));
         }
         if (!S256_CODE_CHALLENGE_PATTERN.matcher(codeChallenge).matches()) {
-            return Optional.of(errorRedirect(params, "invalid_request", Optional.of("Parameter [%s] is malformed.".formatted(Param.code_challenge))));
+            return Optional.of(errorRedirect(params, invalid_request, Optional.of("Parameter [%s] is malformed.".formatted(Param.code_challenge))));
         }
 
         // TODO Support scope.
         if (Param.scope.firstValueIn(params) != null) {
-            return Optional.of(errorRedirect(params, "invalid_request", Optional.of("Scopes are not supported.")));
+            return Optional.of(errorRedirect(params, invalid_request, Optional.of("Scopes are not supported.")));
         }
 
         if (!effectiveResource(params).equals(mcpOAuth.protectedResourceMetadata().resource())) {
-            return Optional.of(errorRedirect(params, "invalid_target", Optional.of("Parameter [%s] does not represent a valid target.".formatted(Param.resource))));
+            return Optional.of(errorRedirect(params, invalid_target, Optional.of("Parameter [%s] does not represent a valid target.".formatted(Param.resource))));
         }
 
         // TODO Check if the current user is authorised to grant MCP access.
@@ -349,7 +349,7 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
     private McpAuthorisationCode newAuthorisationCode(final User user, final Map<Param, List<String>> params) {
         final McpAuthorisationCodeCo co = coFinder.find(McpAuthorisationCode.class, false);
         return co.new_()
-                .setCode(new AuthorizationCode(32).getValue())
+                .setCode(mcpOAuth.generateAuthorisationCode())
                 .setExpirationDate(dates.serverNow().plusMinutes(10).toDate())
                 .setUser(user)
                 .setClientId(Param.client_id.firstValueIn(params))
@@ -375,9 +375,9 @@ public class McpAuthorisationEndpointResource extends AbstractWebResource {
     /// Location: <redirect_uri>?error=<code>&error_description=<text>&state=<state>&iss=<issuer>
     /// ```
     ///
-    private Representation errorRedirect(final Map<Param, List<String>> params, final String errorCode, final Optional<String> errorDesc) {
+    private Representation errorRedirect(final Map<Param, List<String>> params, final OAuthCommon.ErrorCode errorCode, final Optional<String> errorDesc) {
         return redirect(Param.redirect_uri.firstValueIn(params),
-                        Stream.of(t2("error", errorCode),
+                        Stream.of(t2("error", errorCode.toString()),
                                   t2("error_description", errorDesc.orElse(null)),
                                   t2("state", Param.state.firstValueIn(params)),
                                   t2("iss", mcpOAuth.authorisationServerMetadata().issuer())));

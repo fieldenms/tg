@@ -54,6 +54,14 @@ public interface IMcpOAuth {
     ///
     String resourceFromParam(@Nullable String resource);
 
+    /// Generates an authorisation code using a cryptographically secure pseudorandom number generator.
+    ///
+    String generateAuthorisationCode();
+
+    /// Generates an access token using a cryptographically secure pseudorandom number generator.
+    ///
+    String generateAccessToken();
+
     interface IAuthorisationServerMetadata {
 
         /// _Issuer identifier_ of the authorisation server.
