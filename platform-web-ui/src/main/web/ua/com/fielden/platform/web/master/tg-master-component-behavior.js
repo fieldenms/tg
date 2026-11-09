@@ -96,6 +96,9 @@ const componentStyles = `
     [tg-component-focus]:focus,
     :host([tg-component-focus]:focus) {
         outline: auto 1px var(--paper-indigo-500);
+        /* the focus ring is drawn outside the element, as Chrome otherwise draws part of it inside the element,
+           where positioned content at its edges, such as a map or the views of an embedded centre, would cover it */
+        outline-offset: 1px;
     }
 `;
 
