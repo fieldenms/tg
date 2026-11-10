@@ -143,8 +143,9 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                 + "self.lineLegendItems =[" + join(lineLegendItems, ",\n") + "];\n";
     }
 
-    /// Generates the margins of the chart of `deck` that are specified for it, which take the place of the default margins of the chart.
-    /// The other margins keep their defaults, as the chart merges the generated margins into its default margins, so that no margins are generated as `{}`.
+    /// Generates the margins specified for the chart of `deck`, which take the place of the default margins of the chart.
+    /// The chart merges them into its current margins, so the margins that are not specified are left to the chart, which calculates its bottom margin from its x-axis, and to the chart decker, which aligns the left margins of its charts.
+    /// A deck without specified margins generates `{}`, which leaves all margins as they are.
     ///
     private String generateMargin(final ChartDeck<T> deck) {
         final List<String> margins = new ArrayList<>();
