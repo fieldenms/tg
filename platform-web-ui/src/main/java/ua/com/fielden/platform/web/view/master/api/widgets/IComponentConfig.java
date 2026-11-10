@@ -8,7 +8,8 @@ import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentC
 /// or is bound to the entity of the master rather than to any of its properties, declared with `addComponent` and placed in the master layout next to the editors.
 ///
 /// The component is read-only.
-/// It is bound to the fully-fledged entity of the master, and a component in place of an editor also to the name of its property.
+/// The component receives the fully-fledged entity of the master in `entity`, rather than the binding entity of editors,
+/// and a component in place of an editor also receives the name of its property in `property-name`.
 /// Both forms are configured with the same declarations, whose defaults differ where the form matters, as described for each declaration.
 ///
 public interface IComponentConfig<T extends AbstractEntity<?>> extends IComponentConfig0<T> {

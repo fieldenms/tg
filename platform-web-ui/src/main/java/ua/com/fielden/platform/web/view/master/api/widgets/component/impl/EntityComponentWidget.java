@@ -12,7 +12,8 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 /// The component is placed in the master layout next to the editors.
 ///
 /// The component is read-only.
-/// It is bound to the fully-fledged entity of the master, and receives the title and description declared for it, if any, the index of the action to show,
+/// It receives the fully-fledged entity of the master in `entity`, rather than the binding entity of editors.
+/// It also receives the title and description declared for it, if any, the index of the action to show,
 /// the context of the master, and its height and minimum height, if declared.
 /// Any other data it needs is declared as attributes, with either static values or pass-through binding expressions, such as `[[centreUuid]]`.
 /// By default, the component is blocked while the entity is unsaved, as rendered by [AbstractComponentWidget].

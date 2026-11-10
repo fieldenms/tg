@@ -12,7 +12,8 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 /// A widget that represents a property with an application-provided web component in place of a platform editor.
 ///
 /// The component is read-only.
-/// It is bound to the fully-fledged entity of the master and to the name of the property, and receives the title and description of the property, unless others are declared for it,
+/// It receives the fully-fledged entity of the master in `entity`, rather than the binding entity of editors, and the name of the property in `property-name`.
+/// It also receives the title and description of the property, unless others are declared for it,
 /// the index of the property action to show, the context of the master, and its height and minimum height, if declared.
 /// Any other data it needs is declared as attributes, with either static values or pass-through binding expressions, such as `[[centreUuid]]`.
 /// By default, the component is blocked while the entity is unsaved, as rendered by [AbstractComponentWidget].
