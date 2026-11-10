@@ -28,15 +28,15 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEn
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.helpers.*;
 import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
+import ua.com.fielden.platform.web.view.master.api.widgets.IComponentConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IEntityComponentConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentRefreshCondition;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.AbstractComponentWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.EntityComponentWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.EntityComponentConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.ComponentConfig;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
 import java.util.*;
@@ -207,12 +207,12 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public IEntityComponentConfig<T> addComponent(final CharSequence importPath) {
+    public IComponentConfig<T> addComponent(final CharSequence importPath) {
         // a dash cannot occur in a property name, so the key of a component never clashes with a property name or with the id of an editor or a property component
         final long ordinal = widgets.stream().filter(widget -> widget.widget() instanceof EntityComponentWidget).count();
         final EntityComponentWidget component = new EntityComponentWidget(Objects.toString(importPath, null), entityType, "component-" + ordinal);
         widgets.add(new WidgetSelector<>(this, component));
-        return new EntityComponentConfig<>(component, this);
+        return new ComponentConfig<>(component, this);
     }
 
     @Override

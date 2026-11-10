@@ -27,7 +27,7 @@ public interface IComponentConfig4<T extends AbstractEntity<?>> extends ICompone
     /// Keeps the component interactive while the master entity is unsaved.
     ///
     /// By default, a component in a master for a persistent entity type is blocked while the entity is new or has changes that are not yet saved.
-    /// A pane then covers the component with a message to save or cancel the changes, and neither the component nor its property actions can be interacted with.
+    /// A pane then covers the component with a message to save or cancel the changes, and neither the component nor its action can be interacted with.
     /// This declaration is intended for components that display values of the master entity itself, which stay consistent with it while it is unsaved.
     ///
     IComponentConfig5<T> skipBlockingWhenUnsaved();

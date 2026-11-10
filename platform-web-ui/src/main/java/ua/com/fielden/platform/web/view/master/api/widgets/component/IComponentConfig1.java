@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.view.master.api.widgets.component;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-/// A contract for declaring the element name of a component in place of an editor.
+/// A contract for declaring the element name of a component.
 ///
 public interface IComponentConfig1<T extends AbstractEntity<?>> extends IComponentConfig2<T> {
 

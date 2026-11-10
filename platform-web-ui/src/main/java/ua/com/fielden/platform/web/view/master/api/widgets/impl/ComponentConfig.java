@@ -14,18 +14,22 @@ import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentC
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig5;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig6;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentRefreshCondition;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.AbstractComponentWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.ComponentWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.EntityComponentWidget;
 
 import java.util.Objects;
 
-/// The configuration of a component that represents a property in place of an editor, which records all declarations in its [ComponentWidget].
+/// The configuration of a component, which records all declarations in its widget:
+/// a [ComponentWidget] for a component that represents a property in place of an editor,
+/// or an [EntityComponentWidget] for a component bound to the entity rather than to any of its properties.
 ///
 public class ComponentConfig<T extends AbstractEntity<?>> implements IComponentConfig<T> {
 
-    private final ComponentWidget widget;
+    private final AbstractComponentWidget widget;
     private final IPropertySelector<T> propSelector;
 
-    public ComponentConfig(final ComponentWidget widget, final IPropertySelector<T> propSelector) {
+    public ComponentConfig(final AbstractComponentWidget widget, final IPropertySelector<T> propSelector) {
         this.widget = widget;
         this.propSelector = propSelector;
     }

@@ -2,8 +2,8 @@ package ua.com.fielden.platform.web.view.master.api.helpers;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.actions.IEntityActionConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.IComponentConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IEntityComponentConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 
 /**
@@ -26,7 +26,8 @@ public interface IPropertySelector<T extends AbstractEntity<?>> extends IEntityA
     ///
     /// The component is read-only and is placed in the master layout next to the editors, in the order of declaration.
     /// `importPath` is resolved as `/resources/<importPath>.js`, such as `components/tg-vehicle-fuel-usages`.
+    /// It is configured with [IComponentConfig], with the defaults described there for a component bound to the entity.
     ///
-    IEntityComponentConfig<T> addComponent(final CharSequence importPath);
+    IComponentConfig<T> addComponent(final CharSequence importPath);
 
 }
