@@ -8,6 +8,8 @@ import ua.com.fielden.platform.reflection.Finder;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
@@ -115,9 +117,28 @@ public class EntityFromContainerInstantiator {
     }
 
     private <R extends AbstractEntity<?>> void setPropertyToField(final R entity, final String propName, final Object propValue, final Class<R> resultType) throws Exception {
-        final Field field = Finder.findFieldByName(resultType, propName);
-        field.setAccessible(true);
-        field.set(entity, propValue);
-        field.setAccessible(false);
+        accessibleField(resultType, propName).set(entity, propValue);
+    }
+
+    /// Fields of properties assigned during instantiation, by entity type and property name.
+    ///
+    /// Looking up a field ([Finder#findFieldByName]) resolves the property path and creates a new [Field] on every call, which is too costly to repeat for every property of every retrieved entity.
+    /// [ClassValue] keeps the cached fields with their entity type, for as long as the type exists.
+    ///
+    /// The cached fields are made accessible once, and are never handed out, so that their accessibility is not shared with other code.
+    ///
+    private static final ClassValue<ConcurrentMap<String, Field>> ACCESSIBLE_FIELDS = new ClassValue<>() {
+        @Override
+        protected ConcurrentMap<String, Field> computeValue(final Class<?> type) {
+            return new ConcurrentHashMap<>();
+        }
+    };
+
+    private static Field accessibleField(final Class<?> type, final String propName) {
+        return ACCESSIBLE_FIELDS.get(type).computeIfAbsent(propName, name -> {
+            final Field field = Finder.findFieldByName(type, name);
+            field.setAccessible(true);
+            return field;
+        });
     }
 }

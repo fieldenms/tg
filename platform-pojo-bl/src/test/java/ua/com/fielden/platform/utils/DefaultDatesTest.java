@@ -12,6 +12,7 @@ import static java.lang.Math.abs;
 import static org.joda.time.DateTimeZone.forID;
 import static org.joda.time.DateTimeZone.getDefault;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 
 public class DefaultDatesTest {
     private final Date date = new Date(0L);
@@ -361,6 +362,42 @@ public class DefaultDatesTest {
         assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
 
         assertTrue(abs(new DateTime(dates.requestTimeZone().get()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOLD);
+    }
+
+    @Test
+    public void serverNow_is_the_current_moment_in_default_time_zone_in_independent_mode_if_request_time_zone_is_not_empty() {
+        final DefaultDates dates = getDefaultDates(true);
+        dates.setRequestTimeZone("Pacific/Kiritimati");
+        assertTrue(dates.requestTimeZone().isPresent());
+
+        final DateTime serverNow = dates.serverNow();
+        assertEquals(getDefault(), serverNow.getZone());
+        assertTrue(abs(new DateTime().getMillis() - serverNow.getMillis()) < MILLIS_DIFF_THRESHOLD);
+        // `now()` is a different moment -- the wall-clock time in the request time zone, relabelled as the default time zone.
+        assumeFalse("The default time zone has the same offset as the request time zone, so relabelling does not change the moment.",
+                    getDefault().getOffset(serverNow) == dates.requestTimeZone().get().getOffset(serverNow));
+        assertTrue(abs(dates.now().getMillis() - serverNow.getMillis()) > MILLIS_DIFF_THRESHOLD);
+    }
+
+    @Test
+    public void serverNow_is_the_current_moment_in_default_time_zone_in_dependent_mode_if_request_time_zone_is_not_empty() {
+        final DefaultDates dates = getDefaultDates(false);
+        dates.setRequestTimeZone("Pacific/Kiritimati");
+        assertTrue(dates.requestTimeZone().isPresent());
+
+        final DateTime serverNow = dates.serverNow();
+        assertEquals(getDefault(), serverNow.getZone());
+        assertTrue(abs(new DateTime().getMillis() - serverNow.getMillis()) < MILLIS_DIFF_THRESHOLD);
+    }
+
+    @Test
+    public void serverNow_is_the_same_moment_as_now_with_empty_request_time_zone() {
+        final DefaultDates dates = getDefaultDates(true);
+        assertFalse(dates.requestTimeZone().isPresent());
+
+        final DateTime serverNow = dates.serverNow();
+        assertEquals(getDefault(), serverNow.getZone());
+        assertTrue(abs(dates.now().getMillis() - serverNow.getMillis()) < MILLIS_DIFF_THRESHOLD);
     }
 
     @Test

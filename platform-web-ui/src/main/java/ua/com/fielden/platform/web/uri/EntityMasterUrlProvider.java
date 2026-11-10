@@ -16,9 +16,9 @@ import java.util.Optional;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.apache.tika.utils.StringUtils.isEmpty;
 import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTP;
 import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTPS;
 

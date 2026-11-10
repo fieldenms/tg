@@ -305,6 +305,10 @@ const TgSelectionCriteriaBehaviorImpl = {
             this._centreDirty = newCentreDirty;
         };
 
+        const runFailed = function (errorResult) {
+            self._postRunDefaultError(errorResult);
+        };
+
         self._processRunnerResponse = function (e) {
             self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccurred) {
                 const criteriaEntity = entityAndCustomObject[0];
@@ -328,13 +332,11 @@ const TgSelectionCriteriaBehaviorImpl = {
                 };
 
                 self._postRunDefault(criteriaEntity, result);
-            });
+            }, runFailed);
         };
 
         self._processRunnerError = function (e) {
-            self._processError(e, "run", function (errorResult) {
-                self._postRunDefaultError(errorResult);
-            });
+            self._processError(e, "run", runFailed);
         };
 
         // callbacks, that will potentially be augmented by tg-action child elements: 

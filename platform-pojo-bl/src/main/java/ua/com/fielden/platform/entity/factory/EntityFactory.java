@@ -151,14 +151,23 @@ public class EntityFactory {
         return newEntity(entityClass, id, key, null);
     }
 
+    /// Field `id` of each entity type, looked up from the type itself, as some entity types (e.g., synthetic ones) redeclare `id`.
+    /// [Finder#getFieldByName] creates a new [Field] on every call, and thus is called once per type.
+    /// The cached fields are made accessible once and never handed out, so that their accessibility is not shared with other code.
+    ///
+    private static final ClassValue<Field> ID_FIELDS = new ClassValue<>() {
+        @Override
+        protected Field computeValue(final Class<?> type) {
+            final Field field = Finder.getFieldByName(type, ID);
+            field.setAccessible(true);
+            return field;
+        }
+    };
+
     /// Convenience method for setting entity id value.
     ///
     private static <T> void setId(final Class<T> entityClass, final Long id, final T entity) throws IllegalAccessException {
-        final Field idField = Finder.getFieldByName(entityClass, ID);
-        final boolean accessible = idField.isAccessible();
-        idField.setAccessible(true);
-        idField.set(entity, id);
-        idField.setAccessible(accessible);
+        ID_FIELDS.get(entityClass).set(entity, id);
     }
 
     /// Convenience method for setting entity key value.

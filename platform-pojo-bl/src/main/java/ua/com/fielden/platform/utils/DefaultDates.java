@@ -162,6 +162,16 @@ public class DefaultDates implements IDates {
         threadLocalRequestTimeZone.set(requestTimeZoneOpt.orElse(null));
     }
 
+    /// Clears the time-zone associated with an external request on the current thread.
+    ///
+    /// A pooled worker thread must not retain a previous request's time-zone.
+    /// This should be invoked once a unit of work (such as an HTTP request) completes.
+    ///
+    public void clearRequestTimeZone() {
+        // `remove()` (rather than `set(null)`) ensures the thread-local entry does not stay on a pooled worker thread.
+        threadLocalRequestTimeZone.remove();
+    }
+
     @Override
     public DateTime now() {
         return requestTimeZone().map(tz -> {
@@ -169,6 +179,13 @@ public class DefaultDates implements IDates {
             return independentTimeZone ? nowInClientTimeZone.withZoneRetainFields(getDefault()) : nowInClientTimeZone;
         })
         .orElseGet(DateTime::new); // now in server time-zone; used as a fallback where no time-zone was used.
+    }
+
+    /// Returns the current time in the server's time zone, regardless of the request time zone and `independent.time.zone`.
+    ///
+    @Override
+    public DateTime serverNow() {
+        return new DateTime();
     }
 
     @Override

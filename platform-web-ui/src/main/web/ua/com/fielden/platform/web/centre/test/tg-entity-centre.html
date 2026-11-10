@@ -135,7 +135,54 @@
                     centre.$.selection_criteria.setEditorValue4PropertyFromConcreteValue('tgFetchProviderTestEntity_property', ['TEST']);
                 });
             });
-            
+
+        });
+
+        /// The handling of a response with no content, which a timeout can produce.
+        /// Such a response is handled by the error handler of the request it answers.
+        /// The responses are dispatched to the `iron-ajax` of each request as its `response` event.
+        ///
+        suite('entity centre response with no content', function () {
+            const ERR_NOT_DISPATCHED = 'Request could not be dispatched.';
+
+            let centre, criteria, firedEvents;
+
+            /// Dispatches to `ajax` the `response` event of a request answered with no content.
+            ///
+            const respondWithNoContent = function (ajax) {
+                ajax.dispatchEvent(new CustomEvent('response', { detail: { xhr: { status: 200 }, response: null } }));
+            };
+
+            setup(function () {
+                centre = fixture('CentreFixture');
+                criteria = centre.$.selection_criteria;
+                firedEvents = [];
+                ['binding-entity-retrieved-error', 'egi-entities-did-not-appear'].forEach(type =>
+                    criteria.addEventListener(type, e => firedEvents.push([type, e.detail])));
+            });
+
+            test('to a run is handled as a failed run', function () {
+                respondWithNoContent(criteria._ajaxRunner());
+
+                assert.deepEqual(firedEvents, [['egi-entities-did-not-appear', ERR_NOT_DISPATCHED]], 'Only the event of a failed run should be fired.');
+            });
+
+            test('to a criteria validation is handled as a failed validation', function () {
+                const validatedErrors = [];
+                criteria._postValidatedDefaultError = errorResult => validatedErrors.push(errorResult);
+
+                respondWithNoContent(criteria._validator().$.ajaxSender);
+
+                assert.deepEqual(validatedErrors, [ERR_NOT_DISPATCHED], 'The error handler of validation should be invoked.');
+                assert.deepEqual(firedEvents, [], 'No event of a failed retrieval or run should be fired.');
+            });
+
+            test('to a discard is handled as a failed retrieval of the criteria', function () {
+                respondWithNoContent(centre._ajaxDiscarder());
+
+                assert.deepEqual(firedEvents, [['binding-entity-retrieved-error', ERR_NOT_DISPATCHED]], 'Only the event of a failed retrieval should be fired.');
+            });
+
         });
     </script>
 

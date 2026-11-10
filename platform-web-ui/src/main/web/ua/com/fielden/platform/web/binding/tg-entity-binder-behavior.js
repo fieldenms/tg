@@ -1,6 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { processResponseErrorEvent } from '/resources/reflection/tg-ajax-utils.js';
-import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import { _requestHeaders } from '/resources/reflection/tg-request-headers.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 import { checkLinkAndOpen, isSupportedLink } from '/resources/components/tg-link-opener.js';
 
@@ -234,6 +234,10 @@ export const TgEntityBinderBehavior = {
          *
          * In case where result is successful -- 'customHandlerFor(result.instance)' is invoked.
          *
+         * In case where the response has no content (e.g. due to a timeout) or a status other than 200, the toast message is shown and
+         * 'customErrorHandlerFor(message)' is invoked, as '_processError' does for a failed request.
+         * Callers pass the same 'customErrorHandlerFor' to both; without it, '_postRetrievedDefaultError(message)' is invoked.
+         *
          * This is the function, that is designated for binding.
          */
         _processResponse: {
@@ -241,13 +245,11 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
-         * This is the standard processor for 'iron-response's and is applicable for all
-         *   responses that contain java Result inside 'e.detail.response'.
+         * This is the standard processor for 'iron-error's, i.e. for requests that failed.
          *
-         * In case where result is not successful (i.e. has 'ex' inside) the toast message is shown
-         *   and 'customErrorHandlerFor(result)' is invoked.
-         *
-         * In case where result is successful -- 'customHandlerFor(result.instance)' is invoked.
+         * The toast message is shown and 'customErrorHandlerFor(error)' is invoked,
+         * where 'error' is the error Result carried by the response, if any, or a message describing the failure.
+         * An aborted request is processed without invoking 'customErrorHandlerFor'.
          *
          * This is the function, that is designated for binding.
          */
@@ -435,9 +437,9 @@ export const TgEntityBinderBehavior = {
                         const xhr = new XMLHttpRequest();
                         xhr.open("GET", url, true);
                         xhr.responseType = 'blob';
-                        const tzHeader = _timeZoneHeader();
-                        for (const headerName in tzHeader) {
-                            xhr.setRequestHeader(headerName, tzHeader[headerName]);
+                        const headers = _requestHeaders();
+                        for (const headerName in headers) {
+                            xhr.setRequestHeader(headerName, headers[headerName]);
                         }
                         xhr.onload = function (e) {
                             if (xhr.status === 200) {
@@ -512,20 +514,22 @@ export const TgEntityBinderBehavior = {
             }
         }).bind(self);
 
+        const retrievalFailed = function (errorResult) {
+            return self._postRetrievedDefaultError(errorResult);
+        };
+
         self._processRetrieverResponse = function (e) {
             self._processResponse(e, "retrieve", function (entityAndCustomObject, exceptionOccurred) {
                 self._provideExceptionOccurred(entityAndCustomObject[0], exceptionOccurred);
                 return self._postRetrievedDefault(entityAndCustomObject);
-            });
+            }, retrievalFailed);
         };
 
         self._processRetrieverError = function (e) {
-            self._processError(e, "retrieve", function (errorResult) {
-                return self._postRetrievedDefaultError(errorResult);
-            });
+            self._processError(e, "retrieve", retrievalFailed);
         };
 
-        self._processResponse = (function (e, name, customHandlerFor) {
+        self._processResponse = (function (e, name, customHandlerFor, customErrorHandlerFor) {
             console.log("PROCESS RESPONSE");
             console.log(name, ": iron-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
             if (e.detail.xhr.status === 200 && e.detail.response) { // successful execution of the request with written response; timeout errors can lead to status 200 and e.detail.response === null; also 504 error is possible, but this will be handled in _processError
@@ -562,9 +566,9 @@ export const TgEntityBinderBehavior = {
                 const error = 'Request could not be dispatched.';
                 console.warn(error);
                 this._openToastForError(error, 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.', true);
-                // this is equivalent to server side error
-                // threfore, this._postRetrievedDefaultError should be invoked
-                this._postRetrievedDefaultError(error);
+                // This is equivalent to a failed request, so the caller's error handler is invoked, as _processError does.
+                // Without one, the request is handled as a failed retrieval.
+                (customErrorHandlerFor || this._postRetrievedDefaultError)(error);
             }
         }).bind(self);
 

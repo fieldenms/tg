@@ -5,6 +5,7 @@ import static org.restlet.data.MediaType.TEXT_HTML;
 import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
 
 import java.io.ByteArrayInputStream;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
@@ -25,6 +26,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.exceptions.InvalidRequestBodyException;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 /**
@@ -79,9 +81,10 @@ public class GraphiQLResource extends AbstractWebResource {
         }
     }
 
-    /**
-     * Handles GraphQL query POST request.
-     */
+    /// Handles a GraphQL query `POST` request.
+    ///
+    /// A request body that cannot be deserialised is responded to with status `400 Bad Request` and a GraphQL response that carries the error in `errors`.
+    ///
     @Post
     public Representation query(final Representation envelope) {
         // first check request authorisation
@@ -92,7 +95,15 @@ public class GraphiQLResource extends AbstractWebResource {
         }
 
         // if authorisation succeeded, we can proceed with query processing
-        return restUtil.webApiResultRepresentation(webApi.execute((Map<String, Object>) restUtil.restoreJsonMap(envelope)));
+        final Map<String, Object> input;
+        try {
+            input = (Map<String, Object>) restUtil.restoreJsonMap(envelope);
+        } catch (final InvalidRequestBodyException ex) {
+            // The failure is logged where the exception is thrown.
+            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            return restUtil.webApiResultRepresentation(Map.of("errors", List.of(Map.of("message", ex.getMessage()))));
+        }
+        return restUtil.webApiResultRepresentation(webApi.execute(input));
     }
 
 }

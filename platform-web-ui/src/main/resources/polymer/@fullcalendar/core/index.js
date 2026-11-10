@@ -1,5 +1,5 @@
-import { T as Theme, B as BaseComponent, W as setRef, X as Interaction, Y as getElSeg, Z as elementClosest, _ as EventImpl, $ as listenBySelector, a0 as listenToHoverBySelector, a1 as PureComponent, z as memoize, a3 as getUniqueDomId, a4 as parseInteractionSettings, a5 as interactionSettingsStore, D as DelayedRunner, a6 as NowTimer, V as ViewContextType, a7 as CalendarImpl, a8 as flushSync, ab as ensureElHasStyles, i as isArraysEqual, ac as applyStyleProp, g as guid, v as hashValuesToArray, A as memoizeObjArg, F as Emitter, G as rangeContainsMarker, H as createEmptyEventStore, I as reduceEventStore, J as rezoneEventStoreDates, K as mergeRawOptions, L as BASE_OPTION_REFINERS, M as CALENDAR_LISTENER_REFINERS, N as CALENDAR_OPTION_REFINERS, O as COMPLEX_OPTION_COMPARATORS, e as BASE_OPTION_DEFAULTS, P as VIEW_OPTION_REFINERS, Q as DateEnv, a as mapHash, a2 as buildViewContext, aa as RenderId, a9 as CalendarRoot, m as mergeProps, c as greatestDurationDenominator, d as createDuration, f as arrayToHash, h as filterHash, j as buildEventSourceRefiners, p as parseEventSource, k as formatWithOrdinals, u as unpromisify, l as buildRangeApiWithTimeZone, n as identity, r as requestJson, s as subtractDurations, o as intersectRanges, q as startOfDay, t as addDays, w as buildEventApis, x as createFormatter, y as diffWholeDays, E as isPropsEqual, R as DateProfileGenerator, S as createEventUi, U as parseBusinessHours, C as ContentContainer, b as buildViewClassNames } from './internal-common.js';
-export { ae as JsonRequestError } from './internal-common.js';
+import { T as Theme, B as BaseComponent, Y as setRef, Z as Interaction, _ as getElSeg, $ as elementClosest, a0 as EventImpl, a1 as listenBySelector, a2 as listenToHoverBySelector, a3 as PureComponent, A as memoize, a5 as getUniqueDomId, a6 as parseInteractionSettings, a7 as interactionSettingsStore, D as DelayedRunner, a8 as NowTimer, V as ViewContextType, a9 as CalendarImpl, aa as flushSync, ad as ensureElHasStyles, i as isArraysEqual, ae as applyStyleProp, M as MAJOR_VERSION_ERROR, g as guid, v as hashValuesToArray, E as memoizeObjArg, G as Emitter, H as rangeContainsMarker, I as createEmptyEventStore, J as reduceEventStore, K as rezoneEventStoreDates, L as mergeRawOptions, N as BASE_OPTION_REFINERS, O as CALENDAR_LISTENER_REFINERS, P as CALENDAR_OPTION_REFINERS, Q as COMPLEX_OPTION_COMPARATORS, e as BASE_OPTION_DEFAULTS, R as VIEW_OPTION_REFINERS, S as DateEnv, a as mapHash, a4 as buildViewContext, ac as RenderId, ab as CalendarRoot, m as mergeProps, c as greatestDurationDenominator, d as createDuration, f as arrayToHash, h as filterHash, j as buildEventSourceRefiners, p as parseEventSource, k as formatWithOrdinals, w as warnOnce, u as unpromisify, l as buildRangeApiWithTimeZone, n as identity, r as requestJson, s as subtractDurations, o as intersectRanges, q as startOfDay, t as addDays, x as buildEventApis, y as createFormatter, z as diffWholeDays, F as isPropsEqual, U as DateProfileGenerator, W as createEventUi, X as parseBusinessHours, C as ContentContainer, b as buildViewClassNames } from './internal-common.js';
+export { ag as JsonRequestError } from './internal-common.js';
 import { createElement as y, createRef as d, Fragment as _, render as D } from '../../preact/dist/preact.module.js';
 import '../../preact/compat/dist/compat.module.js';
 
@@ -101,6 +101,7 @@ function parseLocale(codeArg, codes, raw) {
 // TODO: easier way to add new hooks? need to update a million things
 function createPlugin(input) {
     return {
+        majorVersionError: MAJOR_VERSION_ERROR,
         id: guid(),
         name: input.name,
         premiumReleaseDate: input.premiumReleaseDate ? new Date(input.premiumReleaseDate) : undefined,
@@ -781,10 +782,11 @@ theme, viewSpecs, calendarApi) {
                     customButtonProps.click.call(ev.target, ev, ev.target); // TODO: use Calendar this context?
                 }
             };
+            let customText = sanitizeButtonText(customButtonProps.text, buttonName);
             (buttonIcon = theme.getCustomButtonIconClass(customButtonProps)) ||
                 (buttonIcon = theme.getIconClass(buttonName, isRtl)) ||
-                (buttonText = customButtonProps.text);
-            buttonHint = customButtonProps.hint || customButtonProps.text;
+                (buttonText = customText);
+            buttonHint = customButtonProps.hint || customText;
         }
         else if ((viewSpec = viewSpecs[buttonName])) {
             viewsWithButtons.push(buttonName);
@@ -824,9 +826,24 @@ theme, viewSpecs, calendarApi) {
                 ], calendarButtonText[buttonName]);
             }
         }
+        buttonText = sanitizeButtonText(buttonText, buttonName);
         return { buttonName, buttonClick, buttonIcon, buttonText, buttonHint };
     })));
     return { widgets, viewsWithButtons, hasTitle };
+}
+/*
+Guards against non-string button text, like JSX, which would otherwise crash rendering (#7120)
+*/
+function sanitizeButtonText(buttonText, buttonName) {
+    if (buttonText == null || typeof buttonText === 'string') {
+        return buttonText;
+    }
+    if (typeof buttonText === 'number') {
+        return String(buttonText);
+    }
+    warnOnce(`Button text must be a string (button '${buttonName}'). ` +
+        'For custom button content, v7 supports the `iconContent` setting.');
+    return buttonName;
 }
 
 // always represents the current view. otherwise, it'd need to change value every time date changes
@@ -1847,7 +1864,12 @@ class EventClicking extends Interaction {
                 // our way to simulate a link click for elements that can't be <a> tags
                 // grab before trigger fired in case trigger trashes DOM thru rerendering
                 let hasUrlContainer = elementClosest(ev.target, '.fc-event-forced-url');
-                let url = hasUrlContainer ? hasUrlContainer.querySelector('a[href]').href : '';
+                let url = '';
+                if (hasUrlContainer) {
+                    let anchorEl = hasUrlContainer.querySelector('a[href]');
+                    // custom eventContent might not render an <a> (#6133)
+                    url = anchorEl ? anchorEl.href : seg.eventRange.def.url;
+                }
                 context.emitter.trigger('eventClick', {
                     el: segEl,
                     event: new EventImpl(component.context, seg.eventRange.def, seg.eventRange.instance),
