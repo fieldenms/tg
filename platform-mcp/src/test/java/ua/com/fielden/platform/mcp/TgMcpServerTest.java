@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.mcp.McpConfig.WEB_API_KEY_MCP_HTTP_HEADER;
 import static ua.com.fielden.platform.mcp.TgMcpServer.QUERY_GUIDE_RESOURCE_URI;
+import static ua.com.fielden.platform.mcp.test_config.TgMcpServerTestCaseConfiguration.TEST_WEB_API_KEY_MCP;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertInstanceOf;
 
 public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
@@ -52,7 +53,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     private final McpSyncClient mcpClient = McpClient.sync(
             HttpClientStreamableHttpTransport.builder(URI)
                     .endpoint(PREFIX + TgMcpServerTestCaseConfiguration.PATH_MCP)
-                    .customizeRequest(request -> request.header(WEB_API_KEY_MCP_HTTP_HEADER, TgMcpServerTestCaseConfiguration.TEST_WEB_API_KEY_MCP))
+                    .addHttpRequestCustomizer((builder, _, _, _, _) -> builder.header(WEB_API_KEY_MCP_HTTP_HEADER, TEST_WEB_API_KEY_MCP))
                     .build())
             .requestTimeout(Duration.ofHours(999))
             .build();
@@ -70,7 +71,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
 
     @Test
     public void resource_query_guide() {
-        final var queryGuideResource = mcpClient.readResource(new McpSchema.ReadResourceRequest(QUERY_GUIDE_RESOURCE_URI));
+        final var queryGuideResource = mcpClient.readResource(McpSchema.ReadResourceRequest.builder(QUERY_GUIDE_RESOURCE_URI).build());
         assertFalse(queryGuideResource.contents().isEmpty());
         final var content = assertInstanceOf(McpSchema.TextResourceContents.class, queryGuideResource.contents().getFirst());
         assertEquals("text/markdown", content.mimeType());
@@ -138,29 +139,32 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
 
     @Test
     public void tool_execute_query_without_query_argument() {
-        final var result = mcpClient.callTool(new McpSchema.CallToolRequest("execute_query", Map.of()));
+        final var result = mcpClient.callTool(McpSchema.CallToolRequest.builder("execute_query").arguments(Map.of()).build());
         assertTrue(result.isError());
-        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("[query]");
+        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text())
+                    .isEqualTo("Argument [query] is required and must be a string.");
     }
 
     @Test
     public void tool_execute_query_with_malformed_variables_argument() {
-        final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
-                "execute_query",
-                Map.of("query", "{ tgVehicle { key } }", "variables", "not an object")));
+        final var result = mcpClient.callTool(
+                McpSchema.CallToolRequest.builder("execute_query")
+                        .arguments(Map.of("query", "{ tgVehicle { key } }", "variables", "not an object"))
+                        .build());
         assertTrue(result.isError());
-        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("[variables]");
+        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text())
+                    .isEqualTo("Argument [variables] must be an object.");
     }
 
     @Test
     public void non_existing_resource() {
-        assertThatThrownBy(() -> mcpClient.readResource(new McpSchema.ReadResourceRequest("tg://abcd")))
+        assertThatThrownBy(() -> mcpClient.readResource(McpSchema.ReadResourceRequest.builder("tg://abcd").build()))
                 .isInstanceOf(McpError.class);
     }
 
     @Test
     public void non_existing_tool() {
-        assertThatThrownBy(() -> mcpClient.callTool(new McpSchema.CallToolRequest("magic", Map.of())))
+        assertThatThrownBy(() -> mcpClient.callTool(McpSchema.CallToolRequest.builder("magic").build()))
                 .isInstanceOf(McpError.class);
     }
 
@@ -203,7 +207,9 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     private McpSchema.CallToolResult executeQuery(final String query, final Map<String, Object> variables) {
-        return mcpClient.callTool(new McpSchema.CallToolRequest("execute_query", Map.of("query", query, "variables", variables)));
+        return mcpClient.callTool(McpSchema.CallToolRequest.builder("execute_query")
+                                          .arguments(Map.of("query", query, "variables", variables))
+                                          .build());
     }
 
     private McpSchema.CallToolResult executeQuery(final String query) {

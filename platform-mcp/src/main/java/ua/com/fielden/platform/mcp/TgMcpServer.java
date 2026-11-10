@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.mcp;
 
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.modelcontextprotocol.common.McpTransportContext;
-import io.modelcontextprotocol.json.jackson2.JacksonMcpJsonMapper;
+import io.modelcontextprotocol.json.McpJsonDefaults;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpStatelessServerFeatures.SyncResourceSpecification;
 import io.modelcontextprotocol.server.McpStatelessSyncServer;
@@ -82,6 +81,8 @@ public class TgMcpServer {
                                       .tools(false)
                                       .resources(false, false)
                                       .build())
+                // Prefer our own validation with our own messages.
+                .validateToolInputs(false)
                 .resources(queryGuideResource())
                 .toolCall(executeQueryTool(), this::handleExecuteQuery)
                 .build();
@@ -91,14 +92,19 @@ public class TgMcpServer {
 
     private SyncResourceSpecification queryGuideResource() {
         return new SyncResourceSpecification(
-                McpSchema.Resource.builder()
-                        .uri(QUERY_GUIDE_RESOURCE_URI)
-                        .name("GraphQL Query Guide")
+                McpSchema.Resource.builder(QUERY_GUIDE_RESOURCE_URI, "GraphQL Query Guide")
                         .description("""
                                      Reference document describing the GraphQL capabilities supported by TG.""")
                         .mimeType("text/markdown")
                         .build(),
-                (exchange, request) -> new ReadResourceResult(List.of(new TextResourceContents(request.uri(), "text/markdown", loadQueryGuide()))));
+                (_, request) -> {
+                    final var contents = List.<McpSchema.ResourceContents>of(
+                            TextResourceContents.builder(request.uri(), loadQueryGuide())
+                                    .mimeType("text/markdown")
+                                    .build()
+                    );
+                    return ReadResourceResult.builder(contents).build();
+                });
     }
 
     private static String loadQueryGuide() {
@@ -115,8 +121,15 @@ public class TgMcpServer {
     // -- Tools --
 
     private static McpSchema.Tool executeQueryTool() {
-        return McpSchema.Tool.builder()
-                .name("execute_query")
+        final var inputSchema = Map.of(
+                "type", "object",
+                "properties", Map.of(
+                        "query", Map.of("type", "string",
+                                        "description", "The GraphQL query string"),
+                        "variables", Map.of("type", "object",
+                                            "description", "Optional GraphQL variables")),
+                "required", List.of("query"));
+        return McpSchema.Tool.builder("execute_query", inputSchema)
                 .description("""
                              Executes a GraphQL query against the TG system and returns a GraphQL response document.
                              Use for both preliminary lookups (e.g., resolving reference entity keys) and final data queries.
@@ -125,15 +138,7 @@ public class TgMcpServer {
                              Values are returned in "data", failures in "errors", and both can be present at once — a query can produce partial data.
                              A query that could not be parsed, validated or executed is reported in "errors", and is a successful tool call.
                              A tool error means only that this request was malformed or that the system failed to process it.""")
-                .inputSchema(new McpSchema.JsonSchema(
-                        "object",
-                        Map.of("query", Map.of("type", "string",
-                                               "description", "The GraphQL query string"),
-                               "variables", Map.of("type", "object",
-                                                   "description", "Optional GraphQL variables")),
-                        List.of("query"),
-                        null, null, null))
-                .outputSchema(new JacksonMcpJsonMapper(new JsonMapper()),
+                .outputSchema(McpJsonDefaults.getMapper(),
                               readResource(TgMcpServer.class, EXECUTE_QUERY_OUTPUT_SCHEMA_RESOURCE_PATH, StandardCharsets.UTF_8))
                 .build();
     }
