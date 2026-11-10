@@ -76,18 +76,19 @@ public class McpWebResourceGuardTest extends AbstractTgMcpServerTestCase {
     ///
     @Test
     public void a_request_with_a_valid_api_key_is_processed_as_the_mcp_user() {
-        final var mcpClient = McpClient.sync(
+        try (final var mcpClient = McpClient.sync(
                         HttpClientStreamableHttpTransport.builder(BASE_URI)
                                 .endpoint(PREFIX + PATH_MCP)
                                 .addHttpRequestCustomizer((builder, _, _, _, _) -> builder.header(WEB_API_KEY_MCP_HTTP_HEADER, TEST_WEB_API_KEY_MCP))
                                 .build())
                 .requestTimeout(Duration.ofMinutes(1))
-                .build();
-
-        final var result = mcpClient.callTool(McpSchema.CallToolRequest.builder("execute_query")
-                                                      .arguments(Map.of("query", "{ tgVehicle { key } }"))
-                                                      .build());
-        assertThat(result.isError()).isFalse();
+                .build())
+        {
+            final var result = mcpClient.callTool(McpSchema.CallToolRequest.builder("execute_query")
+                                                          .arguments(Map.of("query", "{ tgVehicle { key } }"))
+                                                          .build());
+            assertThat(result.isError()).isFalse();
+        }
     }
 
     @Override
