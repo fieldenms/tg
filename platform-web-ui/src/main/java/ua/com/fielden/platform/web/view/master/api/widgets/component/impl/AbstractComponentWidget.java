@@ -14,12 +14,18 @@ import java.util.regex.Pattern;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.countMatches;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 /// The base widget for both ways of adding an application-provided web component to a master:
 /// in place of an editor, with [ComponentWidget], or bound to the entity rather than to a property, with [EntityComponentWidget].
+///
+/// It renders the attributes of the component element for both forms:
+/// the element id, the fully-fledged entity of the master as `entity`, the title and description as `prop-title` and `prop-desc`, which are rendered only if present,
+/// and the index of the action to show as `property-action-index`, calculated under the key of the component.
+/// A concrete widget adds its own attributes after them.
 ///
 /// It records the title and description, the element name, the height and minimum height, the attributes, whether the component is blocked while the master entity is unsaved,
 /// and the condition for refreshing the component after a validation of the master entity.
@@ -28,7 +34,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 /// A declared height makes the component resizable, and is rendered as `height` together with `entity-type`, the entity type of the master,
 /// under which, together with the element id, the client-side component contract remembers the height set by the user.
 /// A declared minimum height is rendered as `min-height`.
-/// The declared attributes are rendered after the attributes of a concrete widget, in the order of declaration.
+/// The declared attributes are rendered after the platform attributes, in the order of declaration.
 /// An attribute has either a declared value, or is bound to the value of a property of the entity of the master.
 ///
 /// Blocking is declared by default, and is rendered as the `block-when-unsaved` flag.
@@ -181,6 +187,17 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
         return refreshCondition;
     }
 
+    /// The key that identifies the component in the master, under which the index of the action to show is calculated for the entity, among the property action indices of the master,
+    /// and under which the master collects the refresh condition of the component.
+    ///
+    public abstract String componentKey();
+
+    /// The id of the component element, which is the key of the component by default.
+    ///
+    protected String elementId() {
+        return componentKey();
+    }
+
     /// The names of attributes rendered by a concrete widget in addition to those of both component widgets, which cannot be declared.
     ///
     protected Set<String> additionalReservedAttrNames() {
@@ -208,7 +225,7 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
     /// Adds the declared height and minimum height of the component to `elementAttrs`, as CSS lengths in pixels.
     /// The height is accompanied by the entity type of the master, which, together with the element id, identifies the height set by the user.
     ///
-    protected void addHeightAttributes(final Map<String, Object> elementAttrs) {
+    private void addHeightAttributes(final Map<String, Object> elementAttrs) {
         height.ifPresent(value -> {
             elementAttrs.put("entity-type", entityType.getName());
             elementAttrs.put("height", value + "px");
@@ -219,7 +236,7 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
     /// Adds the attributes for the unsaved state of the master entity to `elementAttrs`:
     /// the `block-when-unsaved` flag, which is rendered only if blocking is declared, and the modification state of the master.
     ///
-    protected void addUnsavedStateAttributes(final Map<String, Object> elementAttrs) {
+    private void addUnsavedStateAttributes(final Map<String, Object> elementAttrs) {
         elementAttrs.put("block-when-unsaved", blockWhenUnsaved); // a `false` boolean attribute is not rendered
         elementAttrs.put("entity-modified", "[[_bindingEntityModified]]");
         elementAttrs.put("entity-edited", "[[_editedPropsExist]]");
@@ -228,8 +245,29 @@ public abstract class AbstractComponentWidget extends AbstractWidget {
     /// Adds the context of the master to `elementAttrs`: `create-context-holder`, the function of the master that creates the contexts of its property and entity actions.
     /// A component uses it to provide the master entity, including its unsaved changes, as the context of what it runs, such as an embedded centre.
     ///
-    protected void addMasterContextAttribute(final Map<String, Object> elementAttrs) {
+    private void addMasterContextAttribute(final Map<String, Object> elementAttrs) {
         elementAttrs.put("create-context-holder", "[[_createContextHolder]]");
+    }
+
+    /// Creates the attributes of the component element for both forms, in place of the generic attributes of an editor.
+    /// A concrete widget adds its own attributes to those returned, with names reserved with [#additionalReservedAttrNames()].
+    ///
+    @Override
+    protected Map<String, Object> createAttributes() {
+        final Map<String, Object> elementAttrs = new LinkedHashMap<>();
+        if (isDebug()) {
+            elementAttrs.put("debug", "true");
+        }
+        elementAttrs.put("id", elementId());
+        elementAttrs.put("entity", "[[_currEntity]]");
+        // a component bound to the entity has no property to take the title and description from, so they are rendered only if declared
+        ofNullable(title()).ifPresent(value -> elementAttrs.put("prop-title", value));
+        ofNullable(desc()).ifPresent(value -> elementAttrs.put("prop-desc", value));
+        elementAttrs.put("property-action-index", propertyActionIndexBinding(componentKey()));
+        addHeightAttributes(elementAttrs);
+        addUnsavedStateAttributes(elementAttrs);
+        addMasterContextAttribute(elementAttrs);
+        return elementAttrs;
     }
 
     @Override

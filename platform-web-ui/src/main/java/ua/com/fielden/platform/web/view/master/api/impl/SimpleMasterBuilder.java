@@ -463,14 +463,14 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             return widgets.stream()
                     .map(WidgetSelector::widget)
                     .<AbstractComponentWidget>mapMulti(typeFilter(AbstractComponentWidget.class))
-                    .flatMap(component -> component.refreshCondition().map(condition -> t2(keyOf(component), (Class<? extends IComponentRefreshCondition<T>>) condition)).stream())
+                    .flatMap(component -> component.refreshCondition().map(condition -> t2(component.componentKey(), (Class<? extends IComponentRefreshCondition<T>>) condition)).stream())
                     .collect(toMap(tt -> tt._1, tt -> tt._2));
         }
 
-        /// The key of `widget` in the master, which is its property name, or the component key of a component bound to the entity, as it has no property.
+        /// The key of `widget` in the master, which is the key of a component, or otherwise the property name of the widget.
         ///
         private static String keyOf(final AbstractWidget widget) {
-            return widget instanceof EntityComponentWidget component ? component.componentKey() : widget.propertyName();
+            return widget instanceof AbstractComponentWidget component ? component.componentKey() : widget.propertyName();
         }
     }
 

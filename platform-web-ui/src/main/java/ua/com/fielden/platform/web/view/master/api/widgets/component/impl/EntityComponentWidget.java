@@ -2,10 +2,6 @@ package ua.com.fielden.platform.web.view.master.api.widgets.component.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 /// A widget that represents an application-provided web component bound to the entity of a master rather than to any of its properties.
@@ -38,26 +34,9 @@ public class EntityComponentWidget extends AbstractComponentWidget {
     /// It is the id of the component element, and the key under which the index of the action to show is calculated for the entity, among the property action indices of the master,
     /// and under which the master collects the refresh condition of the component.
     ///
+    @Override
     public String componentKey() {
         return componentKey;
-    }
-
-    @Override
-    protected Map<String, Object> createAttributes() {
-        final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
-        if (isDebug()) {
-            attrs.put("debug", "true");
-        }
-        attrs.put("id", componentKey);
-        attrs.put("entity", "[[_currEntity]]");
-        // the component has no property to take the title and description from, so they are rendered only if declared
-        ofNullable(title()).ifPresent(value -> attrs.put("prop-title", value));
-        ofNullable(desc()).ifPresent(value -> attrs.put("prop-desc", value));
-        attrs.put("property-action-index", propertyActionIndexBinding(componentKey));
-        addHeightAttributes(attrs);
-        addUnsavedStateAttributes(attrs);
-        addMasterContextAttribute(attrs);
-        return attrs;
     }
 
 }

@@ -78,14 +78,14 @@ public class SimpleMasterBuilderComponentTest {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).also());
 
         assertTrue(out.contains("import '/resources/components/tg-fuel-chart.js';"));
-        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' property-name='integerProp' prop-title='Integer prop' prop-desc='Integer prop desc' " + actionIndexAttr("integerProp") + " refresh-on-property-change block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' prop-title='Integer prop' prop-desc='Integer prop desc' " + actionIndexAttr("integerProp") + " block-when-unsaved " + MASTER_STATE_ATTRS + " property-name='integerProp' refresh-on-property-change>"));
     }
 
     @Test
     public void property_component_receives_declared_title_and_description_in_place_of_those_of_its_property() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withTitle("Fuel usage").withDesc("Fuel usage by month").also());
 
-        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' property-name='integerProp' prop-title='Fuel usage' prop-desc='Fuel usage by month' property-action-index="));
+        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' prop-title='Fuel usage' prop-desc='Fuel usage by month' property-action-index="));
     }
 
     @Test
@@ -94,8 +94,8 @@ public class SimpleMasterBuilderComponentTest {
                 .addProp("integerProp").asComponent(PROPERTY_COMPONENT).withTitle("Fuel usage").also()
                 .addProp("bigDecimalProp").asComponent("components/tg-cost-chart").withDesc("Cost by month").also());
 
-        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' property-name='integerProp' prop-title='Fuel usage' prop-desc='Integer prop desc' property-action-index="));
-        assertTrue(out.contains("<tg-cost-chart id='component_4_bigDecimalProp' entity='[[_currEntity]]' property-name='bigDecimalProp' prop-title='BigDecimal prop' prop-desc='Cost by month' property-action-index="));
+        assertTrue(out.contains("<tg-fuel-chart id='component_4_integerProp' entity='[[_currEntity]]' prop-title='Fuel usage' prop-desc='Integer prop desc' property-action-index="));
+        assertTrue(out.contains("<tg-cost-chart id='component_4_bigDecimalProp' entity='[[_currEntity]]' prop-title='BigDecimal prop' prop-desc='Cost by month' property-action-index="));
     }
 
     @Test
@@ -115,7 +115,7 @@ public class SimpleMasterBuilderComponentTest {
                 .withAttr("mode", "full")
                 .also());
 
-        assertTrue(out.contains(MASTER_STATE_ATTRS + " mode='full' centre-uuid='[[centreUuid]]'>"));
+        assertTrue(out.contains(MASTER_STATE_ATTRS + " property-name='integerProp' refresh-on-property-change mode='full' centre-uuid='[[centreUuid]]'>"));
     }
 
     @Test
@@ -126,14 +126,14 @@ public class SimpleMasterBuilderComponentTest {
                 .withPropAttr("limit", "bigDecimalProp")
                 .also());
 
-        assertTrue(out.contains(MASTER_STATE_ATTRS + " limit='[[_propertyValue(_currEntity, \"bigDecimalProp\")]]' mode='compact'>"));
+        assertTrue(out.contains(MASTER_STATE_ATTRS + " property-name='integerProp' refresh-on-property-change limit='[[_propertyValue(_currEntity, \"bigDecimalProp\")]]' mode='compact'>"));
     }
 
     @Test
     public void property_component_that_skips_blocking_has_no_blocking_flag_but_receives_modification_state_of_master() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).skipBlockingWhenUnsaved().also());
 
-        assertTrue(out.contains(actionIndexAttr("integerProp") + " refresh-on-property-change " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " " + MASTER_STATE_ATTRS + " property-name='integerProp' refresh-on-property-change>"));
         assertFalse(out.contains("block-when-unsaved"));
     }
 
@@ -141,28 +141,28 @@ public class SimpleMasterBuilderComponentTest {
     public void property_component_receives_declared_height_with_entity_type_of_master_and_declared_minimum_height() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withHeight(300).withMinHeight(200).also());
 
-        assertTrue(out.contains(actionIndexAttr("integerProp") + " refresh-on-property-change entity-type='" + TgPersistentEntityWithProperties.class.getName() + "' height='300px' min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " entity-type='" + TgPersistentEntityWithProperties.class.getName() + "' height='300px' min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + " property-name='integerProp' refresh-on-property-change>"));
     }
 
     @Test
     public void property_component_without_declared_height_receives_only_declared_minimum_height() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).withMinHeight(200).also());
 
-        assertTrue(out.contains(actionIndexAttr("integerProp") + " refresh-on-property-change min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " min-height='200px' block-when-unsaved " + MASTER_STATE_ATTRS + " property-name='integerProp' refresh-on-property-change>"));
     }
 
     @Test
     public void property_component_without_refresh_condition_is_refreshed_whenever_the_value_of_its_property_changes() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).also());
 
-        assertTrue(out.contains(actionIndexAttr("integerProp") + " refresh-on-property-change "));
+        assertTrue(out.contains(MASTER_STATE_ATTRS + " property-name='integerProp' refresh-on-property-change>"));
     }
 
     @Test
     public void property_component_with_refresh_condition_is_refreshed_by_the_condition_in_place_of_changes_of_its_property() {
         final String out = render(master().addProp("integerProp").asComponent(PROPERTY_COMPONENT).refreshWhen(FirstRefreshCondition.class).also());
 
-        assertTrue(out.contains(actionIndexAttr("integerProp") + " block-when-unsaved " + MASTER_STATE_ATTRS + ">"));
+        assertTrue(out.contains(actionIndexAttr("integerProp") + " block-when-unsaved " + MASTER_STATE_ATTRS + " property-name='integerProp'>"));
         assertFalse(out.contains("refresh-on-property-change"));
     }
 
@@ -186,8 +186,9 @@ public class SimpleMasterBuilderComponentTest {
         final IMaster<TgPersistentEntityWithProperties> master = done(master().addProp("entityProp.integerProp").asComponent(PROPERTY_COMPONENT).withAction(mkAction("propAction")).also());
         final String out = render(master);
 
-        assertTrue(out.contains("<tg-fuel-chart id='component_4_entityProp.integerProp' entity='[[_currEntity]]' property-name='entityProp.integerProp' "));
-        assertTrue(out.contains(actionIndexAttr("entityProp.integerProp") + " refresh-on-property-change "));
+        assertTrue(out.contains("<tg-fuel-chart id='component_4_entityProp.integerProp' entity='[[_currEntity]]' "));
+        assertTrue(out.contains(MASTER_STATE_ATTRS + " property-name='entityProp.integerProp' refresh-on-property-change>"));
+        assertTrue(out.contains(actionIndexAttr("entityProp.integerProp") + " block-when-unsaved "));
         assertEquals(Map.of("entityProp.integerProp", SingleActionSelector.class), master.propertyActionSelectors());
     }
 

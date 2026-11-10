@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.view.master.api.widgets.component.impl;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,6 +31,18 @@ public class ComponentWidget extends AbstractComponentWidget {
         super(widgetPath, titleDesc, entityType, propertyName);
     }
 
+    /// The name of the property, which is also the key of the property action of an editor.
+    ///
+    @Override
+    public String componentKey() {
+        return propertyName();
+    }
+
+    @Override
+    protected String elementId() {
+        return "component_4_" + propertyName();
+    }
+
     @Override
     protected Set<String> additionalReservedAttrNames() {
         return setOf("property-name", "refresh-on-property-change");
@@ -39,20 +50,9 @@ public class ComponentWidget extends AbstractComponentWidget {
 
     @Override
     protected Map<String, Object> createAttributes() {
-        final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
-        if (isDebug()) {
-            attrs.put("debug", "true");
-        }
-        attrs.put("id", "component_4_" + propertyName());
-        attrs.put("entity", "[[_currEntity]]");
+        final Map<String, Object> attrs = super.createAttributes();
         attrs.put("property-name", propertyName());
-        attrs.put("prop-title", title());
-        attrs.put("prop-desc", desc());
-        attrs.put("property-action-index", propertyActionIndexBinding(propertyName()));
         attrs.put("refresh-on-property-change", refreshCondition().isEmpty()); // a `false` boolean attribute is not rendered
-        addHeightAttributes(attrs);
-        addUnsavedStateAttributes(attrs);
-        addMasterContextAttribute(attrs);
         return attrs;
     }
 
