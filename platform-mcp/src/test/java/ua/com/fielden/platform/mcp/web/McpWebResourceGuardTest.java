@@ -76,15 +76,18 @@ public class McpWebResourceGuardTest extends AbstractTgMcpServerTestCase {
     @Test
     public void a_request_authenticated_by_the_authentication_model_is_processed_as_the_authenticated_user() {
         getInstance(IUserProvider.class).clearUser();
-        final var mcpClient = McpClient.sync(
+        try (final var mcpClient = McpClient.sync(
                         HttpClientStreamableHttpTransport.builder(BASE_URI)
                                 .endpoint(PREFIX + PATH_MCP)
                                 .build())
                 .requestTimeout(Duration.ofMinutes(1))
-                .build();
-
-        final var result = mcpClient.callTool(new McpSchema.CallToolRequest("execute_query", Map.of("query", "{ tgVehicle { key } }")));
-        assertThat(result.isError()).isFalse();
+                .build())
+        {
+            final var result = mcpClient.callTool(McpSchema.CallToolRequest.builder("execute_query")
+                                                          .arguments(Map.of("query", "{ tgVehicle { key } }"))
+                                                          .build());
+            assertThat(result.isError()).isFalse();
+        }
     }
 
     @Override

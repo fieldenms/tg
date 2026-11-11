@@ -56,12 +56,6 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     }
 
     private final McpTestWebApp webApp = getInstance(McpTestWebApp.class);
-    private final McpSyncClient mcpClient = McpClient.sync(
-            HttpClientStreamableHttpTransport.builder(URI)
-                    .endpoint(PREFIX + TgMcpServerTestCaseConfiguration.PATH_MCP)
-                    .build())
-            .requestTimeout(Duration.ofHours(999))
-            .build();
 
     private final IDomainMetadata domainMetadata = getInstance(IDomainMetadata.class);
     private final IWebApi webApi = getInstance(IWebApi.class);
@@ -89,12 +83,14 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
 
     @Test
     public void resource_query_guide() {
-        final var queryGuideResource = mcpClient.readResource(new McpSchema.ReadResourceRequest(QUERY_GUIDE_RESOURCE_URI));
-        assertFalse(queryGuideResource.contents().isEmpty());
-        final var content = assertInstanceOf(McpSchema.TextResourceContents.class, queryGuideResource.contents().getFirst());
-        assertEquals("text/markdown", content.mimeType());
-        assertEquals(QUERY_GUIDE_RESOURCE_URI, content.uri());
-        assertThat(content.text()).contains("This document describes how to query data from a TG system using GraphQL");
+        try (final var client = client()) {
+            final var queryGuideResource = client.readResource(McpSchema.ReadResourceRequest.builder(QUERY_GUIDE_RESOURCE_URI).build());
+            assertFalse(queryGuideResource.contents().isEmpty());
+            final var content = assertInstanceOf(McpSchema.TextResourceContents.class, queryGuideResource.contents().getFirst());
+            assertEquals("text/markdown", content.mimeType());
+            assertEquals(QUERY_GUIDE_RESOURCE_URI, content.uri());
+            assertThat(content.text()).contains("This document describes how to query data from a TG system using GraphQL");
+        }
     }
 
     @Test
@@ -157,18 +153,24 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
 
     @Test
     public void tool_execute_query_without_query_argument() {
-        final var result = mcpClient.callTool(new McpSchema.CallToolRequest("execute_query", Map.of()));
-        assertTrue(result.isError());
-        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("[query]");
+        try (final var client = client()) {
+            final var result = client.callTool(McpSchema.CallToolRequest.builder("execute_query").arguments(Map.of()).build());
+            assertTrue(result.isError());
+            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text())
+                    .isEqualTo("Argument [query] is required and must be a string.");
+        }
     }
 
     @Test
     public void tool_execute_query_with_malformed_variables_argument() {
-        final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
-                "execute_query",
-                Map.of("query", "{ tgVehicle { key } }", "variables", "not an object")));
-        assertTrue(result.isError());
-        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("[variables]");
+        try (final var client = client()) {
+            final var result = client.callTool(McpSchema.CallToolRequest.builder("execute_query")
+                                                       .arguments(Map.of("query", "{ tgVehicle { key } }", "variables", "not an object"))
+                                                       .build());
+            assertTrue(result.isError());
+            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text())
+                    .isEqualTo("Argument [variables] must be an object.");
+        }
     }
 
     @Test
@@ -249,12 +251,12 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     public void tool_add_calculated_property_returns_an_error_if_the_property_being_added_has_the_same_name_as_the_one_added_previously() {
         addCalculatedProperty(TgVehicle.class, "myNumber", "2*3");
 
-        {
-            final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
-                    TOOL_ADD_CALCULATED_PROPERTY,
-                    Map.of("type", TgVehicle.class.getSimpleName(),
-                           "name", "myNumber",
-                           "expression", "5*4")));
+        try (final var client = client()) {
+            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_ADD_CALCULATED_PROPERTY)
+                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
+                                                                         "name", "myNumber",
+                                                                         "expression", "5*4"))
+                                                       .build());
             assertTrue(result.isError());
             assertThat(result.content()).hasSize(1);
             assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("""
@@ -268,29 +270,31 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     @Test
     public void tool_add_calculated_property_returns_an_error_if_the_property_being_added_has_the_same_name_as_an_existing_one() {
         assertThat(domainMetadata.forPropertyOpt(TgVehicle.class, "model")).isPresent();
-        final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
-                TOOL_ADD_CALCULATED_PROPERTY,
-                Map.of("type", TgVehicle.class.getSimpleName(),
-                       "name", "model",
-                       "expression", "2*3")));
-        assertTrue(result.isError());
-        assertThat(result.content()).hasSize(1);
-        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("""
+        try (final var client = client()) {
+            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_ADD_CALCULATED_PROPERTY)
+                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
+                                                                         "name", "model",
+                                                                         "expression", "2*3"))
+                                                       .build());
+            assertTrue(result.isError());
+            assertThat(result.content()).hasSize(1);
+            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("""
                 Error adding calculated property [TgVehicle.model] with expression:
                 2*3
                 
                 Property [TgVehicle.model] already exists in the original domain. Please try another name.""");
+        }
     }
 
     @Test
     public void tool_remove_calculated_property_removes_a_previously_added_calculated_property_which_then_cannot_be_read_with_execute_query() {
         addCalculatedProperty(TgVehicle.class, "myNumber", "2*3");
 
-        {
-            final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
-                    TOOL_REMOVE_CALCULATED_PROPERTY,
-                    Map.of("type", TgVehicle.class.getSimpleName(),
-                           "name", "myNumber")));
+        try (final var client = client()) {
+            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_REMOVE_CALCULATED_PROPERTY)
+                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
+                                                                         "name", "myNumber"))
+                                                       .build());
             assertFalse(result.isError());
         }
 
@@ -304,81 +308,93 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     @Test
     public void tool_remove_calculated_property_returns_an_error_if_the_property_being_removed_does_not_exist() {
         assertThat(domainMetadata.forPropertyOpt(TgVehicle.class, "myNumber")).isEmpty();
-        final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
-                TOOL_REMOVE_CALCULATED_PROPERTY,
-                Map.of("type", TgVehicle.class.getSimpleName(),
-                       "name", "myNumber")));
-        assertTrue(result.isError());
-        assertThat(result.content()).hasSize(1);
-        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
-                "Error removing calculated property [TgVehicle.myNumber]. Calculated property [TgVehicle.myNumber] does not exist.");
+        try (final var client = client()) {
+            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_REMOVE_CALCULATED_PROPERTY)
+                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
+                                                                         "name", "myNumber"))
+                                                       .build());
+            assertTrue(result.isError());
+            assertThat(result.content()).hasSize(1);
+            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
+                    "Error removing calculated property [TgVehicle.myNumber]. Calculated property [TgVehicle.myNumber] does not exist.");
+        }
     }
 
     @Test
     public void tool_remove_calculated_property_returns_an_error_if_the_property_being_removed_is_an_original_persistent_property() {
         assertThat(domainMetadata.forPropertyOpt(TgVehicle.class, "model")).isPresent();
-        final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
-                TOOL_REMOVE_CALCULATED_PROPERTY,
-                Map.of("type", TgVehicle.class.getSimpleName(),
-                       "name", "model")));
-        assertTrue(result.isError());
-        assertThat(result.content()).hasSize(1);
-        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
-                "Error removing calculated property [TgVehicle.model]. Property [TgVehicle.model] is part of the original domain and cannot be modified.");
+        try (final var client = client()) {
+            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_REMOVE_CALCULATED_PROPERTY)
+                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
+                                                                         "name", "model"))
+                                                       .build());
+            assertTrue(result.isError());
+            assertThat(result.content()).hasSize(1);
+            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
+                    "Error removing calculated property [TgVehicle.model]. Property [TgVehicle.model] is part of the original domain and cannot be modified.");
+        }
     }
 
     @Test
     public void tool_remove_calculated_property_returns_an_error_if_the_property_being_removed_is_an_original_calculated_property() {
         assertThat(domainMetadata.forPropertyOpt(TgVehicle.class, "lastFuelUsage")).isPresent();
-        final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
-                TOOL_REMOVE_CALCULATED_PROPERTY,
-                Map.of("type", TgVehicle.class.getSimpleName(),
-                       "name", "lastFuelUsage")));
-        assertTrue(result.isError());
-        assertThat(result.content()).hasSize(1);
-        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
-                "Error removing calculated property [TgVehicle.lastFuelUsage]. Property [TgVehicle.lastFuelUsage] is part of the original domain and cannot be modified.");
+        try (final var client = client()) {
+            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_REMOVE_CALCULATED_PROPERTY)
+                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
+                                                                         "name", "lastFuelUsage"))
+                                                       .build());
+            assertTrue(result.isError());
+            assertThat(result.content()).hasSize(1);
+            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
+                    "Error removing calculated property [TgVehicle.lastFuelUsage]. Property [TgVehicle.lastFuelUsage] is part of the original domain and cannot be modified.");
+        }
     }
 
     @Test
     public void tool_add_calculated_property_returns_an_error_if_the_specified_type_does_not_exist() {
-        final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
-                TOOL_ADD_CALCULATED_PROPERTY,
-                Map.of("type", "Nothing",
-                       "name", "property",
-                       "expression", "2*3")));
-        assertTrue(result.isError());
-        assertThat(result.content()).hasSize(1);
-        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
-                "Invalid argument [type]. No such type: Nothing.");
+        try (final var client = client()) {
+            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_ADD_CALCULATED_PROPERTY)
+                                                       .arguments(Map.of("type", "Nothing",
+                                                                         "name", "property",
+                                                                         "expression", "2*3"))
+                                                       .build());
+            assertTrue(result.isError());
+            assertThat(result.content()).hasSize(1);
+            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
+                    "Invalid argument [type]. No such type: Nothing.");
+        }
     }
 
     @Test
     public void tool_remove_calculated_property_returns_an_error_if_the_specified_type_does_not_exist() {
-        final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
-                TOOL_REMOVE_CALCULATED_PROPERTY,
-                Map.of("type", "Nothing",
-                       "name", "property")));
-        assertTrue(result.isError());
-        assertThat(result.content()).hasSize(1);
-        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
-                "Invalid argument [type]. No such type: Nothing.");
+        try (final var client = client()) {
+            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_REMOVE_CALCULATED_PROPERTY)
+                                                       .arguments(Map.of("type", "Nothing",
+                                                                         "name", "property"))
+                                                       .build());
+            assertTrue(result.isError());
+            assertThat(result.content()).hasSize(1);
+            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
+                    "Invalid argument [type]. No such type: Nothing.");
+        }
     }
 
     @Test
     public void tool_add_calculated_property_returns_an_error_if_the_specified_expression_is_invalid() {
-        final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
-                TOOL_ADD_CALCULATED_PROPERTY,
-                Map.of("type", TgVehicle.class.getSimpleName(),
-                       "name", "myNumber",
-                       "expression", "2*a")));
-        assertTrue(result.isError());
-        assertThat(result.content()).hasSize(1);
-        assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("""
+        try (final var client = client()) {
+            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_ADD_CALCULATED_PROPERTY)
+                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
+                                                                         "name", "myNumber",
+                                                                         "expression", "2*a"))
+                                                       .build());
+            assertTrue(result.isError());
+            assertThat(result.content()).hasSize(1);
+            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("""
                Error adding calculated property [TgVehicle.myNumber] with expression:
                2*a
-               
+
                Invalid expression for calculated property [TgVehicle.myNumber]: 2*a""");
+        }
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -396,18 +412,20 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
         }
         final Test test = (type, propName, expression, restrictedTokens, unathorisedProps) -> {
             runWithoutTokens(restrictedTokens, () -> {
-                final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
-                        TOOL_ADD_CALCULATED_PROPERTY,
-                        Map.of("type", type.getSimpleName(),
-                               "name", propName,
-                               "expression", expression)));
-                assertTrue(result.isError());
-                assertThat(result.content()).hasSize(1);
-                assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("""
+                try (final var client = client()) {
+                    final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_ADD_CALCULATED_PROPERTY)
+                                                               .arguments(Map.of("type", type.getSimpleName(),
+                                                                                 "name", propName,
+                                                                                 "expression", expression))
+                                                               .build());
+                    assertTrue(result.isError());
+                    assertThat(result.content()).hasSize(1);
+                    assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("""
                Error adding calculated property [%s.%s] with expression:
                %s
                Reason: Unauthorised access to the following properties: [%s]."""
                .formatted(type.getSimpleName(), propName, expression, CollectionUtil.toString(unathorisedProps, ", ")));
+                }
             });
 
             assertThat(domainManager.domainTreeEnhancer(getUser()).findCalculatedProperty(type, propName)).isEmpty();
@@ -437,14 +455,18 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
 
     @Test
     public void non_existing_resource() {
-        assertThatThrownBy(() -> mcpClient.readResource(new McpSchema.ReadResourceRequest("tg://abcd")))
-                .isInstanceOf(McpError.class);
+        try (final var client = client()) {
+            assertThatThrownBy(() -> client.readResource(McpSchema.ReadResourceRequest.builder("tg://abcd").build()))
+                    .isInstanceOf(McpError.class);
+        }
     }
 
     @Test
     public void non_existing_tool() {
-        assertThatThrownBy(() -> mcpClient.callTool(new McpSchema.CallToolRequest("magic", Map.of())))
-                .isInstanceOf(McpError.class);
+        try (final var client = client()) {
+            assertThatThrownBy(() -> client.callTool(McpSchema.CallToolRequest.builder("magic").build()))
+                    .isInstanceOf(McpError.class);
+        }
     }
 
     @Override
@@ -486,7 +508,11 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     private McpSchema.CallToolResult executeQuery(final String query, final Map<String, Object> variables) {
-        return mcpClient.callTool(new McpSchema.CallToolRequest("execute_query", Map.of("query", query, "variables", variables)));
+        try (final var client = client()) {
+            return client.callTool(McpSchema.CallToolRequest.builder("execute_query")
+                                           .arguments(Map.of("query", query, "variables", variables))
+                                           .build());
+        }
     }
 
     private McpSchema.CallToolResult executeQuery(final String query) {
@@ -494,12 +520,14 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     }
 
     private void addCalculatedProperty(final Class<? extends AbstractEntity<?>> type, final String name, final String expression) {
-        final var result = mcpClient.callTool(new McpSchema.CallToolRequest(
-                TOOL_ADD_CALCULATED_PROPERTY,
-                Map.of("type", type.getSimpleName(),
-                       "name", name,
-                       "expression", expression)));
-        assertFalse(result.isError());
+        try (final var client = client()) {
+            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_ADD_CALCULATED_PROPERTY)
+                                                       .arguments(Map.of("type", type.getSimpleName(),
+                                                                         "name", name,
+                                                                         "expression", expression))
+                                                       .build());
+            assertFalse(result.isError());
+        }
     }
 
     /// Asserts that `query` results in a single GraphQL error, raised while fetching data for root field `rootField`, with a message that contains `message`.
@@ -538,6 +566,15 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
         assertThat(__type).containsKey("fields");
         final List<Map<String, Object>> fields = assertInstanceOf(List.class, __type.get("fields"));
         return fields.stream().map(fld -> (String) fld.get("name")).toList();
+    }
+
+    private McpSyncClient client() {
+        return McpClient.sync(
+                        HttpClientStreamableHttpTransport.builder(URI)
+                                .endpoint(PREFIX + TgMcpServerTestCaseConfiguration.PATH_MCP)
+                                .build())
+                .requestTimeout(Duration.ofHours(999))
+                .build();
     }
 
 }
