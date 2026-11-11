@@ -13,8 +13,11 @@ import ua.com.fielden.platform.mcp.test_config.TgMcpServerTestCaseConfiguration;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.security.tokens.persistent.TgVehicle_CanRead_price_Token;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.test.TestWebApplication;
+import ua.com.fielden.platform.web_api.IWebApi;
 
 import java.time.Duration;
 import java.util.List;
@@ -24,9 +27,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.mcp.McpConfig.WEB_API_KEY_MCP_HTTP_HEADER;
-import static ua.com.fielden.platform.mcp.TgMcpServer.*;
+import static ua.com.fielden.platform.mcp.TgMcpServer.QUERY_GUIDE_RESOURCE_URI;
+import static ua.com.fielden.platform.mcp.TgMcpServer.TOOL_ENHANCE_ENTITY_TYPE;
 import static ua.com.fielden.platform.mcp.test_config.TgMcpServerTestCaseConfiguration.TEST_WEB_API_KEY_MCP;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertInstanceOf;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.web_api.EntityTypeEnhancer.ERR_BASE_TYPE_REQUIRED;
+import static ua.com.fielden.platform.web_api.EntityTypeEnhancer.ERR_UNAUTHORISED_ACCESS;
 
 public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
 
@@ -47,6 +54,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     }
 
     private final McpTestWebApp webApp = getInstance(McpTestWebApp.class);
+    private final IWebApi webApi = getInstance(IWebApi.class);
 
     @Before
     public void startWebApp() {
@@ -56,6 +64,13 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     @After
     public void stopWebApp() {
         webApplication.detachWebApplication(webApp);
+    }
+
+    /// MCP requests run as `mcp.user`, which is the current user of tests, so the enhanced entity types that they define are those of the current user.
+    ///
+    @After
+    public void discardEnhancedEntityTypes() {
+        webApi.discardEnhancedEntityTypes();
     }
 
     @Test
@@ -151,6 +166,101 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Tool enhance_entity_type
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    @Test
+    public void tool_enhance_entity_type_creates_an_entity_type_that_can_be_queried_with_execute_query() {
+        final var result = enhanceEntityType(Map.of("name", "MyVehicle",
+                                                    "baseType", "TgVehicle",
+                                                    "addProperties", List.of(Map.of("name", "myNumber", "expression", "2 * 3"))));
+        assertFalse(result.isError());
+        assertThat(text(result)).isEqualTo(
+                "Created entity type [MyVehicle], which extends [TgVehicle] with properties [myNumber]. Query it with root fields [myVehicle] and [myVehicle_agg].");
+
+        assertThat(executeQuery("{myVehicle {key(order: ASC_1) myNumber}}").structuredContent())
+                .isEqualTo(Map.of("data", Map.of("myVehicle", List.of(Map.of("key", "CAR1", "myNumber", 6), Map.of("key", "CAR2", "myNumber", 6)))));
+        assertThat(executeQuery("{myVehicle_agg(where: {cond: {myNumber: {eq: 6}}}) {count}}").structuredContent())
+                .isEqualTo(Map.of("data", Map.of("myVehicle_agg", List.of(Map.of("count", 2)))));
+    }
+
+    @Test
+    public void tool_enhance_entity_type_changes_an_existing_entity_type() {
+        enhanceEntityType(Map.of("name", "MyVehicle",
+                                 "baseType", "TgVehicle",
+                                 "addProperties", List.of(Map.of("name", "myNumber", "expression", "2 * 3"))));
+        final var result = enhanceEntityType(Map.of("name", "MyVehicle",
+                                                    "addProperties", List.of(Map.of("name", "otherNumber", "expression", "myNumber + 1")),
+                                                    "removeProperties", List.of("noSuchProp")));
+        assertFalse(result.isError());
+        assertThat(text(result)).isEqualTo("""
+                Changed entity type [MyVehicle], which extends [TgVehicle] with properties [myNumber, otherNumber]. Query it with root fields [myVehicle] and [myVehicle_agg].
+                Warning: Entity type [MyVehicle] has no properties [noSuchProp], so they were not removed.""");
+
+        assertThat(executeQuery("{myVehicle {key(order: ASC_1) myNumber otherNumber}}").structuredContent())
+                .isEqualTo(Map.of("data", Map.of("myVehicle", List.of(Map.of("key", "CAR1", "myNumber", 6, "otherNumber", 7),
+                                                                       Map.of("key", "CAR2", "myNumber", 6, "otherNumber", 7)))));
+    }
+
+    @Test
+    public void tool_enhance_entity_type_returns_an_error_if_the_request_is_rejected() {
+        final var result = enhanceEntityType(Map.of("name", "MyVehicle",
+                                                    "addProperties", List.of(Map.of("name", "myNumber", "expression", "2 * 3"))));
+        assertTrue(result.isError());
+        assertThat(text(result)).isEqualTo(ERR_BASE_TYPE_REQUIRED.formatted("MyVehicle"));
+        assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
+    }
+
+    @Test
+    public void tool_enhance_entity_type_returns_an_error_if_an_expression_is_invalid() {
+        final var result = enhanceEntityType(Map.of("name", "MyVehicle",
+                                                    "baseType", "TgVehicle",
+                                                    "addProperties", List.of(Map.of("name", "myNumber", "expression", "2 * noSuchProp"))));
+        assertTrue(result.isError());
+        assertThat(text(result)).startsWith("Property [myNumber] cannot be added.");
+        assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
+    }
+
+    @Test
+    public void tool_enhance_entity_type_returns_an_error_if_an_expression_refers_to_properties_that_cannot_be_read() {
+        final Map<String, Object> arguments = Map.of("name", "MyVehicle",
+                                                     "baseType", "TgVehicle",
+                                                     "addProperties", List.of(Map.of("name", "myPrice", "expression", "2 * price")));
+        runWithoutToken(TgVehicle_CanRead_price_Token.class, () -> {
+            final var result = enhanceEntityType(arguments);
+            assertTrue(result.isError());
+            assertThat(text(result)).isEqualTo(ERR_UNAUTHORISED_ACCESS.formatted("myPrice", "price"));
+            assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
+        });
+        // A positive control: the same request succeeds when the token is held.
+        assertFalse(enhanceEntityType(arguments).isError());
+    }
+
+    @Test
+    public void tool_enhance_entity_type_returns_an_error_if_arguments_are_malformed() {
+        final var invalidAddProperties = "Argument [addProperties] must be an array of objects, each with string properties [name] and [expression].";
+        final var invalidRemoveProperties = "Argument [removeProperties] must be an array of strings.";
+        final List<T2<Map<String, Object>, String>> cases = List.of(
+                t2(Map.of("baseType", "TgVehicle"), "Argument [name] is required and must be a string."),
+                t2(Map.of("name", 1), "Argument [name] is required and must be a string."),
+                t2(Map.of("name", "MyVehicle", "baseType", 1), "Argument [baseType] must be a string."),
+                t2(Map.of("name", "MyVehicle", "addProperties", "myNumber"), invalidAddProperties),
+                t2(Map.of("name", "MyVehicle", "addProperties", List.of("myNumber")), invalidAddProperties),
+                t2(Map.of("name", "MyVehicle", "addProperties", List.of(Map.of("name", "myNumber"))), invalidAddProperties),
+                t2(Map.of("name", "MyVehicle", "addProperties", List.of(Map.of("name", "myNumber", "expression", 6))), invalidAddProperties),
+                t2(Map.of("name", "MyVehicle", "removeProperties", "myNumber"), invalidRemoveProperties),
+                t2(Map.of("name", "MyVehicle", "removeProperties", List.of(1)), invalidRemoveProperties));
+        for (final var testCase : cases) {
+            testCase.run((args, error) -> {
+                final var result = enhanceEntityType(args);
+                assertTrue(result.isError());
+                assertThat(text(result)).as("Arguments %s", args).isEqualTo(error);
+            });
+        }
+        assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Invalid requests
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -218,6 +328,19 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
 
     private McpSchema.CallToolResult executeQuery(final String query) {
         return executeQuery(query, Map.of());
+    }
+
+    private McpSchema.CallToolResult enhanceEntityType(final Map<String, Object> arguments) {
+        try (final var client = client()) {
+            return client.callTool(McpSchema.CallToolRequest.builder(TOOL_ENHANCE_ENTITY_TYPE).arguments(arguments).build());
+        }
+    }
+
+    /// The text of a tool result that consists of a single text content.
+    ///
+    private static String text(final McpSchema.CallToolResult result) {
+        assertThat(result.content()).hasSize(1);
+        return assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text();
     }
 
     private McpSyncClient client() {

@@ -506,6 +506,41 @@ The query above returns the number of completed work orders and their average du
 }
 ```
 
+## Enhanced Entity Types
+
+Tool `enhance_entity_type` defines an entity type that extends a queryable entity type with calculated properties.
+Use it where a request needs a value that no property holds: to compare two properties, to filter or group by a derived value, or to aggregate one.
+
+Each calculated property is defined by an expression over the properties of the type, in TG's expression language.
+An expression may follow property paths, such as `model.make.key`, and may use arithmetic, comparisons, `CASE WHEN condition THEN value ELSE value END`, and functions such as `UPPER`, `LOWER`, `YEAR`, `MONTH` and `DAY`.
+An expression may refer to properties added before it, and only to properties that the current user may read.
+
+For example, to find work orders whose actual cost exceeds their estimated cost, extend `WorkOrder` with `costExcess` defined as `actualCost - estimatedCost`, which tool `enhance_entity_type` accepts as:
+
+```json
+{
+  "name": "WorkOrderWithCostExcess",
+  "baseType": "WorkOrder",
+  "addProperties": [ { "name": "costExcess", "expression": "actualCost - estimatedCost" } ]
+}
+```
+
+An enhanced entity type `E` is queried like any other entity type, through root fields `e` and `e_agg`:
+
+```graphql
+{
+  workOrderWithCostExcess(where: { cond: { costExcess: { gt: 0 } } }) {
+    key
+    costExcess
+  }
+}
+```
+
+It has every property of its base type and the added ones, and `_entityType` describes it.
+Calling the tool again with the same `name` and without `baseType` adds or removes properties.
+To change the expression of a property, remove the property in one call and add it in another.
+Enhanced entity types last until the server restarts.
+
 ## Batching Queries
 
 Multiple root fields can be requested in a single query.
@@ -631,7 +666,8 @@ A tool error means only that the request itself was malformed (e.g., no query wa
    Report this rather than presenting unfiltered results as if they matched.
 
 2. Conditions compare a property with given values only.
-   Two properties cannot be compared with each other (e.g. "actual cost exceeds estimated cost"), and relative periods (e.g. "previous month", "last 7 days") must be computed and specified as absolute values.
+   Two properties cannot be compared with each other directly (e.g. "actual cost exceeds estimated cost"); compute their difference in an [enhanced entity type](#enhanced-entity-types) and compare that with a value instead.
+   Relative periods (e.g. "previous month", "last 7 days") must be computed and specified as absolute values.
 
 3. Aggregates cannot be used in conditions.
    `where` restricts the entities before grouping, and there is no way to restrict or order the groups by an aggregated value (e.g. "workshops with more than 10 closed work orders").
@@ -646,7 +682,6 @@ A tool error means only that the request itself was malformed (e.g., no query wa
    Properties `key`, `desc` and `id`, as well as properties common to all members, are not available on a union-typed property.
    Read and filter through a specific member, as shown in [Union-Typed Properties](#union-typed-properties).
 
-6. A calculated property added with tool `add_calculated_property` is available only on the entity type of a root field: in the selection of `e` and `e_agg`, and in their `where`.
-   It cannot be reached through an entity-typed property: if `x` was added to `Person`, both `technician { person { x } }` and `technician(where: { cond: { person: { cond: { x: { eq: 1 } } } } })` fail.
-   Such a query passes validation, but its root field fails with an execution error.
-   To use such a value through a path, add the calculated property to the entity type of the root field instead, with an expression that follows the path (e.g., to `Technician`, with an expression over `person.…`).
+6. An [enhanced entity type](#enhanced-entity-types) is reachable only through its own root fields.
+   Properties of other types keep their domain types: if `PersonWithX` extends `Person` with `x`, then `technician { person { x } }` is a validation error, as `person` is of type `Person`, which has no `x`.
+   To use such a value through a path, extend the type of the root field instead, with an expression that follows the path (e.g., extend `Technician` with an expression over `person.…`).

@@ -10,8 +10,9 @@ The expected interaction flow:
 1. User asks an LLM a question in natural language (e.g., "Show me all work orders in progress ordered by priority for cost centre A").
 2. The LLM reads the MCP resource `tg://query-guide` to understand the query syntax.
 3. The LLM queries the [domain meta-schema](#domain-meta-schema) to identify which entity types a request refers to and what their shape is, and may execute preliminary GraphQL queries to resolve reference values (e.g., mapping "in progress" to a status key).
-4. The LLM constructs the final GraphQL query and executes it via the MCP tool.
-5. The LLM presents the results to the user.
+4. Where the request needs a value that no property holds, the LLM defines an [enhanced entity type](#enhance_entity_type) with a calculated property that computes it.
+5. The LLM constructs the final GraphQL query and executes it via the MCP tool.
+6. The LLM presents the results to the user.
 
 ## MCP Resource
 
@@ -24,7 +25,7 @@ The domain itself is described by the [domain meta-schema](#domain-meta-schema) 
 This is a static resource.
 Its content is defined in [graphql-query-guide.md](../src/main/resources/mcp/graphql-query-guide.md).
 
-## MCP Tool
+## MCP Tools
 
 ### `execute_query`
 
@@ -56,6 +57,37 @@ A tool error (`isError`) means only that the tool input was malformed or that pr
 - The tool delegates to `IWebApi.execute()`, which is implemented by `GraphQLService`.
   Authorisation is enforced per entity type via `Entity_CanRead_Token`; see [Authorisation](#authorisation).
 
+### `enhance_entity_type`
+
+Creates an _enhanced entity type_, which extends a domain entity type with calculated properties, or changes an existing one.
+The tool is specified in [`tool-enhance-entity-type.md`](../../platform-doc/spec/mcp/custom-calculated-properties/tool-enhance-entity-type.md); this section summarises it and describes its implementation.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `name` | `string` | yes | Name of the enhanced entity type |
+| `baseType` | `string` | to create a type | Name of the domain entity type to extend; must be omitted for an existing type |
+| `addProperties` | `[{name: string, expression: string}]` | no | Calculated properties to add, each defined by an expression in TG's expression language |
+| `removeProperties` | `[string]` | no | Previously added properties to remove |
+
+**Returns:** A text message naming the type and its root fields, followed by any warnings.
+A property in `removeProperties` that the type does not have is reported as a warning rather than an error.
+A request that breaks a rule is a tool error (`isError`) whose message names the rule; the rules are listed on `IWebApi.enhanceEntityType`.
+
+**Behaviour:**
+
+- An enhanced entity type is exposed exactly as a domain type is: an object type `E` with root field `e`, `E_Agg` with `e_agg`, and condition types `E_Cond` and `E_Cond_cond`.
+  It has all the fields of its base type and the added properties, and `_entityType` describes it.
+  It is not reachable through properties of other types, which keep their domain types.
+- Enhanced entity types belong to the user that the request runs as, and are held in memory until the server restarts.
+  As every MCP request runs as `mcp.user`, all MCP clients share one set of enhanced entity types.
+- The tool delegates to `IWebApi.enhanceEntityType()`.
+  `GraphQLService` holds each user's enhanced entity types together with a schema built from the domain types and those enhanced entity types.
+  It processes one request of a user at a time and replaces the user's entry only on success, so a request either takes full effect or none.
+- `EntityTypeEnhancer` validates a request and generates the Java type of an enhanced entity type: a subclass of the base type, generated and named as all types with calculated properties added at runtime are.
+  The name of that class is unrelated to the name of the enhanced entity type, so the Web API keeps the mapping between them.
+
 ## Domain Meta-Schema
 
 The domain model is described to a language model through the GraphQL schema itself.
@@ -64,7 +96,8 @@ The domain model is described to a language model through the GraphQL schema its
 ### Schema and data
 
 The name "meta-schema" says what `_entityType` conveys, not what it is.
-The GraphQL schema is a schema: `GraphQLService` builds it once, at startup, and every request is validated and executed against that one structure.
+The GraphQL schema is a schema: `GraphQLService` builds it at startup, and every request is validated and executed against that structure.
+A user who defines [enhanced entity types](#enhance_entity_type) gets a schema of their own, rebuilt with each such definition, but it too is fixed before the requests that use it arrive.
 `_entityType` is an ordinary root field returning ordinary data, computed by its fetchers on each request.
 
 The two therefore live at different stages, and that is the governing distinction between them.
@@ -222,6 +255,13 @@ The first is intended; the second is inherited from the schema and only partly s
    That a union escapes property authorisation at all looks like an oversight in `FieldVisibility` rather than a decision: a union member carrying `@Authorise` is shown in the schema regardless of its token.
    Whatever is settled there will hold for the meta-schema without further work, which is the point of taking the properties from the same method.
 
+An enhanced entity type is authorised as its base type, under both `Entity_CanRead_Token` and `Entity_CanReadModel_Token`.
+The simple name of its generated Java type matches no token, so `FieldVisibility.authoriseReadingOf` resolves the base type first; without that, every check would fall back to the default token.
+
+The expression of a calculated property added to an enhanced entity type may refer only to properties that the user can read.
+`EntityTypeEnhancer` checks every element of every property path in the expression with `FieldVisibility.visibilityPredicate`, so a property that a user could not select cannot be read through an expression either.
+Unions included: an expression is checked as a condition is, which applies `visibilityPredicate` to union members too.
+
 ### Visibility Rules and Where They Are Encoded
 
 The GraphQL schema and the `_entityType` meta-schema must describe the same domain.
@@ -239,7 +279,7 @@ Static rules are settled when `GraphQLService` builds the schema and hold for th
 | S4 | A property is not excluded — `@Invisible`, `@Ignore`, `key` without `@KeyTitle`, `desc` without `@DescTitle`, a property whose type is itself excluded, and the rest. | `createGraphQLTypeFor`, through `isExcluded(type, property)` |
 | S5 | A property's type is one the Web API supports, which also fixes the field's GraphQL type and its arguments. | `FieldSchema.determineFieldType` |
 | S6 | A type left with no field is not a type at all and is dropped. | `createGraphQLTypeFor` |
-| S7 | A root field is named by uncapitalising the type's simple name. | `GraphQLCommon.rootFieldName` |
+| S7 | A root field is named by uncapitalising the type's name, which is the simple name of a domain type and the given name of an enhanced entity type. | `GraphQLCommon.rootFieldName` |
 
 Dynamic rules are evaluated per request, because the answer depends on who is asking.
 
