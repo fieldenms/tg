@@ -1,7 +1,7 @@
 import '/resources/egi/tg-custom-action-dialog.js';
 import '/resources/components/postal-lib.js';
 
-import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isTouchEnabled, getParentAnd, getFlattenedParentAnd, isIPhoneOs, isIPadOs, isMacSafari } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isTouchEnabled, getParentAnd, getFlattenedParentAnd, isInert, isIPhoneOs, isIPadOs, isMacSafari } from '/resources/reflection/tg-polymer-utils.js';
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
@@ -112,16 +112,6 @@ const _isElementInViewport = function (el) {
         && rect.left >= rootRect.left
         && rect.bottom <= rootRect.bottom
         && rect.right <= rootRect.right;
-};
-
-/**
- * Determines whether 'element' of 'container' is inert, as are the elements of a blocked master component, which cannot be focused:
- * whether 'element' or any of its ancestors up to 'container' in the flattened tree, including the hosts of shadow roots and the slots of slotted elements, is inert,
- * as the browser makes inert the elements within an inert element in the flattened tree.
- */
-const _isInert = function (element, container) {
-    const inertOrContainer = getFlattenedParentAnd(element, current => current === container || current.inert);
-    return !!inertOrContainer && inertOrContainer.inert === true;
 };
 
 /**
@@ -242,7 +232,7 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
         } else {
             // If manuallyFocusedInput is present, focus it.
             // If it is disabled (<input> / <textarea>), or inert, as the element of a blocked master component is, fallback to focus element before first enabled input ('else' branch).
-            if (_updateManuallyFocusedInputWith && manuallyFocusedInput && !manuallyFocusedInput.disabled && !_isInert(manuallyFocusedInput, this)) {
+            if (_updateManuallyFocusedInputWith && manuallyFocusedInput && !manuallyFocusedInput.disabled && !isInert(manuallyFocusedInput, this)) {
                 focusInput(manuallyFocusedInput);
             }
             // Otherwise, take the first significant parent node, namely `tg-custom-action-dialog`, if it is present.
@@ -1198,7 +1188,7 @@ const TgEntityMasterBehaviorImpl = {
      * The elements of inert subtrees, such as a blocked master component and its elements, are skipped, as they cannot be focused.
      */
     _getCurrentFocusableElements: function () {
-        return queryElements(this, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null && !_isInert(element, this) && !_isInComponentContent(element, this));
+        return queryElements(this, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null && !isInert(element, this) && !_isInComponentContent(element, this));
     },
 
     wasLoaded: function () {

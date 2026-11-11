@@ -888,7 +888,7 @@ Polymer({
 
     _isAnimatingDimensions: function () {
         return !!this.style.getPropertyValue("transition-property");
-},
+    },
 
     _invertMinimiseState: function() {
         if (!this._maximised) { // need to skip the action if dialog is in maximised state: this is needed for alt+m collapsing

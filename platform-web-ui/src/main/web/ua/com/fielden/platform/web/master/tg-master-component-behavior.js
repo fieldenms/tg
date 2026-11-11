@@ -5,7 +5,7 @@ import '/resources/images/tg-icons.js';
 import { addListener } from '/resources/polymer/@polymer/polymer/lib/utils/gestures.js';
 import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
-import { deepestActiveElement, isInHierarchy, isInFlattenedHierarchy, tearDownEvent, localStorageKey, getRelativePos, getFlattenedParentAnd, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import { deepestActiveElement, isInHierarchy, isInFlattenedHierarchy, tearDownEvent, localStorageKey, getRelativePos, getFlattenedParentAnd, isInert, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 
 /**
@@ -17,16 +17,6 @@ export const MSG_BLOCKED_FOR_NEW_ENTITY = 'A new entity is being created. Please
  * The message of the blocking pane while the master entity has changes that are not yet saved, as for leaving a master with such changes.
  */
 export const MSG_BLOCKED_FOR_UNSAVED_CHANGES = 'Please save or cancel changes.';
-
-/**
- * Determines whether 'element' of 'container' is inert, as are the elements of a blocked master component, which cannot be focused:
- * whether 'element' or any of its ancestors up to 'container' in the flattened tree, including the hosts of shadow roots and the slots of slotted elements, is inert,
- * as the browser makes inert the elements within an inert element in the flattened tree.
- */
-const _isInert = function (element, container) {
-    const inertOrContainer = getFlattenedParentAnd(element, current => current === container || current.inert);
-    return !!inertOrContainer && inertOrContainer.inert === true;
-};
 
 /**
  * Determines whether 'element' is in the content of a master component, as are a centre embedded by 'tg-master-centre' and the masters of its views:
@@ -629,7 +619,7 @@ const TgMasterComponentBehaviorImpl = {
      * Returns the focusable elements of the content of the component, which are within the element returned by `component()`, including those slotted into it, in the order of focus traversal.
      */
     _getContentFocusableElements: function () {
-        return queryElements(this.component(), FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null && !_isInert(element, this));
+        return queryElements(this.component(), FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null && !isInert(element, this));
     }
 };
 

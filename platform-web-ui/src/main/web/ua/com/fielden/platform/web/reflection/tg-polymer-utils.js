@@ -183,6 +183,16 @@ export function getFlattenedParentAnd(element, predicate) {
     return current;
 }
 
+/**
+ * Determines whether 'element' of 'container' is inert, as are the elements of a blocked master component, which cannot be focused:
+ * whether 'element' or any of its ancestors up to 'container' in the flattened tree, including the hosts of shadow roots and the slots of slotted elements, is inert,
+ * as the browser makes inert the elements within an inert element in the flattened tree.
+ */
+export function isInert(element, container) {
+    const inertOrContainer = getFlattenedParentAnd(element, current => current === container || current.inert);
+    return !!inertOrContainer && inertOrContainer.inert === true;
+}
+
 export function getActiveParentAnd(predicate) {
     return getParentAnd(deepestActiveElement(), predicate);
 }
