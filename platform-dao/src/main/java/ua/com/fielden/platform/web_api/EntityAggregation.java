@@ -4,7 +4,6 @@ import graphql.Scalars;
 import graphql.schema.*;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.IDomainManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
@@ -21,6 +20,7 @@ import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.CharSequenceEnum;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -34,8 +34,8 @@ import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
 import static ua.com.fielden.platform.security.tokens.Template.READ;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
+import static ua.com.fielden.platform.web_api.FieldVisibility.authoriseReadingOf;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.QUERY_TYPE_NAME;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.validateDuplicateFields;
 
@@ -56,7 +56,6 @@ public class EntityAggregation {
         groupBy, count, avg, sum, max, min;
     }
 
-    private final IApplicationDomainProvider appDomainProvider;
     private final ICompanionObjectFinder coFinder;
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
@@ -66,7 +65,6 @@ public class EntityAggregation {
 
     @Inject
     protected EntityAggregation(
-            final IApplicationDomainProvider appDomainProvider,
             final ICompanionObjectFinder coFinder,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
@@ -74,7 +72,6 @@ public class EntityAggregation {
             final GraphQLCommon common,
             final IUserProvider userProvider)
     {
-        this.appDomainProvider = appDomainProvider;
         this.coFinder = coFinder;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
@@ -83,37 +80,39 @@ public class EntityAggregation {
         this.userProvider = userProvider;
     }
 
-    public GraphQLSchema enhanceSchema(final GraphQLSchema schema) {
-        final var entityTypes = common.streamVisibleTypes(appDomainProvider)
+    /// Enhances `schema` with aggregation over those of `entityTypes` that have root fields in `schema`.
+    ///
+    public GraphQLSchema enhanceSchema(final GraphQLSchema schema, final Collection<WebApiEntityType> entityTypes) {
+        final var aggregatedTypes = entityTypes.stream()
                 .filter(ty -> common.containsRootFieldForType(schema, ty))
                 .toList();
 
         final var queryType = schema.getQueryType();
         final var codeRegistry = schema.getCodeRegistry();
         return schema.transform(builder -> builder
-                .additionalTypes(entityTypes.stream().map(this::mkGraphQlAggEntityType).collect(toSet()))
-                .codeRegistry(enhanceCodeRegistry(codeRegistry, entityTypes))
-                .query(enhanceQueryType(queryType, entityTypes)));
+                .additionalTypes(aggregatedTypes.stream().map(this::mkGraphQlAggEntityType).collect(toSet()))
+                .codeRegistry(enhanceCodeRegistry(codeRegistry, aggregatedTypes))
+                .query(enhanceQueryType(queryType, aggregatedTypes)));
     }
 
     private GraphQLCodeRegistry enhanceCodeRegistry(
             final GraphQLCodeRegistry codeReg,
-            final List<Class<? extends AbstractEntity<?>>> entityTypes)
+            final List<WebApiEntityType> entityTypes)
     {
         return codeReg.transform(builder -> {
-            entityTypes.forEach(ty -> builder.dataFetcher(coordinates(QUERY_TYPE_NAME, common.rootFieldNameForAggEntity(ty)), aggEntityFetcher(ty)));
+            entityTypes.forEach(ty -> builder.dataFetcher(coordinates(QUERY_TYPE_NAME, common.rootFieldNameForAggEntity(ty)), aggEntityFetcher(ty.type())));
         });
     }
 
     private GraphQLObjectType enhanceQueryType(
             final GraphQLObjectType queryType,
-            final List<Class<? extends AbstractEntity<?>>> entityTypes)
+            final List<WebApiEntityType> entityTypes)
     {
         return queryType.transform(builder -> {
             entityTypes.forEach(ty -> builder
                     .field(newFieldDefinition()
                                    .name(common.rootFieldNameForAggEntity(ty))
-                                   .description("Aggregation over %s.".formatted(getEntityTitle(ty)))
+                                   .description("Aggregation over %s.".formatted(getEntityTitle(ty.type())))
                                    .type(new GraphQLList(new GraphQLTypeReference(common.graphQlTypeNameForAggEntity(ty))))
                                    // TODO Once paging is supported in the fetcher.
                                    //        .argument(PAGE_NUMBER_ARGUMENT)
@@ -122,8 +121,8 @@ public class EntityAggregation {
         });
     }
 
-    private GraphQLObjectType mkGraphQlAggEntityType(final Class<? extends AbstractEntity<?>> entityType) {
-        final var graphQlEntityTypeRef = new GraphQLTypeReference(common.graphQlTypeNameForEntity(entityType));
+    private GraphQLObjectType mkGraphQlAggEntityType(final WebApiEntityType entityType) {
+        final var graphQlEntityTypeRef = new GraphQLTypeReference(entityType.name());
         final var fields = List.of(
                 newFieldDefinition()
                         .name(Fields.groupBy.name())
@@ -158,7 +157,7 @@ public class EntityAggregation {
         );
         return newObject()
                 .name(common.graphQlTypeNameForAggEntity(entityType))
-                .description("Aggregation over %s.".formatted(getEntityTitle(entityType)))
+                .description("Aggregation over %s.".formatted(getEntityTitle(entityType.type())))
                 .fields(fields)
                 .build();
     }
@@ -180,7 +179,7 @@ public class EntityAggregation {
 
         @Override
         public List<EntityAggregates> get(final DataFetchingEnvironment environment) {
-            authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
+            authoriseReadingOf(entityType, READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
             validateDuplicateFields(common.allSelectedFields(environment), common);
             // This typecast is safe in practice as all enhanced types extend their originals.
             final var managedEntityType = (Class<? extends AbstractEntity<?>>) domainManager.domainTreeEnhancer(userProvider.getUser()).getManagedType(entityType);

@@ -20,14 +20,12 @@ import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static graphql.GraphQL.newGraphQL;
 import static graphql.schema.FieldCoordinates.coordinates;
@@ -37,6 +35,7 @@ import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
 import static graphql.schema.SchemaTransformer.transformSchema;
 import static java.lang.String.format;
+import static java.util.Comparator.comparing;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.*;
@@ -44,8 +43,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
-import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.web_api.FieldSchema.*;
 import static ua.com.fielden.platform.web_api.GraphQLCommon.QUERY_TYPE_NAME;
 import static ua.com.fielden.platform.web_api.GraphQLPropertyDataFetcher.fetching;
@@ -83,8 +81,14 @@ public class GraphQLService implements IWebApi {
 
     private final GraphQLSchema initSchema;
     private final ConcurrentHashMap<String, GraphQLSchema> schemas;
+    private final ICompanionObjectFinder coFinder;
+    private final IAuthorisationModel authorisationModel;
+    private final ISecurityTokenProvider securityTokenProvider;
+    private final EntityTypeIntrospection entityTypeIntrospection;
+    private final EntityAggregation entityAggregation;
     private final FluentConditions fluentConditions;
     private final GraphQLCommon common;
+    private final IDomainManager domainManager;
     private final IUserProvider userProvider;
 
     /// Creates a GraphQLService instance based on `applicationDomainProvider` which contains all entity types.
@@ -104,48 +108,60 @@ public class GraphQLService implements IWebApi {
             final IDomainManager domainManager,
             final IUserProvider userProvider)
     {
+        this.coFinder = coFinder;
+        this.authorisationModel = authorisationModel;
+        this.securityTokenProvider = securityTokenProvider;
+        this.entityTypeIntrospection = entityTypeIntrospection;
+        this.entityAggregation = entityAggregation;
+        this.fluentConditions = fluentConditions;
+        this.common = common;
+        this.domainManager = domainManager;
+        this.userProvider = userProvider;
+        this.schemas = new ConcurrentHashMap<>();
         try {
             LOGGER.info("GraphQL Web API...");
-            this.fluentConditions = fluentConditions;
-            this.common = common;
-            this.userProvider = userProvider;
-            this.schemas = new ConcurrentHashMap<>();
-
-            final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
-
-            LOGGER.info("\tBuilding dictionary...");
-            final var queryableTypes = common.streamQueryableTypes(applicationDomainProvider).collect(toCollection(LinkedHashSet::new));
-            // The dictionary must list all referenced types.
-            final var dictionary = createDictionary(common.streamVisibleTypes(applicationDomainProvider).collect(toCollection(LinkedHashSet::new)));
-
-            LOGGER.info("\tBuilding query type...");
-            final var queryType = createQueryType(queryableTypes,
-                                                  coFinder,
-                                                  codeRegistryBuilder,
-                                                  authorisationModel,
-                                                  securityTokenProvider,
-                                                  domainManager,
-                                                  userProvider);
-
-            LOGGER.info("\tBuilding field visibility...");
-            codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisationModel, queryableTypes, securityTokenProvider));
-
-            LOGGER.info("\tBuilding default data fetcher...");
-            codeRegistryBuilder.defaultDataFetcher(env -> fetching(env.getFieldDefinition().getName()));
-
-            LOGGER.info("\tBuilding schema...");
-            initSchema = fluentConditions.enhanceSchema(entityAggregation.enhanceSchema(entityTypeIntrospection.enhanceSchema(
-                    newSchema()
-                    .codeRegistry(codeRegistryBuilder.build())
-                    .query(queryType)
-                    .additionalTypes(new LinkedHashSet<>(dictionary.values()))
-                    .build())));
-
+            initSchema = buildSchema(common.streamVisibleTypes(applicationDomainProvider).map(WebApiEntityType::domainType).toList());
             LOGGER.info("GraphQL Web API...done");
         } catch (final Throwable t) {
             LOGGER.error("GraphQL Web API error.", t);
             throw t;
         }
+    }
+
+    /// Builds a schema that exposes `entityTypes`.
+    ///
+    /// Each entity type gets an object type, and those that are not unions also get root fields.
+    /// Entity types without fields suitable for querying are omitted.
+    ///
+    private GraphQLSchema buildSchema(final List<WebApiEntityType> entityTypes) {
+        final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
+
+        final var queryableTypes = entityTypes.stream().filter(ty -> !isUnionEntityType(ty.type())).toList();
+
+        LOGGER.debug("\tBuilding dictionary...");
+        // The dictionary must list all referenced types.
+        final var dictionary = createDictionary(entityTypes);
+
+        LOGGER.debug("\tBuilding query type...");
+        final var queryType = createQueryType(queryableTypes, codeRegistryBuilder);
+
+        LOGGER.debug("\tBuilding field visibility...");
+        codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisationModel, queryableTypes, securityTokenProvider));
+
+        LOGGER.debug("\tBuilding default data fetcher...");
+        codeRegistryBuilder.defaultDataFetcher(env -> fetching(env.getFieldDefinition().getName()));
+
+        LOGGER.debug("\tBuilding schema...");
+        final var schema = newSchema()
+                .codeRegistry(codeRegistryBuilder.build())
+                .query(queryType)
+                .additionalTypes(new LinkedHashSet<>(dictionary))
+                .build();
+        return fluentConditions.enhanceSchema(
+                entityAggregation.enhanceSchema(
+                        entityTypeIntrospection.enhanceSchema(schema, entityTypes),
+                        entityTypes),
+                entityTypes);
     }
 
     @Override
@@ -313,14 +329,14 @@ public class GraphQLService implements IWebApi {
     /// Creates a GraphQL dictionary (aka GraphQL "additional types") for the specified entity types.
     ///
     /// The set of resultant types can be smaller than the specified one.
-    /// See [#createGraphQLTypeFor(Class)] for more details.
+    /// See [#createGraphQLTypeFor(WebApiEntityType)] for more details.
     ///
-    private Map<Class<? extends AbstractEntity<?>>, GraphQLNamedType> createDictionary(final Set<Class<? extends AbstractEntity<?>>> entityTypes) {
+    private List<GraphQLObjectType> createDictionary(final List<WebApiEntityType> entityTypes) {
         return entityTypes.stream()
             .map(this::createGraphQLTypeFor)
-            .flatMap(optType -> optType.map(Stream::of).orElseGet(Stream::empty))
-            .sorted((pair1, pair2) -> pair1.getKey().getSimpleName().compareTo(pair2.getKey().getSimpleName()))
-            .collect(toLinkedHashMap(Pair::getKey, Pair::getValue));
+            .flatMap(Optional::stream)
+            .sorted(comparing(GraphQLObjectType::getName))
+            .toList();
     }
 
     /// Creates the "query" type that will contain root fields.
@@ -331,27 +347,21 @@ public class GraphQLService implements IWebApi {
     /// @param codeRegistryBuilder a place to register root data fetchers
     ///
     private GraphQLObjectType createQueryType(
-            final Set<Class<? extends AbstractEntity<?>>> entityTypes,
-            final ICompanionObjectFinder coFinder,
-            final GraphQLCodeRegistry.Builder codeRegistryBuilder,
-            final IAuthorisationModel authorisationModel,
-            final ISecurityTokenProvider securityTokenProvider,
-            final IDomainManager domainManager,
-            final IUserProvider userProvider)
+            final List<WebApiEntityType> entityTypes,
+            final GraphQLCodeRegistry.Builder codeRegistryBuilder)
     {
         final Builder queryTypeBuilder = newObject().name(QUERY_TYPE_NAME).description("Query following **entities** represented as GraphQL root fields:");
         entityTypes.forEach(entityType -> {
-            final String simpleTypeName = entityType.getSimpleName();
             final String fieldName = common.rootFieldName(entityType);
             queryTypeBuilder.field(newFieldDefinition()
                 .name(fieldName)
-                .description(format("Query %s.", bold(getEntityTitleAndDesc(entityType).getKey())))
+                .description(format("Query %s.", bold(getEntityTitleAndDesc(entityType.type()).getKey())))
                 .argument(ORDER_ARGUMENT)
                 .argument(PAGE_NUMBER_ARGUMENT)
                 .argument(PAGE_CAPACITY_ARGUMENT)
-                .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName))));
+                .type(new GraphQLList(new GraphQLTypeReference(entityType.name()))));
             codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName),
-                                            new RootEntityFetcher<>(entityType,
+                                            new RootEntityFetcher<>(entityType.type(),
                                                                     coFinder,
                                                                     authorisationModel,
                                                                     securityTokenProvider,
@@ -365,22 +375,22 @@ public class GraphQLService implements IWebApi {
     /// Creates a GraphQL object type for querying `entityType`.
     /// The result is an empty optional if `entityType` has no suitable fields for querying.
     ///
-    private Optional<Pair<Class<? extends AbstractEntity<?>>, GraphQLObjectType>> createGraphQLTypeFor(final Class<? extends AbstractEntity<?>> entityType) {
+    private Optional<GraphQLObjectType> createGraphQLTypeFor(final WebApiEntityType entityType) {
+        final var type = entityType.type();
          // Generic type exclusion logic for root types (exclude abstract entity types, types without KeyType annotation, etc.).
-        if (isExcluded(entityType, "")) {
+        if (isExcluded(type, "")) {
             return empty();
         }
-        final var graphQLFieldDefinitions = common.propertiesForGraphQlFields(entityType).stream()
-            .filter(field -> !isExcluded(entityType, reflectionProperty(field.getName())))
-            .map(field -> createGraphQLFieldDefinition(entityType, field.getName()))
-            .flatMap(optField -> optField.map(Stream::of).orElseGet(Stream::empty))
-            .collect(toList());
+        final var graphQLFieldDefinitions = common.propertiesForGraphQlFields(type).stream()
+            .filter(field -> !isExcluded(type, reflectionProperty(field.getName())))
+            .map(field -> createGraphQLFieldDefinition(type, field.getName()))
+            .flatMap(Optional::stream)
+            .toList();
         if (!graphQLFieldDefinitions.isEmpty()) {
-            return of(pair(entityType, newObject()
-                .name(entityType.getSimpleName())
-                .description(titleAndDescRepresentation(getEntityTitleAndDesc(entityType)))
-                .fields(graphQLFieldDefinitions).build()
-            ));
+            return of(newObject()
+                .name(entityType.name())
+                .description(titleAndDescRepresentation(getEntityTitleAndDesc(type)))
+                .fields(graphQLFieldDefinitions).build());
         }
         return empty();
     }

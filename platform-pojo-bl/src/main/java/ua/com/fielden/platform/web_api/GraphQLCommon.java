@@ -76,34 +76,58 @@ public class GraphQLCommon {
         return maxQueryDepth;
     }
 
-    /// Name of the GraphQL root field for the specified entity type.
+    /// Name of the GraphQL root field for the specified domain type.
     ///
     public String rootFieldName(final Class<?> entityType) {
         return uncapitalize(entityType.getSimpleName());
     }
 
-    /// Name of the GraphQL root field for an aggregation entity type.
+    /// Name of the GraphQL root field for the specified entity type.
+    ///
+    public String rootFieldName(final WebApiEntityType entityType) {
+        return uncapitalize(entityType.name());
+    }
+
+    /// Name of the GraphQL root field for the aggregation type of the specified domain type.
     ///
     public String rootFieldNameForAggEntity(final Class<? extends AbstractEntity<?>> entityType) {
+        return rootFieldNameForAggEntity(WebApiEntityType.domainType(entityType));
+    }
+
+    /// Name of the GraphQL root field for the aggregation type of the specified entity type.
+    ///
+    public String rootFieldNameForAggEntity(final WebApiEntityType entityType) {
         return "%s_agg".formatted(rootFieldName(entityType));
     }
 
-    /// Name of the GraphQL type for the specified entity type.
+    /// Name of the GraphQL type for the specified domain type.
     ///
     public String graphQlTypeNameForEntity(final Class<? extends AbstractEntity<?>> entityType) {
         return entityType.getSimpleName();
     }
 
-    /// Name of the GraphQL type for an aggregation entity type.
+    /// Name of the GraphQL aggregation type for the specified domain type.
     ///
     public String graphQlTypeNameForAggEntity(final Class<? extends AbstractEntity<?>> entityType) {
-        return "%s_Agg".formatted(graphQlTypeNameForEntity(entityType));
+        return graphQlTypeNameForAggEntity(WebApiEntityType.domainType(entityType));
     }
 
-    /// Name of the GraphQL type for a condition entity type.
+    /// Name of the GraphQL aggregation type for the specified entity type.
+    ///
+    public String graphQlTypeNameForAggEntity(final WebApiEntityType entityType) {
+        return "%s_Agg".formatted(entityType.name());
+    }
+
+    /// Name of the GraphQL condition type for the specified domain type.
     ///
     public String graphQlTypeNameForCondEntity(final Class<? extends AbstractEntity<?>> entityType) {
-        return "%s_Cond".formatted(graphQlTypeNameForEntity(entityType));
+        return graphQlTypeNameForCondEntity(WebApiEntityType.domainType(entityType));
+    }
+
+    /// Name of the GraphQL condition type for the specified entity type.
+    ///
+    public String graphQlTypeNameForCondEntity(final WebApiEntityType entityType) {
+        return "%s_Cond".formatted(entityType.name());
     }
 
     /// True if the specified GraphQL type name represents the type of a condition entity type.
@@ -119,10 +143,16 @@ public class GraphQLCommon {
         return i == -1 ? Optional.empty() : Optional.of(graphQlTypeName.subSequence(0, i).toString());
     }
 
-    /// Name of the GraphQL type for a condition entity type's `cond` field.
+    /// Name of the GraphQL type for field `cond` of the condition type of the specified domain type.
     ///
     public String graphQlTypeNameForCondEntityCond(final Class<? extends AbstractEntity<?>> entityType) {
-        return "%s_Cond_cond".formatted(graphQlTypeNameForEntity(entityType));
+        return graphQlTypeNameForCondEntityCond(WebApiEntityType.domainType(entityType));
+    }
+
+    /// Name of the GraphQL type for field `cond` of the condition type of the specified entity type.
+    ///
+    public String graphQlTypeNameForCondEntityCond(final WebApiEntityType entityType) {
+        return "%s_Cond_cond".formatted(entityType.name());
     }
 
     /// True if the specified GraphQL type name represents the type of a condition entity type's `cond` field.
@@ -180,8 +210,8 @@ public class GraphQLCommon {
                 .sorted(comparing(Class::getSimpleName));
     }
 
-    public boolean containsRootFieldForType(final GraphQLSchema schema, final Class<?> type) {
-        return schema.getQueryType().getFieldDefinition(rootFieldName(type)) != null;
+    public boolean containsRootFieldForType(final GraphQLSchema schema, final WebApiEntityType entityType) {
+        return schema.getQueryType().getFieldDefinition(rootFieldName(entityType)) != null;
     }
 
     /// Returns the fields of `entityType` that are candidates for becoming GraphQL fields.

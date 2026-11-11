@@ -4,18 +4,20 @@ import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLFieldsContainer;
 import graphql.schema.visibility.GraphqlFieldVisibility;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.tokens.Template;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.isPropertyAuthorised;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.security.tokens.Template.READ_MODEL;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.utils.CollectionUtil.first;
@@ -28,27 +30,27 @@ import static ua.com.fielden.platform.utils.CollectionUtil.first;
 ///
 public class FieldVisibility implements GraphqlFieldVisibility {
     private final IAuthorisationModel authorisationModel;
-    private final Map<String, Class<? extends AbstractEntity<?>>> domainTypes;
+    private final Map<String, Class<? extends AbstractEntity<?>>> entityTypes;
     private final ISecurityTokenProvider securityTokenProvider;
 
     /// Creates an instance to be installed in the code registry of a GraphQL schema.
     ///
     /// @param authorisationModel    authorises Web API queries [FieldVisibility].
-    /// @param domainTypes           a set of TG domain types to be processed for field visibility
+    /// @param entityTypes           entity types to be processed for field visibility
     /// @param securityTokenProvider a security token provider, used to get token classes by their string names.
     ///
-    public FieldVisibility(final IAuthorisationModel authorisationModel, final Set<Class<? extends AbstractEntity<?>>> domainTypes, final ISecurityTokenProvider securityTokenProvider) {
+    public FieldVisibility(final IAuthorisationModel authorisationModel, final Collection<WebApiEntityType> entityTypes, final ISecurityTokenProvider securityTokenProvider) {
         this.authorisationModel = authorisationModel;
-        this.domainTypes = domainTypes.stream().collect(toMap(Class::getSimpleName, Function.identity()));
+        this.entityTypes = entityTypes.stream().collect(toMap(WebApiEntityType::name, WebApiEntityType::type));
         this.securityTokenProvider = securityTokenProvider;
     }
 
     @Override
     public List<GraphQLFieldDefinition> getFieldDefinitions(final GraphQLFieldsContainer fieldsContainer) {
-        final String simpleName = fieldsContainer.getName();
-        // Only consider containers that represent TG domain types (more specifically only those domain types that are used for Query root fields).
-        if (domainTypes.containsKey(simpleName)) {
-            return filterFieldDefinitions(domainTypes.get(simpleName), fieldsContainer.getFieldDefinitions());
+        final String typeName = fieldsContainer.getName();
+        // Only consider containers that represent entity types with root fields.
+        if (entityTypes.containsKey(typeName)) {
+            return filterFieldDefinitions(entityTypes.get(typeName), fieldsContainer.getFieldDefinitions());
         }
         else {
             return fieldsContainer.getFieldDefinitions();
@@ -62,7 +64,20 @@ public class FieldVisibility implements GraphqlFieldVisibility {
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider)
     {
-        return authoriseReading(entityType.getSimpleName(), READ_MODEL, authorisationModel, securityTokenProvider).isSuccessful();
+        return authoriseReadingOf(entityType, READ_MODEL, authorisationModel, securityTokenProvider).isSuccessful();
+    }
+
+    /// Authorises the current user to read `entityType` as specified by `readingKind`.
+    ///
+    /// A generated type is authorised as its base type, which is the type that security tokens are defined for.
+    ///
+    public static Result authoriseReadingOf(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final Template readingKind,
+            final IAuthorisationModel authorisationModel,
+            final ISecurityTokenProvider securityTokenProvider)
+    {
+        return authoriseReading(baseEntityType(entityType).getSimpleName(), readingKind, authorisationModel, securityTokenProvider);
     }
 
     /// Creates a predicate that, given a property of `entityType`, returns `true` if the current user is authorised to read it.
@@ -82,11 +97,11 @@ public class FieldVisibility implements GraphqlFieldVisibility {
 
     @Override
     public GraphQLFieldDefinition getFieldDefinition(final GraphQLFieldsContainer fieldsContainer, final String fieldName) {
-        final String simpleName = fieldsContainer.getName();
-        // Only consider containers that represent TG domain types (more specifically only those domain types that are used for Query root fields).
-        if (domainTypes.containsKey(simpleName)) {
+        final String typeName = fieldsContainer.getName();
+        // Only consider containers that represent entity types with root fields.
+        if (entityTypes.containsKey(typeName)) {
             final var fieldDefinition = fieldsContainer.getFieldDefinition(fieldName);
-            return fieldDefinition == null ? null : first(filterFieldDefinitions(domainTypes.get(simpleName), List.of(fieldDefinition))).orElse(null);
+            return fieldDefinition == null ? null : first(filterFieldDefinitions(entityTypes.get(typeName), List.of(fieldDefinition))).orElse(null);
         }
         else {
             return fieldsContainer.getFieldDefinition(fieldName);

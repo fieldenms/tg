@@ -5,7 +5,6 @@ import graphql.schema.visibility.GraphqlFieldVisibility;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
@@ -17,10 +16,8 @@ import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.google.common.collect.Streams.stream;
 import static graphql.Directives.OneOfDirective;
 import static graphql.Scalars.*;
 import static graphql.schema.GraphQLArgument.newArgument;
@@ -78,37 +75,36 @@ public class FluentConditions {
             IN = "in", NOT_IN = "notIn",
             LIKE = "like", NOT_LIKE = "notLike", I_LIKE = "iLike", NOT_I_LIKE = "notILike";
 
-    private final IApplicationDomainProvider appDomainProvider;
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
     private final GraphQLCommon common;
 
     @Inject
     protected FluentConditions(
-            final IApplicationDomainProvider appDomainProvider,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
             final GraphQLCommon common)
     {
-        this.appDomainProvider = appDomainProvider;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
         this.common = common;
     }
 
-    public GraphQLSchema enhanceSchema(final GraphQLSchema schema) {
-        final var entityTypes = common.streamVisibleTypes(appDomainProvider)
-                .filter(ty -> hasEntityCondType(ty, schema))
+    /// Enhances `schema` with conditions over those of `entityTypes` that have object types in `schema`.
+    ///
+    public GraphQLSchema enhanceSchema(final GraphQLSchema schema, final Collection<WebApiEntityType> entityTypes) {
+        final var conditionedTypes = entityTypes.stream()
+                .filter(ty -> schema.getType(ty.name()) != null)
                 .toList();
 
         final var queryType = schema.getQueryType();
         return schema.transform(builder -> builder
                 .additionalTypes(graphQlValueCondTypes())
-                .additionalTypes(entityTypes.stream()
+                .additionalTypes(conditionedTypes.stream()
                                          .flatMap(ty -> Stream.of(mkGraphQlEntityCondType(ty), mkGraphQlEntityCondCondType(ty, schema)))
                                          .collect(toSet()))
-                .codeRegistry(enhanceCodeRegistry(schema.getCodeRegistry()))
-                .query(enhanceQueryType(queryType, entityTypes)));
+                .codeRegistry(enhanceCodeRegistry(schema.getCodeRegistry(), conditionedTypes))
+                .query(enhanceQueryType(queryType, conditionedTypes)));
     }
 
     /// Creates a field for the `Entity_Cond_cond` type that represents `property` of `entityType`.
@@ -265,7 +261,7 @@ public class FluentConditions {
 
     private GraphQLObjectType enhanceQueryType(
             final GraphQLObjectType queryType,
-            final List<Class<? extends AbstractEntity<?>>> entityTypes)
+            final List<WebApiEntityType> entityTypes)
     {
         return queryType.transform(builder -> {
             // Enhance root entity fields with argument `where`.
@@ -300,7 +296,7 @@ public class FluentConditions {
     /// Defines a GraphQL input object type representing an entity condition type for `entityType`.
     /// E.g., `User_Cond` for entity type `User`.
     ///
-    private GraphQLInputObjectType mkGraphQlEntityCondType(final Class<? extends AbstractEntity<?>> entityType) {
+    private GraphQLInputObjectType mkGraphQlEntityCondType(final WebApiEntityType entityType) {
         final var graphQlEntityTypeRef = new GraphQLTypeReference(common.graphQlTypeNameForCondEntityCond(entityType));
         final var condEntityTypeName = common.graphQlTypeNameForCondEntity(entityType);
         final var graphQlEntityCondTypeRef = new GraphQLTypeReference(condEntityTypeName);
@@ -332,7 +328,7 @@ public class FluentConditions {
                         .build());
         return newInputObject()
                 .name(condEntityTypeName)
-                .description("Filtering conditions for %s.".formatted(getEntityTitle(entityType)))
+                .description("Filtering conditions for %s.".formatted(entityType.name()))
                 .withDirective(OneOfDirective)
                 .fields(fields)
                 .build();
@@ -342,17 +338,16 @@ public class FluentConditions {
     /// (e.g., `User_Cond_cond`).
     /// This type provides access to filterable properties of an entity type.
     ///
-    private GraphQLInputObjectType mkGraphQlEntityCondCondType(final Class<? extends AbstractEntity<?>> entityType, final GraphQLSchema schema) {
-        final var graphQlEntityTypeName = common.graphQlTypeNameForEntity(entityType);
-        final var graphQlEntityType = schema.getObjectType(graphQlEntityTypeName);
+    private GraphQLInputObjectType mkGraphQlEntityCondCondType(final WebApiEntityType entityType, final GraphQLSchema schema) {
+        final var graphQlEntityType = schema.getObjectType(entityType.name());
         if (graphQlEntityType == null) {
-            throw new WebApiException("GraphQL schema does not contain type [%s].".formatted(graphQlEntityTypeName));
+            throw new WebApiException("GraphQL schema does not contain type [%s].".formatted(entityType.name()));
         }
-        final var fields = common.propertiesForGraphQlFields(entityType)
+        final var fields = common.propertiesForGraphQlFields(entityType.type())
                 .stream()
                 .filter(prop -> graphQlEntityType.getField(prop.getName()) != null)
-                .filter(prop -> isFilterable(entityType, prop.getName()))
-                .map(prop -> createEntityCondCondField(entityType, prop.getName(), schema))
+                .filter(prop -> isFilterable(entityType.type(), prop.getName()))
+                .map(prop -> createEntityCondCondField(entityType.type(), prop.getName(), schema))
                 .flatMap(Optional::stream)
                 .toList();
         return newInputObject()
@@ -416,9 +411,9 @@ public class FluentConditions {
         }
     }
 
-    private GraphQLCodeRegistry enhanceCodeRegistry(final GraphQLCodeRegistry codeRegistry) {
+    private GraphQLCodeRegistry enhanceCodeRegistry(final GraphQLCodeRegistry codeRegistry, final List<WebApiEntityType> entityTypes) {
         return codeRegistry.transform(builder -> builder
-                .fieldVisibility(new FieldVisibility(codeRegistry.getFieldVisibility(), common.streamVisibleTypes(appDomainProvider).toList())));
+                .fieldVisibility(new FieldVisibility(codeRegistry.getFieldVisibility(), entityTypes)));
     }
 
     /// Restricts access to fields of `E_Cond_cond` types whose corresponding properties cannot be read by the user.
@@ -427,14 +422,15 @@ public class FluentConditions {
     private class FieldVisibility implements GraphqlFieldVisibility {
 
         private final GraphqlFieldVisibility base;
-        private final Map<String, Class<? extends AbstractEntity<?>>> domainTypes;
+        /// Entity types by the names of their `E_Cond_cond` types.
+        private final Map<String, Class<? extends AbstractEntity<?>>> entityTypes;
 
         public FieldVisibility(
                 final GraphqlFieldVisibility base,
-                final Iterable<Class<? extends AbstractEntity<?>>> domainTypes)
+                final Collection<WebApiEntityType> entityTypes)
         {
             this.base = base;
-            this.domainTypes = stream(domainTypes).collect(toMap(Class::getSimpleName, Function.identity()));
+            this.entityTypes = entityTypes.stream().collect(toMap(common::graphQlTypeNameForCondEntityCond, WebApiEntityType::type));
         }
 
         @Override
@@ -479,14 +475,7 @@ public class FluentConditions {
         }
 
         private Optional<Class<? extends AbstractEntity<?>>> entityTypeFrom(final GraphQLInputFieldsContainer fieldsContainer) {
-            return common.entityTypeNameFromGraphQlCondEntityCondType(fieldsContainer.getName())
-                    .map(entitySimpleName -> {
-                        final var entityType = domainTypes.get(entitySimpleName);
-                        if (entityType == null) {
-                            throw new WebApiException("Unrecognised entity type: %s.".formatted(entitySimpleName));
-                        }
-                        return entityType;
-                    });
+            return Optional.ofNullable(entityTypes.get(fieldsContainer.getName()));
         }
 
     }

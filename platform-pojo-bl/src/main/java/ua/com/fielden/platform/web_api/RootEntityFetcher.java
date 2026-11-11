@@ -20,9 +20,9 @@ import java.util.Optional;
 
 import static graphql.GraphqlErrorBuilder.newError;
 import static ua.com.fielden.platform.security.tokens.Template.READ;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_NUMBER;
 import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_NUMBER;
+import static ua.com.fielden.platform.web_api.FieldVisibility.authoriseReadingOf;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.generateQueryModelFrom;
 
 /// A [DataFetcher] implementation responsible for resolving root `Query` fields that correspond to main entity trees.
@@ -63,7 +63,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     ///
     @Override
     public DataFetcherResult<List<T>> get(final DataFetchingEnvironment environment) {
-        authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);// reading of entities should be authorised when running GraphQL query
+        authoriseReadingOf(entityType, READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);// reading of entities should be authorised when running GraphQL query
         // This typecast is safe in practice as all enhanced types extend their originals.
         final var user = userProvider.getUser();
         final var managedEntityType = (Class<T>) domainManager.domainTreeEnhancer(user).getManagedType(entityType);
