@@ -429,12 +429,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         customProperties.clear(); // FIXME this piece of logic is not properly workable -- this must be considered when discard action will be used anywhere. Low priority for now.
     }
 
-    @Override
-    public void restoreAll() {
-        calculatedProperties.clear();
-        customProperties.clear(); // NOTE Pay attention to the FIXME in `discard`.
-    }
-
     /// Extracts all calculated properties from enhanced root types.
     ///
     static Map<Class<?>, List<CalculatedProperty>> extractAll(final IDomainTreeEnhancer dte, final boolean validateTitleContextOfExtractedProperties) {
@@ -599,11 +593,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     @Override
     public ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String propertyPath) {
         return calculatedPropertyWhichShouldExist(rootType, propertyPath);
-    }
-
-    @Override
-    public Optional<ICalculatedProperty> findCalculatedProperty(final Class<?> rootType, final String propertyPath) {
-        return Optional.ofNullable(calculatedProperty(rootType, propertyPath));
     }
 
     @Override

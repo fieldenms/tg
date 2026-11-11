@@ -234,11 +234,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         }
 
         @Override
-        public void restoreAll() {
-            baseEnhancer.restoreAll();
-        }
-
-        @Override
         public Class<?> getManagedType(final Class<?> type) {
             return baseEnhancer().getManagedType(type);
         }
@@ -271,11 +266,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         @Override
         public ICalculatedProperty getCalculatedProperty(final Class<?> rootType, final String propertyPath) {
             return baseEnhancer().getCalculatedProperty(rootType, propertyPath);
-        }
-
-        @Override
-        public Optional<ICalculatedProperty> findCalculatedProperty(final Class<?> rootType, final String propertyPath) {
-            return baseEnhancer().findCalculatedProperty(rootType, propertyPath);
         }
 
         @Override
