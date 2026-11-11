@@ -111,6 +111,7 @@ public class EntityTypeIntrospection {
     ///
     /// @param name          GraphQL type name.
     /// @param rootField     GraphQL root field name, or `null` if this type is not queryable, which is the case for a union.
+    /// @param baseType      Name of the entity type that an enhanced entity type extends, or `null` for a domain type.
     /// @param title         Human-readable entity title
     /// @param desc          Entity description
     /// @param keyType       Shape of the key, or `null` where not applicable.
@@ -123,6 +124,7 @@ public class EntityTypeIntrospection {
     public record EntityType (
             String name,
             @Nullable String rootField,
+            @Nullable String baseType,
             String title,
             String desc,
             @Nullable EntityKind kind,
@@ -205,7 +207,7 @@ public class EntityTypeIntrospection {
                                          .name(EQ)
                                          .description(
                                           """
-                                          Include entity types whose simple name (`name`) is exactly equal to the specified value.
+                                          Include entity types whose name (`name`) is exactly equal to the specified value.
                                           Matching is case-sensitive.
                                           Does not support comma separated values.
                                           Does not permit wildcard `*`.
@@ -216,7 +218,7 @@ public class EntityTypeIntrospection {
                                          .name(LIKE)
                                          .description(
                                           """
-                                          Include entity types whose simple name matches the specified value.
+                                          Include entity types whose name (`name`) matches the specified value.
                                           Supports wildcard `*`, without which the match is exact.
                                           Supports multiple selection through comma-separated values.
                                           Matching is case-sensitive, and `*` is the only character with a special meaning.
@@ -231,7 +233,7 @@ public class EntityTypeIntrospection {
                 newFieldDefinition()
                         .name("name")
                         .description("""
-                                     GraphQL type name, equal to the entity type's simple name.
+                                     GraphQL type name: the simple name of a domain entity type, or the name given to an enhanced entity type.
                                      This is the name that a property's `type` refers to.""")
                         .type(Scalars.GraphQLString)
                         .build(),
@@ -240,6 +242,13 @@ public class EntityTypeIntrospection {
                         .description("""
                                      GraphQL root field name used to query this type, or `null` if it is not queryable.
                                      A type that is visible but has no root field, a union for instance, is reachable only as a property type.""")
+                        .type(Scalars.GraphQLString)
+                        .build(),
+                newFieldDefinition()
+                        .name("baseType")
+                        .description("""
+                                     For an enhanced entity type, the name of the entity type that it extends; `null` otherwise.
+                                     An enhanced entity type has all properties of its base type, and the calculated properties added to it.""")
                         .type(Scalars.GraphQLString)
                         .build(),
                 newFieldDefinition()
@@ -398,6 +407,7 @@ public class EntityTypeIntrospection {
         return new EntityType(
                 webApiEntityType.name(),
                 rootField,
+                webApiEntityType.baseType() == null ? null : webApiEntityType.baseType().getSimpleName(),
                 titleAndDesc.getKey(),
                 titleAndDesc.getValue(),
                 entityKindOf(entityType),

@@ -111,17 +111,21 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void an_enhanced_entity_type_is_described_by_the_domain_meta_schema() {
+    public void an_enhanced_entity_type_is_described_by_the_domain_meta_schema_as_its_base_type_is_with_the_added_properties() {
         enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
 
-        final var result = execute("{_entityType(eq: \"MyVehicle\") {name rootField properties {name}}}");
+        final var result = execute("{_entityType(like: \"MyVehicle,TgVehicle\") {name rootField baseType title desc kind keyType keyMembers hasDesc properties {name}}}");
         assertThat(errors(result)).isEmpty();
         final List<Map<String, Object>> entityTypes = (List<Map<String, Object>>) data(result).get("_entityType");
-        assertThat(entityTypes).hasSize(1);
-        assertThat(entityTypes.getFirst()).containsEntry("name", "MyVehicle").containsEntry("rootField", "myVehicle");
-        assertThat((List<Map<String, Object>>) entityTypes.getFirst().get("properties"))
-                .extracting(property -> property.get("name"))
-                .contains("key", "price", "myNumber");
+        assertThat(entityTypes).extracting(entityType -> entityType.get("name")).containsExactlyInAnyOrder("MyVehicle", "TgVehicle");
+        final var myVehicle = entityTypes.stream().filter(entityType -> "MyVehicle".equals(entityType.get("name"))).findFirst().orElseThrow();
+        final var tgVehicle = entityTypes.stream().filter(entityType -> "TgVehicle".equals(entityType.get("name"))).findFirst().orElseThrow();
+
+        assertThat(myVehicle).containsEntry("rootField", "myVehicle").containsEntry("baseType", "TgVehicle");
+        for (final var field : List.of("title", "desc", "kind", "keyType", "keyMembers", "hasDesc")) {
+            assertThat(myVehicle.get(field)).as(field).isEqualTo(tgVehicle.get(field));
+        }
+        assertThat(propertyNames(myVehicle)).isEqualTo(append(propertyNames(tgVehicle), "myNumber"));
     }
 
     @Test
@@ -515,6 +519,10 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         final var type = (Map<String, Object>) data(result).get("__type");
         assertThat(type).as("Type [%s] exists.", typeName).isNotNull();
         return ((List<Map<String, Object>>) type.get(fieldsKind)).stream().map(field -> (String) field.get("name")).toList();
+    }
+
+    private static List<String> propertyNames(final Map<String, Object> entityType) {
+        return ((List<Map<String, Object>>) entityType.get("properties")).stream().map(property -> (String) property.get("name")).toList();
     }
 
     private void runAs(final String username, final Runnable runnable) {

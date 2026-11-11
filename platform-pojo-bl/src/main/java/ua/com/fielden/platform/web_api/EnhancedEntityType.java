@@ -27,7 +27,7 @@ public record EnhancedEntityType(
     }
 
     public WebApiEntityType webApiEntityType() {
-        return new WebApiEntityType(name, type);
+        return new WebApiEntityType(name, type, baseType);
     }
 
 }

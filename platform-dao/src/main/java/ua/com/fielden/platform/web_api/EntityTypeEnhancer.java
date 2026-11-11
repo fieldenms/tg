@@ -114,7 +114,7 @@ public class EntityTypeEnhancer {
                 throw new WebApiException(ERR_BASE_TYPE_REQUIRED.formatted(name));
             }
             baseEntityType = findBaseType(schema, baseType);
-            validateNameIsFree(schema, new WebApiEntityType(name, baseEntityType));
+            validateNameIsFree(schema, new WebApiEntityType(name, baseEntityType, baseEntityType));
         }
         else if (baseType != null) {
             throw new WebApiException(ERR_BASE_TYPE_OF_EXISTING_TYPE.formatted(name));

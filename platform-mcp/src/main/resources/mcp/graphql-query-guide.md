@@ -43,7 +43,7 @@ It is an ordinary root field, so it may be selected alongside data fields and ba
 ```graphql
 {
   _entityType {
-    name rootField title desc kind keyType keyMembers keySeparator hasDesc
+    name rootField baseType title desc kind keyType keyMembers keySeparator hasDesc
     properties { name title desc type typeKind collectional required filterable }
   }
 }
@@ -63,7 +63,7 @@ Even one type with all its properties can be large, so narrow the result to the 
 | `like` | `String` | Include types whose `name` matches the specified comma-separated values. Supports wildcard `*`, without which a value is matched exactly. Mutually exclusive with `eq`. |
 
 These are the only arguments of `_entityType`; its `properties` cannot be narrowed.
-Both match against `name`, the entity type's simple name, and not against `rootField`.
+Both match against `name`, and not against `rootField`.
 Matching here differs from matching in a condition, in three ways:
 - It is case-sensitive.
 - `*` is the only character with a special meaning; `%` and `_` are matched literally.
@@ -83,8 +83,9 @@ Example — describe the types that a work order query will use:
 
 | Field | Description |
 |-------|-------------|
-| `name` | GraphQL type name, equal to the entity type's simple name (e.g., `WorkOrder`). This is the name a property's `type` refers to. The type of conditions on it is named `${name}_Cond`. |
+| `name` | GraphQL type name: the entity type's simple name (e.g., `WorkOrder`), or the name given to an [enhanced entity type](#enhanced-entity-types). This is the name a property's `type` refers to. The type of conditions on it is named `${name}_Cond`. |
 | `rootField` | Root field used to query this type (e.g., `workOrder`), or `null` if it is not queryable. A type that is described but has no root field, such as a union, is reachable only as a property type. |
+| `baseType` | For an [enhanced entity type](#enhanced-entity-types), the name of the entity type that it extends; `null` otherwise. |
 | `title` | Human-readable title of the entity type. |
 | `desc` | Description of the entity type. |
 | `kind` | Nature of the type: `PERSISTENT`, `SYNTHETIC` or `UNION`. |
@@ -536,7 +537,7 @@ An enhanced entity type `E` is queried like any other entity type, through root 
 }
 ```
 
-It has every property of its base type and the added ones, and `_entityType` describes it.
+It has every property of its base type and the added ones, and `_entityType.baseType` describes it.
 Calling the tool again with the same `name` and without `baseType` adds or removes properties.
 To change the expression of a property, remove the property in one call and add it in another.
 Enhanced entity types last until the server restarts.
