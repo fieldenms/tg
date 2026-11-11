@@ -6,8 +6,6 @@ import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
-import ua.com.fielden.platform.domaintree.IDomainManager;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.NoKey;
@@ -16,7 +14,6 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.lang.reflect.Field;
@@ -121,8 +118,7 @@ public class EntityTypeIntrospection {
     /// @param keySeparator  Separator used to concatenate composite key members, or `null` for other key shapes.
     /// @param hasDesc       Whether `desc` may be selected on this type.
     /// @param type          Invisible to GraphQL, exists to provide information to properties fetcher.
-    ///                      This is a canonical entity type, so callers should obtain a corresponding managed type from
-    ///                      [IDomainTreeEnhancer] where necessary.
+    ///                      This is the Java type that the GraphQL type represents.
     ///
     public record EntityType (
             String name,
@@ -161,24 +157,18 @@ public class EntityTypeIntrospection {
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
     private final GraphQLCommon common;
-    private final IDomainManager domainManager;
-    private final IUserProvider userProvider;
 
     @Inject
     protected EntityTypeIntrospection(
             final IDomainMetadata domainMetadata,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
-            final GraphQLCommon common,
-            final IDomainManager domainManager,
-            final IUserProvider userProvider)
+            final GraphQLCommon common)
     {
         this.domainMetadata = domainMetadata;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
         this.common = common;
-        this.domainManager = domainManager;
-        this.userProvider = userProvider;
     }
 
     /// Enhances `schema` with the domain meta-schema, which describes those of `entityTypes` that have object types in `schema`.
@@ -566,11 +556,9 @@ public class EntityTypeIntrospection {
                 if (environment.getSource() instanceof EntityType entityType) {
                     final var schema = environment.getGraphQLSchema();
                     if (schema.getType(entityType.name()) instanceof GraphQLObjectType objectType) {
-                        @SuppressWarnings("unchecked") // This typecast is safe in practice as all enhanced types extend their originals.
-                        final var managedEntityType = (Class<? extends AbstractEntity<?>>) domainManager.domainTreeEnhancer(userProvider.getUser()).getManagedType(entityType.type());
                         return schema.getCodeRegistry().getFieldVisibility().getFieldDefinitions(objectType)
                                 .stream()
-                                .map(field -> mkProperty(managedEntityType, field))
+                                .map(field -> mkProperty(entityType.type(), field))
                                 .toList();
                     }
                 }

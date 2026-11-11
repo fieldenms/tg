@@ -110,7 +110,7 @@ public class FluentConditions {
     /// Creates a field for the `Entity_Cond_cond` type that represents `property` of `entityType`.
     /// Returns an empty optional if the property cannot be represented (e.g., has an unsupported type).
     ///
-    public Optional<GraphQLInputObjectField> createEntityCondCondField(
+    private Optional<GraphQLInputObjectField> createEntityCondCondField(
             final Class<? extends AbstractEntity<?>> entityType,
             final CharSequence property,
             final GraphQLSchema schema)
@@ -120,18 +120,9 @@ public class FluentConditions {
             return Optional.empty();
         }
         return Optional.of(newInputObjectField()
-                                   .name(entityCondCondFieldName(entityType, property))
+                                   .name(property.toString())
                                    .type(type)
                                    .build());
-    }
-
-    /// Returns the name of a field of the `Entity_Cond_cond` type that represents `property` of `entityType`.
-    ///
-    public String entityCondCondFieldName(
-            final Class<? extends AbstractEntity<?>> entityType,
-            final CharSequence property)
-    {
-        return property.toString();
     }
 
     public boolean hasEntityCondType(final Class<? extends AbstractEntity<?>> entityType, final GraphQLSchema schema) {

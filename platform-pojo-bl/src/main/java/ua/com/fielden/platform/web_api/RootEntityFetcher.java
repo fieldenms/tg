@@ -5,14 +5,12 @@ import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.PropertyDataFetcher;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.domaintree.IDomainManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.List;
@@ -35,25 +33,21 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
     private final GraphQLCommon common;
-    private final IDomainManager domainManager;
-    private final IUserProvider userProvider;
 
+    /// @param entityType  the type to query, which can be a generated type
+    ///
     public RootEntityFetcher(
             final Class<T> entityType,
             final ICompanionObjectFinder coFinder,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
-            final GraphQLCommon common,
-            final IDomainManager domainManager,
-            final IUserProvider userProvider)
+            final GraphQLCommon common)
     {
         this.entityType = entityType;
         this.coFinder = coFinder;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
-        this.domainManager = domainManager;
         this.common = common;
-        this.userProvider = userProvider;
     }
 
     /// Verifies whether  [#entityType] can be retrieved by the current user and returns an error if access is denied.
@@ -64,10 +58,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     @Override
     public DataFetcherResult<List<T>> get(final DataFetchingEnvironment environment) {
         authoriseReadingOf(entityType, READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);// reading of entities should be authorised when running GraphQL query
-        // This typecast is safe in practice as all enhanced types extend their originals.
-        final var user = userProvider.getUser();
-        final var managedEntityType = (Class<T>) domainManager.domainTreeEnhancer(user).getManagedType(entityType);
-        final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(environment, managedEntityType, common);
+        final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(environment, entityType, common);
 
         final var _pageCapacity = common.getPageCapacityArgument(environment);
         final var pageCapacity = _pageCapacity._1;

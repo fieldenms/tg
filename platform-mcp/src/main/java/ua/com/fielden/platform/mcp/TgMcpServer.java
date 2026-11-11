@@ -15,42 +15,17 @@ import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty;
-import ua.com.fielden.platform.domaintree.IDomainManager;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
-import ua.com.fielden.platform.entity.query.QueryProcessingModel;
-import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
-import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
-import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.mcp.web.McpResource;
 import ua.com.fielden.platform.mcp.web.McpResourceFactory;
-import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.security.IAuthorisationModel;
-import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.types.either.Left;
-import ua.com.fielden.platform.types.either.Right;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.function.BiFunction;
+import java.util.List;
+import java.util.Map;
 
-import static java.lang.String.format;
-import static java.util.function.Predicate.not;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer.Stage.stage2;
-import static ua.com.fielden.platform.error.Result.failuref;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authorisePropertyReading;
-import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.utils.MiscUtilities.readResource;
 
 /// MCP server that exposes a TG system to 3rd-party AI systems.
@@ -58,8 +33,6 @@ import static ua.com.fielden.platform.utils.MiscUtilities.readResource;
 /// Provides:
 /// - `tg://query-guide` resource — GraphQL query syntax reference.
 /// - `execute_query` tool — executes GraphQL queries against the TG system.
-/// - [#TOOL_ADD_CALCULATED_PROPERTY] — adds a calculated property to an entity type.
-/// - [#TOOL_REMOVE_CALCULATED_PROPERTY] — removes a calculated property from an entity type.
 ///
 /// Uses stateless HTTP transport.
 ///
@@ -90,10 +63,6 @@ public class TgMcpServer {
     private static final String SERVER_NAME = "tg-mcp-server";
     private static final String SERVER_VERSION = "0.1.0";
 
-    public static final String
-            TOOL_ADD_CALCULATED_PROPERTY = "add_calculated_property",
-            TOOL_REMOVE_CALCULATED_PROPERTY = "remove_calculated_property";
-
     /// Path to the Java resource containing the contents of MCP resource [#QUERY_GUIDE_RESOURCE_URI].
     /// This Java resource is resolved via [Class#getResource(String)], which means it should be present on the classpath.
     private static final String GRAPHQL_QUERY_GUIDE_RESOURCE_PATH = "/mcp/graphql-query-guide.md";
@@ -120,13 +89,7 @@ public class TgMcpServer {
     protected TgMcpServer(
             final IWebApi webApi,
             final McpResourceFactory mcpResourceFactory,
-            final IUserProvider userProvider,
-            final IApplicationDomainProvider appDomainProvider,
-            final IDomainManager domainManager,
-            final EqlQueryTransformer eqlTransformer,
-            final IAuthorisationModel authorisationModel,
-            final ISecurityTokenProvider securityTokenProvider,
-            final IDomainMetadata domainMetadata)
+            final IUserProvider userProvider)
     {
         this.webApi = webApi;
         this.userProvider = userProvider;
@@ -145,8 +108,6 @@ public class TgMcpServer {
                 .validateToolInputs(false)
                 .resources(queryGuideResource())
                 .toolCall(executeQueryTool(), this::handleExecuteQuery)
-                .toolCall(addCalculatedPropertyTool(), new AddCalculatedProperty(appDomainProvider, domainManager, eqlTransformer, userProvider, authorisationModel, securityTokenProvider, domainMetadata))
-                .toolCall(removeCalculatedPropertyTool(), new RemoveCalculatedProperty(appDomainProvider, domainManager))
                 .build();
         // After the builder is finished, the server will start.
     }
@@ -206,44 +167,6 @@ public class TgMcpServer {
                 .build();
     }
 
-    private static McpSchema.Tool addCalculatedPropertyTool() {
-        final var inputSchema = Map.of(
-                "type", "object",
-                "properties", Map.of(
-                        "type", Map.of("type", "string",
-                                       "description", "Entity type to add the property to."),
-                        "name", Map.of("type", "string",
-                                       "description", "Property name."),
-                        "expression", Map.of("type", "string",
-                                             "description", "Expression defining the calculated property.")),
-                "required", List.of("type", "name", "expression"));
-        return McpSchema.Tool.builder(TOOL_ADD_CALCULATED_PROPERTY, inputSchema)
-                .description("""
-                             Adds a calculated property.
-                             
-                             **Authorisation**
-                             An expression may access only those properties that the client is authorised to access.
-                             If an unauthorised access is detected, the calculated property will be rejected.
-                             """)
-                .build();
-    }
-
-    private static McpSchema.Tool removeCalculatedPropertyTool() {
-        final var inputSchema = Map.of(
-                "type", "object",
-                "properties", Map.of(
-                        "type", Map.of("type", "string",
-                                       "description", "Entity type to remove the property from."),
-                        "name", Map.of("type", "string",
-                                       "description", "Property name.")),
-                "required", List.of("type", "name"));
-        return McpSchema.Tool.builder(TOOL_REMOVE_CALCULATED_PROPERTY, inputSchema)
-                .description("""
-                             Removes the specified calculated property.
-                             """)
-                .build();
-    }
-
     private @Nullable User getUser(final McpTransportContext context) {
         return (User) context.get(McpResource.USER_KEY);
     }
@@ -294,273 +217,11 @@ public class TgMcpServer {
                 .build();
     }
 
-    class AddCalculatedProperty implements BiFunction<McpTransportContext, CallToolRequest, CallToolResult> {
-
-        private final IApplicationDomainProvider appDomainProvider;
-        private final IDomainManager domainManager;
-        private final EqlQueryTransformer eqlTransformer;
-        private final IUserProvider userProvider;
-        private final IAuthorisationModel authorisationModel;
-        private final ISecurityTokenProvider securityTokenProvider;
-        private final IDomainMetadata domainMetadata;
-
-        AddCalculatedProperty(
-                final IApplicationDomainProvider appDomainProvider,
-                final IDomainManager domainManager,
-                final EqlQueryTransformer eqlTransformer,
-                final IUserProvider userProvider,
-                final IAuthorisationModel authorisationModel,
-                final ISecurityTokenProvider securityTokenProvider,
-                final IDomainMetadata domainMetadata)
-        {
-            this.appDomainProvider = appDomainProvider;
-            this.domainManager = domainManager;
-            this.eqlTransformer = eqlTransformer;
-            this.userProvider = userProvider;
-            this.authorisationModel = authorisationModel;
-            this.securityTokenProvider = securityTokenProvider;
-            this.domainMetadata = domainMetadata;
-        }
-
-        @Override
-        public CallToolResult apply(final McpTransportContext context, final CallToolRequest request) {
-            final var arguments = request.arguments();
-            if (!(arguments.get("type") instanceof String type)) {
-                return errorResult("Argument [type] is required and must be a string.");
-            }
-            if (!(arguments.get("name") instanceof String name)) {
-                return errorResult("Argument [name] is required and must be a string.");
-            }
-            if (!(arguments.get("expression") instanceof String expression)) {
-                return errorResult("Argument [expression] is required and must be a string.");
-            }
-
-            setCurrentUser(context);
-
-            final var user = getUser(context);
-            if (user == null) {
-                LOGGER.error("Current user is missing.");
-                return errorResult("Current user is missing.");
-            }
-            final var domainTreeEnhancer = domainManager.domainTreeEnhancer(user);
-
-            final var maybeEntityType = appDomainProvider.entityTypes().stream()
-                    .filter(ty -> ty.getSimpleName().equals(type))
-                    .findFirst();
-            if (maybeEntityType.isEmpty()) {
-                return invalidArgument("type", "No such type: %s.".formatted(type));
-            }
-            final var entityType = maybeEntityType.get();
-
-            try {
-                domainTreeEnhancer.addCalculatedProperty(
-                        entityType,
-                        "",
-                        name,
-                        expression,
-                        "Title",
-                        "Description",
-                        ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR,
-                        null,
-                        null,
-                        null);
-                domainTreeEnhancer.apply();
-            } catch (final Exception ex) {
-                final var msg = """
-                                Error adding calculated property [%s.%s] with expression:
-                                %s
-                                """.formatted(type, name, expression);
-                LOGGER.error(() -> msg, ex);
-                return errorResult(msg + "\n" + ex.getMessage());
-            }
-
-            final var managedType = (Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType);
-
-            // The domain has been enhanced, but the rest of the operation could still fail, which would require a rollback
-            // (removal of the added calculated property).
-
-            final Result validationResult;
-            try {
-                validationResult = validateExpression(managedType, name);
-            } catch (final Throwable ex) {
-                LOGGER.error(() -> format("Expression validation failed while adding calculated property [%s.%s].", entityType.getSimpleName(), name), ex);
-                removeAddedProperty(domainTreeEnhancer, entityType, managedType, name).ifPresent(ex::addSuppressed);
-                final var msg = """
-                                Error adding calculated property [%s.%s] with expression:
-                                %s
-                                """.formatted(type, name, expression);
-                return errorResult(msg + "\n" + ex.getMessage());
-            }
-
-            if (!validationResult.isSuccessful()) {
-                removeAddedProperty(domainTreeEnhancer, entityType, managedType, name);
-                return errorResult("""
-                                   Error adding calculated property [%s.%s] with expression:
-                                   %s
-                                   Reason: %s
-                                   """.formatted(type, name, expression, validationResult));
-            }
-
-            try {
-                webApi.propertiesAdded(managedType, Set.of(name));
-            } catch (final Throwable ex) {
-                LOGGER.error(() -> format("Web API failed while adding calculated property [%s.%s].", entityType.getSimpleName(), name), ex);
-                removeAddedProperty(domainTreeEnhancer, entityType, managedType, name).ifPresentOrElse(
-                        ex::addSuppressed,
-                        () -> LOGGER.info(() -> format("Rollback successful: removed calculated property [%s.%s] from the Web API.", entityType.getSimpleName(), name)));
-                final var msg = """
-                                Error adding calculated property [%s.%s] with expression:
-                                %s
-                                """.formatted(type, name, expression);
-                return errorResult(msg + "\n" + ex.getMessage());
-            }
-
-            return CallToolResult.builder()
-                    .addTextContent("Ok")
-                    .build();
-        }
-
-        private Optional<Exception> removeAddedProperty(
-                final IDomainTreeEnhancer domainTreeEnhancer,
-                final Class<? extends AbstractEntity<?>> entityType,
-                final Class<? extends AbstractEntity<?>> managedType,
-                final CharSequence property)
-        {
-            return switch (Try(() -> {
-                domainTreeEnhancer.findCalculatedProperty(entityType, property.toString()).ifPresent(_ -> {
-                    domainTreeEnhancer.removeCalculatedProperty(entityType, property.toString());
-                    domainTreeEnhancer.apply();
-                });
-                webApi.propertiesRemoved(managedType, Set.of(property));
-                return true;
-            })) {
-                case Right _ -> Optional.empty();
-                case Left (var cleanupEx) -> {
-                    LOGGER.error(() -> format("Failed to remove calculated property [%s.%s] from the Web API. This failure will be suppressed.",
-                                              entityType.getSimpleName(), property),
-                                 cleanupEx);
-                    yield Optional.of(cleanupEx);
-                }
-            };
-        }
-
-        private Result validateExpression(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
-            final var expressionModel = domainMetadata.forProperty(entityType, property).asCalculated()
-                    .orElseThrow(() -> new InvalidStateException(format("[%s.%s] must be calculated.", entityType.getTypeName(), property)))
-                    .data().expressionModel();
-            final var query = select(entityType).yield().expr(expressionModel).as("expr").modelAsAggregate();
-            final var qpm = new QueryProcessingModel<>(query, null, null, Map.of(), true);
-            // Stage 2 contains yet unexpanded calculated properties which may themselves reference other properties,
-            // but it is not necessary to check them.
-            // If such a calculated property is defined in the original domain, its authorisation rules will guard access.
-            // If it is an added calculated property, it must have already been validated.
-            final var resultQuery2 = eqlTransformer.transformToStage(qpm, userProvider.getUsername(), stage2);
-            final var unauthorisedPaths = resultQuery2.collectProps().stream()
-                    .map(this::findUnauthorised)
-                    .filter(Objects::nonNull)
-                    .map(path -> CollectionUtil.toString(path, it -> it.name, "."))
-                    .sorted()
-                    .toList();
-            if (!unauthorisedPaths.isEmpty()) {
-                return failuref("Unauthorised access to the following properties: [%s].", CollectionUtil.toString(unauthorisedPaths, ", "));
-            }
-            return successful();
-        }
-
-        private @Nullable List<AbstractQuerySourceItem<?>> findUnauthorised(final Prop2 prop) {
-            try {
-                Class<?> type = prop.source.sourceType();
-                final var path = prop.getPath();
-                for (int i = 0; i < path.size(); i++) {
-                    final var item = path.get(i);
-                    final var result = authorisePropertyReading(type, item.name, authorisationModel, securityTokenProvider);
-                    if (result.filter(not(Result::isSuccessful)).isPresent()) {
-                        return path.subList(0, i + 1);
-                    }
-                    type = domainMetadata.forProperty(type, item.name).type().javaType();
-                }
-                return null;
-            } catch (final Exception ex) {
-                LOGGER.warn(() -> format("Suppressed error while checking authorisation for [%s.%s]. Assuming unauthorised.",
-                                         prop.source.sourceType().getTypeName(), prop.propPath),
-                            ex);
-                return prop.getPath();
-            }
-        }
-
-    }
-
-    class RemoveCalculatedProperty implements BiFunction<McpTransportContext, CallToolRequest, CallToolResult> {
-
-        private final IApplicationDomainProvider appDomainProvider;
-        private final IDomainManager domainManager;
-
-        RemoveCalculatedProperty(
-                final IApplicationDomainProvider appDomainProvider,
-                final IDomainManager domainManager)
-        {
-            this.appDomainProvider = appDomainProvider;
-            this.domainManager = domainManager;
-        }
-
-        @Override
-        public CallToolResult apply(final McpTransportContext context, final CallToolRequest request) {
-            final var arguments = request.arguments();
-            if (!(arguments.get("type") instanceof String type)) {
-                return errorResult("Argument [type] is required and must be a string.");
-            }
-            if (!(arguments.get("name") instanceof String name)) {
-                return errorResult("Argument [name] is required and must be a string.");
-            }
-
-            setCurrentUser(context);
-
-            final var user = getUser(context);
-            if (user == null) {
-                LOGGER.error("Current user is missing.");
-                return errorResult("Current user is missing.");
-            }
-            final var domainTreeEnhancer = domainManager.domainTreeEnhancer(user);
-
-            final var maybeEntityType = appDomainProvider.entityTypes().stream()
-                    .filter(ty -> ty.getSimpleName().equals(type))
-                    .findFirst();
-            if (maybeEntityType.isEmpty()) {
-                return invalidArgument("type", "No such type: %s.".formatted(type));
-            }
-            final var entityType = maybeEntityType.get();
-
-            try {
-                domainTreeEnhancer.removeCalculatedProperty(entityType, name);
-                domainTreeEnhancer.apply();
-                webApi.propertiesRemoved((Class<? extends AbstractEntity<?>>) domainTreeEnhancer.getManagedType(entityType), Set.of(name));
-            } catch (final Exception e) {
-                final var msg = "Error removing calculated property [%s.%s].".formatted(type, name);
-                LOGGER.error(() -> msg, e);
-                return errorResult(msg + " " + e.getMessage());
-            }
-
-            return CallToolResult.builder()
-                    .addTextContent("Ok")
-                    .build();
-        }
-
-    }
-
     /// Creates a tool result representing an error.
     ///
     private static CallToolResult errorResult(final String message) {
         return CallToolResult.builder()
                 .addTextContent(message)
-                .isError(true)
-                .build();
-    }
-
-    /// Creates a tool result representing an invalid argument error.
-    ///
-    private static CallToolResult invalidArgument(final String argumentName, final String message) {
-        return CallToolResult.builder()
-                .addTextContent(format("Invalid argument [%s]. %s", argumentName, message))
                 .isError(true)
                 .build();
     }

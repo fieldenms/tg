@@ -8,7 +8,6 @@ import org.restlet.data.Method;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -21,13 +20,14 @@ import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory
 import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.GraphiQLResource;
+import ua.com.fielden.platform.web_api.EnhancedEntityType;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.zip.GZIPInputStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -101,8 +101,9 @@ public class InvalidRequestBodyResponseTest {
                         inputs.add(input);
                         return Map.of("data", Map.of());
                     }
-                    @Override public void propertiesAdded(Class<? extends AbstractEntity<?>> entityType, Set<? extends CharSequence> properties) {}
-                    @Override public void propertiesRemoved(Class<? extends AbstractEntity<?>> entityType, Set<? extends CharSequence> properties) {}
+                    @Override public Enhancement enhanceEntityType(String name, String baseType, List<PropertyDefinition> addProperties, List<String> removeProperties) { throw new UnsupportedOperationException(); }
+                    @Override public Optional<EnhancedEntityType> findEnhancedEntityType(CharSequence name) { return Optional.empty(); }
+                    @Override public void discardEnhancedEntityTypes() {}
                 },
                 AUTHORISED, restUtil, new ThreadLocalDeviceProvider(), null, null, request, response);
         representations.add(resource.query(request.getEntity()));

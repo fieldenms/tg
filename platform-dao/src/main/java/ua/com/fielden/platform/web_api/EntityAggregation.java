@@ -4,7 +4,6 @@ import graphql.Scalars;
 import graphql.schema.*;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import ua.com.fielden.platform.domaintree.IDomainManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -17,7 +16,6 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.CharSequenceEnum;
 
 import java.util.Collection;
@@ -59,25 +57,19 @@ public class EntityAggregation {
     private final ICompanionObjectFinder coFinder;
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
-    private final IDomainManager domainManager;
     private final GraphQLCommon common;
-    private final IUserProvider userProvider;
 
     @Inject
     protected EntityAggregation(
             final ICompanionObjectFinder coFinder,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
-            final IDomainManager domainManager,
-            final GraphQLCommon common,
-            final IUserProvider userProvider)
+            final GraphQLCommon common)
     {
         this.coFinder = coFinder;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
-        this.domainManager = domainManager;
         this.common = common;
-        this.userProvider = userProvider;
     }
 
     /// Enhances `schema` with aggregation over those of `entityTypes` that have root fields in `schema`.
@@ -163,7 +155,7 @@ public class EntityAggregation {
     }
 
     private DataFetcher<?> aggEntityFetcher(final Class<? extends AbstractEntity<?>> type) {
-        return new AggEntityFetcher(type, coFinder, authorisationModel, securityTokenProvider, domainManager, userProvider, common);
+        return new AggEntityFetcher(type, coFinder, authorisationModel, securityTokenProvider, common);
     }
 
     private record AggEntityFetcher(
@@ -171,8 +163,6 @@ public class EntityAggregation {
             ICompanionObjectFinder coFinder,
             IAuthorisationModel authorisationModel,
             ISecurityTokenProvider securityTokenProvider,
-            IDomainManager domainManager,
-            IUserProvider userProvider,
             GraphQLCommon common)
             implements DataFetcher<List<EntityAggregates>>
     {
@@ -181,9 +171,7 @@ public class EntityAggregation {
         public List<EntityAggregates> get(final DataFetchingEnvironment environment) {
             authoriseReadingOf(entityType, READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime);
             validateDuplicateFields(common.allSelectedFields(environment), common);
-            // This typecast is safe in practice as all enhanced types extend their originals.
-            final var managedEntityType = (Class<? extends AbstractEntity<?>>) domainManager.domainTreeEnhancer(userProvider.getUser()).getManagedType(entityType);
-            final var query = buildQuery(managedEntityType, environment);
+            final var query = buildQuery(entityType, environment);
             final var qem = from(query).model();
             final var co = coFinder.find(EntityAggregates.class, true);
             return co.getAllEntities(qem);
