@@ -33,7 +33,9 @@ Read-only web components in a simple master, bound to the fully-fledged entity:
 - Blocked by default while the entity is new or has unsaved changes.
 - Each component takes a layout cell in the order of declaration, as an editor does; a `FLEXIBLE_ROW` lets it grow with the master.
 - Platform components: `centre/tg-centre-component` (an embedded centre, attribute `mi-type`) and `gis/tg-map-component` (a map, attributes `gis-component-uri` and `gis-component-name`).
-- Client-side contract for application components: `TgMasterComponentBehavior` (`master/tg-master-component-behavior.js`).
+- `tg-centre-component` is the most universal: the alternative views of the centre (`addAlternativeView`, `makePreferred()`) present its data as a chart, a map or otherwise, so consider it before developing an application component.
+- Application components: a Polymer element with the client-side contract of `TgMasterComponentBehavior` (`master/tg-master-component-behavior.js`), among the web resources of the application, such as `src/main/web/fielden/components/tg-gauge-component.js` for import path `components/tg-gauge-component`.
+- A component implements `refresh()`, which the master asks for when it retrieves or saves the entity, after a validation for which `refreshWhen` holds, and, for `asComponent` without `refreshWhen`, when the value of the property changes; it is called with `entity` in place and never while the component is blocked, and work for the master entity on the server takes `masterEntityContext()` as its context.
 
 See `web-ui/reference.md` § *Master Components*.
 
