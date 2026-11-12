@@ -7,6 +7,16 @@ const unprocessedFiles = [
     // Separate testing dependency -- we also tree shake it because placed under '@polymer/' umbrella.
     'node_modules/@polymer/test-fixture/test-fixture.js',
 
+    // Separate web test files, that 'wct-browser-legacy/browser.js' loads (see its 'environmentScripts').
+    // Only these files remain in their packages, as with 'test-fixture.js' above.
+    'node_modules/wct-browser-legacy/browser.js',
+    'node_modules/async/dist/async.js',
+    'node_modules/lodash/lodash.js',
+    'node_modules/mocha/mocha.js',
+    'node_modules/chai/chai.js',
+    'node_modules/sinon/pkg/sinon.js',
+    'node_modules/sinon-chai/lib/sinon-chai.js',
+
     // Separate production files, that are used through <script src='/resources/polymer/ ... /*.js'></script>.
     'node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js',
     'node_modules/web-animations-js/web-animations-next-lite.min.js'
