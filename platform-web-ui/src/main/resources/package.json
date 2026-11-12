@@ -81,6 +81,7 @@
       "dompurify": "^3.4.17",
       "@types/trusted-types": "../_EXCLUDED_"
     },
+    "moment-timezone": "$moment-timezone",
     "wct-browser-legacy": {
       "@polymer/sinonjs": "../_EXCLUDED_",
       "@polymer/test-fixture": "$@polymer/test-fixture",
@@ -123,7 +124,6 @@
       "deep-eql": "../_EXCLUDED_",
       "loupe": "../_EXCLUDED_",
       "pathval": "../_EXCLUDED_"
-    },
-    "moment-timezone": "$moment-timezone"
+    }
   }
 }
