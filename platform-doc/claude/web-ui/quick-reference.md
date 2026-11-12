@@ -20,7 +20,22 @@ Compound.openNew(OpenAction.class, "add-circle-outline", ENTITY_TITLE, "Add new 
 
 ## Property Editor Types
 
-`.asSinglelineText()`, `.asMultilineText()`, `.asRichText()`, `.asAutocompleter()`, `.asDateTimePicker()` / `.asDatePicker()` / `.asTimePicker()`, `.asDecimal()` / `.asSpinner()` / `.asMoney()`, `.asCheckbox()`, `.asColour()`, `.asHyperlink()`, `.asCollectionalRepresentor()` / `.asCollectionalEditor()`, `.asFile()`
+`.asSinglelineText()`, `.asMultilineText()`, `.asRichText()`, `.asAutocompleter()`, `.asDateTimePicker()` / `.asDatePicker()` / `.asTimePicker()`, `.asDecimal()` / `.asSpinner()` / `.asMoney()`, `.asCheckbox()`, `.asColour()`, `.asHyperlink()`, `.asCollectionalRepresentor()` / `.asCollectionalEditor()`, `.asFile()`, `.asComponent(importPath)`
+
+## Master Components
+
+Read-only web components in a simple master, bound to the fully-fledged entity:
+
+- `.addProp(Entity_.prop()).asComponent(importPath)` — in place of an editor of the property.
+- `.addComponent(importPath)` — bound to the entity rather than to a property, next to the editors.
+- `importPath` resolves to `/resources/<importPath>.js`; the element name defaults to its last segment.
+- Options, each optional, in this order: `withTitle` → `withDesc` → `withElementName` → `withHeight(px)` (makes it resizable) → `withMinHeight(px)` → `withAttr(name, value)` / `withPropAttr(name, prop)` → `skipBlockingWhenUnsaved()` → `refreshWhen(Condition.class)` → `withAction` / `withMultiAction` → `also()`.
+- Blocked by default while the entity is new or has unsaved changes.
+- Each component takes a layout cell in the order of declaration, as an editor does; a `FLEXIBLE_ROW` lets it grow with the master.
+- Platform components: `centre/tg-centre-component` (an embedded centre, attribute `mi-type`) and `gis/tg-map-component` (a map, attributes `gis-component-uri` and `gis-component-name`).
+- Client-side contract for application components: `TgMasterComponentBehavior` (`master/tg-master-component-behavior.js`).
+
+See `web-ui/reference.md` § *Master Components*.
 
 ## Layouts
 
@@ -84,3 +99,5 @@ The open token alone does not gate menu-item activation — see *Compound master
 
 **Compound master fetch providers**: Menu item entities receive their key from the root entity's companion fetch provider, not their own.
 Adding a fetch provider to the menu item's own companion has no effect.
+
+**Master component data must be fetched with the master entity**: a component receives the entity of the master as is, so the property it represents, and properties bound with `withPropAttr`, including dot-notated ones such as `location.gisInfo`, must be in the fetch model of the master.
