@@ -114,6 +114,11 @@
     "@sinonjs/commons": "../_EXCLUDED_",
     "@sinonjs/fake-timers": "../_EXCLUDED_",
     "@sinonjs/samsam": "../_EXCLUDED_",
+    "assertion-error": "../_EXCLUDED_",
+    "check-error": "../_EXCLUDED_",
+    "deep-eql": "../_EXCLUDED_",
+    "loupe": "../_EXCLUDED_",
+    "pathval": "../_EXCLUDED_",
     "moment-timezone": "$moment-timezone"
   }
 }
