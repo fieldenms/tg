@@ -195,6 +195,12 @@ Cross-links from a quick-reference should prefer another quick-reference; from a
 | `security/` | Token templates, `@Authorise` usage, CSRF protection, login lockout and password reset cooldown | `reference.md` — `@Authorise` + AOP infrastructure, authorization scopes (DAO/Producer/Property/Action), CSRF protection (cookie attributes, reverse proxy requirements, wiring), login attempt counting, lockout and reset link rules, runtime-generated audit tokens |
 | `auditing/` | @Audited basics, generated types, test config | `reference.md` — full type hierarchy, versioning, runtime plumbing, GenAudit, Web UI |
 
+## Specifications
+
+`platform-doc/spec/` holds high-level specifications of TG's internals, for TG developers.
+Each feature has a directory of its own, grouped by area, e.g., `mcp/custom-calculated-properties`.
+A specification is the reference for the behaviour that it describes: read it before changing or reviewing that behaviour, and change it first when the behaviour changes.
+
 ## Development Guidelines
 
 ### Keep Documentation up-to-date
