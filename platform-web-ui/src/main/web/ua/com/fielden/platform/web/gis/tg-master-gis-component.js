@@ -39,7 +39,7 @@ const AltScrollWheelZoom = L.Map.ScrollWheelZoom.extend({
 
 /**
  * A map of entities in an entity master, such as the master entity, an entity it refers to, or the entities of its collectional property.
- * It is created by 'tg-master-map', which passes the entities to draw to 'show'.
+ * It is created by 'tg-map-component', which passes the entities to draw to 'show'.
  *
  * Each entity is drawn as a feature derived from it with 'Object.create', in the GeoJSON form used by 'GisComponent':
  * the feature has 'type', 'properties' and 'geometry' of its own, and the properties of the entity through its prototype.

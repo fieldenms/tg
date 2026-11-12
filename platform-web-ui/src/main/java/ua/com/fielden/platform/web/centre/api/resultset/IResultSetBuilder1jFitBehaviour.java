@@ -8,7 +8,7 @@ public interface IResultSetBuilder1jFitBehaviour<T extends AbstractEntity<?>> ex
 
     /// Makes egi content fit to its height.
     ///
-    /// The egi of a centre in a master component, such as one embedded with `tg-master-centre`, always fits to its height, filling the component, whether or not this method is called,
+    /// The egi of a centre in a master component, such as one embedded with `tg-centre-component`, always fits to its height, filling the component, whether or not this method is called,
     /// and neither `setHeight` nor `setVisibleRowsCount` applies to it.
     ///
     IResultSetBuilder1kRowHeight<T> fitToHeight();

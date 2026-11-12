@@ -19,7 +19,7 @@ export const MSG_BLOCKED_FOR_NEW_ENTITY = 'A new entity is being created. Please
 export const MSG_BLOCKED_FOR_UNSAVED_CHANGES = 'Please save or cancel changes.';
 
 /**
- * Determines whether 'element' is in the content of a master component, as are a centre embedded by 'tg-master-centre' and the masters of its views:
+ * Determines whether 'element' is in the content of a master component, as are a centre embedded by 'tg-centre-component' and the masters of its views:
  * whether any of the ancestors of 'element', from its parent element or the host of its shadow root on in the flattened tree, including the hosts of shadow roots and the slots of slotted elements,
  * is a master component, which is marked with attribute 'tg-master-component'.
  * Such centres and masters do not take the focus by themselves, as when they load or the component refreshes them,

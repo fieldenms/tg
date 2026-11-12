@@ -361,7 +361,7 @@ Polymer({
         embedded: Boolean,
         /**
          * Indicates whether the selection view fills the height of this centre, with the selection criteria growing to the height that is left by the toolbar and the buttons of the view, so that the buttons are at the bottom of the centre.
-         * It is determined once this centre is attached: the selection view fills the height of a centre in the content of a master component, such as a centre embedded by 'tg-master-centre', as described in `isInMasterComponent`.
+         * It is determined once this centre is attached: the selection view fills the height of a centre in the content of a master component, such as a centre embedded by 'tg-centre-component', as described in `isInMasterComponent`.
          * Otherwise, the selection view has the height of its content, up to the height of this centre.
          */
         _selectionViewFillHeight: {
@@ -780,7 +780,7 @@ Polymer({
 
     /**
      * Configures current view binding; removes view binding for previous view; focuses first focusable element in current view,
-     * unless this centre is in the content of a master component, such as a centre embedded by 'tg-master-centre', as described in `isInMasterComponent`.
+     * unless this centre is in the content of a master component, such as a centre embedded by 'tg-centre-component', as described in `isInMasterComponent`.
      * Such a centre focuses only the views that the user selects, as described in `_activateView` and `_postRun` of `TgEntityCentreBehavior`.
      */
     _pageSelectionChanged: function (event) {

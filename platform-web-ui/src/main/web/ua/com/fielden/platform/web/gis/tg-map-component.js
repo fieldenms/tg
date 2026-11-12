@@ -84,7 +84,7 @@ const template = html`
  * A map component for entity masters, which draws the master entity, an entity it refers to, or the entities of its collectional property.
  * It is declared in the Entity Master DSL, in place of the editor of a property, which may be dot-notated, or bound to the entity:
  *
- *     .addProp(LocationSubsystem_.location().gisInfo()).asComponent("gis/tg-master-map")
+ *     .addProp(LocationSubsystem_.location().gisInfo()).asComponent("gis/tg-map-component")
  *         .withAttr("gis-component-uri", "gis/location/tg-location-gis-master-component")
  *         .withAttr("gis-component-name", "LocationGisMasterComponent")
  *
@@ -99,14 +99,14 @@ const template = html`
  *
  * The title of the map is followed by a responsive toolbar, which moves the actions that do not fit into a dropdown.
  * The toolbar has the property actions, and a toggle that shows and hides the labels of map features, as the labels toggle of centre maps, if attribute 'labels-toggle' is set.
- * A property action reaches the map as 'action.masterMap', wherever the toolbar places the action, and the GIS component as 'action.masterMap.gisComponent' once the map is created.
+ * A property action reaches the map as 'action.mapComponent', wherever the toolbar places the action, and the GIS component as 'action.mapComponent.gisComponent' once the map is created.
  *
  * The component is focused as a whole at the element that holds the toolbar and the map, below the title, as described in 'TgMasterComponentBehavior', so that its focus ring surrounds them, as that of an embedded centre surrounds the centre.
  * The actions of the toolbar, including the property actions, and the map with its controls, such as those of zooming, are its content:
  * Enter moves the focus into it, and the map itself, which the map makes focusable once it is created, can then be focused, so that the keys of the map, such as the arrows that move it, can be used.
  * A click on the map focuses the map, as an element of the content, and a click elsewhere in the toolbar focuses the component as a whole.
  */
-class TgMasterMap extends mixinBehaviors([TgMasterComponentBehavior], PolymerElement) {
+class TgMapComponent extends mixinBehaviors([TgMasterComponentBehavior], PolymerElement) {
 
     static get template() {
         return template;
@@ -194,7 +194,7 @@ class TgMasterMap extends mixinBehaviors([TgMasterComponentBehavior], PolymerEle
         super.ready();
         this._hasPropertyActions = this._propertyActions.length > 0;
         // the toolbar moves the actions that do not fit into its dropdown, so the parent element of an action is not always this map
-        this._propertyActions.forEach(action => action.masterMap = this);
+        this._propertyActions.forEach(action => action.mapComponent = this);
     }
 
     connectedCallback() {
@@ -305,20 +305,20 @@ class TgMasterMap extends mixinBehaviors([TgMasterComponentBehavior], PolymerEle
     _loadGisComponentClass() {
         const uri = this.gisComponentUri, name = this.gisComponentName;
         if (!uri || !name) {
-            console.error(`tg-master-map: attributes 'gis-component-uri' and 'gis-component-name' are required, but are [${uri}] and [${name}].`);
+            console.error(`tg-map-component: attributes 'gis-component-uri' and 'gis-component-name' are required, but are [${uri}] and [${name}].`);
             return Promise.resolve(null);
         }
         return import(`/resources/${uri}.js`).then(module => {
             if (typeof module[name] !== 'function') {
-                console.error(`tg-master-map: module [/resources/${uri}.js] does not export GIS component [${name}].`);
+                console.error(`tg-map-component: module [/resources/${uri}.js] does not export GIS component [${name}].`);
                 return null;
             }
             return module[name];
         }).catch(error => {
-            console.error(`tg-master-map: module [/resources/${uri}.js] with GIS component [${name}] cannot be loaded.`, error);
+            console.error(`tg-map-component: module [/resources/${uri}.js] with GIS component [${name}] cannot be loaded.`, error);
             return null;
         });
     }
 }
 
-customElements.define('tg-master-map', TgMasterMap);
+customElements.define('tg-map-component', TgMapComponent);

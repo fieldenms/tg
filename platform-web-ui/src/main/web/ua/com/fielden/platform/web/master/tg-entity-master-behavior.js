@@ -1363,7 +1363,7 @@ const TgEntityMasterBehaviorImpl = {
      * 
      * In case of preferred input focusing, the contents of the input gets selected.
      *
-     * A master in the content of a master component, such as the master of an alternative view of a centre embedded by 'tg-master-centre', is not focused,
+     * A master in the content of a master component, such as the master of an alternative view of a centre embedded by 'tg-centre-component', is not focused,
      * so that it does not take the focus from the master of the component when its entity appears, as described in `isInMasterComponent`.
      * The inline master of a grid overrides this method, so it is focused also there, as it is opened by the user.
      */

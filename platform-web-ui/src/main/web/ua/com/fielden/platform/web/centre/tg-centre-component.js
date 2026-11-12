@@ -57,7 +57,7 @@ const template = html`
  * A component for entity masters that embeds an entity centre, whose query depends on the master entity, as the embedded centres of compound masters do.
  * It is declared in the Entity Master DSL, usually bound to the entity:
  *
- *     .addComponent("centre/tg-master-centre")
+ *     .addComponent("centre/tg-centre-component")
  *         .withTitle("Stock on Hand")
  *         .withAttr("mi-type", MiWorkActivityExpendableMaster_StockOnHand.class.getName())
  *
@@ -84,7 +84,7 @@ const template = html`
  * so that they do not take the focus from the master, which focuses its editors and components when it shows the entity, as described in 'TgEntityMasterBehavior'.
  * The filling of the component by the selection view and the grid and the focusing of the views follow from the centre being in the content of the component, as described in 'isInMasterComponent' of 'TgMasterComponentBehavior'.
  */
-class TgMasterCentre extends mixinBehaviors([TgMasterComponentBehavior, IronResizableBehavior], PolymerElement) {
+class TgCentreComponent extends mixinBehaviors([TgMasterComponentBehavior, IronResizableBehavior], PolymerElement) {
 
     static get template() {
         return template;
@@ -188,4 +188,4 @@ class TgMasterCentre extends mixinBehaviors([TgMasterComponentBehavior, IronResi
     }
 }
 
-customElements.define('tg-master-centre', TgMasterCentre);
+customElements.define('tg-centre-component', TgCentreComponent);

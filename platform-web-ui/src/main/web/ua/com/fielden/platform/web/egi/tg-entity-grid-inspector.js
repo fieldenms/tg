@@ -797,7 +797,7 @@ Polymer({
             value: false
         },
         /**
-         * Indicates whether this EGI is in the content of a master component, such as the EGI of a centre embedded by 'tg-master-centre', as described in `isInMasterComponent`.
+         * Indicates whether this EGI is in the content of a master component, such as the EGI of a centre embedded by 'tg-centre-component', as described in `isInMasterComponent`.
          * Such an EGI always fits to height, as described in '_fitsToHeight', and 'constantHeight' and 'visibleRowsCount' do not apply to it,
          * so that it fills the component, as the component stretches the grid to its height with mixin '--tg-grid-container', which collapses the grid of an EGI that does not fit to height, leaving no rows visible.
          * It is determined once this EGI is attached.
