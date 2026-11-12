@@ -70,7 +70,6 @@
     "chai": "5.1.2",
     "lodash": "4.18.1",
     "mocha": "10.8.2",
-    "serialize-javascript": "7.1.4",
     "sinon": "21.0.2",
     "sinon-chai": "4.0.0",
     "wct-browser-legacy": "1.0.2"
@@ -92,10 +91,26 @@
       "sinon-chai": "$sinon-chai",
       "stacky": "../_EXCLUDED_"
     },
-    "serialize-javascript": "$serialize-javascript",
     "glob": "../_EXCLUDED_",
     "minimatch": "../_EXCLUDED_",
     "chokidar": "../_EXCLUDED_",
+    "ansi-colors": "../_EXCLUDED_",
+    "browser-stdout": "../_EXCLUDED_",
+    "debug": "../_EXCLUDED_",
+    "diff": "../_EXCLUDED_",
+    "escape-string-regexp": "../_EXCLUDED_",
+    "find-up": "../_EXCLUDED_",
+    "he": "../_EXCLUDED_",
+    "js-yaml": "../_EXCLUDED_",
+    "log-symbols": "../_EXCLUDED_",
+    "ms": "../_EXCLUDED_",
+    "serialize-javascript": "../_EXCLUDED_",
+    "strip-json-comments": "../_EXCLUDED_",
+    "supports-color": "../_EXCLUDED_",
+    "workerpool": "../_EXCLUDED_",
+    "yargs": "../_EXCLUDED_",
+    "yargs-parser": "../_EXCLUDED_",
+    "yargs-unparser": "../_EXCLUDED_",
     "moment-timezone": "$moment-timezone"
   }
 }
