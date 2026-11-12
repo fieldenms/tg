@@ -269,16 +269,16 @@ Set out below is every rule that decides what the schema exposes, and where each
 
 #### The rules
 
-Static rules are settled when `GraphQLService` builds the schema and hold for the life of the application.
+Static rules are settled when `GraphQLSchemaFactory` builds the schema and hold for the life of the application.
 
 | # | Rule | Encoded in |
 |---|------|------------|
 | S1 | A type is a domain type of a visible kind: persistent or synthetic, and not `@DenyIntrospection`. Unions are visible as property types but get no root field. | `GraphQLCommon.streamQueryableTypes` and `streamVisibleTypes` |
-| S2 | A type is not excluded in its own right — abstract, no `@KeyType`, an enum, and the other generic exclusions. | `createGraphQLTypeFor`, through `isExcluded(type, "")` |
+| S2 | A type is not excluded in its own right — abstract, no `@KeyType`, an enum, and the other generic exclusions. | `GraphQLSchemaFactory.createGraphQLTypeFor`, through `isExcluded(type, "")` |
 | S3 | The candidate properties of a type are its key members and properties, or its members if it is a union. | `GraphQLCommon.propertiesForGraphQlFields` |
-| S4 | A property is not excluded — `@Invisible`, `@Ignore`, `key` without `@KeyTitle`, `desc` without `@DescTitle`, a property whose type is itself excluded, and the rest. | `createGraphQLTypeFor`, through `isExcluded(type, property)` |
+| S4 | A property is not excluded — `@Invisible`, `@Ignore`, `key` without `@KeyTitle`, `desc` without `@DescTitle`, a property whose type is itself excluded, and the rest. | `GraphQLSchemaFactory.createGraphQLTypeFor`, through `isExcluded(type, property)` |
 | S5 | A property's type is one the Web API supports, which also fixes the field's GraphQL type and its arguments. | `FieldSchema.determineFieldType` |
-| S6 | A type left with no field is not a type at all and is dropped. | `createGraphQLTypeFor` |
+| S6 | A type left with no field is not a type at all and is dropped. | `GraphQLSchemaFactory.createGraphQLTypeFor` |
 | S7 | A root field is named by uncapitalising the type's name, which is the simple name of a domain type and the given name of an enhanced entity type. | `GraphQLCommon.rootFieldName` |
 
 Dynamic rules are evaluated per request, because the answer depends on who is asking.

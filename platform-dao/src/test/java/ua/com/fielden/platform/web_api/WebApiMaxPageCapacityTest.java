@@ -21,15 +21,18 @@ public class WebApiMaxPageCapacityTest extends AbstractDaoTestCase {
     /// Creates a Web API service ([GraphQLService]) with an explicit maximum page capacity, reusing the injected collaborators.
     ///
     private IWebApi webApi(final int maxPageCapacity) {
+        final var common = new GraphQLCommon(DEFAULT_MAX_QUERY_DEPTH, maxPageCapacity);
         return new GraphQLService(
                 getInstance(IApplicationDomainProvider.class),
-                getInstance(ICompanionObjectFinder.class),
-                getInstance(IAuthorisationModel.class),
-                getInstance(ISecurityTokenProvider.class),
-                getInstance(EntityTypeIntrospection.class),
-                getInstance(EntityAggregation.class),
-                getInstance(FluentConditions.class),
-                new GraphQLCommon(DEFAULT_MAX_QUERY_DEPTH, maxPageCapacity),
+                new GraphQLSchemaFactory(
+                        getInstance(ICompanionObjectFinder.class),
+                        getInstance(IAuthorisationModel.class),
+                        getInstance(ISecurityTokenProvider.class),
+                        getInstance(EntityTypeIntrospection.class),
+                        getInstance(EntityAggregation.class),
+                        getInstance(FluentConditions.class),
+                        common),
+                common,
                 getInstance(EntityTypeEnhancer.class),
                 getInstance(IUserProvider.class));
     }
