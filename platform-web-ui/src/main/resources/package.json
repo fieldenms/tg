@@ -111,6 +111,9 @@
     "yargs": "../_EXCLUDED_",
     "yargs-parser": "../_EXCLUDED_",
     "yargs-unparser": "../_EXCLUDED_",
+    "@sinonjs/commons": "../_EXCLUDED_",
+    "@sinonjs/fake-timers": "../_EXCLUDED_",
+    "@sinonjs/samsam": "../_EXCLUDED_",
     "moment-timezone": "$moment-timezone"
   }
 }
