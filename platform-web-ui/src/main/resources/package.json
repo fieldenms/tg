@@ -83,6 +83,7 @@
     "wct-browser-legacy": {
       "@polymer/sinonjs": "../_EXCLUDED_",
       "@polymer/test-fixture": "$@polymer/test-fixture",
+      "accessibility-developer-tools": "../_EXCLUDED_",
       "async": "$async",
       "chai": "$chai",
       "lodash": "$lodash",
