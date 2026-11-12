@@ -237,13 +237,15 @@ public class VehicleModelChanged implements IComponentRefreshCondition<Vehicle> 
 
 `ComponentRefreshContext` provides the validated entity, with the changes of the user and the values that definers set in turn, and the properties whose values the user changed since the previous validation, which the dirtiness of properties does not tell.
 The condition is created with the injector, so its dependencies are injected.
-What refreshing does is up to the component, such as running an embedded centre again.
+What refreshing does is up to the component, which implements `refresh()` (see *Application components*), such as running an embedded centre again.
 A refresh asked for while the component is blocked takes place once it is unblocked.
 
 ### Platform components
 
 **`centre/tg-centre-component`** embeds an entity centre whose query depends on the master entity, usually with `addComponent`.
 
+- It is the most universal component: besides the grid, the centre presents its data in alternative views declared with `addAlternativeView`, such as a chart or a map, and an alternative view made preferred with `makePreferred()` is shown in place of the grid.
+  So it is considered first, before developing an application component.
 - Attribute `mi-type` is the class name of the menu item type of the centre, a `MiWithConfigurationSupport` subclass; the centre is registered with `builder.register(centre)` as any other centre.
 - The context of the centre includes the master entity with its unsaved changes, so a query enhancer with `context().withMasterEntity()` restricts the query by it.
 - The centre runs whenever the component is refreshed, and not while the component is blocked.
@@ -262,7 +264,16 @@ A refresh asked for while the component is blocked takes place once it is unbloc
 
 ### Application components
 
-An application component is a Polymer element with the client-side contract of `TgMasterComponentBehavior` (`master/tg-master-component-behavior.js`):
+An application component is a Polymer element with the client-side contract of `TgMasterComponentBehavior` (`master/tg-master-component-behavior.js`), for data that needs a presentation that an embedded centre with its alternative views does not provide, such as a gauge of a value of the master entity.
+Its module is placed among the web resources of the web UI module of the application, such as `src/main/web/fielden/components/tg-gauge-component.js`, which is served as `/resources/components/tg-gauge-component.js`, and the component is declared in the master by that import path:
+
+```java
+.addProp(Location_.capacityUsage()).asComponent("components/tg-gauge-component")
+    .withHeight(160)
+    .withAttr("max", "100")
+    .skipBlockingWhenUnsaved()          // the gauge shows a value of the entity itself
+    .also()
+```
 
 ```js
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
@@ -270,31 +281,92 @@ import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/c
 import { TgMasterComponentBehavior } from '/resources/master/tg-master-component-behavior.js';
 
 const template = html`
+    <style>
+        :host {
+            display: flex;
+            flex-direction: column;
+        }
+        #content {
+            flex: 1;
+        }
+    </style>
     <div class="tg-component-title" hidden$="[[!propTitle]]" tooltip-text$="[[propDesc]]">[[propTitle]]</div>
-    <div id="content" tabindex="0">...</div>
+    <div id="content" tabindex="0">
+        <div class="gauge" style$="[[_gaugeStyle(_value, max)]]"></div>
+    </div>
     <slot name="property-action"></slot>
 `;
 
-class TgFuelUsageChart extends mixinBehaviors([TgMasterComponentBehavior], PolymerElement) {
-    static get template() { return template; }
-    static get properties() {
-        return { mode: { type: String } }; // declared with withAttr("mode", "compact")
+class TgGaugeComponent extends mixinBehaviors([TgMasterComponentBehavior], PolymerElement) {
+
+    static get template() {
+        return template;
     }
-    // the element at which the component is focused as a whole, which declares tabindex
-    component() { return this.$.content; }
-    // asked for by the master, such as when it retrieves or saves the entity
-    refresh() { /* load data for this.masterEntityContext() */ }
+
+    static get properties() {
+        return {
+            // declared with withAttr("max", "100")
+            max: {
+                type: Number,
+                value: 100
+            },
+            // the default least height, unless declared with withMinHeight
+            minHeight: {
+                type: String,
+                value: '120px'
+            },
+            // the value that the gauge shows, taken from the entity at each refresh
+            _value: {
+                type: Number,
+                value: 0
+            }
+        };
+    }
+
+    // the element at which the component is focused as a whole
+    component() {
+        return this.$.content;
+    }
+
+    // called as the master asks, with the entity in place, and never while the component is blocked
+    refresh() {
+        this._value = this.entity.get(this.propertyName) || 0;
+    }
+
+    _gaugeStyle(value, max) {
+        return `width: ${Math.min(100, 100 * value / max)}%;`;
+    }
 }
-customElements.define('tg-fuel-usage-chart', TgFuelUsageChart);
+
+customElements.define('tg-gauge-component', TgGaugeComponent);
 ```
 
 - The behaviour provides `entity`, `propertyName`, `propTitle`, `propDesc` and the index of the property action to show, and adds the resizer, the blocking pane and the common styles to the shadow tree, such as a margin of `8px` above and below, as for editors.
+  Attribute `resizable` is set while the component is resizable, so that the component can keep its content clear of the resizer.
+- A component gives `minHeight` a default value by declaring the property with that value, which `withMinHeight` replaces.
 - The property actions are the children slotted into `property-action`, of which only the action for the entity is shown.
-- `masterEntityContext()` returns the master entity with its unsaved changes as a context, as for the actions of the master.
 - The component is focused as a whole at `component()`, the component itself by default, which needs `tabindex="0"`: Tab moves among the editors to it and on, Enter moves into its content, where Tab cycles, and Esc moves back.
   The element has a focus ring, and the element with class `tg-component-title` looks as the title of a focused editor while the focus is within the component.
   Without `tabindex`, the focusable elements of the component take part in the focus traversal of the master in their place among the editors.
 - `isInMasterComponent(element)` tells whether an element is in the content of a master component, as the centres and masters in it are, so that they do not take the focus by themselves.
+
+#### `refresh()`
+
+`refresh()` loads or presents the data of the component for the master entity; the behaviour implements it as doing nothing.
+
+- The master asks for a refresh with `requestRefresh()`, as described in *Refreshing*: whenever it retrieves or saves the entity, after each validation for which the `refreshWhen` condition holds, and, for a component in place of an editor without `refreshWhen`, whenever the value of its property differs from the value for which the component was last refreshed, compared as values of properties are, such as entities by their keys.
+- `refresh()` is called with `entity` in place, and never while the component is blocked: a refresh asked for while the component is blocked takes place once it is unblocked.
+- It is called at microtask timing, so that refreshes asked for at once, such as when a save also unblocks the component, result in a single call.
+- A component may call `requestRefresh()` itself, such as from a button of its own, to refresh on the same terms.
+- Work for the master entity on the server takes `masterEntityContext()` as its context, which returns the master entity with its unsaved changes, in the form in which the contexts of the master carry it, as for property and entity actions.
+  `tg-centre-component` gives its centre a new function at each refresh, which loads the centre the first time and runs it again afterwards:
+  ```js
+  refresh() {
+      this._getMasterEntity = () => this.masterEntityContext();
+  }
+  ```
+- Binding to `entity`, which follows every change of the master entity, including each validation of a change made by the user, presents every change at once, as `tg-map-component` does; `refresh()` suits work that takes place only when the master asks for it, such as a request to the server.
+- The values that a component reads from the entity must be fetched with the master entity.
 
 ## Master With Centre
 
