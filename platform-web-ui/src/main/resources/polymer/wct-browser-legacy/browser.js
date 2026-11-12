@@ -223,7 +223,8 @@ var _config = {
             /*TG #2329*/
             'sinon/pkg/sinon.js',
             'sinon-chai/lib/sinon-chai.js',
-            'accessibility-developer-tools/dist/js/axs_testing.js',
+            /*TG #2892*/
+            //'accessibility-developer-tools/dist/js/axs_testing.js',
             '@polymer/test-fixture/test-fixture.js'
         ] :
         [
@@ -235,7 +236,8 @@ var _config = {
             'chai/chai.js',
             'sinonjs/sinon.js',
             'sinon-chai/lib/sinon-chai.js',
-            'accessibility-developer-tools/dist/js/axs_testing.js'
+            /*TG #2892*/
+            //'accessibility-developer-tools/dist/js/axs_testing.js'
         ],
     environmentImports: !!window.__wctUseNpm ? [] :
         ['test-fixture/test-fixture.html'],
