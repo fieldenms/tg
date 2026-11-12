@@ -71,7 +71,6 @@
     "lodash": "4.18.1",
     "mocha": "10.8.2",
     "serialize-javascript": "7.1.4",
-    "glob": "13.0.6",
     "sinon": "21.0.2",
     "sinon-chai": "4.0.0",
     "wct-browser-legacy": "1.0.2"
@@ -94,7 +93,8 @@
       "stacky": "../_EXCLUDED_"
     },
     "serialize-javascript": "$serialize-javascript",
-    "glob": "$glob",
+    "glob": "../_EXCLUDED_",
+    "minimatch": "../_EXCLUDED_",
     "chokidar": "../_EXCLUDED_",
     "moment-timezone": "$moment-timezone"
   }
