@@ -3,8 +3,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.mocha = factory());
-})(this, (function () { 'use strict';
-
+})(undefined, (function () {
   var global$2 = (typeof global !== "undefined" ? global :
     typeof self !== "undefined" ? self :
     typeof window !== "undefined" ? window : {});
@@ -20773,4 +20772,3 @@
   return browserEntry;
 
 }));
-//# sourceMappingURL=mocha.js.map

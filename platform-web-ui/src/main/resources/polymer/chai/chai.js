@@ -3798,17 +3798,6 @@ function use(fn) {
   return exports;
 }
 __name(use, "use");
-export {
-  Assertion,
-  AssertionError,
-  Should,
-  assert,
-  config,
-  expect,
-  should,
-  use,
-  utils_exports as util
-};
 /*!
  * Chai - flag utility
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
@@ -4049,3 +4038,5 @@ deep-eql/index.js:
    * @return {Boolean} result
    *)
 */
+
+export { Assertion, AssertionError, Should, assert, config, expect, should, use, utils_exports as util };

@@ -14,7 +14,6 @@
  */
 
 (function () {
-'use strict';
 
 window.__wctUseNpm = true;
 /**
@@ -1199,7 +1198,7 @@ var MultiReporter = /** @class */ (function () {
      */
     MultiReporter.prototype.childReporter = function (location) {
         var _a;
-        var name = this.suiteTitle(location);
+        this.suiteTitle(location);
         // The reporter is used as a constructor, so we can't depend on `this` being
         // properly bound.
         var self = this;
@@ -1285,10 +1284,6 @@ var MultiReporter = /** @class */ (function () {
      * @param {...*} var_args Any additional data passed as part of the event.
      */
     MultiReporter.prototype.proxyEvent = function (eventName, runner) {
-        var _args = [];
-        for (var _i = 2; _i < arguments.length; _i++) {
-            _args[_i - 2] = arguments[_i];
-        }
         var extraArgs = Array.prototype.slice.call(arguments, 2);
         if (this.complete) {
             console.warn('out of order Mocha event for ' + runner.name + ':', eventName, extraArgs);
@@ -2033,8 +2028,6 @@ function stubInterfaces() {
         });
     });
 }
-// Whether we've called `mocha.setup`
-var _mochaIsSetup = false;
 /**
  * @param {string} ui Sets up mocha to run `ui`-style tests.
  * @param {string} key The method called that triggered this.
@@ -2047,9 +2040,6 @@ function _setupMocha(ui, key, alternate) {
             ' Mocha styles is not supported. ' +
             'You called "' + key + '". Did you mean ' + alternate + '?';
         throw new Error(message);
-    }
-    if (_mochaIsSetup) {
-        return;
     }
     applyExtensions();
     mochaOptions.ui = ui;
@@ -2123,4 +2113,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 }());
-//# sourceMappingURL=browser.js.map
