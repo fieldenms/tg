@@ -162,9 +162,9 @@ const template = html`
             max-height: 100%;
             overflow: hidden;
         }
-        /* the selection view and its card fill the height of the centre, so that the buttons of the view are at the bottom of the centre */
-        :host([_selection-view-fill-height]) .selection-material,
-        :host([_selection-view-fill-height]) tg-selection-view {
+        /* the selection view and its card fill the height of the centre embedded by 'tg-centre-component', so that the buttons of the view are at the bottom of the component */
+        :host([in-centre-component]) .selection-material,
+        :host([in-centre-component]) tg-selection-view {
             flex: 1;
         }
         paper-spinner {
@@ -251,7 +251,7 @@ const template = html`
     <iron-pages id="views" selected="[[_selectedView]]">
         <div class="fit layout vertical">
             <div class="paper-material selection-material layout vertical" elevation="1">
-                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _reset-autocompleter-state="[[_resetAutocompleterState]]" _show-dialog="[[_showDialog]]" _long-help-tap-handler="[[_longHelpTapHandler]]" _short-help-tap-handler="[[_shortHelpTapHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]" fill-height$="[[_selectionViewFillHeight]]">
+                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _reset-autocompleter-state="[[_resetAutocompleterState]]" _show-dialog="[[_showDialog]]" _long-help-tap-handler="[[_longHelpTapHandler]]" _short-help-tap-handler="[[_shortHelpTapHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]" fill-height$="[[inCentreComponent]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
                     <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
@@ -360,11 +360,11 @@ Polymer({
         _viewerDisabled: Boolean,
         embedded: Boolean,
         /**
-         * Indicates whether the selection view fills the height of this centre, with the selection criteria growing to the height that is left by the toolbar and the buttons of the view, so that the buttons are at the bottom of the centre.
-         * It is determined once this centre is attached: the selection view fills the height of a centre in the content of a master component, such as a centre embedded by 'tg-centre-component', as described in `isInMasterComponent`.
-         * Otherwise, the selection view has the height of its content, up to the height of this centre.
+         * Indicates whether this centre is the centre embedded by 'tg-centre-component', which sets it.
+         * The selection view of such a centre fills its height, with the selection criteria growing to the height that is left by the toolbar and the buttons of the view, so that the buttons are at the bottom of the component.
+         * Otherwise, the selection view has the height of its content, up to the height of this centre, as in the centres of the insertion points of such a centre.
          */
-        _selectionViewFillHeight: {
+        inCentreComponent: {
             type: Boolean,
             value: false,
             reflectToAttribute: true
@@ -521,7 +521,6 @@ Polymer({
 
     attached: function () {
         const self = this;
-        self._selectionViewFillHeight = isInMasterComponent(self);
         self._createActionObject = function (entityType, createPreActionPromise, customPostActionSuccess) {
             return {
                 preAction: function (action) {

@@ -254,7 +254,9 @@ So `refreshWhen`, and the refresh of a component in place of an editor on change
 - The context of the centre includes the master entity with its unsaved changes, so a query enhancer with `context().withMasterEntity()` restricts the query by it.
 - The centre runs whenever the component is refreshed, and not while the component is blocked.
 - The centre has its own uuid, so its actions do not refresh the master.
-- The selection view and the grid fill the component; the grid always fits to height there, whether or not the centre declares `fitToHeight()`, and whatever height or number of visible rows the centre declares or the user configures.
+- The selection view fills the component. The grid has the height that the centre declares: with `fitToHeight()`, it fills the component, stretched to its full height with its rows scrolled within it, and otherwise it has the height of its rows or of its visible rows, which leaves room for insertion points of the centre.
+  A grid that fits to height covers the insertion points at the top, bottom, left or right of its centre, as anywhere else, so a centre with such insertion points does not declare `fitToHeight()`.
+  This applies to the embedded centre only; the centres in its insertion points, with their selection views and grids, are laid out as anywhere else.
 - The views of the centre, such as a chart in an alternative view, follow every change of size of the component, including one by the user.
 - The centre and the masters of its views do not take the focus from the master when they load or refresh, only when the user acts on them.
 - A toolbar without selection criteria suits a centre restricted to the master entity, such as `CentreToolbar.withTopActionsViewSwitchPaginationAndRefresh()`, with `standardEmbeddedScrollingConfig(0)`.

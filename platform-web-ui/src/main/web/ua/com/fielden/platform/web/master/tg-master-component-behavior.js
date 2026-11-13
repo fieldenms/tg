@@ -24,9 +24,6 @@ export const MSG_BLOCKED_FOR_UNSAVED_CHANGES = 'Please save or cancel changes.';
  * is a master component, which is marked with attribute 'tg-master-component'.
  * Such centres and masters do not take the focus by themselves, as when they load or the component refreshes them,
  * so that they do not take it from the master of the component, which focuses its editors and components when it shows the entity, as described in 'TgEntityMasterBehavior'.
- * The selection view of such a centre fills the height of the centre, with the selection criteria growing to the height that is left by the toolbar and the buttons of the view,
- * so that the buttons are at the bottom of the component, as described in '_selectionViewFillHeight' of 'tg-entity-centre'.
- * The grid of such a centre always fits to height, filling the component, whatever height or number of visible rows the centre declares, as described in '_inMasterComponent' of 'tg-entity-grid-inspector'.
  */
 export const isInMasterComponent = function (element) {
     return !!getFlattenedParentAnd(element.parentElement || element.getRootNode().host, current => current.hasAttribute('tg-master-component'));

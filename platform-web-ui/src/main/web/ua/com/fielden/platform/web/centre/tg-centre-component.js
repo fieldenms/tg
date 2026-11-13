@@ -10,10 +10,6 @@ const template = html`
         :host {
             display: flex;
             flex-direction: column;
-            --tg-grid-container: {
-                @apply --layout-flex;
-                min-height:0;
-            };
         }
         .caption {
             display: flex;
@@ -50,7 +46,7 @@ const template = html`
         <span class="caption-title tg-component-title" tooltip-text$="[[propDesc]]">[[propTitle]]</span>
         <slot name="property-action"></slot>
     </div>
-    <tg-element-loader id="loader" tabindex="0" import="[[_importUri(miType)]]" element-name="[[_elementName(miType)]]" attrs="[[_centreAttrs]]" context="[[_getMasterEntity]]" context-property="getMasterEntity"></tg-element-loader>
+    <tg-element-loader id="loader" tabindex="0" import="[[_importUri(miType)]]" element-name="[[_elementName(miType)]]" attrs="[[_centreAttrs]]" context="[[_getMasterEntity]]" context-property="getMasterEntity" on-after-load="_centreLoaded"></tg-element-loader>
 `;
 
 /**
@@ -77,12 +73,14 @@ const template = html`
  * so that its views, such as a chart in an alternative view, fit the new size.
  * Its selection view fills the component, with the selection criteria growing to the height that is left by the toolbar and the buttons of the view,
  * so that the buttons are always at the bottom of the component.
- * Its grid always fits to height, filling the component, as stretched by mixin '--tg-grid-container', whether or not the centre declares 'fitToHeight()' in the Entity Centre DSL,
- * and whatever height or number of visible rows the centre declares or the user configures.
+ * Its grid has the height that the centre declares in the Entity Centre DSL: with 'fitToHeight()', it fills the component, stretched to its full height with its rows scrolled within it,
+ * and otherwise it has the height of its rows, or of the number of visible rows that the centre declares or the user configures, which leaves room for insertion points of the centre.
+ * This applies to the embedded centre only, which the component marks with 'inCentreComponent' of 'tg-entity-centre' and 'tg-entity-grid-inspector':
+ * the centres in its insertion points, with their selection views and grids, are laid out as anywhere else.
  * The centre focuses its views only when the user selects them, such as by running it or by going back to its selection criteria, and not when it selects them by itself, as when it loads or the component refreshes it,
  * and the masters of its views, such as a chart in an alternative view, do not focus themselves when their entities appear,
  * so that they do not take the focus from the master, which focuses its editors and components when it shows the entity, as described in 'TgEntityMasterBehavior'.
- * The filling of the component by the selection view and the grid and the focusing of the views follow from the centre being in the content of the component, as described in 'isInMasterComponent' of 'TgMasterComponentBehavior'.
+ * The focusing of the views follows from the centre being in the content of the component, as described in 'isInMasterComponent' of 'TgMasterComponentBehavior'.
  */
 class TgCentreComponent extends mixinBehaviors([TgMasterComponentBehavior, IronResizableBehavior], PolymerElement) {
 
@@ -98,6 +96,13 @@ class TgCentreComponent extends mixinBehaviors([TgMasterComponentBehavior, IronR
              */
             miType: {
                 type: String
+            },
+
+            /**
+             * The embedded centre, once the loader has inserted it.
+             */
+            _centre: {
+                type: Object
             },
 
             /**
@@ -133,6 +138,12 @@ class TgCentreComponent extends mixinBehaviors([TgMasterComponentBehavior, IronR
         };
     }
 
+    static get observers() {
+        return [
+            '_centreChanged(_centre)'
+        ];
+    }
+
     ready() {
         super.ready();
         this._hasPropertyActions = this._propertyActions.length > 0;
@@ -166,6 +177,28 @@ class TgCentreComponent extends mixinBehaviors([TgMasterComponentBehavior, IronR
     _sizeChangedAsync() {
         cancelAnimationFrame(this._sizeChangedFrame);
         this._sizeChangedFrame = requestAnimationFrame(() => this.notifyResize());
+    }
+
+    /**
+     * Keeps the embedded centre, which the loader inserts once it is loaded.
+     */
+    _centreLoaded(event) {
+        this._centre = event.detail;
+    }
+
+    /**
+     * Marks the embedded centre and its grid, so that its selection view fills the component, and its grid fills the component if the centre declares 'fitToHeight()',
+     * as described in 'inCentreComponent' of 'tg-entity-centre' and 'tg-entity-grid-inspector'.
+     */
+    _centreChanged(centre) {
+        if (centre && centre.$) {
+            if (centre.$.dom) {
+                centre.$.dom.inCentreComponent = true;
+            }
+            if (centre.$.egi) {
+                centre.$.egi.inCentreComponent = true;
+            }
+        }
     }
 
     _hasCaption(propTitle, _hasPropertyActions) {
