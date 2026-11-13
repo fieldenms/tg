@@ -1,4 +1,4 @@
-function sinonChai (chai, utils) {
+export default function (chai, utils) {
   const slice = Array.prototype.slice;
 
   function isSpy(putativeSpy) {
@@ -193,5 +193,3 @@ function sinonChai (chai, utils) {
   sinonMethod('returned', 'returned %1');
   exceptionalSinonMethod('thrown', 'threw', 'thrown %1');
 }
-
-export { sinonChai as default };
