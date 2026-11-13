@@ -387,6 +387,16 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
+         * Indicates whether this entity centre is a master component, embedded by 'tg-centre-component', which sets it through the attributes of its loader.
+         * The centre passes it to its selection view and its grid, so that its selection view fills the component, and its grid fills the component if the centre declares 'fitToHeight()',
+         * as described in 'isComponent' of 'tg-entity-centre' and 'tg-entity-grid-inspector'.
+         */
+        isComponent: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * Indicates whether this entity centre is runAutomatically and allows customisation.
          *
          * For standalone centre it means that no criteria clearing will be performed during auto-run for default configurations.

@@ -64,8 +64,8 @@ const template = html`
         .grid-container[fit-to-height] {
             max-height: 100%;
         }
-        /* the grid of the centre embedded by 'tg-centre-component' that fits to height is stretched to the full height of the component, as described in 'inCentreComponent' */
-        :host([in-centre-component][fit-to-height]) .grid-container {
+        /* the grid of a centre that is a master component is stretched to the full height of the component if it fits to height, as described in 'isComponent' */
+        :host([is-component][fit-to-height]) .grid-container {
             flex: 1;
             min-height: 0;
         }
@@ -800,12 +800,12 @@ Polymer({
             value: false
         },
         /**
-         * Indicates whether this EGI is the grid of the centre embedded by 'tg-centre-component', which sets it.
+         * Indicates whether the centre of this EGI is a master component, embedded by 'tg-centre-component', as passed by its centre, as described in 'isComponent' of 'TgEntityCentreBehavior'.
          * If the centre declares 'fitToHeight()' in the Entity Centre DSL, such a grid is stretched to the full height of the component, with its rows scrolled within it,
          * rather than growing with its rows up to that height, as a grid that fits to height does elsewhere.
          * The grids of the centres in the insertion points of such a centre are sized as anywhere else.
          */
-        inCentreComponent: {
+        isComponent: {
             type: Boolean,
             value: false,
             reflectToAttribute: true

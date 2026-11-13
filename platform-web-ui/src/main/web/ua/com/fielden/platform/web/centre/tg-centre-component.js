@@ -46,7 +46,7 @@ const template = html`
         <span class="caption-title tg-component-title" tooltip-text$="[[propDesc]]">[[propTitle]]</span>
         <slot name="property-action"></slot>
     </div>
-    <tg-element-loader id="loader" tabindex="0" import="[[_importUri(miType)]]" element-name="[[_elementName(miType)]]" attrs="[[_centreAttrs]]" context="[[_getMasterEntity]]" context-property="getMasterEntity" on-after-load="_centreLoaded"></tg-element-loader>
+    <tg-element-loader id="loader" tabindex="0" import="[[_importUri(miType)]]" element-name="[[_elementName(miType)]]" attrs="[[_centreAttrs]]" context="[[_getMasterEntity]]" context-property="getMasterEntity"></tg-element-loader>
 `;
 
 /**
@@ -75,7 +75,7 @@ const template = html`
  * so that the buttons are always at the bottom of the component.
  * Its grid has the height that the centre declares in the Entity Centre DSL: with 'fitToHeight()', it fills the component, stretched to its full height with its rows scrolled within it,
  * and otherwise it has the height of its rows, or of the number of visible rows that the centre declares or the user configures, which leaves room for insertion points of the centre.
- * This applies to the embedded centre only, which the component marks with 'inCentreComponent' of 'tg-entity-centre' and 'tg-entity-grid-inspector':
+ * This applies to the embedded centre only, which the component marks with 'isComponent' through the attributes of its loader, as described in 'TgEntityCentreBehavior':
  * the centres in its insertion points, with their selection views and grids, are laid out as anywhere else.
  * The centre focuses its views only when the user selects them, such as by running it or by going back to its selection criteria, and not when it selects them by itself, as when it loads or the component refreshes it,
  * and the masters of its views, such as a chart in an alternative view, do not focus themselves when their entities appear,
@@ -99,13 +99,6 @@ class TgCentreComponent extends mixinBehaviors([TgMasterComponentBehavior, IronR
             },
 
             /**
-             * The embedded centre, once the loader has inserted it.
-             */
-            _centre: {
-                type: Object
-            },
-
-            /**
              * The least height of the component, as a CSS length, which is applied by 'TgMasterComponentBehavior'.
              */
             minHeight: {
@@ -126,6 +119,7 @@ class TgCentreComponent extends mixinBehaviors([TgMasterComponentBehavior, IronR
                 value: function () {
                     return {
                         embedded: true,
+                        isComponent: true,
                         uuid: generateUUID()
                     };
                 }
@@ -136,12 +130,6 @@ class TgCentreComponent extends mixinBehaviors([TgMasterComponentBehavior, IronR
                 value: false
             }
         };
-    }
-
-    static get observers() {
-        return [
-            '_centreChanged(_centre)'
-        ];
     }
 
     ready() {
@@ -177,28 +165,6 @@ class TgCentreComponent extends mixinBehaviors([TgMasterComponentBehavior, IronR
     _sizeChangedAsync() {
         cancelAnimationFrame(this._sizeChangedFrame);
         this._sizeChangedFrame = requestAnimationFrame(() => this.notifyResize());
-    }
-
-    /**
-     * Keeps the embedded centre, which the loader inserts once it is loaded.
-     */
-    _centreLoaded(event) {
-        this._centre = event.detail;
-    }
-
-    /**
-     * Marks the embedded centre and its grid, so that its selection view fills the component, and its grid fills the component if the centre declares 'fitToHeight()',
-     * as described in 'inCentreComponent' of 'tg-entity-centre' and 'tg-entity-grid-inspector'.
-     */
-    _centreChanged(centre) {
-        if (centre && centre.$) {
-            if (centre.$.dom) {
-                centre.$.dom.inCentreComponent = true;
-            }
-            if (centre.$.egi) {
-                centre.$.egi.inCentreComponent = true;
-            }
-        }
     }
 
     _hasCaption(propTitle, _hasPropertyActions) {
