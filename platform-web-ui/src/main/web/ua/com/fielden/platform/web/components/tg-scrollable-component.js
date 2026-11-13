@@ -44,10 +44,29 @@ Polymer({
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
         //Add layout finished in case if this container may slot the tg-flex-layout component.
         this.addEventListener("layout-finished", this._resizeEventListener.bind(this));
+        this.$.content_selector.addEventListener('slotchange', () => this._observeContent());
     },
 
     attached: function () {
         this.async(this._resizeEventListener, 1);
+        // the shadows depend on the height of the content too, which changes without the panel being scrolled or resized, such as when a master component in the content is resized
+        this._contentResizeObserver = new ResizeObserver(() => this._contentScrolled());
+        this._observeContent();
+    },
+
+    detached: function () {
+        this._contentResizeObserver.disconnect();
+        this._contentResizeObserver = null;
+    },
+
+    /**
+     * Observes the size of the elements of the content, including those slotted through the slots of the content, to update the shadows once it changes.
+     */
+    _observeContent: function () {
+        if (this._contentResizeObserver) {
+            this._contentResizeObserver.disconnect();
+            this.$.content_selector.assignedElements({ flatten: true }).forEach(element => this._contentResizeObserver.observe(element));
+        }
     },
 
     _resizeEventListener: function (event, details) {

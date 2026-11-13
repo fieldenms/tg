@@ -104,7 +104,7 @@ final EntityMaster<PmTask> master = new EntityMaster<>(
 builder.register(master);
 ```
 
-**Property editor types:** `.asSinglelineText()`, `.asMultilineText()`, `.asRichText()`, `.asAutocompleter()`, `.asDateTimePicker()/.asDatePicker()/.asTimePicker()`, `.asDecimal()/.asSpinner()/.asMoney()`, `.asCheckbox()`, `.asColour()`, `.asHyperlink()`, `.asCollectionalRepresentor()/.asCollectionalEditor()`, `.asFile()`
+**Property editor types:** `.asSinglelineText()`, `.asMultilineText()`, `.asRichText()`, `.asAutocompleter()`, `.asDateTimePicker()/.asDatePicker()/.asTimePicker()`, `.asDecimal()/.asSpinner()/.asMoney()`, `.asCheckbox()`, `.asColour()`, `.asHyperlink()`, `.asCollectionalRepresentor()/.asCollectionalEditor()`, `.asFile()`, `.asComponent(importPath)` (see *Master Components*)
 
 **Standard actions:** `MasterActions.SAVE` (ctrl+s), `MasterActions.REFRESH` (ctrl+x), `MasterActions.VALIDATE`, `MasterActions.EDIT`, `MasterActions.VIEW`, `MasterActions.DELETE`, `MasterActions.NEW`
 
@@ -144,10 +144,250 @@ final String layout = cell(
 
 All constants (`CELL_LAYOUT`, `MARGIN`, `ROW_LAYOUT`, `PADDING_LAYOUT`, `SUBHEADER_LAYOUT`, `FLEXIBLE_ROW`, `FLEXIBLE_LAYOUT_WITH_PADDING`) live on `LayoutComposer`; `cell(...)` is `LayoutBuilder.cell` (`ua.com.fielden.platform.web.layout.api.impl`).
 
+## Master Components
+
+A simple master can contain read-only web components next to its editors, such as a chart, a map or an embedded centre.
+A component is bound to the fully-fledged entity of the master; it displays data and invokes actions, but does not change property values.
+There are two forms:
+
+- `.addProp(prop).asComponent(importPath)` — a component in place of an editor of the property, which may be dot-notated.
+  It receives the title and description of the property, and its property actions are declared as those of editors.
+- `.addComponent(importPath)` — a component bound to the entity rather than to a property, placed next to the editors.
+  It has no title or description unless declared, and its action has no chosen property.
+
+`importPath` is resolved as `/resources/<importPath>.js`, and the element name defaults to its last segment, such as `tg-map-component` for `gis/tg-map-component`.
+
+```java
+final IMaster<Location> masterConfig = new SimpleMasterBuilder<Location>()
+    .forEntity(Location.class)
+    .addProp(Location_.key()).asSinglelineText().also()
+    .addProp(Location_.desc()).asMultilineText().also()
+    // a map in place of an editor of the GIS information of the location
+    .addProp(Location_.gisInfo()).asComponent("gis/tg-map-component")
+        .withAttr("gis-component-uri", "gis/location/tg-location-gis-master-component")
+        .withAttr("gis-component-name", "LocationGisMasterComponent")
+        .withAttr("labels-toggle", "")
+        .skipBlockingWhenUnsaved()          // the map shows a value of the entity itself, which is consistent while it is unsaved
+        .withAction(editGisInfoAction)      // a property action, as for editors
+        .also()
+    // an embedded centre bound to the entity
+    .addComponent("centre/tg-centre-component")
+        .withTitle("Active Work Orders by Status")
+        .withHeight(300)                    // resizable by the user, and kept at least
+        .withMinHeight(200)
+        .withAttr("mi-type", MiLocationMaster_ActiveWorkOrders.class.getName())
+        .also()
+    .addAction(MasterActions.REFRESH)
+    .addAction(MasterActions.SAVE)
+    .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
+    .done();
+```
+
+### Configuration
+
+The options are declared in this order, and each of them is optional:
+
+| Method | Purpose |
+|---|---|
+| `withTitle(title)` / `withDesc(desc)` | The caption and its tooltip, in place of the title and description of the property for `asComponent`. `withTitle("")` leaves a component without a title, such as a map whose purpose is evident. |
+| `withElementName(name)` | The element name, in place of the last segment of the import path. |
+| `withHeight(px)` | Makes the component resizable with a resizer at its bottom right corner; the component keeps this height, or the height set by the user, at least. The height set by the user is remembered in the browser for the user, the entity type of the master and the component; a double tap on the resizer restores the declared height. |
+| `withMinHeight(px)` | The least height, below which the component is not shrunk or resized; it cannot be greater than the declared height. By default, it is that of the component itself, such as 200 pixels for a map. |
+| `withAttr(name, value)` | An attribute of the element, in dash-case, with a static value or a pass-through binding expression over the master, such as `[[centreUuid]]`. Declaring an attribute again replaces its value. |
+| `withPropAttr(name, prop)` | An attribute bound to the value of a property of the master entity, which may be dot-notated or a metamodel reference; the value follows the entity and is passed as is, such as an entity or a collection. |
+| `skipBlockingWhenUnsaved()` | Keeps the component interactive while the entity is unsaved (see *Blocking*). |
+| `refreshWhen(Condition.class)` | The condition for refreshing the component after a validation of the master entity (see *Refreshing*). |
+| `withAction(config)` / `withMultiAction(config)` | A property action of a component in place of an editor, or the action of a component bound to the entity; in both forms, it is shown where the component places slot `property-action`, such as in its caption or toolbar. |
+
+A component has no height of its own, and fills the height of its layout cell.
+Each component takes a layout cell in the order of declaration, as an editor does.
+In a `FLEXIBLE_ROW` of the master layout, a component grows with the master, and shrinks with the master down to the height that it keeps at least; in a row that takes the height of its content, it has that height.
+
+The element id is `component_4_<property>` for a component in place of an editor, and `component-<n>` for the `n`-th component bound to the entity, counted from `0`.
+
+The configuration is validated as it is declared, except for an element name derived from the import path, which is validated when the master is built, and errors are reported with `EntityMasterConfigurationException`, with messages that are public constants of `AbstractComponentWidget` and `WidgetSelector`:
+
+- the import path must be a path relative to `/resources/` without the `.js` extension, and the element name must be a valid custom element name;
+- the property of `asComponent` and of `withPropAttr` must exist;
+- attribute names must be in lowercase dash-case, and the attributes that the platform renders, such as `id`, `entity`, `prop-title`, `height` and `block-when-unsaved`, cannot be declared;
+- binding expressions must be balanced, heights must be positive, and the height cannot be less than the minimum height;
+- titles, descriptions and attribute values cannot be null or contain a straight single quote, a backtick or `${`, which cannot be rendered, and a refresh condition cannot be null.
+
+### Blocking
+
+A component is visible as soon as the master is loaded, so, unlike a section of a compound master, nothing would prevent interaction with it while the entity is unsaved.
+By default, a component is therefore blocked while the master entity is an instance of a persistent type that is new or has changes that are not yet saved, including edits in progress.
+A pane covers the component with a message to save or cancel the changes, and the component is made `inert`, so that neither the component nor its actions can be interacted with, including through the shortcuts of the actions.
+`skipBlockingWhenUnsaved()` opts out, for components that display values of the master entity itself, or data that depends on them, such as an embedded centre restricted by a property of the entity, which stay consistent with the entity while it is unsaved.
+
+### Refreshing
+
+The master asks its components to refresh whenever it retrieves the entity, as when it is opened or its changes are cancelled, and whenever it saves the entity.
+Between these, a component in place of an editor is refreshed whenever the value of its property changes, whether the user or a definer changed it, while a component bound to the entity is not refreshed.
+`refreshWhen` replaces this with a condition, evaluated on the server after each validation of a change made by the user:
+
+```java
+public class VehicleModelChanged implements IComponentRefreshCondition<Vehicle> {
+    @Override
+    public boolean shouldRefresh(final ComponentRefreshContext<Vehicle> context) {
+        return context.isChanged(Vehicle_.model());
+    }
+}
+```
+
+`ComponentRefreshContext` provides the validated entity, with the changes of the user and the values that definers set in turn, and the properties whose values the user changed since the previous validation, which the dirtiness of properties does not tell.
+The condition is created with the injector, so its dependencies are injected.
+The keys of the components whose conditions hold are returned with the validation result, and the master asks those components to refresh.
+What refreshing does is up to the component, which implements `refresh()` (see *Application components*), such as running an embedded centre again.
+A refresh asked for while the component is blocked takes place once it is unblocked.
+
+A component that blocks while the entity is unsaved is blocked whenever the user has changed a persisted entity, and is unblocked when the changes are saved or cancelled, which refreshes all components anyway.
+So `refreshWhen`, and the refresh of a component in place of an editor on changes of its property, take effect for components declared with `skipBlockingWhenUnsaved()`, such as an embedded centre that follows a property as the user changes it, and in masters of entity types that are not persistent.
+
+### Platform components
+
+**`centre/tg-centre-component`** embeds an entity centre whose query depends on the master entity, usually with `addComponent`.
+
+- It is the most universal component: besides the grid, the centre presents its data in alternative views declared with `addAlternativeView`, such as a chart or a map, and an alternative view made preferred with `makePreferred()` is shown in place of the grid.
+  So it is considered first, before developing an application component.
+- Attribute `mi-type` is the class name of the menu item type of the centre, a `MiWithConfigurationSupport` subclass; the centre is registered with `builder.register(centre)` as any other centre.
+- The context of the centre includes the master entity with its unsaved changes, so a query enhancer with `context().withMasterEntity()` restricts the query by it.
+- The centre runs whenever the component is refreshed, and not while the component is blocked.
+- The centre has its own uuid, so its actions do not refresh the master.
+- The selection view fills the component. The grid has the height that the centre declares: with `fitToHeight()`, it fills the component, stretched to its full height with its rows scrolled within it, and otherwise it has the height of its rows or of its visible rows, which leaves room for insertion points of the centre.
+  A grid that fits to height covers the insertion points at the top, bottom, left or right of its centre, as anywhere else, so a centre with such insertion points does not declare `fitToHeight()`.
+  This applies to the embedded centre only; the centres in its insertion points, with their selection views and grids, are laid out as anywhere else.
+- The views of the centre, such as a chart in an alternative view, follow every change of size of the component, including one by the user.
+- The centre and the masters of its views do not take the focus from the master when they load or refresh, only when the user acts on them.
+- A toolbar without selection criteria suits a centre restricted to the master entity, such as `CentreToolbar.withTopActionsViewSwitchPaginationAndRefresh()`, with `standardEmbeddedScrollingConfig(0)`.
+
+**`gis/tg-map-component`** draws the value of its property, an entity or a collection of entities, with `asComponent`, or the master entity itself with `addComponent`.
+
+- Attribute `gis-component-uri` is the path of the module of the GIS component, relative to `/resources/` and without `.js`, and `gis-component-name` is the name under which the module exports it.
+- The GIS component is a subclass of `MasterGisComponent` (`gis/tg-master-gis-component.js`), with the extension points of `GisComponent`, such as `featureType`, `createGeometry`, `createMarkerFactory` and `createBaseLayers`, so the methods of a centre map for the same entity types can be reused; clustering is declared with `createMarkerClusterGroup`.
+- Boolean attribute `labels-toggle` adds a toggle of the labels of map features to its toolbar, and `zoom` is the zoom for a single point, and the greatest zoom when the map fits several features into view, `14` by default.
+- A Fit to bounds button fits the drawn features into view.
+- The property actions are in the toolbar of the map, and reach the map as `action.mapComponent`, and the GIS component as `action.mapComponent.gisComponent`.
+- The map zooms with its controls and with the mouse wheel with Option (Alt); the mouse wheel alone scrolls the master.
+
+### Application components
+
+An application component is a Polymer element with the client-side contract of `TgMasterComponentBehavior` (`master/tg-master-component-behavior.js`), for data that needs a presentation that an embedded centre with its alternative views does not provide, such as a gauge of a value of the master entity.
+Its module is placed among the web resources of the web UI module of the application, such as `src/main/web/fielden/components/tg-gauge-component.js`, which is served as `/resources/components/tg-gauge-component.js`, and the component is declared in the master by that import path:
+
+```java
+.addProp(Location_.capacityUsage()).asComponent("components/tg-gauge-component")
+    .withHeight(160)
+    .withAttr("max", "100")
+    .skipBlockingWhenUnsaved()          // the gauge shows a value of the entity itself
+    .also()
+```
+
+```js
+import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
+import { TgMasterComponentBehavior } from '/resources/master/tg-master-component-behavior.js';
+
+const template = html`
+    <style>
+        :host {
+            display: flex;
+            flex-direction: column;
+        }
+        #content {
+            flex: 1;
+        }
+        .gauge {
+            height: 24px;
+            background-color: #03a9f4;
+        }
+    </style>
+    <div class="tg-component-title" hidden$="[[!propTitle]]" tooltip-text$="[[propDesc]]">[[propTitle]]</div>
+    <div id="content" tabindex="0">
+        <div class="gauge" style$="[[_gaugeStyle(_value, max)]]"></div>
+    </div>
+    <slot name="property-action"></slot>
+`;
+
+class TgGaugeComponent extends mixinBehaviors([TgMasterComponentBehavior], PolymerElement) {
+
+    static get template() {
+        return template;
+    }
+
+    static get properties() {
+        return {
+            // declared with withAttr("max", "100")
+            max: {
+                type: Number,
+                value: 100
+            },
+            // the default least height, unless declared with withMinHeight
+            minHeight: {
+                type: String,
+                value: '120px'
+            },
+            // the value that the gauge shows, taken from the entity at each refresh
+            _value: {
+                type: Number,
+                value: 0
+            }
+        };
+    }
+
+    // the element at which the component is focused as a whole
+    component() {
+        return this.$.content;
+    }
+
+    // called with the entity in place whenever the master retrieves or saves the entity, and whenever the value of the property changes
+    refresh() {
+        this._value = this.entity.get(this.propertyName) || 0;
+    }
+
+    _gaugeStyle(value, max) {
+        return `width: ${Math.min(100, 100 * value / max)}%;`;
+    }
+}
+
+customElements.define('tg-gauge-component', TgGaugeComponent);
+```
+
+- The behaviour provides `entity`, `propertyName`, `propTitle`, `propDesc` and the index of the property action to show, and adds the resizer, the blocking pane and the common styles to the shadow tree, such as a margin of `8px` above and below, as for editors.
+  Attribute `resizable` is set while the component is resizable, so that the component can keep its content clear of the resizer.
+- A component gives `minHeight` a default value by declaring the property with that value, which `withMinHeight` replaces.
+- The property actions are the children slotted into `property-action`, of which only the action for the entity is shown.
+- The component is focused as a whole at `component()`, the component itself by default, which needs `tabindex="0"`: Tab moves among the editors to it and on, Enter moves into its content, where Tab and Shift+Tab cycle, and Esc moves back; an overlay opened from the content, such as the result list of an autocompleter or the dropdown of a responsive toolbar, consumes the Esc that closes it, so that the next Esc moves back.
+  The element has a focus ring, and the element with class `tg-component-title` looks as the title of a focused editor while the focus is within the component.
+  Without `tabindex`, the focusable elements of the component take part in the focus traversal of the master in their place among the editors.
+  The master focuses a component when it shows the entity, as it focuses an editor: as the preferred input if the component represents the preferred property, as the first input of a new entity, and as the input that the user focused last, unless the component is blocked, as a component of a new persistent entity is by default.
+- `isInMasterComponent(element)`, a function exported by the module of the behaviour, tells whether an element is in the content of a master component, as the centres and masters in it are, so that they do not take the focus by themselves.
+
+#### `refresh()`
+
+`refresh()` loads or presents the data of the component for the master entity; the behaviour implements it as doing nothing.
+
+- The master asks for a refresh with `requestRefresh()` whenever it retrieves or saves the entity, and after each validation for which the `refreshWhen` condition holds, as described in *Refreshing*.
+- A component in place of an editor without `refreshWhen` is also refreshed whenever the value of its property differs from the value for which the component was last refreshed, compared as values of properties are, such as entities by their keys, which the behaviour tracks itself.
+- `refresh()` is called with `entity` in place, and never while the component is blocked: a refresh asked for while the component is blocked takes place once it is unblocked.
+  A component that blocks is blocked whenever the user has changed a persisted entity, so the refreshes after validations and on changes of its property take effect with `skipBlockingWhenUnsaved()`, as for the gauge, or in masters of entity types that are not persistent.
+- It is called at microtask timing, so that refreshes asked for at once, such as when a save also unblocks the component, result in a single call.
+- A component may call `requestRefresh()` itself, such as from a button of its own, to refresh on the same terms.
+- Work for the master entity on the server takes `masterEntityContext()` as its context, which returns the master entity with its unsaved changes, in the form in which the contexts of the master carry it, as for property and entity actions.
+  `tg-centre-component` gives its centre a new function at each refresh, which loads the centre the first time and runs it again afterwards:
+  ```js
+  refresh() {
+      this._getMasterEntity = () => this.masterEntityContext();
+  }
+  ```
+- Binding to `entity` follows every change of the master entity, including each validation of a change made by the user, as `tg-map-component` does, while `refresh()` takes place only at the moments above, which suits work such as a request to the server, or presenting the value of the property of the component, as the gauge does.
+- The values that a component reads from the entity must be fetched with the master entity.
+
 ## Master With Centre
 
 `MasterWithCentreBuilder` embeds an Entity Centre inside a master.
 Typically used for insertion points and special views where a centre needs to appear as a master's content.
+To show a centre next to the editors of a simple master, use component `centre/tg-centre-component` instead (see *Master Components*).
 
 ```java
 final IMaster<OpenAction> masterConfig = new MasterWithCentreBuilder<OpenAction>()

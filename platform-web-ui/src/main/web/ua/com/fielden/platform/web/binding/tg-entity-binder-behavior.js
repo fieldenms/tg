@@ -143,6 +143,13 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
+         * The modified properties holder of the entity as it was last received, which tells the properties that the user changed since then.
+         */
+        _receivedModifiedPropertiesHolder: {
+            type: Object
+        },
+
+        /**
          * Returns true in case where binding entity has modified properties, false otherwise.
          *
          * Please, note that this property recomputes and caches manually strictly when _currBindingEntity and _originalBindingEntity changes (_postEntityReceived method).
@@ -729,6 +736,7 @@ export const TgEntityBinderBehavior = {
                 this._continuations = {};
             }
             const newBindingEntity = this._postEntityReceived(validatedEntity, false, customObject);
+            this._postValidatedDefaultForDescendants(validatedEntity, newBindingEntity, customObject);
             // custom external action
             if (this.postValidated) {
                 this.postValidated(validatedEntity, newBindingEntity, customObject);
@@ -906,6 +914,12 @@ export const TgEntityBinderBehavior = {
     _postRetrievedDefaultForDescendants: function (entity, newBindingEntity, customObject) { },
 
     //////////////////////////////////////// VALIDATION ////////////////////////////////////////
+    /**
+     * This callback is intended to be invoked just before the custom 'postValidated' callback.
+     * Override it in descendants to provide some custom behaviour.
+     */
+    _postValidatedDefaultForDescendants: function (entity, newBindingEntity, customObject) { },
+
     _reset: function (modifiedPropertiesHolder) {
         delete modifiedPropertiesHolder['@modified']; // remove it not to serialise this purely technical property
         return modifiedPropertiesHolder;
@@ -992,6 +1006,23 @@ export const TgEntityBinderBehavior = {
 
     //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
     /**
+     * Returns the index of the property action to show for `key`, a property name or the key of a component bound to the entity, among `propertyActionIndices` of the received entity,
+     * or -1 if there is no index for `key`, in which case no property action is shown.
+     * The key is looked up as a whole, as a binding path would treat a dot-notated property name, such as 'location.gisInfo', as a path.
+     */
+    _propertyActionIndex: function (propertyActionIndices, key) {
+        return propertyActionIndices && typeof propertyActionIndices[key] === 'number' ? propertyActionIndices[key] : -1;
+    },
+
+    /**
+     * Returns the value of property `path` of `entity`, or null if there is no entity yet, for attributes of components that are bound to properties of the entity.
+     * A dot-notated path, such as 'location.gisInfo', is followed through the entities it refers to, as a binding path cannot be used for a property of an entity.
+     */
+    _propertyValue: function (entity, path) {
+        return entity ? entity.get(path) : null;
+    },
+
+    /**
      * Implements the default action to (re)bind freshly received entity. Entity receival is the result of actions Refresh, Validate, Save and Run.
      *
      * @param isRefreshingProcess -- value true indicates that the call happens as part of refresh lifecycle, which requires resetting the state.
@@ -1031,7 +1062,8 @@ export const TgEntityBinderBehavior = {
         self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder, self._currBindingEntity);
         self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity, isEntityStale ? self._originalBindingEntity : null);
 
-        self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
+        self._receivedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+        self._bindingEntityModified = self._hasModified(self._receivedModifiedPropertiesHolder);
         // console.debug('_bindingEntityModified = ', self._bindingEntityModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
         self._bindingEntityNotPersistentOrNotPersistedOrModified = !self._currBindingEntity.type().isPersistent() ||
             !self._currBindingEntity.isPersisted() ||

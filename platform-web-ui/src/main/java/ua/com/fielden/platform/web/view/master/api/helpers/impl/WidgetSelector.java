@@ -15,6 +15,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.checkbox.impl.Checkbo
 import ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl.CollectionalEditorWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl.CollectionalRepresentorWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.colour.impl.ColourWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.ComponentWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl.DecimalWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.hyperlink.impl.HyperlinkWidget;
@@ -26,22 +27,27 @@ import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.S
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
 
 public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelector<T> {
 
-    private static final String ERR_INVALID_AUTOCOMPLETER_TYPE = """
+    public static final String
+        ERR_INVALID_AUTOCOMPLETER_TYPE = """
             Type [%s] cannot be used for autocompletion of property [%s.%s] with type [%s]. \
-            Please use asAutocompleter(entityType), or asAutocompleter() for an entity-typed property.""";
-    private static final String ERR_INVALID_PROPERTY_FOR_AUTOCOMPLETION = """
+            Please use asAutocompleter(entityType), or asAutocompleter() for an entity-typed property.""",
+        ERR_INVALID_PROPERTY_FOR_AUTOCOMPLETION = """
             Property [%s.%s] with type [%s] cannot be used for autocompletion. \
-            Please use asAutocompleter(entityType), or asAutocompleter() for an entity-typed property.""";
-    private static final String ERR_INVALID_DATEPICKER_CHOICE = "Invalid editor choice for property [%s.%s] due to annotation @%s.";
+            Please use asAutocompleter(entityType), or asAutocompleter() for an entity-typed property.""",
+        ERR_INVALID_DATEPICKER_CHOICE = "Invalid editor choice for property [%s.%s] due to annotation @%s.",
+        ERR_COMPONENT_FOR_MISSING_PROPERTY = "Component [%s] cannot represent property [%s.%s], which does not exist.";
 
     public final SimpleMasterBuilder<T> smBuilder;
+    /// The property of the widget, or `null` for a widget that is not bound to a property, such as a component bound to the entity.
     public final String propertyName;
 
     private AbstractWidget widget;
@@ -61,6 +67,15 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
             final SimpleMasterBuilder<T> simpleMaster,
             final String propertyName) {
         this(simpleMaster, propertyName, null);
+    }
+
+    /// Creates a selector for `widget`, which is not bound to a property, such as a component bound to the entity.
+    ///
+    public WidgetSelector(
+            final SimpleMasterBuilder<T> simpleMaster,
+            final AbstractWidget widget) {
+        this(simpleMaster, (String) null, null);
+        this.widget = widget;
     }
 
     @Override
@@ -164,7 +179,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
                     );
             return new DatePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
         }
-        throw new EntityMasterConfigurationException(format(ERR_INVALID_DATEPICKER_CHOICE, propertyName, smBuilder.getEntityType().getSimpleName(), DateOnly.class.getSimpleName()));
+        throw new EntityMasterConfigurationException(format(ERR_INVALID_DATEPICKER_CHOICE, smBuilder.getEntityType().getSimpleName(), propertyName, DateOnly.class.getSimpleName()));
     }
 
     @Override
@@ -180,7 +195,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
                     );
             return new TimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
         }
-        throw new EntityMasterConfigurationException(format(ERR_INVALID_DATEPICKER_CHOICE, propertyName, smBuilder.getEntityType().getSimpleName(), TimeOnly.class.getSimpleName()));
+        throw new EntityMasterConfigurationException(format(ERR_INVALID_DATEPICKER_CHOICE, smBuilder.getEntityType().getSimpleName(), propertyName, TimeOnly.class.getSimpleName()));
     }
 
     @Override
@@ -232,6 +247,15 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
     public IHyperlinkConfig<T> asHyperlink() {
         widget = new HyperlinkWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new HyperlinkConfig<>((HyperlinkWidget) widget, smBuilder);
+    }
+
+    @Override
+    public IComponentConfig<T> asComponent(final CharSequence importPath) {
+        if (!isPropertyPresent(smBuilder.getEntityType(), propertyName)) {
+            throw new EntityMasterConfigurationException(ERR_COMPONENT_FOR_MISSING_PROPERTY.formatted(importPath, smBuilder.getEntityType().getSimpleName(), propertyName));
+        }
+        widget = new ComponentWidget(Objects.toString(importPath, null), TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), smBuilder.getEntityType(), propertyName);
+        return new ComponentConfig<>((ComponentWidget) widget, smBuilder);
     }
 
     public AbstractWidget widget() {

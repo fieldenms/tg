@@ -1,0 +1,630 @@
+import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
+import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
+import '/resources/images/tg-icons.js';
+
+import { addListener } from '/resources/polymer/@polymer/polymer/lib/utils/gestures.js';
+import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
+import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
+import { deepestActiveElement, isInHierarchy, isInFlattenedHierarchy, tearDownEvent, localStorageKey, getRelativePos, getFlattenedParentAnd, isInert, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import { TgReflector } from '/app/tg-reflector.js';
+
+/**
+ * The message of the blocking pane while the master entity is new, as for sections of a compound master.
+ */
+export const MSG_BLOCKED_FOR_NEW_ENTITY = 'A new entity is being created. Please save or cancel your changes.';
+
+/**
+ * The message of the blocking pane while the master entity has changes that are not yet saved, as for leaving a master with such changes.
+ */
+export const MSG_BLOCKED_FOR_UNSAVED_CHANGES = 'Please save or cancel changes.';
+
+/**
+ * Determines whether 'element' is in the content of a master component, as are a centre embedded by 'tg-centre-component' and the masters of its views:
+ * whether any of the ancestors of 'element', from its parent element or the host of its shadow root on in the flattened tree, including the hosts of shadow roots and the slots of slotted elements,
+ * is a master component, which is marked with attribute 'tg-master-component'.
+ * Such centres and masters do not take the focus by themselves, as when they load or the component refreshes them,
+ * so that they do not take it from the master of the component, which focuses its editors and components when it shows the entity, as described in 'TgEntityMasterBehavior'.
+ */
+export const isInMasterComponent = function (element) {
+    return !!getFlattenedParentAnd(element.parentElement || element.getRootNode().host, current => current.hasAttribute('tg-master-component'));
+};
+
+/**
+ * The styles of the spacing of the component, of the resizer, of the blocking pane, and of the title and the outline while the component is focused.
+ * They are the first styles of the component, so that its own styles take precedence; the host becomes a containing block for them only if the component does not position it.
+ * The spacing is that of editors, which have it from `padding: 8px 0` of `paper-input-container`; it is a margin, so that the resizer and the blocking pane cover the component exactly.
+ * The resizer precedes the blocking pane, which covers it while the component is blocked.
+ * While the focus is within the component, the title has the colour and the weight of the title of a focused editor:
+ * `--paper-input-container-focus-color`, which `tg-editor` sets to `--paper-indigo-500`, and `font-weight: 700` of `tg-editor`.
+ * The selector is more specific than that of a class, so that the colour of the title in the styles of the component does not take precedence.
+ * The element at which the component is focused as a whole, which has attribute `tg-component-focus`, has a focus ring of that colour, as the underline of a focused editor is, with the style and the width of the ring of the browser.
+ * The ring is shown whenever the element is focused, as the underline of an editor is, rather than only when the browser would show its own ring, such as when the element is focused from the keyboard but not by a click.
+ */
+const componentStyles = `
+    :host {
+        position: relative;
+        margin: 8px 0;
+    }
+    .tg-component-resizer {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+        cursor: ns-resize;
+        --iron-icon-fill-color: var(--paper-grey-600);
+    }
+    .tg-component-resizer[hidden] {
+        display: none;
+    }
+    .tg-component-blocking-pane {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        padding: 20px;
+        text-align: center;
+        font-size: 18px;
+        color: var(--tg-component-blocking-pane-color, var(--paper-grey-400));
+        background-color: var(--tg-component-blocking-pane-background-color, rgba(255, 255, 255, 0.85));
+    }
+    .tg-component-blocking-pane[hidden] {
+        display: none;
+    }
+    :host(:focus-within) .tg-component-title {
+        color: var(--paper-indigo-500);
+        font-weight: 700;
+    }
+    [tg-component-focus]:focus,
+    :host([tg-component-focus]:focus) {
+        outline: auto 1px var(--paper-indigo-500);
+        /* the focus ring is drawn outside the element, as Chrome otherwise draws part of it inside the element,
+           where positioned content at its edges, such as a map or the views of an embedded centre, would cover it */
+        outline-offset: 1px;
+    }
+`;
+
+/**
+ * The contract of an application-provided web component in an entity master, common to a component in place of an editor (`asComponent` in the Entity Master DSL)
+ * and to a component bound to the entity (`addComponent`).
+ *
+ * The component is read-only and is bound to the fully-fledged entity of the master through `entity`.
+ * It receives the title and description of its property, or those declared for it, if any.
+ *
+ * The property actions of the component are the children of its element in slot `property-action`, rendered by the master.
+ * The component places them with `<slot name="property-action"></slot>` in its template, and this behaviour shows only the action at `propertyActionIndex`,
+ * which the master calculates for the entity, as it does for the property actions of editors.
+ *
+ * While `blockWhenUnsaved` is set and the entity is an instance of a persistent type that is new or has changes that are not yet saved,
+ * the component is `blocked`: a pane covers it with a message to save or cancel the changes, and it is made `inert`, so that neither the component nor its actions can be interacted with.
+ * Changes that are not yet saved are those committed to the master, indicated by `entityModified`, and edits in progress, indicated by `entityEdited`.
+ * `blockWhenUnsaved` may change at run time.
+ *
+ * The component has the vertical spacing of editors, a margin of `8px` above and below, which a component may change in its own styles.
+ * The component has no height of its own, so that it fills the height of its layout cell, and its least height is `minHeight`, which a component may give a default value by declaring the property with that value.
+ * With `height` declared, as a CSS length, the component is resizable, as a rich text editor with a declared height: the user drags the resizer at its bottom right corner to change the height
+ * that the component keeps at least, which is the declared height until then, and double taps the resizer to restore the declared height.
+ * So, in a flexible row of the master layout, the component grows with the master, and shrinks with the master down to the height set by the user,
+ * while in a row laid out to the heights of its content, the component has the height set by the user.
+ * The height set by the user is never less than the visible height of the component, so that every change is seen as it is made:
+ * the resizer shrinks a component in a flexible row only until the component fits the row, and a smaller height can be set once the master is made smaller.
+ * The height set by the user is remembered in the browser under the user, `entityType` and the element id, and takes the place of the declared height.
+ * It is never less than `minHeight`.
+ * The component cannot be resized while it is blocked.
+ *
+ * The component receives the context of the master through `createContextHolder`, and `masterEntityContext()` provides the master entity, including its unsaved changes,
+ * as the context of what the component runs, such as `getMasterEntity` of an embedded centre.
+ *
+ * `entity` follows every change of the master entity, including each validation of a change made by the user, which suits a component that only displays values of the entity.
+ * A component that runs something for the master entity, such as an embedded centre, does so in `refresh()`, which the master asks for by calling `requestRefresh()`:
+ * whenever the master retrieves the entity, as when it is opened or its changes are cancelled, whenever it saves the entity,
+ * and after each validation for which the refresh condition declared for the component with `refreshWhen` in the Entity Master DSL holds.
+ * The master finds its components by attribute `tg-master-component`, which this behaviour sets, as an editor sets `tg-editor`.
+ * A component in place of an editor without a declared condition is also refreshed whenever the value of its property `propertyName` changes, as `refreshOnPropertyChange` indicates,
+ * whether the user or a definer changed it, but not when other properties change; the values are compared as values of properties are, such as entities by their keys.
+ * A refresh asked for while the component is blocked takes place once it is unblocked, and refreshes asked for at once, such as when a save also unblocks the component, take place once.
+ * A component that is blocked while the entity is unsaved is blocked whenever the user has changed a persisted entity, and is unblocked when the changes are saved or cancelled, which refreshes all components anyway,
+ * so the refreshes after validations and on changes of the property take effect for components that skip blocking, and in masters of entity types that are not persistent.
+ *
+ * The component is focused as a whole, as a rich text editor is, at the element returned by `component()`: the component itself by default,
+ * or an element of its shadow tree in which the component presents its content, such as the element of a map component that holds its toolbar and the map, below its title.
+ * The component declares `tabindex` on that element, such as `tabindex="0"` in its template, or on itself, so that the element can be focused, and a click on it focuses it.
+ * The content of the component is within that element in the flattened tree, in which a slotted element is within the slot that it is assigned to:
+ * its shadow tree and its property actions for the component itself, or the elements within an element of its shadow tree, including the elements slotted into it,
+ * such as the toolbar and the controls of a map, with the property actions slotted into the toolbar, or the elements of an embedded centre.
+ * Tab and Shift+Tab move the focus among the editors of the master to that element and on from it, as well as to the focusable elements of the component outside its content,
+ * such as the property actions in the caption of an embedded centre, but not into its content.
+ * Enter moves the focus from that element to the first focusable element of its content, where Tab and Shift+Tab move the focus among the focusable elements of the content only,
+ * going round from the last to the first and from the first to the last, and Esc moves the focus back to that element.
+ * An overlay opened from the content, such as the result list of an autocompleter or the dropdown of a responsive toolbar, consumes the Esc that closes it,
+ * so that the Esc closes only the overlay, and the next Esc moves the focus back.
+ * A click on an element of the content focuses it, as it does an element of a rich text editor.
+ * The master moves the focus over the component, as described in `TgEntityMasterBehavior`, so it knows its first and last focusable elements also when a component comes first or last,
+ * and Tab moves on from the last of them as from the last editor, such as to the title bar of a dialog, rather than out of the master.
+ * When the master shows an entity, it focuses the component as a whole as it does an editor: as the preferred input if the component represents the preferred property,
+ * as the first input of a new entity if the component comes first, and as the input that the user focused last, which the component reports to the master as an editor does, as described in `focusEnabledInputIfAny`.
+ * A component whose element returned by `component()` cannot be focused, such as one without `tabindex`, is not focused as a whole:
+ * its focusable elements, including those of its content, take part in the focus traversal of the master in their place among the editors.
+ * The master skips the component and its elements while it is blocked, as they are inert.
+ * The title of the component, the element with class `tg-component-title` in its template, looks as the title of a focused editor while the focus is within the component:
+ * at the element returned by `component()`, in its content or at a property action.
+ * The element returned by `component()` has a focus ring of the colour of the underline of a focused editor whenever it is focused: from the keyboard, by a click, or by the master as it shows the entity.
+ * The centres and masters in the content of the component, such as an embedded centre and the masters of its views, do not take the focus by themselves, as when they load or the component refreshes them,
+ * but only when the user acts on them, so that they do not take the focus from the master, as `isInMasterComponent` describes.
+ *
+ * The component is a container of selectable elements, as an editor is, so that the master finds its focusable elements, including those of its content,
+ * and searches it for the actions of its shortcuts and for elements with the `canLeave` contract, such as an embedded centre.
+ *
+ * The behaviour is used with `mixinBehaviors([...], PolymerElement)` for a class-based element, or with `behaviors: [...]` for an element declared with `Polymer({...})`.
+ */
+const TgMasterComponentBehaviorImpl = {
+
+    properties: {
+
+        /**
+         * The fully-fledged entity of the master, or `null` while the master is being reset.
+         */
+        entity: {
+            type: Object,
+            value: null
+        },
+
+        /**
+         * The property that a component in place of an editor represents, which may be dot-notated; it is empty for a component bound to the entity.
+         */
+        propertyName: {
+            type: String,
+            value: ''
+        },
+
+        /**
+         * The title of the property that the component represents, or the title declared for a component bound to the entity.
+         */
+        propTitle: {
+            type: String
+        },
+
+        /**
+         * The description of the property that the component represents, or the description declared for a component bound to the entity.
+         */
+        propDesc: {
+            type: String
+        },
+
+        /**
+         * The index of the property action to show; no action is shown for an index out of range.
+         */
+        propertyActionIndex: {
+            type: Number,
+            value: -1,
+            observer: '_propertyActionIndexChanged'
+        },
+
+        /**
+         * The entity type of the master, which is rendered together with `height`.
+         */
+        entityType: {
+            type: String
+        },
+
+        /**
+         * The declared height of the component, as a CSS length, which makes the component resizable, and which the component keeps at least until the user resizes it.
+         */
+        height: {
+            type: String
+        },
+
+        /**
+         * The least height of the component, as a CSS length, below which the user cannot resize it.
+         * It has no observer of its own, so that a component can declare the property with its default value, which replaces this declaration.
+         */
+        minHeight: {
+            type: String
+        },
+
+        /**
+         * Indicates whether the component is resizable, which it is if `height` is declared; the resizer is shown only for a resizable component.
+         * This is the counterpart of `autoResize` of a rich text editor, which is not resizable while its height is the default `100%`.
+         * It is reflected to attribute `resizable` for the component to style itself, such as to keep its content clear of the resizer.
+         */
+        resizable: {
+            type: Boolean,
+            computed: '_isResizable(height)',
+            observer: '_renderResizer',
+            reflectToAttribute: true
+        },
+
+        /**
+         * Indicates whether the component is refreshed whenever the value of its property changes, as a component in place of an editor is without a declared refresh condition.
+         */
+        refreshOnPropertyChange: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
+         * Indicates whether the component is blocked while the entity is unsaved.
+         */
+        blockWhenUnsaved: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
+         * Indicates whether the master has changes that are committed but not yet saved.
+         */
+        entityModified: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
+         * Indicates whether the master has edits in progress.
+         */
+        entityEdited: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
+         * The function of the master that creates the contexts of its property and entity actions,
+         * with arguments `(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber)`.
+         */
+        createContextHolder: {
+            type: Function
+        },
+
+        /**
+         * Indicates whether the component is blocked, which is reflected to attribute `blocked` for the component to style itself.
+         */
+        blocked: {
+            type: Boolean,
+            value: false,
+            readOnly: true,
+            notify: true,
+            reflectToAttribute: true
+        }
+    },
+
+    observers: [
+        '_updateBlocking(blockWhenUnsaved, entity, entityModified, entityEdited)',
+        '_refreshIfRequested(blocked)',
+        '_propertyValueChanged(entity, propertyName, refreshOnPropertyChange, blocked)',
+        '_updateHeight(height, minHeight, entityType)'
+    ],
+
+    created: function () {
+        this._reflector = new TgReflector();
+    },
+
+    ready: function () {
+        this._ensureAttribute('tg-master-component', true);
+        this.addEventListener('keydown', event => this._onMoveFocus(event));
+        this.addEventListener('focusin', event => this._reportFocus(event.composedPath()[0]));
+        this.addEventListener('focusout', event => this._reportFocus(event.relatedTarget));
+        this._propertyActions = [...this.querySelectorAll(':scope > [slot="property-action"]')];
+        this._propertyActions.forEach((action, index) => this._setActionVisible(action, index === this.propertyActionIndex));
+
+        if (this.shadowRoot) {
+            const styles = document.createElement('style');
+            styles.textContent = componentStyles;
+            this.shadowRoot.prepend(styles);
+            this._resizer = this._createResizer();
+            this.shadowRoot.append(this._resizer);
+            this._blockingPane = document.createElement('div');
+            this._blockingPane.className = 'tg-component-blocking-pane';
+            this.shadowRoot.append(this._blockingPane);
+        }
+        // marks the element at which the component is focused as a whole for the styles of its outline
+        const component = this.component();
+        if (component) {
+            component.setAttribute('tg-component-focus', '');
+        }
+        this._renderBlocking();
+        this._renderResizer();
+    },
+
+    /**
+     * Returns the master entity, including its unsaved changes, in the form in which the contexts of the master carry it, as for property and entity actions.
+     */
+    masterEntityContext: function () {
+        return this.createContextHolder(null, null, 'true', null, null)['masterEntity'];
+    },
+
+    /**
+     * Returns the element at which the component is focused as a whole, which is the component itself by default.
+     * A component that presents its content in an element of its shadow tree, such as a map, overrides it to return that element, on which it declares `tabindex`.
+     */
+    component: function () {
+        return this;
+    },
+
+    /**
+     * Returns the element returned by `component()` if it can be focused, as one with `tabindex` `0` can, so that the component is focused as a whole at that element, or `null` otherwise.
+     */
+    _componentToFocus: function () {
+        const component = this.component();
+        return component && component.matches(FOCUSABLE_ELEMENTS_SELECTOR) ? component : null;
+    },
+
+    /**
+     * Reports to the master the input that the user focused, as an editor does with `_updateManuallyFocusedInputWith`, which the master provides:
+     * the element at which the component is focused as a whole, while the focus is at that element or in its content, and none while the focus is elsewhere,
+     * such as at a property action outside that element or out of the component, so that the master focuses the component as a whole again, such as after a save, as described in `TgEntityMasterBehavior`.
+     * The component receives `focusin` and `focusout` as the focus enters or leaves it, or moves between its shadow tree and its property actions, but not as it moves within its shadow tree.
+     */
+    _reportFocus: function (focusedElement) {
+        if (this._updateManuallyFocusedInputWith) {
+            const component = this._componentToFocus();
+            this._updateManuallyFocusedInputWith(component && focusedElement && isInFlattenedHierarchy(component, focusedElement) ? component : null);
+        }
+    },
+
+    /**
+     * Refreshes the component for the master entity, as the master asks; does nothing by default.
+     * A component that runs something for the master entity, such as an embedded centre, implements it.
+     */
+    refresh: function () {
+    },
+
+    /**
+     * Asks the component to refresh, as the master does whenever it retrieves or saves the entity, and after each validation for which the refresh condition of the component holds.
+     */
+    requestRefresh: function () {
+        this._refreshRequested = true;
+        this._refreshIfRequested(this.blocked);
+    },
+
+    /**
+     * Refreshes the component when the master has asked for a refresh that has not taken place yet, unless the component is blocked, which defers the refresh until it is unblocked.
+     * The refresh takes place at microtask timing, so that refreshes asked for at once take place once.
+     */
+    _refreshIfRequested: function (blocked) {
+        if (this._refreshRequested && !blocked) {
+            this._debounceRefresh();
+        }
+    },
+
+    /**
+     * Refreshes the component when the value of its property differs from the value for which it was last refreshed, if it is refreshed whenever the value changes,
+     * unless the component is blocked, which defers the refresh until it is unblocked, as for a refresh asked for by the master.
+     */
+    _propertyValueChanged: function (entity, propertyName, refreshOnPropertyChange, blocked) {
+        if (refreshOnPropertyChange && propertyName && entity && !blocked && !this._reflector.equalsEx(entity.get(propertyName), this._refreshedValue)) {
+            this._debounceRefresh();
+        }
+    },
+
+    /**
+     * Refreshes the component at microtask timing, so that refreshes asked for at once take place once,
+     * marking the request of the master as fulfilled and recording the value of the property for which it is refreshed.
+     * The component is not refreshed if by then it is blocked, or has no entity, as while the master is being reset, and the request of the master stays pending.
+     */
+    _debounceRefresh: function () {
+        this.debounce('tg-master-component-refresh', () => {
+            if (this.entity && !this.blocked) {
+                this._refreshRequested = false;
+                this._refreshedValue = this.propertyName ? this.entity.get(this.propertyName) : undefined;
+                this.refresh();
+            }
+        });
+    },
+
+    /**
+     * Blocks the component while `blockWhenUnsaved` is set and `entity` is an instance of a persistent type that is new or has changes that are not yet saved.
+     */
+    _updateBlocking: function (blockWhenUnsaved, entity, entityModified, entityEdited) {
+        const persistent = !!entity && entity.type().isPersistent();
+        const newEntity = persistent && !entity.isPersisted();
+        this._setBlocked(!!blockWhenUnsaved && persistent && (newEntity || !!entityModified || !!entityEdited));
+        this._blockingMessage = newEntity ? MSG_BLOCKED_FOR_NEW_ENTITY : MSG_BLOCKED_FOR_UNSAVED_CHANGES;
+        this._renderBlocking();
+    },
+
+    /**
+     * Shows the blocking pane and makes the component inert while it is blocked; the pane exists once the component is ready.
+     */
+    _renderBlocking: function () {
+        this.inert = this.blocked;
+        if (this._blockingPane) {
+            this._blockingPane.hidden = !this.blocked;
+            this._blockingPane.textContent = this._blockingMessage || '';
+        }
+    },
+
+    /**
+     * Applies the least height of the component: `minHeight`, and, for a resizable component, the height set by the user, if any, or otherwise the declared height.
+     */
+    _updateHeight: function (height, minHeight, entityType) {
+        this._applyLeastHeight(this._isResizable(height) ? (localStorage.getItem(this._heightKey()) || height) : null);
+    },
+
+    /**
+     * Makes `leastHeight`, a CSS length, the least height of the component, which is never less than `minHeight`; without `leastHeight`, it is just `minHeight`.
+     * The component has no height of its own, so that it fills its layout cell above its least height, such as a flexible row of the master layout.
+     */
+    _applyLeastHeight: function (leastHeight) {
+        this.style.minHeight = leastHeight && this.minHeight ? `max(${this.minHeight}, ${leastHeight})` : (leastHeight || this.minHeight || '');
+    },
+
+    _isResizable: function (height) {
+        return !!height;
+    },
+
+    /**
+     * Shows the resizer while the component is resizable; the resizer exists once the component is ready.
+     */
+    _renderResizer: function () {
+        if (this._resizer) {
+            this._resizer.hidden = !this.resizable;
+        }
+    },
+
+    /**
+     * Creates the resizer, which changes the height of the component as it is dragged, and restores the declared height on a double tap.
+     */
+    _createResizer: function () {
+        const resizer = document.createElement('iron-icon');
+        resizer.className = 'tg-component-resizer';
+        resizer.icon = 'tg-icons:resize-bottom-right';
+        resizer.hidden = true;
+        resizer.setAttribute('tooltip-text', 'Drag to resize<br>Double tap to reset height');
+        addListener(resizer, 'down', event => this._resizeStarted(event));
+        addListener(resizer, 'up', event => this._resizeEnded(event));
+        addListener(resizer, 'track', event => this._resize(event));
+        addListener(resizer, 'tap', TgDoubleTapHandlerBehavior._createDoubleTapHandler.call(this, '_lastResizerTap', () => this._resetHeight()));
+        return resizer;
+    },
+
+    /**
+     * Changes the height that the component keeps at least by the vertical movement of the resizer, and remembers it once the resizer is released.
+     * The component grows or shrinks from its visible height, and its least height is never less than its visible height, so that every change of the least height is seen as it is made:
+     * while the component fills a flexible row, which is higher than the least height, the resizer stops shrinking the component once it fits the row exactly.
+     * The component grows or shrinks further while the resizer is beyond the bottom or the top of the scrolling container, which is scrolled to follow the resizer.
+     */
+    _resize: function (event) {
+        tearDownEvent(event);
+        if (event.detail.state === 'track') {
+            const prevHeight = parseFloat(getComputedStyle(this).height);
+            let newHeight = prevHeight + event.detail.ddy;
+            const scrollContainer = this._scrollingParent();
+            const mousePos = scrollContainer && getRelativePos(event.detail.x, event.detail.y, scrollContainer);
+            const beyondScrollContainer = !!mousePos && (mousePos.y > scrollContainer.offsetHeight || mousePos.y < 0);
+            if (beyondScrollContainer) {
+                newHeight += mousePos.y > 0 ? mousePos.y - scrollContainer.offsetHeight : mousePos.y;
+            }
+            // the resizer stays within the component, so that the component can be resized again; the least height is never less than `minHeight`
+            this._applyLeastHeight(`${Math.max(newHeight, this._resizer.offsetHeight)}px`);
+            // a component that its layout cell keeps higher than the new least height keeps its visible height as the least height
+            const style = getComputedStyle(this);
+            const height = parseFloat(style.height);
+            if (height > parseFloat(style.minHeight)) {
+                this._applyLeastHeight(`${height}px`);
+            }
+            if (beyondScrollContainer) {
+                scrollContainer.scrollTop += height - prevHeight;
+            }
+        } else if (event.detail.state === 'end') {
+            // the least height as applied, which is not less than `minHeight`
+            localStorage.setItem(this._heightKey(), getComputedStyle(this).minHeight);
+        }
+    },
+
+    /**
+     * Restores the declared height as the least height of the component, forgetting the height set by the user.
+     */
+    _resetHeight: function () {
+        localStorage.removeItem(this._heightKey());
+        this._applyLeastHeight(this.height);
+    },
+
+    /**
+     * Shows the resizing cursor everywhere while the resizer is dragged, overriding the cursors of the application, as for a rich text editor.
+     */
+    _resizeStarted: function (event) {
+        tearDownEvent(event);
+        document.styleSheets[0].insertRule('* { cursor: ns-resize !important; }', 0);
+    },
+
+    _resizeEnded: function (event) {
+        tearDownEvent(event);
+        if (document.styleSheets.length > 0 && document.styleSheets[0].cssRules.length > 0) {
+            document.styleSheets[0].deleteRule(0);
+        }
+    },
+
+    /**
+     * Returns the nearest ancestor of the component that scrolls, through the slots and shadow roots on the way.
+     */
+    _scrollingParent: function () {
+        return getFlattenedParentAnd(this, current => current.offsetHeight !== current.scrollHeight);
+    },
+
+    _heightKey: function () {
+        return localStorageKey(`${this.entityType}_${this.id}_height`);
+    },
+
+    /**
+     * Shows the property action at `newIndex` in place of the one at `oldIndex`, and moves focus to it if the previous action was focused.
+     * The property actions exist once the component is ready.
+     */
+    _propertyActionIndexChanged: function (newIndex, oldIndex) {
+        if (!this._propertyActions) {
+            return;
+        }
+        const oldAction = this._propertyActions[oldIndex];
+        const shouldBeFocused = !!oldAction && isInHierarchy(oldAction, deepestActiveElement());
+        if (oldAction) {
+            this._setActionVisible(oldAction, false);
+        }
+        const newAction = this._propertyActions[newIndex];
+        if (newAction) {
+            this._setActionVisible(newAction, true);
+            if (shouldBeFocused && newAction.$ && newAction.$.iActionButton) {
+                newAction.$.iActionButton.focus();
+            }
+        }
+    },
+
+    _setActionVisible: function (action, visible) {
+        if (visible) {
+            action.removeAttribute('hidden');
+        } else {
+            action.setAttribute('hidden', '');
+        }
+    },
+
+    /**
+     * Moves the focus from the keyboard as within a rich text editor, while the component is focused as a whole:
+     * Enter moves it from the element returned by `component()` to the first focusable element of its content,
+     * Tab and Shift+Tab move it among the focusable elements of the content, going round from the last to the first and from the first to the last,
+     * and Esc moves it from the content back to the element returned by `component()`.
+     * The focus is moved among the elements of the content here rather than by the browser, which would move it out of the content from its first and last elements.
+     * From the element returned by `component()`, the master moves the focus, as described in `TgEntityMasterBehavior`.
+     */
+    _onMoveFocus: function (event) {
+        const component = this._componentToFocus();
+        if (!component || event.ctrlKey || event.altKey || event.metaKey) {
+            return;
+        }
+        const focusedElement = deepestActiveElement();
+        if (focusedElement === component) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                const [firstElement] = this._getContentFocusableElements();
+                if (firstElement) {
+                    firstElement.focus();
+                    tearDownEvent(event);
+                }
+            }
+        } else if (isInFlattenedHierarchy(component, focusedElement)) {
+            if (event.key === 'Escape') {
+                component.focus();
+                tearDownEvent(event);
+            } else if (event.key === 'Tab') {
+                const elements = this._getContentFocusableElements();
+                const index = elements.indexOf(focusedElement);
+                if (index >= 0) {
+                    elements[(index + (event.shiftKey ? elements.length - 1 : 1)) % elements.length].focus();
+                    tearDownEvent(event);
+                }
+            }
+        }
+    },
+
+    /**
+     * Returns the focusable elements of the content of the component, which are within the element returned by `component()`, including those slotted into it, in the order of focus traversal.
+     */
+    _getContentFocusableElements: function () {
+        return queryElements(this.component(), FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null && !isInert(element, this));
+    }
+};
+
+export const TgMasterComponentBehavior = [
+    TgElementSelectorBehavior,
+    TgMasterComponentBehaviorImpl
+];

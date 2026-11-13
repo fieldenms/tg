@@ -1056,6 +1056,9 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTapHandlerBehaviour], 
     _resultCanceled (event) {
         this._dataPage = 1;
         if (event.detail.keyCode && event.detail.keyCode === 27) {
+            // the Esc that closes the result list is consumed, as for the dropdowns of 'tg-action-dropdown' and 'tg-responsive-toolbar',
+            // so that it does not reach the elements below the input, such as a master component, which would move the focus out of its content
+            tearDownEvent(event.detail);
             this._focusInput();
         }
     }

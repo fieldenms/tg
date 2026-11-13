@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -12,7 +13,9 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.BarMode;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerLineColour;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerMode;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerRightMargin;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerShowLegend;
+import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerTopMargin;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithLine;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeries;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerWithSeriesColour;
@@ -36,6 +39,9 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     private String title = "";
     private String xAxisTitle = "";
     private String yAxisTitle = "";
+    // the default margins of the chart are used for the margins that are not specified
+    private Optional<Integer> topMargin = Optional.empty();
+    private Optional<Integer> rightMargin = Optional.empty();
 
     public ChartDeck(final Class<? extends AbstractEntity<?>> entityType, final ChartDeckerMasterBuilder<T> chartDeckerMasterBuilder) {
         this.entityType = entityType;
@@ -136,9 +142,29 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     }
 
     @Override
-    public IChartDeckerWithSeries<T> withYAxisTitle(final String title) {
+    public IChartDeckerTopMargin<T> withYAxisTitle(final String title) {
         this.yAxisTitle = title;
         return this;
+    }
+
+    @Override
+    public IChartDeckerRightMargin<T> topMargin(final int px) {
+        this.topMargin = Optional.of(px);
+        return this;
+    }
+
+    @Override
+    public IChartDeckerWithSeries<T> rightMargin(final int px) {
+        this.rightMargin = Optional.of(px);
+        return this;
+    }
+
+    public Optional<Integer> getTopMargin() {
+        return topMargin;
+    }
+
+    public Optional<Integer> getRightMargin() {
+        return rightMargin;
     }
 
     @Override

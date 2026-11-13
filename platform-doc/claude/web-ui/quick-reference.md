@@ -20,7 +20,25 @@ Compound.openNew(OpenAction.class, "add-circle-outline", ENTITY_TITLE, "Add new 
 
 ## Property Editor Types
 
-`.asSinglelineText()`, `.asMultilineText()`, `.asRichText()`, `.asAutocompleter()`, `.asDateTimePicker()` / `.asDatePicker()` / `.asTimePicker()`, `.asDecimal()` / `.asSpinner()` / `.asMoney()`, `.asCheckbox()`, `.asColour()`, `.asHyperlink()`, `.asCollectionalRepresentor()` / `.asCollectionalEditor()`, `.asFile()`
+`.asSinglelineText()`, `.asMultilineText()`, `.asRichText()`, `.asAutocompleter()`, `.asDateTimePicker()` / `.asDatePicker()` / `.asTimePicker()`, `.asDecimal()` / `.asSpinner()` / `.asMoney()`, `.asCheckbox()`, `.asColour()`, `.asHyperlink()`, `.asCollectionalRepresentor()` / `.asCollectionalEditor()`, `.asFile()`, `.asComponent(importPath)`
+
+## Master Components
+
+Read-only web components in a simple master, bound to the fully-fledged entity:
+
+- `.addProp(Entity_.prop()).asComponent(importPath)` — in place of an editor of the property.
+- `.addComponent(importPath)` — bound to the entity rather than to a property, next to the editors.
+- `importPath` resolves to `/resources/<importPath>.js`; the element name defaults to its last segment.
+- Options, each optional, in this order: `withTitle` → `withDesc` → `withElementName` → `withHeight(px)` (makes it resizable) → `withMinHeight(px)` → `withAttr(name, value)` / `withPropAttr(name, prop)` → `skipBlockingWhenUnsaved()` → `refreshWhen(Condition.class)` → `withAction` / `withMultiAction` → `also()`.
+- Blocked by default while the entity is an instance of a persistent type that is new or has unsaved changes.
+- Each component takes a layout cell in the order of declaration, as an editor does; a `FLEXIBLE_ROW` lets it grow with the master.
+- Platform components: `centre/tg-centre-component` (an embedded centre, attribute `mi-type`; its grid fills the component if the centre declares `fitToHeight()`) and `gis/tg-map-component` (a map, attributes `gis-component-uri` and `gis-component-name`).
+- `tg-centre-component` is the most universal: the alternative views of the centre (`addAlternativeView`, `makePreferred()`) present its data as a chart, a map or otherwise, so consider it before developing an application component.
+- Application components: a Polymer element with the client-side contract of `TgMasterComponentBehavior` (`master/tg-master-component-behavior.js`), among the web resources of the application, such as `src/main/web/fielden/components/tg-gauge-component.js` for import path `components/tg-gauge-component`.
+- A component implements `refresh()`, which takes place when the master retrieves or saves the entity, after a validation for which `refreshWhen` holds, and, for `asComponent` without `refreshWhen`, when the value of the property changes; it is called with `entity` in place and never while the component is blocked, and work for the master entity on the server takes `masterEntityContext()` as its context.
+- A blocked component is refreshed once it is unblocked, which a save or a cancel does, so `refreshWhen` and the refresh on changes of the property take effect with `skipBlockingWhenUnsaved()` or for entity types that are not persistent.
+
+See `web-ui/reference.md` § *Master Components*.
 
 ## Layouts
 
@@ -84,3 +102,5 @@ The open token alone does not gate menu-item activation — see *Compound master
 
 **Compound master fetch providers**: Menu item entities receive their key from the root entity's companion fetch provider, not their own.
 Adding a fetch provider to the menu item's own companion has no effect.
+
+**Master component data must be fetched with the master entity**: a component receives the entity of the master as is, so the property it represents, and properties bound with `withPropAttr`, including dot-notated ones such as `location.gisInfo`, must be in the fetch model of the master.

@@ -1,4 +1,4 @@
-import { tearDownEvent, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, getFlattenedParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 
 const isInput = function (element) {
@@ -81,12 +81,17 @@ export const TgShortcutProcessingBehavior = {
 
     /**
      * Returns 'true' if action is enabled for actioning, 'false' otherwise.
+     *
+     * An action is disabled while it is inside an inert element in the flattened tree, in which the browser makes inert the elements within an inert element,
+     * such as a master component blocked while the entity is unsaved;
+     * an inert element stays visible, but a shortcut runs its action directly rather than through user input, which inert elements do not receive.
      */
     _isEnabled: function (actionElement, elementTag) {
+        const inert = !!getFlattenedParentAnd(actionElement, element => element.inert);
         if (elementTag === 'paper-button' || elementTag === 'paper-icon-button' || elementTag === 'tg-action') {
-            return window.getComputedStyle(actionElement)['pointer-events'] !== 'none';
+            return !inert && window.getComputedStyle(actionElement)['pointer-events'] !== 'none';
         } else if (elementTag === 'tg-ui-action') {
-            return !actionElement.isActionInProgress;
+            return !inert && !actionElement.isActionInProgress;
         } else {
             throw 'Unsupported shortcut action tag ' + elementTag;
         }
