@@ -514,7 +514,7 @@ Use it where a request needs a value that no property holds: to compare two prop
 
 Each calculated property is defined by an expression over the properties of the type, in TG's expression language.
 An expression may follow property paths, such as `model.make.key`, and may use arithmetic, comparisons, `CASE WHEN condition THEN value ELSE value END`, and functions such as `UPPER`, `LOWER`, `YEAR`, `MONTH` and `DAY`.
-An expression may refer to properties added before it, and only to properties that the current user may read.
+An expression may refer to the other added properties, including those added in the same call, and only to properties that the current user may read.
 
 For example, to find work orders whose actual cost exceeds their estimated cost, extend `WorkOrder` with `costExcess` defined as `actualCost - estimatedCost`, which tool `enhance_entity_type` accepts as:
 
@@ -540,7 +540,8 @@ An enhanced entity type `E` is queried like any other entity type, through root 
 It has every property of its base type and the added ones, and `_entityType.baseType` describes it.
 Calling the tool again with the same `name` and without `baseType` adds or removes properties.
 To change the expression of a property, remove the property in one call and add it in another.
-Enhanced entity types last until the server restarts.
+Enhanced entity types are stored, so they remain available after the server restarts.
+An enhanced entity type cannot be queried while any of its properties is invalid, e.g., because the domain no longer has a property that its expression refers to; removing that property makes it available again.
 
 ## Batching Queries
 

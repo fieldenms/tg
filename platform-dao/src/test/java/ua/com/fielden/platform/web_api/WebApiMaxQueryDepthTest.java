@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web_api;
 
 import org.junit.Test;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
@@ -44,6 +45,8 @@ public class WebApiMaxQueryDepthTest extends AbstractDaoTestCase {
                     common),
             common,
             getInstance(EntityTypeEnhancer.class),
+            getInstance(ICompanionObjectFinder.class),
+            () -> getInstance(TransactionalExecution.class),
             getInstance(IUserProvider.class));
     }
 

@@ -7,13 +7,14 @@ import java.util.Map;
 
 /// An entity type defined at runtime, which extends a domain type with calculated properties.
 ///
-/// Its Java type is a subclass of the base type, generated and named as all types with calculated properties added at runtime are.
+/// Its Java type is a subclass of the base type, generated and named as all types with calculated properties added at runtime are,
+/// or the base type itself if there are no added properties.
 /// The Web API exposes it under `name` instead.
 ///
 /// @param name        the name of this type in the Web API
 /// @param baseType    the domain type that this type extends
-/// @param properties  expressions of the added calculated properties by property name, in order of addition
-/// @param type        the generated Java type
+/// @param properties  expressions of the added calculated properties by property name
+/// @param type        the Java type
 ///
 public record EnhancedEntityType(
         String name,

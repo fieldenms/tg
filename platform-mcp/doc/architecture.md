@@ -80,13 +80,20 @@ A request that breaks a rule is a tool error (`isError`) whose message names the
 - An enhanced entity type is exposed exactly as a domain type is: an object type `E` with root field `e`, `E_Agg` with `e_agg`, and condition types `E_Cond` and `E_Cond_cond`.
   It has all the fields of its base type and the added properties, and `_entityType` describes it.
   It is not reachable through properties of other types, which keep their domain types.
-- Enhanced entity types belong to the user that the request runs as, and are held in memory until the server restarts.
+- Enhanced entity types belong to the user that the request runs as.
   As every MCP request runs as `mcp.user`, all MCP clients share one set of enhanced entity types.
+- Enhanced entity types are stored as `UserDefinedEnhancedEntityType` records, with a `UserDefinedCalculatedProperty` record for each property, so they survive a restart.
 - The tool delegates to `IWebApi.enhanceEntityType()`.
-  `GraphQLService` holds each user's enhanced entity types together with a schema built from the domain types and those enhanced entity types.
-  It processes one request of a user at a time and replaces the user's entry only on success, so a request either takes full effect or none.
-- `EntityTypeEnhancer` validates a request and generates the Java type of an enhanced entity type: a subclass of the base type, generated and named as all types with calculated properties added at runtime are.
-  The name of that class is unrelated to the name of the enhanced entity type, so the Web API keeps the mapping between them.
+  `GraphQLService` instantiates each user's enhanced entity types when that user first needs them, and holds them in memory together with a schema built from the domain types and those enhanced entity types.
+  An enhanced entity type that cannot be instantiated, or whose registration in the schema causes an error, is left out of that schema.
+  If the error cannot be attributed to a specific enhanced entity type, all of them are left out.
+  `GraphQLService` processes one request of a user at a time.
+  It stores the changes and builds the new schema in one transaction, and replaces the user's entry only once the transaction commits, so a request either takes full effect or none.
+- `EntityTypeEnhancer` validates a request and stores it.
+  As `IEntityTypeEnhancement.javaTypeFor()`, it instantiates an enhanced entity type from its records: it validates all properties, and generates a subclass of the base type, named as all types with calculated properties added at runtime are.
+  A property is generated after the properties that its expression refers to, which `EntityTypeEnhancer` finds by tokenising the expression.
+  An enhanced entity type without properties uses its base type as its Java type.
+  The name of the Java type is unrelated to the name of the enhanced entity type, so the Web API keeps the mapping between them.
 
 ## Domain Meta-Schema
 
@@ -97,7 +104,7 @@ The domain model is described to a language model through the GraphQL schema its
 
 The name "meta-schema" says what `_entityType` conveys, not what it is.
 The GraphQL schema is a schema: `GraphQLService` builds it at startup, and every request is validated and executed against that structure.
-A user who defines [enhanced entity types](#enhance_entity_type) gets a schema of their own, rebuilt with each such definition, but it too is fixed before the requests that use it arrive.
+A user with [enhanced entity types](#enhance_entity_type) gets a schema of their own, built when they are instantiated and rebuilt with each definition, but it too is fixed before the requests that use it arrive.
 `_entityType` is an ordinary root field returning ordinary data, computed by its fetchers on each request.
 
 The two therefore live at different stages, and that is the governing distinction between them.
@@ -260,6 +267,7 @@ The simple name of its generated Java type matches no token, so `FieldVisibility
 
 The expression of a calculated property added to an enhanced entity type may refer only to properties that the user can read.
 `EntityTypeEnhancer` checks every element of every property path in the expression with `FieldVisibility.visibilityPredicate`, so a property that a user could not select cannot be read through an expression either.
+It does so whenever it instantiates an enhanced entity type, so an enhanced entity type that refers to properties the user can no longer read becomes unavailable.
 Unions included: an expression is checked as a condition is, which applies `visibilityPredicate` to union members too.
 
 ### Visibility Rules and Where They Are Encoded

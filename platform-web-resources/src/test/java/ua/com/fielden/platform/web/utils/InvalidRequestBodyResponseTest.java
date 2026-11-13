@@ -103,7 +103,7 @@ public class InvalidRequestBodyResponseTest {
                     }
                     @Override public Enhancement enhanceEntityType(String name, String baseType, List<PropertyDefinition> addProperties, List<String> removeProperties) { throw new UnsupportedOperationException(); }
                     @Override public Optional<EnhancedEntityType> findEnhancedEntityType(CharSequence name) { return Optional.empty(); }
-                    @Override public void discardEnhancedEntityTypes() {}
+                    @Override public void evictUserEnhancedEntityTypes() {}
                 },
                 AUTHORISED, restUtil, new ThreadLocalDeviceProvider(), null, null, request, response);
         representations.add(resource.query(request.getEntity()));

@@ -217,7 +217,7 @@ public class TgMcpServer {
 
                              Each added property is defined by an expression in TG's expression language over the properties of the entity type, such as `2 * price` or `actualCost - estimatedCost`.
                              See section "Enhanced Entity Types" of resource %s.
-                             An expression may refer to properties added before it, and only to properties that the current user may read.
+                             An expression may refer to the other added properties, including those added in the same call, and only to properties that the current user may read.
                              Properties of the base type can be neither added nor removed.
                              To change the expression of a property, remove the property in one call and add it in another.
 
@@ -308,11 +308,12 @@ public class TgMcpServer {
         final Enhancement enhancement;
         try {
             enhancement = webApi.enhanceEntityType(name, baseType, addProperties.get(), removeProperties.stream().map(String.class::cast).toList());
-        } catch (final WebApiException ex) {
-            return errorResult(ex.getMessage());
         } catch (final Exception ex) {
             LOGGER.error(() -> "Error enhancing entity type [%s].".formatted(name), ex);
-            return errorResult("Error enhancing entity type [%s]: %s".formatted(name, ex.getMessage()));
+            return switch (ex) {
+                case WebApiException _ -> errorResult(ex.getMessage());
+                default -> errorResult("Error enhancing entity type [%s]: %s".formatted(name, ex.getMessage()));
+            };
         }
 
         final var entityType = enhancement.entityType();
@@ -321,7 +322,7 @@ public class TgMcpServer {
                         baseType == null ? "Changed" : "Created",
                         entityType.name(),
                         entityType.baseType().getSimpleName(),
-                        String.join(", ", entityType.properties().keySet()),
+                        entityType.properties().keySet().stream().sorted().collect(joining(", ")),
                         common.rootFieldName(entityType.webApiEntityType()),
                         common.rootFieldNameForAggEntity(entityType.webApiEntityType()))),
                 enhancement.warnings().stream().map(warning -> "Warning: " + warning))

@@ -2,10 +2,21 @@ package ua.com.fielden.platform.web_api;
 
 import org.junit.After;
 import org.junit.Test;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.persistent.TgVehicleModel_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgVehicleModel_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgVehicle_CanRead_model_Token;
@@ -14,8 +25,10 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web_api.IWebApi.Enhancement;
 import ua.com.fielden.platform.web_api.IWebApi.PropertyDefinition;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
@@ -25,16 +38,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ua.com.fielden.platform.utils.CollectionUtil.append;
 import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 import static ua.com.fielden.platform.web_api.EntityTypeEnhancer.*;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
+import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeBaseTypeValidator.ERR_NO_SUCH_DOMAIN_TYPE;
+import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeNameValidator.ERR_NAME_OF_DOMAIN_TYPE;
+import static ua.com.fielden.platform.web_api.validators.UserDefinedCalculatedPropertyNameValidator.ERR_PROPERTY_OF_BASE_TYPE;
 
 /// Tests for enhanced entity types, defined with [IWebApi#enhanceEntityType].
 ///
-/// Each test that expects a request to be rejected also asserts that the rejected request changed nothing.
+/// Each test that expects a request to be rejected also asserts that the rejected request changed nothing, neither in memory nor in the database.
 ///
 public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
 
@@ -43,9 +60,9 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
     private final IWebApi webApi = getInstance(IWebApi.class);
 
     @After
-    public void discardEnhancedEntityTypes() {
-        webApi.discardEnhancedEntityTypes();
-        runAs(OTHER_USER, webApi::discardEnhancedEntityTypes);
+    public void evictEnhancedEntityTypes() {
+        webApi.evictUserEnhancedEntityTypes();
+        runAs(OTHER_USER, webApi::evictUserEnhancedEntityTypes);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -166,10 +183,21 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void an_added_property_may_refer_to_properties_that_follow_it_in_the_same_request() {
+        enhance("MyVehicle", "TgVehicle", props("a", "z + 1", "z", "2 * 3"));
+
+        assertThat(execute("{myVehicle {key(order: ASC_1) a z}}"))
+                .isEqualTo(result(Map.of("myVehicle", List.of(
+                        Map.of("key", "CAR1", "a", 7, "z", 6),
+                        Map.of("key", "CAR2", "a", 7, "z", 6)))));
+    }
+
+    @Test
     public void an_enhanced_entity_type_without_added_properties_is_a_copy_of_its_base_type() {
         final var enhancement = enhance("MyVehicle", "TgVehicle", props());
 
         assertThat(enhancement.entityType().properties()).isEmpty();
+        assertThat(enhancement.entityType().type()).isEqualTo(TgVehicle.class);
         assertThat(fieldNames("MyVehicle")).isEqualTo(fieldNames("TgVehicle"));
         assertThat(execute("{myVehicle {key(order: ASC_1)}}"))
                 .isEqualTo(result(Map.of("myVehicle", List.of(Map.of("key", "CAR1"), Map.of("key", "CAR2")))));
@@ -201,13 +229,217 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         assertThat(fieldNames("YourVehicle")).contains("yourNumber").doesNotContain("myNumber");
     }
 
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Storage and instantiation
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
     @Test
-    public void discarding_enhanced_entity_types_removes_them_from_the_schema() {
+    public void an_enhanced_entity_type_is_stored_with_its_properties() {
+        enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3", "otherNumber", "4"));
+
+        final var entityType = co(UserDefinedEnhancedEntityType.class).findByKeyAndFetch(UserDefinedEnhancedEntityTypeCo.FETCH_PROVIDER.fetchModel(), "MyVehicle", getUser());
+        assertThat(entityType.getBaseType()).isEqualTo(TgVehicle.class.getName());
+        assertThat(storedProperties("MyVehicle")).isEqualTo(Map.of("myNumber", "2 * 3", "otherNumber", "4"));
+
+        enhance("MyVehicle", null, props("thirdNumber", "5"), List.of("myNumber"));
+        assertThat(storedProperties("MyVehicle")).isEqualTo(Map.of("otherNumber", "4", "thirdNumber", "5"));
+    }
+
+    @Test
+    public void an_evicted_enhanced_entity_type_is_instantiated_from_the_database_when_next_needed() {
+        final var enhancedType = enhance("MyVehicle", "TgVehicle", props("a", "2 * 3", "b", "a + 1", "c", "z * 10", "z", "b * 2")).entityType();
+        webApi.evictUserEnhancedEntityTypes();
+
+        final var restoredType = webApi.findEnhancedEntityType("MyVehicle").orElseThrow();
+        assertThat(restoredType.baseType()).isEqualTo(TgVehicle.class);
+        assertThat(restoredType.properties()).isEqualTo(enhancedType.properties());
+        assertThat(execute("{myVehicle {key(order: ASC_1) a b c z}}"))
+                .isEqualTo(result(Map.of("myVehicle", List.of(
+                        Map.of("key", "CAR1", "a", 6, "b", 7, "c", 140, "z", 14),
+                        Map.of("key", "CAR2", "a", 6, "b", 7, "c", 140, "z", 14)))));
+    }
+
+    @Test
+    public void an_enhanced_entity_type_that_cannot_be_instantiated_is_left_out_of_the_schema_until_repaired() {
         enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
-        webApi.discardEnhancedEntityTypes();
+        enhance("YourVehicle", "TgVehicle", props("yourNumber", "4"));
+        // A property that has become invalid, e.g., because the domain property it refers to has been removed.
+        save(new_composite(UserDefinedCalculatedProperty.class, storedEntityType("MyVehicle"), "badNumber").setExpression("2 * noSuchProp"));
+        webApi.evictUserEnhancedEntityTypes();
 
         assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
-        assertTypeIsAbsent("MyVehicle");
+        assertValidationError("{myVehicle {key}}", "Field 'myVehicle' in type 'Query' is undefined");
+        assertThat(webApi.findEnhancedEntityType("YourVehicle")).isPresent();
+        assertThat(fieldNames("YourVehicle")).contains("yourNumber");
+
+        // A request that does not repair the entity type fails.
+        assertThatThrownBy(() -> enhance("MyVehicle", null, props("otherNumber", "4")))
+                .isInstanceOf(WebApiException.class)
+                .hasMessage(ERR_PROPERTY_CANNOT_BE_ADDED.formatted("badNumber"));
+        assertThat(storedProperties("MyVehicle")).isEqualTo(Map.of("myNumber", "2 * 3", "badNumber", "2 * noSuchProp"));
+
+        // A request that repairs the entity type succeeds.
+        enhance("MyVehicle", null, props(), List.of("badNumber"));
+        assertThat(execute("{myVehicle {key(order: ASC_1) myNumber}}"))
+                .isEqualTo(result(Map.of("myVehicle", List.of(Map.of("key", "CAR1", "myNumber", 6), Map.of("key", "CAR2", "myNumber", 6)))));
+    }
+
+    @Test
+    public void an_enhanced_entity_type_whose_instantiation_fails_with_an_error_other_than_a_validation_failure_is_left_out_of_the_schema_until_repaired() {
+        enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
+        enhance("YourVehicle", "TgVehicle", props("yourNumber", "4"));
+        // A property that refers to a property that is not persistent, e.g., because it has ceased to be.
+        // Such a property can be generated, but its expression cannot be transformed into EQL.
+        save(new_composite(UserDefinedCalculatedProperty.class, storedEntityType("MyVehicle"), "badNumber").setExpression("2 * maxReading.reading"));
+        assertThatThrownBy(() -> getInstance(IEntityTypeEnhancement.class).javaTypeFor(storedEntityType("MyVehicle")))
+                .isNotInstanceOf(WebApiException.class);
+        webApi.evictUserEnhancedEntityTypes();
+
+        assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
+        assertValidationError("{myVehicle {key}}", "Field 'myVehicle' in type 'Query' is undefined");
+        assertThat(fieldNames("YourVehicle")).contains("yourNumber");
+
+        // A request that repairs the entity type succeeds.
+        enhance("MyVehicle", null, props(), List.of("badNumber"));
+        assertThat(execute("{myVehicle {key(order: ASC_1) myNumber}}"))
+                .isEqualTo(result(Map.of("myVehicle", List.of(Map.of("key", "CAR1", "myNumber", 6), Map.of("key", "CAR2", "myNumber", 6)))));
+    }
+
+    @Test
+    public void an_enhanced_entity_type_whose_registration_in_the_schema_causes_an_error_is_left_out_of_the_schema() {
+        enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
+        final var aggFieldNames = fieldNames("TgVehicle_Agg");
+        // An entity type named as the aggregation type of a domain type, e.g., because the domain type was added after the entity type had been created.
+        save(new_composite(UserDefinedEnhancedEntityType.class, "TgVehicle_Agg", getUser()).setBaseType(TgVehicle.class.getName()));
+        assertThat(getInstance(IEntityTypeEnhancement.class).javaTypeFor(storedEntityType("TgVehicle_Agg")).type()).isEqualTo(TgVehicle.class);
+        webApi.evictUserEnhancedEntityTypes();
+
+        assertThat(webApi.findEnhancedEntityType("TgVehicle_Agg")).isEmpty();
+        assertThat(fieldNames("TgVehicle_Agg")).isEqualTo(aggFieldNames);
+        assertThat(execute("{myVehicle {key(order: ASC_1) myNumber}}"))
+                .isEqualTo(result(Map.of("myVehicle", List.of(Map.of("key", "CAR1", "myNumber", 6), Map.of("key", "CAR2", "myNumber", 6)))));
+    }
+
+    @Test
+    public void all_enhanced_entity_types_are_left_out_of_the_schema_if_the_error_of_registering_them_cannot_be_attributed_to_one_of_them() {
+        enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
+        enhance("X", "TgVehicle", props());
+        // An entity type named as the aggregation type of X, which can be registered without X, but not with it.
+        save(new_composite(UserDefinedEnhancedEntityType.class, "X_Agg", getUser()).setBaseType(TgVehicle.class.getName()));
+        webApi.evictUserEnhancedEntityTypes();
+
+        for (final var name : List.of("MyVehicle", "X", "X_Agg")) {
+            assertThat(webApi.findEnhancedEntityType(name)).as("Entity type [%s] is left out.", name).isEmpty();
+        }
+        assertValidationError("{myVehicle {key}}", "Field 'myVehicle' in type 'Query' is undefined");
+        assertThat(errors(execute("{tgVehicle {key}}"))).isEmpty();
+
+        // A positive control: once the conflict is removed, all entity types are registered.
+        save(co$(UserDefinedEnhancedEntityType.class).findByKeyAndFetch(UserDefinedEnhancedEntityTypeCo.FETCH_PROVIDER.fetchModel(), "X", getUser()).setName("Y"));
+        webApi.evictUserEnhancedEntityTypes();
+        for (final var name : List.of("MyVehicle", "Y", "X_Agg")) {
+            assertThat(webApi.findEnhancedEntityType(name)).as("Entity type [%s] is registered.", name).isPresent();
+        }
+    }
+
+    @Test
+    public void an_enhanced_entity_type_with_properties_that_the_user_can_no_longer_read_cannot_be_instantiated() {
+        enhance("MyVehicle", "TgVehicle", props("doublePrice", "2 * price.amount"));
+        webApi.evictUserEnhancedEntityTypes();
+
+        runWithoutToken(TgVehicle_CanRead_price_Token.class, () -> {
+            assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
+            assertRejected(() -> enhance("MyVehicle", null, props("myNumber", "2 * 3")), ERR_UNAUTHORISED_ACCESS.formatted("doublePrice", "price"));
+            webApi.evictUserEnhancedEntityTypes();
+        });
+        // A positive control: the entity type is instantiated when the token is held.
+        assertThat(webApi.findEnhancedEntityType("MyVehicle")).isPresent();
+    }
+
+    @Test
+    public void the_Java_type_of_a_stored_enhanced_entity_type_is_generated_from_its_records() {
+        enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
+        enhance("EmptyVehicle", "TgVehicle", props());
+        final var enhancement = getInstance(IEntityTypeEnhancement.class);
+
+        final var myVehicle = enhancement.javaTypeFor(storedEntityType("MyVehicle"));
+        assertThat(myVehicle.name()).isEqualTo("MyVehicle");
+        assertThat(myVehicle.baseType()).isEqualTo(TgVehicle.class);
+        assertThat(myVehicle.properties()).isEqualTo(Map.of("myNumber", "2 * 3"));
+        assertThat(myVehicle.type()).isNotEqualTo(TgVehicle.class);
+        assertThat(TgVehicle.class).isAssignableFrom(myVehicle.type());
+
+        final var emptyVehicle = enhancement.javaTypeFor(storedEntityType("EmptyVehicle"));
+        assertThat(emptyVehicle.properties()).isEmpty();
+        assertThat(emptyVehicle.type()).isEqualTo(TgVehicle.class);
+    }
+
+    @Test
+    public void an_enhanced_entity_type_of_another_user_cannot_be_instantiated() {
+        enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
+        final var entityType = storedEntityType("MyVehicle");
+        final var owner = getUser();
+
+        runAs(OTHER_USER, () -> assertRejected(() -> getInstance(IEntityTypeEnhancement.class).javaTypeFor(entityType),
+                                               ERR_ENTITY_TYPE_OF_ANOTHER_USER.formatted("MyVehicle", owner, OTHER_USER)));
+    }
+
+    @Test
+    public void a_stored_enhanced_entity_type_is_validated_when_instantiated() {
+        enhance("MyVehicle", "TgVehicle", props());
+        final var enhancement = getInstance(IEntityTypeEnhancement.class);
+
+        // Stored values that have become invalid, e.g., because the domain has changed, are simulated by changing uninstrumented instances,
+        // whose setters do not validate.
+        final var namedAsDomainType = storedEntityType("MyVehicle").setName("EntityNewAction");
+        assertThatThrownBy(() -> enhancement.javaTypeFor(namedAsDomainType))
+                .isInstanceOf(Result.class)
+                .hasMessage(ERR_NAME_OF_DOMAIN_TYPE.formatted("EntityNewAction", EntityNewAction.class.getName()));
+
+        final var withoutBaseType = storedEntityType("MyVehicle").setBaseType("no.such.Type");
+        assertRejected(() -> enhancement.javaTypeFor(withoutBaseType), ERR_NO_SUCH_DOMAIN_TYPE.formatted("no.such.Type"));
+    }
+
+    @Test
+    public void an_enhanced_entity_type_that_is_not_persisted_cannot_be_instantiated() {
+        final var notPersisted = new_composite(UserDefinedEnhancedEntityType.class, "MyVehicle", getUser()).setBaseType(TgVehicle.class.getName());
+        assertThatThrownBy(() -> getInstance(IEntityTypeEnhancement.class).javaTypeFor(notPersisted))
+                .isInstanceOf(InvalidArgumentException.class)
+                .hasMessage("[instance] must be persisted.");
+    }
+
+    @Test
+    public void the_name_of_a_new_enhanced_entity_type_cannot_be_that_of_a_domain_entity_type_outside_the_schema() {
+        assertThatThrownBy(() -> enhance("EntityNewAction", "TgVehicle", props("myNumber", "2 * 3", "otherNumber", "3 * 4"), List.of("noSuchProp")))
+                .isInstanceOf(WebApiException.class)
+                .hasMessage(ERR_ENHANCEMENT_FAILED.formatted("EntityNewAction", "myNumber, otherNumber", "noSuchProp")
+                            + " " + ERR_NAME_OF_DOMAIN_TYPE.formatted("EntityNewAction", EntityNewAction.class.getName()))
+                .hasCauseInstanceOf(Result.class);
+        assertNotDefined("EntityNewAction");
+    }
+
+    @Test
+    public void the_reason_of_a_failure_other_than_a_validation_failure_is_not_reported() {
+        final var failure = new IllegalStateException("Server-side detail.");
+        final var enhancer = new EntityTypeEnhancer(getInstance(IApplicationDomainProvider.class),
+                                                    getInstance(GraphQLCommon.class),
+                                                    getInstance(EntityFactory.class),
+                                                    getInstance(ICompanionObjectFinder.class),
+                                                    getInstance(EqlQueryTransformer.class),
+                                                    getInstance(IDomainMetadata.class),
+                                                    getInstance(IAuthorisationModel.class),
+                                                    getInstance(ISecurityTokenProvider.class),
+                                                    new ThreadLocalUserProvider() {
+                                                        @Override
+                                                        public User getUser() {
+                                                            throw failure;
+                                                        }
+                                                    });
+        // The schema is not needed, as the user is obtained first.
+        assertThatThrownBy(() -> enhancer.enhance(null, "MyVehicle", "TgVehicle", props("myNumber", "2 * 3"), List.of("noSuchProp")))
+                .isInstanceOf(WebApiException.class)
+                .hasMessage(ERR_ENHANCEMENT_FAILED.formatted("MyVehicle", "myNumber", "noSuchProp"))
+                .hasCause(failure);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -269,7 +501,7 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         final var existing = enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3")).entityType();
 
         assertRejected(() -> enhance("MyVehicle", "TgVehicle", props("otherNumber", "4")), ERR_BASE_TYPE_OF_EXISTING_TYPE.formatted("MyVehicle"));
-        assertThat(webApi.findEnhancedEntityType("MyVehicle")).contains(existing);
+        assertUnchanged(existing);
     }
 
     @Test
@@ -321,12 +553,14 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
 
     @Test
     public void a_property_of_the_base_type_cannot_be_added() {
-        assertRejected(() -> enhance("MyVehicle", "TgVehicle", props("price", "2 * 3")), ERR_ADDED_PROPERTY_OF_BASE_TYPE.formatted("price", "TgVehicle"));
+        assertRejected(() -> enhance("MyVehicle", "TgVehicle", props("price", "2 * 3")),
+                       ERR_ENHANCEMENT_FAILED.formatted("MyVehicle", "price", "") + " " + ERR_PROPERTY_OF_BASE_TYPE.formatted("price", "TgVehicle"));
         assertNotDefined("MyVehicle");
 
         final var existing = enhance("MyVehicle", "TgVehicle", props()).entityType();
-        assertRejected(() -> enhance("MyVehicle", null, props("key", "2 * 3")), ERR_ADDED_PROPERTY_OF_BASE_TYPE.formatted("key", "TgVehicle"));
-        assertThat(webApi.findEnhancedEntityType("MyVehicle")).contains(existing);
+        assertRejected(() -> enhance("MyVehicle", null, props("key", "2 * 3")),
+                       ERR_ENHANCEMENT_FAILED.formatted("MyVehicle", "key", "") + " " + ERR_PROPERTY_OF_BASE_TYPE.formatted("key", "TgVehicle"));
+        assertUnchanged(existing);
     }
 
     @Test
@@ -334,7 +568,7 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         final var existing = enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3")).entityType();
 
         assertRejected(() -> enhance("MyVehicle", null, props("myNumber", "4")), ERR_ADDED_PROPERTY_EXISTS.formatted("myNumber", "MyVehicle"));
-        assertThat(webApi.findEnhancedEntityType("MyVehicle")).contains(existing);
+        assertUnchanged(existing);
     }
 
     @Test
@@ -342,7 +576,7 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         final var existing = enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3")).entityType();
 
         assertRejected(() -> enhance("MyVehicle", null, props(), List.of("price")), ERR_REMOVED_PROPERTY_OF_BASE_TYPE.formatted("price", "TgVehicle"));
-        assertThat(webApi.findEnhancedEntityType("MyVehicle")).contains(existing);
+        assertUnchanged(existing);
         assertThat(fieldNames("MyVehicle")).contains("price");
     }
 
@@ -351,7 +585,7 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         final var existing = enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3")).entityType();
 
         assertRejected(() -> enhance("MyVehicle", null, props("otherNumber", "4"), List.of("otherNumber")), ERR_PROPERTY_ADDED_AND_REMOVED.formatted("otherNumber"));
-        assertThat(webApi.findEnhancedEntityType("MyVehicle")).contains(existing);
+        assertUnchanged(existing);
     }
 
     @Test
@@ -363,7 +597,7 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         final var existing = enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3")).entityType();
         assertThatThrownBy(() -> enhance("MyVehicle", null, props("otherNumber", "4", "badNumber", "2 *"), List.of("myNumber")))
                 .hasMessageStartingWith("Property [badNumber] cannot be added.");
-        assertThat(webApi.findEnhancedEntityType("MyVehicle")).contains(existing);
+        assertUnchanged(existing);
         assertThat(fieldNames("MyVehicle")).contains("myNumber").doesNotContain("otherNumber");
     }
 
@@ -371,10 +605,9 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
     public void a_property_that_another_added_property_refers_to_cannot_be_removed() {
         final var existing = enhance("MyVehicle", "TgVehicle", props("a", "2 * 3", "b", "a + 1")).entityType();
 
-        assertThatThrownBy(() -> enhance("MyVehicle", null, props(), List.of("a")))
-                .isInstanceOf(WebApiException.class)
-                .hasMessageStartingWith("Property [b] cannot be added.");
-        assertThat(webApi.findEnhancedEntityType("MyVehicle")).contains(existing);
+        assertRejected(() -> enhance("MyVehicle", null, props(), List.of("a")), ERR_REMOVED_PROPERTY_IS_REFERENCED.formatted("a", "b"));
+        assertRejected(() -> enhance("MyVehicle", null, props("c", "a * 2"), List.of("b", "a")), ERR_REMOVED_PROPERTY_IS_REFERENCED.formatted("a", "c"));
+        assertUnchanged(existing);
         // Removing both properties at once is permitted.
         assertThat(enhance("MyVehicle", null, props(), List.of("a", "b")).entityType().properties()).isEmpty();
     }
@@ -418,28 +651,30 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
 
     @Test
     public void an_expression_may_refer_to_properties_that_the_user_can_read() {
-        for (final var expression : List.of("2 * price.amount", "2 * replacedBy.price.amount", "model", "model.make", "replacedBy.model.make",
-                                             "model.makeModelsCount + price.amount")) {
-            enhance("MyVehicle", "TgVehicle", props("myProp", expression));
-            webApi.discardEnhancedEntityTypes();
+        final var expressions = List.of("2 * price.amount", "2 * replacedBy.price.amount", "model", "model.make", "replacedBy.model.make",
+                                        "model.makeModelsCount + price.amount");
+        for (int i = 0; i < expressions.size(); i++) {
+            enhance("MyVehicle" + i, "TgVehicle", props("myProp", expressions.get(i)));
         }
     }
 
     @Test
     public void an_expression_cannot_refer_to_properties_that_the_user_cannot_read() {
-        assertUnauthorised("2 * price.amount", List.of(TgVehicle_CanRead_price_Token.class), "price");
-        assertUnauthorised("2 * replacedBy.price.amount", List.of(TgVehicle_CanRead_price_Token.class), "replacedBy.price");
-        assertUnauthorised("2 * replacedBy.price.amount + price.amount", List.of(TgVehicle_CanRead_price_Token.class), "price, replacedBy.price");
-        assertUnauthorised("model", List.of(TgVehicle_CanRead_model_Token.class), "model");
-        assertUnauthorised("model.make", List.of(TgVehicle_CanRead_model_Token.class), "model");
-        assertUnauthorised("replacedBy.model.make", List.of(TgVehicle_CanRead_model_Token.class), "replacedBy.model");
-        assertUnauthorised("model.makeModelsCount + price.amount", List.of(TgVehicle_CanRead_model_Token.class, TgVehicle_CanRead_price_Token.class), "model, price");
+        final var ns = StreamUtils.integers(1).iterator();
+        assertUnauthorised("MyTgVehicle"+ns.next(), TgVehicle.class, "2 * price.amount", List.of(TgVehicle_CanRead_price_Token.class), "price");
+        assertUnauthorised("MyTgVehicle"+ns.next(), TgVehicle.class, "2 * replacedBy.price.amount", List.of(TgVehicle_CanRead_price_Token.class), "replacedBy.price");
+        assertUnauthorised("MyTgVehicle"+ns.next(), TgVehicle.class, "2 * replacedBy.price.amount + price.amount", List.of(TgVehicle_CanRead_price_Token.class), "price, replacedBy.price");
+        assertUnauthorised("MyTgVehicle"+ns.next(), TgVehicle.class, "model", List.of(TgVehicle_CanRead_model_Token.class), "model");
+        assertUnauthorised("MyTgVehicle"+ns.next(), TgVehicle.class, "model.make", List.of(TgVehicle_CanRead_model_Token.class), "model");
+        assertUnauthorised("MyTgVehicle"+ns.next(), TgVehicle.class, "replacedBy.model.make", List.of(TgVehicle_CanRead_model_Token.class), "replacedBy.model");
+        assertUnauthorised("MyTgVehicle"+ns.next(), TgVehicle.class, "model.makeModelsCount + price.amount", List.of(TgVehicle_CanRead_model_Token.class, TgVehicle_CanRead_price_Token.class), "model, price");
     }
 
     @Test
     public void an_expression_cannot_refer_to_properties_of_a_type_whose_model_the_user_cannot_read() {
-        assertUnauthorised("model.make", List.of(TgVehicleModel_CanReadModel_Token.class), "model.make");
-        assertUnauthorised("replacedBy.model.make", List.of(TgVehicleModel_CanReadModel_Token.class), "replacedBy.model.make");
+        final var ns = StreamUtils.integers(1).iterator();
+        assertUnauthorised("MyTgVehicle"+ns.next(), TgVehicle.class, "model.make", List.of(TgVehicleModel_CanReadModel_Token.class), "model.make");
+        assertUnauthorised("MyTgVehicle"+ns.next(), TgVehicle.class, "replacedBy.model.make", List.of(TgVehicleModel_CanReadModel_Token.class), "replacedBy.model.make");
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -472,22 +707,24 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         assertThatThrownBy(request::run).isInstanceOf(WebApiException.class).hasMessage(message);
     }
 
-    /// Asserts that a request to add calculated property `myProp` with `expression` to a new enhanced entity type is rejected
-    /// while `tokens` are withdrawn, and accepted otherwise.
+    /// Asserts that a request to create an enhanced entity type that extends `baseType` with a calculated property with `expression`
+    /// is rejected while `tokens` are withdrawn, and accepted otherwise.
+    ///
+    /// Each call creates an enhanced entity type with a name of its own, as the accepted request stores the entity type.
     ///
     private void assertUnauthorised(
+            final String enhancedTypeName,
+            final Class<? extends AbstractEntity<?>> baseType,
             final String expression,
             final List<Class<? extends ISecurityToken>> tokens,
             final String unauthorisedPaths)
     {
         runWithoutTokens(tokens, () -> {
-            assertRejected(() -> enhance("MyVehicle", "TgVehicle", props("myProp", expression)),
-                           ERR_UNAUTHORISED_ACCESS.formatted("myProp", unauthorisedPaths));
-            assertNotDefined("MyVehicle");
+            assertRejected(() -> enhance(enhancedTypeName, baseType.getSimpleName(), props("myProp", expression)), ERR_UNAUTHORISED_ACCESS.formatted("myProp", unauthorisedPaths));
+            assertNotDefined(enhancedTypeName);
         });
         // A positive control: the same request succeeds when the tokens are held.
-        enhance("MyVehicle", "TgVehicle", props("myProp", expression));
-        webApi.discardEnhancedEntityTypes();
+        enhance(enhancedTypeName, baseType.getSimpleName(), props("myProp", expression));
     }
 
     private void assertValidationError(final String query, final String message) {
@@ -497,6 +734,28 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
     private void assertNotDefined(final String name) {
         assertThat(webApi.findEnhancedEntityType(name)).isEmpty();
         assertTypeIsAbsent(name);
+        assertThat(co(UserDefinedEnhancedEntityType.class).findByKeyOptional(name, getUser())).isEmpty();
+    }
+
+    /// Asserts that `entityType` is defined exactly as it was, both in memory and in the database.
+    ///
+    private void assertUnchanged(final EnhancedEntityType entityType) {
+        assertThat(webApi.findEnhancedEntityType(entityType.name())).contains(entityType);
+        assertThat(storedProperties(entityType.name())).isEqualTo(entityType.properties());
+    }
+
+    private UserDefinedEnhancedEntityType storedEntityType(final String name) {
+        final var entityType = co(UserDefinedEnhancedEntityType.class).findByKeyAndFetch(UserDefinedEnhancedEntityTypeCo.FETCH_PROVIDER.fetchModel(), name, getUser());
+        assertThat(entityType).as("Entity type [%s] is stored.", name).isNotNull();
+        return entityType;
+    }
+
+    /// Expressions of the stored properties of the current user's enhanced entity type `name` by property name.
+    ///
+    private Map<String, String> storedProperties(final String name) {
+        final UserDefinedCalculatedPropertyCo co = co(UserDefinedCalculatedProperty.class);
+        return co.findByEntityType(storedEntityType(name)).stream()
+                .collect(toMap(UserDefinedCalculatedProperty::getName, UserDefinedCalculatedProperty::getExpression));
     }
 
     private void assertTypeIsAbsent(final String typeName) {

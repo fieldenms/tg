@@ -69,8 +69,8 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     /// MCP requests run as `mcp.user`, which is the current user of tests, so the enhanced entity types that they define are those of the current user.
     ///
     @After
-    public void discardEnhancedEntityTypes() {
-        webApi.discardEnhancedEntityTypes();
+    public void evictUserEnhancedEntityTypes() {
+        webApi.evictUserEnhancedEntityTypes();
     }
 
     @Test

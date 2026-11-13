@@ -13,6 +13,7 @@ public class GraphQLIocModule extends AbstractPlatformIocModule {
         super.configure();
 
         bind(IWebApi.class).to(GraphQLService.class);
+        bind(IEntityTypeEnhancement.class).to(EntityTypeEnhancer.class);
     }
 
 }

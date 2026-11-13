@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web_api;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import graphql.ExecutionInput;
 import graphql.analysis.MaxQueryDepthInstrumentation;
@@ -10,20 +11,28 @@ import graphql.validation.QueryComplexityLimits;
 import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.dao.session.TransactionalExecution;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.ImmutableMapUtils;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static graphql.GraphQL.newGraphQL;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 
 /// GraphQL-based implementation of the TG Web API using [graphql-java](https://github.com/graphql-java/graphql-java).
@@ -32,12 +41,13 @@ import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 ///
 /// ### Enhanced entity types
 ///
-/// Each user's enhanced entity types are held together with the schema that exposes them, which is built from the domain types and
+/// Enhanced entity types are stored in the database.
+/// For each user, they are instantiated when that user first needs them.
+/// They are then held in memory, until evicted, together with the schema that exposes them, which is built from the domain types and
 /// those enhanced entity types.
-/// A user without enhanced entity types is served by the schema of the domain types alone.
-///
-/// [#enhanceEntityType] runs one request of a user at a time, holding that user's entry while it validates the request and builds a new schema.
-/// The entry is replaced only on success, so a failed request changes nothing, and concurrent requests cannot lose each other's changes.
+/// An enhanced entity type that cannot be instantiated, or whose registration in the schema causes an error, is left out of the schema,
+/// so requests that use it fail.
+/// If the error cannot be attributed to a specific enhanced entity type, all of them are left out.
 ///
 @Singleton
 public class GraphQLService implements IWebApi {
@@ -62,6 +72,8 @@ public class GraphQLService implements IWebApi {
     private final GraphQLSchemaFactory schemaFactory;
     private final GraphQLCommon common;
     private final EntityTypeEnhancer entityTypeEnhancer;
+    private final ICompanionObjectFinder coFinder;
+    private final Provider<TransactionalExecution> transactionalExecution;
     private final IUserProvider userProvider;
 
     /// The enhanced entity types of a user by name, and the schema that exposes them.
@@ -80,11 +92,15 @@ public class GraphQLService implements IWebApi {
             final GraphQLSchemaFactory schemaFactory,
             final GraphQLCommon common,
             final EntityTypeEnhancer entityTypeEnhancer,
+            final ICompanionObjectFinder coFinder,
+            final Provider<TransactionalExecution> transactionalExecution,
             final IUserProvider userProvider)
     {
         this.schemaFactory = schemaFactory;
         this.common = common;
         this.entityTypeEnhancer = entityTypeEnhancer;
+        this.coFinder = coFinder;
+        this.transactionalExecution = transactionalExecution;
         this.userProvider = userProvider;
         this.userApis = new ConcurrentHashMap<>();
         try {
@@ -101,7 +117,7 @@ public class GraphQLService implements IWebApi {
     @Override
     public Map<String, Object> execute(final Map<String, Object> input) {
         try {
-            final var schema = schemaForUser(currentUser().getKey());
+            final var schema = loadUserApi(currentUser()).schema();
             final var graphQL = newGraphQL(schema)
                     .queryExecutionStrategy(new GraphQLAsyncExecutionStrategy(new GraphQLSimpleDataFetcherExceptionHandler()))
                     .instrumentation(new MaxQueryDepthInstrumentation(common.maxQueryDepth()))
@@ -147,38 +163,80 @@ public class GraphQLService implements IWebApi {
             final List<PropertyDefinition> addProperties,
             final List<String> removeProperties)
     {
-        final var userKey = currentUser().getKey();
+        final var user = currentUser();
         final var enhancement = new AtomicReference<Enhancement>();
-        userApis.compute(userKey, (_, userApi) -> {
-            final var enhancedTypes = userApi == null ? Map.<String, EnhancedEntityType>of() : userApi.enhancedTypes();
-            final var schema = userApi == null ? initSchema : userApi.schema();
-            final var result = entityTypeEnhancer.enhance(schema, enhancedTypes, name, baseType, addProperties, removeProperties);
-            final var newEnhancedTypes = new LinkedHashMap<>(enhancedTypes);
-            newEnhancedTypes.put(name, result.entityType());
-            final var newSchema = schemaFactory.create(Stream.concat(domainTypes.stream(),
-                                                                     newEnhancedTypes.values().stream().map(EnhancedEntityType::webApiEntityType))
-                                                               .toList());
-            enhancement.set(result);
-            return new UserApi(newEnhancedTypes, newSchema);
+        userApis.compute(user.getKey(), (_, cachedUserApi) -> {
+            final var userApi = cachedUserApi == null ? mkUserApi(user) : cachedUserApi;
+            return transactionalExecution.get().exec(() -> {
+                final var result = entityTypeEnhancer.enhance(userApi.schema(), name, baseType, addProperties, removeProperties);
+                final var enhancedTypes = ImmutableMapUtils.insert(userApi.enhancedTypes(), name, result.entityType());
+                enhancement.set(result);
+                return mkUserApi(enhancedTypes);
+            });
         });
-        LOGGER.info(() -> "User [%s] enhanced entity type [%s]: %s".formatted(userKey, name, enhancement.get().entityType().properties()));
+        LOGGER.info(() -> "User [%s] enhanced entity type [%s]: %s".formatted(user.getKey(), name, enhancement.get().entityType().properties()));
         return enhancement.get();
     }
 
     @Override
     public Optional<EnhancedEntityType> findEnhancedEntityType(final CharSequence name) {
-        return Optional.ofNullable(userApis.get(currentUser().getKey()))
-                .map(userApi -> userApi.enhancedTypes().get(name.toString()));
+        return Optional.ofNullable(loadUserApi(currentUser()).enhancedTypes().get(name.toString()));
     }
 
     @Override
-    public void discardEnhancedEntityTypes() {
+    public void evictUserEnhancedEntityTypes() {
         userApis.remove(currentUser().getKey());
     }
 
-    private GraphQLSchema schemaForUser(final String userKey) {
-        final var userApi = userApis.get(userKey);
-        return userApi == null ? initSchema : userApi.schema();
+    private UserApi loadUserApi(final User user) {
+        return userApis.computeIfAbsent(user.getKey(), _ -> mkUserApi(user));
+    }
+
+    /// Instantiates the enhanced entity types of `user`, which must be the current user, and builds the schema that exposes them.
+    ///
+    /// If the schema cannot be built, each enhanced entity type is registered in a schema on its own to find those that cause the error.
+    ///
+    private UserApi mkUserApi(final User user) {
+        final UserDefinedEnhancedEntityTypeCo coEntityType = coFinder.find(UserDefinedEnhancedEntityType.class, true);
+        final var enhancedTypes = coEntityType.findByUser(user).stream()
+                .map(entityType -> {
+                    try {
+                        return t2(entityType.getName(), entityTypeEnhancer.javaTypeFor(entityType));
+                    } catch (final Exception ex) {
+                        LOGGER.warn(() -> "Entity type [%s] of user [%s] cannot be instantiated.".formatted(entityType.getName(), user.getKey()), ex);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(T2.toMap());
+        return tryMkUserApi(user, enhancedTypes)
+                .or(() -> tryMkUserApi(user, enhancedTypes.values().stream()
+                                             // TODO Optimise: incrementally add each type instead of rebuilding the whole schema.
+                                             // Requires a new API: GraphQLSchemaFactory.addType(GraphQLSchema, WebApiEntityType).
+                                             .filter(type -> tryMkUserApi(user, Map.of(type.name(), type)).isPresent())
+                                             .collect(toMap(EnhancedEntityType::name, identity()))))
+                .orElseGet(() -> mkUserApi(Map.of()));
+    }
+
+    /// Returns an empty optional if the schema cannot be built.
+    ///
+    private Optional<UserApi> tryMkUserApi(final User user, final Map<String, EnhancedEntityType> enhancedTypes) {
+        try {
+            return Optional.of(mkUserApi(enhancedTypes));
+        } catch (final Exception ex) {
+            LOGGER.warn(() -> "Schema of user [%s] cannot be built with entity types [%s].".formatted(user.getKey(), CollectionUtil.toString(enhancedTypes.keySet(), ", ")), ex);
+            return Optional.empty();
+        }
+    }
+
+    private UserApi mkUserApi(final Map<String, EnhancedEntityType> enhancedTypes) {
+        if (enhancedTypes.isEmpty()) {
+            return new UserApi(Map.of(), initSchema);
+        }
+        final var schema = schemaFactory.create(Stream.concat(domainTypes.stream(),
+                                                              enhancedTypes.values().stream().map(EnhancedEntityType::webApiEntityType))
+                                                        .toList());
+        return new UserApi(enhancedTypes, schema);
     }
 
     private User currentUser() {

@@ -23,7 +23,7 @@ import java.util.Optional;
 /// A user can define entity types at runtime, each extending a domain type with calculated properties, using [#enhanceEntityType].
 /// An enhanced entity type is visible only to queries executed by the user who defined it, and only through its own root fields:
 /// properties of other types keep their domain types.
-/// Enhanced entity types are held in memory, so they do not survive a restart.
+/// Enhanced entity types are stored in the database, so they survive a restart.
 ///
 public interface IWebApi {
 
@@ -60,7 +60,7 @@ public interface IWebApi {
     ///
     /// If the current user has no enhanced entity type named `name`, one is created that extends `baseType` with `addProperties`.
     /// Otherwise, `removeProperties` are removed from that type, and then `addProperties` are added to it.
-    /// Properties are added in the specified order, so the expression of each one may refer to those added before it.
+    /// The expression of an added property may refer to the other properties of the enhanced entity type, including those added by the same request.
     ///
     /// A request either takes full effect or none.
     /// It is rejected if:
@@ -84,8 +84,8 @@ public interface IWebApi {
     ///
     Optional<EnhancedEntityType> findEnhancedEntityType(CharSequence name);
 
-    /// Discards all enhanced entity types of the current user.
+    /// Evicts the enhanced entity types of the current user from memory.
     ///
-    void discardEnhancedEntityTypes();
+    void evictUserEnhancedEntityTypes();
 
 }
