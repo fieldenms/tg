@@ -10,6 +10,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 /// while a component in place of an editor is refreshed whenever the value of its property changes, which a condition replaces.
 /// What refreshing does is up to the component, such as running an embedded centre again.
 ///
+/// A refresh asked for while the component is blocked takes place once it is unblocked.
+/// A component that is blocked while the entity is unsaved, as components are by default, is blocked whenever the user has changed a persisted entity,
+/// and is unblocked when the changes are saved or cancelled, which refreshes all components anyway.
+/// So a condition takes effect for components declared with `skipBlockingWhenUnsaved`, such as an embedded centre that follows a property as the user changes it,
+/// and in masters of entity types that are not persistent.
+///
 /// The condition is created with the injector, as the selector of a multi-action is, so that its dependencies are injected.
 ///
 /// @param <T> the entity type of the master

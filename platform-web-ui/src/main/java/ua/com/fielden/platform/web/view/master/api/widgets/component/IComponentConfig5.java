@@ -12,6 +12,8 @@ public interface IComponentConfig5<T extends AbstractEntity<?>> extends ICompone
     /// Between these, a component in place of an editor is refreshed by default whenever the value of its property changes, whether the user or a definer changed it, and not when other properties change,
     /// while a component bound to the entity is not refreshed.
     /// With a condition, the component is refreshed instead after each validation of a change made by the user for which the condition holds, as described in [IComponentRefreshCondition].
+    /// A refresh asked for while the component is blocked takes place once it is unblocked, which a save or a cancel does,
+    /// so a condition takes effect for components declared with `skipBlockingWhenUnsaved`, and in masters of entity types that are not persistent.
     ///
     IComponentConfig6<T> refreshWhen(final Class<? extends IComponentRefreshCondition<T>> condition);
 

@@ -153,7 +153,7 @@ There are two forms:
 - `.addProp(prop).asComponent(importPath)` — a component in place of an editor of the property, which may be dot-notated.
   It receives the title and description of the property, and its property actions are declared as those of editors.
 - `.addComponent(importPath)` — a component bound to the entity rather than to a property, placed next to the editors.
-  It has no title or description unless declared, and its action is invoked by the component itself.
+  It has no title or description unless declared, and its action has no chosen property.
 
 `importPath` is resolved as `/resources/<importPath>.js`, and the element name defaults to its last segment, such as `tg-map-component` for `gis/tg-map-component`.
 
@@ -197,7 +197,7 @@ The options are declared in this order, and each of them is optional:
 | `withPropAttr(name, prop)` | An attribute bound to the value of a property of the master entity, which may be dot-notated or a metamodel reference; the value follows the entity and is passed as is, such as an entity or a collection. |
 | `skipBlockingWhenUnsaved()` | Keeps the component interactive while the entity is unsaved (see *Blocking*). |
 | `refreshWhen(Condition.class)` | The condition for refreshing the component after a validation of the master entity (see *Refreshing*). |
-| `withAction(config)` / `withMultiAction(config)` | A property action of a component in place of an editor, or the action of a component bound to the entity, which the component invokes itself. |
+| `withAction(config)` / `withMultiAction(config)` | A property action of a component in place of an editor, or the action of a component bound to the entity; in both forms, it is shown where the component places slot `property-action`, such as in its caption or toolbar. |
 
 A component has no height of its own, and fills the height of its layout cell.
 Each component takes a layout cell in the order of declaration, as an editor does.
@@ -205,20 +205,20 @@ In a `FLEXIBLE_ROW` of the master layout, a component grows with the master, and
 
 The element id is `component_4_<property>` for a component in place of an editor, and `component-<n>` for the `n`-th component bound to the entity, counted from `0`.
 
-The configuration is validated as it is declared, and errors are reported with `EntityMasterConfigurationException`, with messages that are public constants of `AbstractComponentWidget` and `WidgetSelector`:
+The configuration is validated as it is declared, except for an element name derived from the import path, which is validated when the master is built, and errors are reported with `EntityMasterConfigurationException`, with messages that are public constants of `AbstractComponentWidget` and `WidgetSelector`:
 
 - the import path must be a path relative to `/resources/` without the `.js` extension, and the element name must be a valid custom element name;
 - the property of `asComponent` and of `withPropAttr` must exist;
 - attribute names must be in lowercase dash-case, and the attributes that the platform renders, such as `id`, `entity`, `prop-title`, `height` and `block-when-unsaved`, cannot be declared;
 - binding expressions must be balanced, heights must be positive, and the height cannot be less than the minimum height;
-- titles and descriptions cannot contain a straight single quote, a backtick or `${`, which cannot be rendered.
+- titles, descriptions and attribute values cannot be null or contain a straight single quote, a backtick or `${`, which cannot be rendered, and a refresh condition cannot be null.
 
 ### Blocking
 
 A component is visible as soon as the master is loaded, so, unlike a section of a compound master, nothing would prevent interaction with it while the entity is unsaved.
 By default, a component is therefore blocked while the master entity is an instance of a persistent type that is new or has changes that are not yet saved, including edits in progress.
 A pane covers the component with a message to save or cancel the changes, and the component is made `inert`, so that neither the component nor its actions can be interacted with, including through the shortcuts of the actions.
-`skipBlockingWhenUnsaved()` opts out, for components that display values of the master entity itself, which stay consistent with it while it is unsaved.
+`skipBlockingWhenUnsaved()` opts out, for components that display values of the master entity itself, or data that depends on them, such as an embedded centre restricted by a property of the entity, which stay consistent with the entity while it is unsaved.
 
 ### Refreshing
 
@@ -237,8 +237,12 @@ public class VehicleModelChanged implements IComponentRefreshCondition<Vehicle> 
 
 `ComponentRefreshContext` provides the validated entity, with the changes of the user and the values that definers set in turn, and the properties whose values the user changed since the previous validation, which the dirtiness of properties does not tell.
 The condition is created with the injector, so its dependencies are injected.
+The keys of the components whose conditions hold are returned with the validation result, and the master asks those components to refresh.
 What refreshing does is up to the component, which implements `refresh()` (see *Application components*), such as running an embedded centre again.
 A refresh asked for while the component is blocked takes place once it is unblocked.
+
+A component that blocks while the entity is unsaved is blocked whenever the user has changed a persisted entity, and is unblocked when the changes are saved or cancelled, which refreshes all components anyway.
+So `refreshWhen`, and the refresh of a component in place of an editor on changes of its property, take effect for components declared with `skipBlockingWhenUnsaved()`, such as an embedded centre that follows a property as the user changes it, and in masters of entity types that are not persistent.
 
 ### Platform components
 
@@ -251,6 +255,7 @@ A refresh asked for while the component is blocked takes place once it is unbloc
 - The centre runs whenever the component is refreshed, and not while the component is blocked.
 - The centre has its own uuid, so its actions do not refresh the master.
 - The selection view and the grid fill the component; the grid always fits to height there, whether or not the centre declares `fitToHeight()`, and whatever height or number of visible rows the centre declares or the user configures.
+- The views of the centre, such as a chart in an alternative view, follow every change of size of the component, including one by the user.
 - The centre and the masters of its views do not take the focus from the master when they load or refresh, only when the user acts on them.
 - A toolbar without selection criteria suits a centre restricted to the master entity, such as `CentreToolbar.withTopActionsViewSwitchPaginationAndRefresh()`, with `standardEmbeddedScrollingConfig(0)`.
 
@@ -258,7 +263,8 @@ A refresh asked for while the component is blocked takes place once it is unbloc
 
 - Attribute `gis-component-uri` is the path of the module of the GIS component, relative to `/resources/` and without `.js`, and `gis-component-name` is the name under which the module exports it.
 - The GIS component is a subclass of `MasterGisComponent` (`gis/tg-master-gis-component.js`), with the extension points of `GisComponent`, such as `featureType`, `createGeometry`, `createMarkerFactory` and `createBaseLayers`, so the methods of a centre map for the same entity types can be reused; clustering is declared with `createMarkerClusterGroup`.
-- Boolean attribute `labels-toggle` adds a toggle of the labels of map features to its toolbar, and `zoom` is the zoom for a single point, `14` by default.
+- Boolean attribute `labels-toggle` adds a toggle of the labels of map features to its toolbar, and `zoom` is the zoom for a single point, and the greatest zoom when the map fits several features into view, `14` by default.
+- A Fit to bounds button fits the drawn features into view.
 - The property actions are in the toolbar of the map, and reach the map as `action.mapComponent`, and the GIS component as `action.mapComponent.gisComponent`.
 - The map zooms with its controls and with the mouse wheel with Option (Alt); the mouse wheel alone scrolls the master.
 
@@ -288,6 +294,10 @@ const template = html`
         }
         #content {
             flex: 1;
+        }
+        .gauge {
+            height: 24px;
+            background-color: #03a9f4;
         }
     </style>
     <div class="tg-component-title" hidden$="[[!propTitle]]" tooltip-text$="[[propDesc]]">[[propTitle]]</div>
@@ -328,7 +338,7 @@ class TgGaugeComponent extends mixinBehaviors([TgMasterComponentBehavior], Polym
         return this.$.content;
     }
 
-    // called as the master asks, with the entity in place, and never while the component is blocked
+    // called with the entity in place whenever the master retrieves or saves the entity, and whenever the value of the property changes
     refresh() {
         this._value = this.entity.get(this.propertyName) || 0;
     }
@@ -345,17 +355,20 @@ customElements.define('tg-gauge-component', TgGaugeComponent);
   Attribute `resizable` is set while the component is resizable, so that the component can keep its content clear of the resizer.
 - A component gives `minHeight` a default value by declaring the property with that value, which `withMinHeight` replaces.
 - The property actions are the children slotted into `property-action`, of which only the action for the entity is shown.
-- The component is focused as a whole at `component()`, the component itself by default, which needs `tabindex="0"`: Tab moves among the editors to it and on, Enter moves into its content, where Tab cycles, and Esc moves back.
+- The component is focused as a whole at `component()`, the component itself by default, which needs `tabindex="0"`: Tab moves among the editors to it and on, Enter moves into its content, where Tab and Shift+Tab cycle, and Esc moves back.
   The element has a focus ring, and the element with class `tg-component-title` looks as the title of a focused editor while the focus is within the component.
   Without `tabindex`, the focusable elements of the component take part in the focus traversal of the master in their place among the editors.
-- `isInMasterComponent(element)` tells whether an element is in the content of a master component, as the centres and masters in it are, so that they do not take the focus by themselves.
+  The master focuses a component when it shows the entity, as it focuses an editor: as the preferred input if the component represents the preferred property, as the first input of a new entity, and as the input that the user focused last, unless the component is blocked, as a component of a new persistent entity is by default.
+- `isInMasterComponent(element)`, a function exported by the module of the behaviour, tells whether an element is in the content of a master component, as the centres and masters in it are, so that they do not take the focus by themselves.
 
 #### `refresh()`
 
 `refresh()` loads or presents the data of the component for the master entity; the behaviour implements it as doing nothing.
 
-- The master asks for a refresh with `requestRefresh()`, as described in *Refreshing*: whenever it retrieves or saves the entity, after each validation for which the `refreshWhen` condition holds, and, for a component in place of an editor without `refreshWhen`, whenever the value of its property differs from the value for which the component was last refreshed, compared as values of properties are, such as entities by their keys.
+- The master asks for a refresh with `requestRefresh()` whenever it retrieves or saves the entity, and after each validation for which the `refreshWhen` condition holds, as described in *Refreshing*.
+- A component in place of an editor without `refreshWhen` is also refreshed whenever the value of its property differs from the value for which the component was last refreshed, compared as values of properties are, such as entities by their keys, which the behaviour tracks itself.
 - `refresh()` is called with `entity` in place, and never while the component is blocked: a refresh asked for while the component is blocked takes place once it is unblocked.
+  A component that blocks is blocked whenever the user has changed a persisted entity, so the refreshes after validations and on changes of its property take effect with `skipBlockingWhenUnsaved()`, as for the gauge, or in masters of entity types that are not persistent.
 - It is called at microtask timing, so that refreshes asked for at once, such as when a save also unblocks the component, result in a single call.
 - A component may call `requestRefresh()` itself, such as from a button of its own, to refresh on the same terms.
 - Work for the master entity on the server takes `masterEntityContext()` as its context, which returns the master entity with its unsaved changes, in the form in which the contexts of the master carry it, as for property and entity actions.
@@ -365,7 +378,7 @@ customElements.define('tg-gauge-component', TgGaugeComponent);
       this._getMasterEntity = () => this.masterEntityContext();
   }
   ```
-- Binding to `entity`, which follows every change of the master entity, including each validation of a change made by the user, presents every change at once, as `tg-map-component` does; `refresh()` suits work that takes place only when the master asks for it, such as a request to the server.
+- Binding to `entity` follows every change of the master entity, including each validation of a change made by the user, as `tg-map-component` does, while `refresh()` takes place only at the moments above, which suits work such as a request to the server, or presenting the value of the property of the component, as the gauge does.
 - The values that a component reads from the entity must be fetched with the master entity.
 
 ## Master With Centre

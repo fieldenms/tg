@@ -58,8 +58,8 @@ const template = html`
  * It is declared in the Entity Master DSL, usually bound to the entity:
  *
  *     .addComponent("centre/tg-centre-component")
- *         .withTitle("Stock on Hand")
- *         .withAttr("mi-type", MiWorkActivityExpendableMaster_StockOnHand.class.getName())
+ *         .withTitle("Active Work Orders by Status")
+ *         .withAttr("mi-type", MiLocationMaster_ActiveWorkOrders.class.getName())
  *
  * The centre is that of menu item type 'mi-type', registered in the application, which is loaded from '/centre_ui/<mi-type>' as element 'tg-<simple name of mi-type>-centre'.
  * Its context includes the master entity, with the changes that are not yet saved, so that its query enhancer with 'context().withMasterEntity()' can restrict the query by the master entity.

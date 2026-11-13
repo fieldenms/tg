@@ -8,7 +8,8 @@ import ua.com.fielden.platform.web.view.master.api.helpers.IAlso;
 ///
 /// The action is declared as for editors: a single action, or a multi-action whose selector chooses the action to show for the entity.
 /// The action of a component in place of an editor is a property action, whose chosen property is the property of the component.
-/// The action of a component bound to the entity is invoked by the component itself, and has no chosen property.
+/// The action of a component bound to the entity has no chosen property.
+/// In both forms, the action is shown where the component places slot `property-action`, such as in its caption or toolbar.
 ///
 public interface IComponentConfig6<T extends AbstractEntity<?>> extends IAlso<T>, IPropertyActionConfig<T> {
 }

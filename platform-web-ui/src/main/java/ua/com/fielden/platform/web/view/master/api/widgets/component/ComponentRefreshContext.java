@@ -11,7 +11,7 @@ import java.util.Set;
 /// and every property of a new entity is dirty.
 ///
 /// @param entity the entity produced by the validation, with the changes of the user applied, and the values that definers set in turn
-/// @param changedProps the names of the properties whose values the user changed
+/// @param changedProps the names of the properties of the master entity whose values the user changed
 /// @param <T> the entity type of the master
 ///
 public record ComponentRefreshContext<T extends AbstractEntity<?>>(T entity, Set<String> changedProps) {
@@ -20,10 +20,10 @@ public record ComponentRefreshContext<T extends AbstractEntity<?>>(T entity, Set
         changedProps = Set.copyOf(changedProps);
     }
 
-    /// Determines whether the user changed the value of property `propPath`, which is a property name or a metamodel reference, such as `Vehicle_.model()`.
+    /// Determines whether the user changed the value of property `propName` of the master entity, which is given by its name or by its metamodel reference, such as `Vehicle_.model()`.
     ///
-    public boolean isChanged(final CharSequence propPath) {
-        return changedProps.contains(propPath.toString());
+    public boolean isChanged(final CharSequence propName) {
+        return changedProps.contains(propName.toString());
     }
 
 }

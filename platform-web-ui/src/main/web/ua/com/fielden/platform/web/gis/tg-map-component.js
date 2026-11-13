@@ -84,7 +84,7 @@ const template = html`
  * A map component for entity masters, which draws the master entity, an entity it refers to, or the entities of its collectional property.
  * It is declared in the Entity Master DSL, in place of the editor of a property, which may be dot-notated, or bound to the entity:
  *
- *     .addProp(LocationSubsystem_.location().gisInfo()).asComponent("gis/tg-map-component")
+ *     .addProp(Equipment_.location().gisInfo()).asComponent("gis/tg-map-component")
  *         .withAttr("gis-component-uri", "gis/location/tg-location-gis-master-component")
  *         .withAttr("gis-component-name", "LocationGisMasterComponent")
  *

@@ -131,6 +131,8 @@ const componentStyles = `
  * A component in place of an editor without a declared condition is also refreshed whenever the value of its property `propertyName` changes, as `refreshOnPropertyChange` indicates,
  * whether the user or a definer changed it, but not when other properties change; the values are compared as values of properties are, such as entities by their keys.
  * A refresh asked for while the component is blocked takes place once it is unblocked, and refreshes asked for at once, such as when a save also unblocks the component, take place once.
+ * A component that is blocked while the entity is unsaved is blocked whenever the user has changed a persisted entity, and is unblocked when the changes are saved or cancelled, which refreshes all components anyway,
+ * so the refreshes after validations and on changes of the property take effect for components that skip blocking, and in masters of entity types that are not persistent.
  *
  * The component is focused as a whole, as a rich text editor is, at the element returned by `component()`: the component itself by default,
  * or an element of its shadow tree in which the component presents its content, such as the element of a map component that holds its toolbar and the map, below its title.

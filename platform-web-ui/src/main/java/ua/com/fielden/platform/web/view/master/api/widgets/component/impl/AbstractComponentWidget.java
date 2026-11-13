@@ -45,7 +45,8 @@ import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 /// The condition for refreshing the component is not rendered: the master collects it under the key of the component, as it collects the selector of the action of the component.
 /// Nothing is rendered for refreshing either: the client-side master asks the component to refresh with a method call, finding the component by that key.
 ///
-/// The configuration is validated as it is declared, and errors are reported with [EntityMasterConfigurationException].
+/// The configuration is validated as it is declared, except for an element name derived from the import path, which is validated when the master is built, as a declared element name may replace it.
+/// Errors are reported with [EntityMasterConfigurationException].
 /// Attributes and texts are rendered into a single-quoted attribute of the master template, which is a JavaScript template literal,
 /// so a straight single quote, a backtick and `${` cannot be rendered and are rejected.
 ///
