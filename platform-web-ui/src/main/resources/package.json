@@ -74,6 +74,10 @@
     "sinon-chai": "4.0.0",
     "wct-browser-legacy": "1.0.2"
   },
+  "//engines": "npm 11+ is required: npm 10 and older silently ignore the overrides nested under `wct-browser-legacy` (install-polymer scripts stop otherwise).",
+  "engines": {
+    "npm": ">=11"
+  },
   "//": "Do NOT nest overrides under a package that appears as $<name> elsewhere (npm/cli#5914 + #5730). Hoist such sub-rules to the root instead.",
   "//wct-browser-legacy": "Overrides under `wct-browser-legacy` are grouped, separated by empty lines: its direct dependencies, then the unused dependencies of `mocha`, `sinon` and `chai` (web tests load only their pre-bundled files).",
   "overrides": {
