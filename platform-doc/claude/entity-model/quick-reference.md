@@ -59,6 +59,21 @@ Symptom of misuse: the computation runs many times during edit, sees inconsisten
 | `co(Type.class)` | `IEntityReader<T>` (uninstrumented) | Read-only queries, exports |
 | `co$(Type.class)` | `IEntityDao<T>` (instrumented) | Full CRUD with change tracking |
 
+**The companion of a persistent entity extends `ISaveWithFetch<T>`.**
+Its DAO overrides the two-parameter `save(entity, maybeFetch)`, which is the only place for custom saving logic, and leaves the one-parameter `save(entity)` alone:
+```java
+public interface VehicleCo extends IEntityDao<Vehicle>, ISaveWithFetch<Vehicle> { ... }
+
+// VehicleDao
+@Override
+@SessionRequired
+public Either<Long, Vehicle> save(final Vehicle entity, final Optional<fetch<Vehicle>> maybeFetch) {
+    return super.save(entity, maybeFetch);
+}
+```
+Callers pass the fetch model of the instance they need back, or `Optional.empty()` when they need only the ID.
+See `reference.md` § *Companion Object Pattern — Advanced*.
+
 **Use `FETCH_PROVIDER` / `FETCH_MODEL` when retrieving for editing:**
 ```java
 co$(Vehicle.class).findByKeyAndFetch(VehicleCo.FETCH_MODEL, key);
