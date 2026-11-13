@@ -41,6 +41,25 @@ Asserting over the whole result is appropriate when the dataset is designed as a
 In that case a fixture change should update the test deliberately, so keep the assertion exact rather than conditional.
 The pattern to avoid is an unscoped `allSatisfy` with a conditional on the key: it neither pins the rows nor fails clearly when a fixture is added.
 
+**Fixture assumptions.**
+A test names a scenario, and its fixture is meant to set that scenario up; a fixture that fails to do so makes the test exercise another case, which may well pass.
+Assert each assumption that the scenario depends on before exercising the code under test, and describe it with `.as(...)`:
+```java
+final var entityType = save(new_composite(UserDefinedEnhancedEntityType.class, "MyVehicle", getUser()).setBaseType(TgVehicle.class.getName()));
+
+assertThat(isPropertyPresent(TgVehicle.class, "price")).as("TgVehicle has property price.").isTrue();
+final var propertyOfBaseType = new_composite(UserDefinedCalculatedProperty.class, entityType, "price");
+assertThat(propertyOfBaseType.getProperty(NAME).getFirstFailure())
+        .hasMessage(ERR_PROPERTY_OF_BASE_TYPE.formatted("price", "TgVehicle"));
+
+assertThat(isPropertyPresent(TgVehicle.class, "myNumber")).as("TgVehicle has no property myNumber.").isFalse();
+final var newProperty = new_composite(UserDefinedCalculatedProperty.class, entityType, "myNumber");
+assertThat(newProperty.getProperty(NAME).isValid()).isTrue();
+```
+Without the assumptions, a change to `TgVehicle` that removed `price` would leave the first check failing for an unclear reason, and one that added `myNumber` would make the second check fail as if the validator were wrong.
+Take an assumption from the same source as the code under test: the domain entity types from `IApplicationDomainProvider.entityTypes()`, and, for code that compares with stored instants, the current time from `IDates.serverNow()`.
+To mutation-check an assumption, break the fixture rather than the code, e.g., replace `myNumber` with a property that `TgVehicle` has: the test must fail at the assumption, with its description.
+
 ### Indirect Testing Pattern
 
 Business logic (validators, definers) resides in `pojo-bl` but is tested **indirectly through DAO tests**:
