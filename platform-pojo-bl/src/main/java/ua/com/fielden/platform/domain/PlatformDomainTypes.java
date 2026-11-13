@@ -26,6 +26,8 @@ import ua.com.fielden.platform.share.ShareAction;
 import ua.com.fielden.platform.tiny.TinyHyperlink;
 import ua.com.fielden.platform.ui.config.*;
 import ua.com.fielden.platform.web.centre.*;
+import ua.com.fielden.platform.web_api.UserDefinedCalculatedProperty;
+import ua.com.fielden.platform.web_api.UserDefinedEnhancedEntityType;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -123,6 +125,8 @@ public class PlatformDomainTypes {
         types.add(OpenPersistentEntityInfoAction.class);
         types.add(PersistentEntityInfoMaster_OpenMain_MenuItem.class);
         types.add(AuditCompoundMenuItem.class);
+        types.add(UserDefinedEnhancedEntityType.class);
+        types.add(UserDefinedCalculatedProperty.class);
 
         typesDependentOnWebUI.add(EntityExportAction.class);
         typesDependentOnWebUI.add(CentreConfigUpdater.class);

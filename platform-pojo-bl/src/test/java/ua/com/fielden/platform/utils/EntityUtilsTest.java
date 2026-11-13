@@ -29,6 +29,8 @@ import ua.com.fielden.platform.test_entities.Entity;
 import ua.com.fielden.platform.test_entities.EntityExt;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.web_api.UserDefinedCalculatedProperty;
+import ua.com.fielden.platform.web_api.UserDefinedEnhancedEntityType;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -680,7 +682,9 @@ public class EntityUtilsTest {
                 SynUserAndRoleAssociationActive.class,
                 SynUserAndRoleAssociationInactive.class,
                 SecurityRoleAssociation.class,
-                UserDefinableHelp.class);
+                UserDefinableHelp.class,
+                UserDefinedEnhancedEntityType.class,
+                UserDefinedCalculatedProperty.class);
     }
 
     @Test
