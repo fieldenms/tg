@@ -8,26 +8,25 @@ const unprocessedFiles = [
     // Separate testing dependency -- we also tree shake it because placed under '@polymer/' umbrella.
     'node_modules/@polymer/test-fixture/test-fixture.js',
 
-    // Separate web test files, that 'wct-browser-legacy/browser.js' loads (see its 'environmentScripts').
-    // Only these files remain in their packages, as with 'test-fixture.js' above.
-    'node_modules/wct-browser-legacy/browser.js',
-    'node_modules/async/dist/async.js',
-    'node_modules/lodash/lodash.js',
-    'node_modules/mocha/mocha.js',
-    'node_modules/chai/chai.js',
-    'node_modules/sinon/pkg/sinon.js',
-    'node_modules/sinon-chai/lib/sinon-chai.js',
-
     // Separate production files, that are used through <script src='/resources/polymer/ ... /*.js'></script>.
     'node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js',
     'node_modules/web-animations-js/web-animations-next-lite.min.js'
 ];
 
-// Non-JS files, that rollup does not emit by itself.
-// They are copied to the same paths, so that they stay in their packages next to the 'unprocessedFiles' above.
+// Files, that are copied byte for byte to the same paths, so that only they remain in their packages.
+// Rollup would parse a classic script as an ES module, removing its 'use strict' and rewriting its top-level 'this'.
 const copiedFiles = [
-    // Mocha's report stylesheet, that 'wct-browser-legacy/browser.js' loads next to 'mocha.js'.
-    'node_modules/mocha/mocha.css'
+    // The web test runner, that test pages load through a plain <script src='...'></script>.
+    'node_modules/wct-browser-legacy/browser.js',
+
+    // Web test files, that 'browser.js' loads (see its 'environmentScripts'; 'mocha.css' is loaded next to 'mocha.js').
+    'node_modules/async/dist/async.js',
+    'node_modules/lodash/lodash.js',
+    'node_modules/mocha/mocha.js',
+    'node_modules/mocha/mocha.css',
+    'node_modules/chai/chai.js',
+    'node_modules/sinon/pkg/sinon.js',
+    'node_modules/sinon-chai/lib/sinon-chai.js'
 ];
 
 /// A plugin to emit `files` as assets under the same paths.
