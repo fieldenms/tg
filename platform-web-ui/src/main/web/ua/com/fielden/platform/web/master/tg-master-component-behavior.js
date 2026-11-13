@@ -144,6 +144,8 @@ const componentStyles = `
  * such as the property actions in the caption of an embedded centre, but not into its content.
  * Enter moves the focus from that element to the first focusable element of its content, where Tab and Shift+Tab move the focus among the focusable elements of the content only,
  * going round from the last to the first and from the first to the last, and Esc moves the focus back to that element.
+ * An overlay opened from the content, such as the result list of an autocompleter or the dropdown of a responsive toolbar, consumes the Esc that closes it,
+ * so that the Esc closes only the overlay, and the next Esc moves the focus back.
  * A click on an element of the content focuses it, as it does an element of a rich text editor.
  * The master moves the focus over the component, as described in `TgEntityMasterBehavior`, so it knows its first and last focusable elements also when a component comes first or last,
  * and Tab moves on from the last of them as from the last editor, such as to the title bar of a dialog, rather than out of the master.

@@ -355,7 +355,7 @@ customElements.define('tg-gauge-component', TgGaugeComponent);
   Attribute `resizable` is set while the component is resizable, so that the component can keep its content clear of the resizer.
 - A component gives `minHeight` a default value by declaring the property with that value, which `withMinHeight` replaces.
 - The property actions are the children slotted into `property-action`, of which only the action for the entity is shown.
-- The component is focused as a whole at `component()`, the component itself by default, which needs `tabindex="0"`: Tab moves among the editors to it and on, Enter moves into its content, where Tab and Shift+Tab cycle, and Esc moves back.
+- The component is focused as a whole at `component()`, the component itself by default, which needs `tabindex="0"`: Tab moves among the editors to it and on, Enter moves into its content, where Tab and Shift+Tab cycle, and Esc moves back; an overlay opened from the content, such as the result list of an autocompleter or the dropdown of a responsive toolbar, consumes the Esc that closes it, so that the next Esc moves back.
   The element has a focus ring, and the element with class `tg-component-title` looks as the title of a focused editor while the focus is within the component.
   Without `tabindex`, the focusable elements of the component take part in the focus traversal of the master in their place among the editors.
   The master focuses a component when it shows the entity, as it focuses an editor: as the preferred input if the component represents the preferred property, as the first input of a new entity, and as the input that the user focused last, unless the component is blocked, as a component of a new persistent entity is by default.
