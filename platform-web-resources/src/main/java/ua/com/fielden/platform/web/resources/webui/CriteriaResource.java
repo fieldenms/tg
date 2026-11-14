@@ -70,6 +70,7 @@ import static org.joda.time.Days.daysBetween;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.security.tokens.Template.READ;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseCriteria;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
@@ -773,11 +774,36 @@ public class CriteriaResource extends AbstractWebResource {
         return !savedCentre.getFirstTick().selectionCriteriaEquals(freshCentre.getFirstTick()) ? CHANGED : NONE;
     }
 
-    private Result authoriseCriteriaEntity(final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity) {
-        final var entityAuthorisationResult = authoriseReading(getEntityType(miType).getSimpleName(), READ, authorisationModel, securityTokenProvider);
+    /// Authorises criteria entity on data reading for the whole centre and for individual guarded criteria with non-empty values.
+    ///
+    public static Result authoriseCriteriaEntity(
+        final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity,
+        final IAuthorisationModel authorisationModel,
+        final ISecurityTokenProvider securityTokenProvider
+    ) {
+        final var entityAuthorisationResult = authoriseReading(getEntityType(criteriaEntity.miType()).getSimpleName(), READ, authorisationModel, securityTokenProvider);
         return entityAuthorisationResult.isSuccessful()
                ? authoriseCriteria(criteriaEntity.queryProperties.get(), authorisationModel, securityTokenProvider)
                : entityAuthorisationResult;
+    }
+
+    /// Validates Entity Centre criteria entity prior running, including crit-only single prototype validation and authorisation.
+    ///
+    public static Result validateCriteriaBeforeRunning(
+        final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity,
+        final IAuthorisationModel authorisationModel,
+        final ISecurityTokenProvider securityTokenProvider
+    ) {
+        final Result validationResult = criteriaEntity.isValid();
+        if (!validationResult.isSuccessful()) {
+            return validationResult;
+        }
+
+        final Result authorisationResult = authoriseCriteriaEntity(criteriaEntity, authorisationModel, securityTokenProvider);
+        if (!authorisationResult.isSuccessful()) {
+            return authorisationResult;
+        }
+        return successful();
     }
 
     /// Handles `PUT` requests triggered by the `tg-selection-criteria.run()` method.
@@ -886,7 +912,7 @@ public class CriteriaResource extends AbstractWebResource {
                         return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication)));
                     }
 
-                    final Result authorisationResult = authoriseCriteriaEntity(freshCentreAppliedCriteriaEntity);
+                    final Result authorisationResult = authoriseCriteriaEntity(freshCentreAppliedCriteriaEntity, authorisationModel, securityTokenProvider);
                     if (!authorisationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run failed (authorisation validation failed).");
                         final var criteriaIndication = createCriteriaIndication(
@@ -971,10 +997,7 @@ public class CriteriaResource extends AbstractWebResource {
                 // Validation is needed because the criteria come from the client.
                 // Authorisation is needed if the user changed token role association between run and refresh actions.
                 if (!isRunning) {
-                    final var validationResult = previouslyRunCriteriaEntity.isValid();
-                    final var validationAndAuthorisationResult = validationResult.isSuccessful()
-                        ? authoriseCriteriaEntity(previouslyRunCriteriaEntity)
-                        : validationResult;
+                    final var validationAndAuthorisationResult = validateCriteriaBeforeRunning(previouslyRunCriteriaEntity, authorisationModel, securityTokenProvider);
                     if (!validationAndAuthorisationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: refresh failed (validation or authorisation failed).");
                         return restUtil.resultJSONRepresentation(
