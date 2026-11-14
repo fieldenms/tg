@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
@@ -11,6 +12,31 @@ const unprocessedFiles = [
     'node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js',
     'node_modules/web-animations-js/web-animations-next-lite.min.js'
 ];
+
+// Files, that are copied byte for byte to the same paths, so that only they remain in their packages.
+// Rollup would parse a classic script as an ES module, removing its 'use strict' and rewriting its top-level 'this'.
+const copiedFiles = [
+    // The web test runner, that test pages load through a plain <script src='...'></script>.
+    'node_modules/wct-browser-legacy/browser.js',
+
+    // Web test files, that 'browser.js' loads (see its 'environmentScripts'; 'mocha.css' is loaded next to 'mocha.js').
+    'node_modules/async/dist/async.js',
+    'node_modules/lodash/lodash.js',
+    'node_modules/mocha/mocha.js',
+    'node_modules/mocha/mocha.css',
+    'node_modules/chai/chai.js',
+    'node_modules/sinon/pkg/sinon.js',
+    'node_modules/sinon-chai/lib/sinon-chai.js'
+];
+
+/// A plugin to emit `files` as assets under the same paths.
+///
+const copy = files => ({
+    name: 'copy',
+    generateBundle() {
+        files.forEach(fileName => this.emitFile({ type: 'asset', fileName, source: readFileSync(fileName) }));
+    }
+});
 
 export default {
     input: [
@@ -55,6 +81,8 @@ export default {
             exclude: [ ...unprocessedFiles ]
         }),
         css(), // plugin to be able to import CSS files (see '@toast-ui/editor')
-        json() // plugin to be able to import JSON files (see 'moment-timezone')
+        json(), // plugin to be able to import JSON files (see 'moment-timezone')
+        // Plugin to copy non-JS files (see 'copiedFiles').
+        copy(copiedFiles)
     ]
 };
