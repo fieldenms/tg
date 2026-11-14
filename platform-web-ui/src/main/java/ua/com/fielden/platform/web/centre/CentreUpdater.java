@@ -972,19 +972,17 @@ public class CentreUpdater {
         return applyDifferences(defaultCentre, updatedDiff, getEntityType(miType), companionFinder);
     }
     
-    /**
-     * Creates user-specific (!) default centre manager from Centre DSL configuration.
-     * <p>
-     * IMPORTANT: this 'default centre' is used for constructing 'fresh centre', 'previouslyRun centre' and their 'diff centres', that is why it is very important to make it suitable for Web UI default values.
-     * All other centres will reuse such Web UI specific default values.
-     * <p>
-     * Please note that 'default' centre is specific to the user on current thread ({@link IUserProvider}). All injector-based default values will be user-specific
-     * if they are defined as user-specific in domain logic.
-     *
-     * @param gdtm
-     * @param miType
-     * @return
-     */
+    /// Creates user-specific (!) default centre manager from Centre DSL configuration.
+    ///
+    /// IMPORTANT: this 'default centre' is the base of every centre.
+    /// 'Fresh' and 'saved' centres are constructed from it and their diffs.
+    /// 'PreviouslyRun' centres are constructed from it and the diff strings that clients keep.
+    /// That is why it is very important to make it suitable for Web UI default values.
+    /// All other centres will reuse such Web UI specific default values.
+    ///
+    /// Please note that 'default' centre is specific to the user on current thread ([IUserProvider]).
+    /// All injector-based default values will be user-specific if they are defined as user-specific in domain logic.
+    ///
     public static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
         return applyWebUIDefaultValues(createDefaultCentre(miType, webUiConfig), getEntityType(miType));
     }

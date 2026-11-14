@@ -130,7 +130,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /// Minimal age of a recorded `lastSeen` before the maintenance sweep re-stamps ("bumps") it.
     /// Throttles silent persistence for actively used centres to at most one adjustment per bump interval per configuration.
-    /// Re-stamping on every emission would instead rewrite three surrogate configurations on each run / page navigation.
+    /// Re-stamping on every emission would instead rewrite FRESH and SAVED on each run / page navigation.
     /// Day granularity is lossless for the eviction decision: eviction fires only after strictly more than [#DYNAMIC_ENTRY_EVICTION_DAYS] whole days since the recorded `lastSeen`.
     /// So even with `lastSeen` lagging behind the actual use by up to a day, at least [#DYNAMIC_ENTRY_EVICTION_DAYS] days of actual non-use are guaranteed before eviction.
     ///
@@ -1275,7 +1275,7 @@ public class CriteriaResource extends AbstractWebResource {
             .collect(toSet());
 
         // Bump only used keys whose lastSeen is missing (stamping heals legacy width-only entries) or old enough to matter.
-        // Re-stamping on every emission would rewrite three surrogate configurations on each run / page navigation.
+        // Re-stamping on every emission would rewrite FRESH and SAVED on each run / page navigation.
         final Set<String> keysToBump = usedDynamicKeys.stream()
             .filter(key -> secondTick.getDynamicLastSeen(root, key)
                 .map(ls -> nowMillis - ls >= DYNAMIC_LAST_SEEN_BUMP_INTERVAL_MILLIS)

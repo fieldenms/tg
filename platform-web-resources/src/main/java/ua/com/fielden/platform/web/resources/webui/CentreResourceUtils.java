@@ -678,7 +678,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             );
         });
         // SAVED-half of the silent adjuster — the FRESH and PREVIOUSLY_RUN halves are covered by `centreAdjuster`.
-        // `EnhancedCentreEntityQueryCriteria.adjustCentreSilently` composes the two so all three surrogates are kept in sync.
+        // `EnhancedCentreEntityQueryCriteria.adjustCentreSilently` composes the two.
+        // So FRESH, SAVED and the PREVIOUSLY_RUN diff string are kept in sync.
         // The combined effect is invisible to dirty-state tracking — indicator stays grey and SAVE stays disabled.
         // Intended for housekeeping mutations such as the dynamic-column eviction sweep / lastSeen bumping.
         // See `CriteriaResource.refreshAndEvictDynamicEntries` for the canonical caller.
