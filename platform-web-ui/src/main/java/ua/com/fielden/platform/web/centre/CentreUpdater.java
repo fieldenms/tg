@@ -212,6 +212,26 @@ public class CentreUpdater {
         final var updatedDiff = updateDifferences(miType, user, saveAsSpecificName, name, saveAsName, webUiConfig, companionFinder);
         return loadCentreFromDefaultAndDiff(miType, updatedDiff, webUiConfig, companionFinder);
     }
+
+    /// Returns the FRESH centre of `user` for the configuration with `saveAsName`, if it exists.
+    /// Otherwise, returns the default centre.
+    /// Unlike [#updateCentre(User, Class, String, Optional, IWebUiConfig, ICompanionObjectFinder)], nothing is saved.
+    ///
+    /// It is used for centre contexts that may come from a tiny hyperlink created by another user.
+    /// Saving would add a configuration with the title used by that user to the configurations of `user`.
+    ///
+    /// @param saveAsName  user-defined title of 'saveAs' centre configuration or empty [Optional] for unnamed centre
+    ///
+    public static ICentreDomainTreeManagerAndEnhancer findFreshCentreOrDefault(
+            final User user,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final Optional<String> saveAsName,
+            final IWebUiConfig webUiConfig,
+            final ICompanionObjectFinder companionFinder) {
+        return retrieveDiff(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName), companionFinder)
+            .map(freshDiff -> loadCentreFromDefaultAndDiff(miType, freshDiff, webUiConfig, companionFinder))
+            .orElseGet(() -> getDefaultCentre(miType, webUiConfig));
+    }
     
     /// Creates the diff string of a PREVIOUSLY_RUN centre, which the client keeps.
     ///

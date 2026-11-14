@@ -1154,23 +1154,27 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     /// It is created from the PREVIOUSLY_RUN diff string in the custom object of `centreContextHolder`.
     /// Actions on the results view always have the diff string, because the client shows this view only after a run.
     ///
-    /// Front actions (`FunctionalActionKind.FRONT`) are on the selection criteria view, which shows FRESH centre.
-    /// Their criteria entity is always created from FRESH centre, whether the client has run the centre or not.
+    /// Front actions (`FunctionalActionKind.FRONT`) are on the selection criteria view.
+    /// Their criteria entity represents the selection criteria that the user sees, even after a run.
+    /// It is FRESH centre with the modifHolder of `centreContextHolder` applied, see `createFrontActionCriteriaEntity`.
     /// This holds for front actions of both standalone and embedded centres.
     /// In standard New and locator actions, selection criteria is the context part before `withComputation`.
     /// It is chosen because every centre has selection criteria. (refs https://github.com/fieldenms/tg/issues/2025)
-    /// Their producers use the computation.
     ///
-    /// For other actions, there is no diff string if the centre has not been run in the client.
+    /// Other actions have no diff string if the centre has not been run in the client.
     /// This is also the case after moving to another configuration, until it is run.
-    /// The criteria entity is then created from FRESH centre too.
+    /// Their criteria entity is then created from FRESH centre, see `createPreviouslyRunCriteriaEntity`.
     /// Without a run, the client shows only the selection criteria view.
     /// Its other actions that require selection criteria are configuration actions.
     /// These are New, Duplicate, Load, Edit, Delete, Configure and Save.
     /// They use the criteria entity for its functions, such as saving or loading configurations.
     /// They apply the modifHolder of `centreContextHolder` to FRESH centre (see `CentreConfigUtils.applyCriteria`).
     ///
-    /// Tiny hyperlinks created before the diff string was introduced have no diff string, and use FRESH centre.
+    /// A tiny hyperlink keeps the context of the user who created it, and may be opened by another user.
+    /// FRESH centre is therefore taken from the user who opens it, if that user has it.
+    /// Otherwise, the default centre is used.
+    /// Nothing is saved for that user.
+    /// Tiny hyperlinks created before the diff string was introduced have no diff string either.
     ///
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(
         final CentreContextHolder centreContextHolder,
@@ -1189,20 +1193,28 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final String saveAsNameString = (String) centreContextHolder.getCustomObject().get("@@saveAsName");
         final Optional<String> saveAsName = "".equals(saveAsNameString) ? empty() : of(saveAsNameString);
 
-        // A `null` diff string creates the criteria entity from FRESH centre.
-        final var previouslyRunDiffString = isFrontAction(centreContextHolder)
-            ? null
-            : (String) centreContextHolder.getCustomObject().get(PREVIOUSLY_RUN_DIFF_STRING_KEY);
-        final M criteriaEntity = (M) createPreviouslyRunCriteriaEntity(
-            previouslyRunDiffString,
-            companionFinder,
-            critGenerator,
-            miType,
-            saveAsName,
-            user,
-            webUiConfig,
-            sharingModel
-        ).setCentreContextHolder(centreContextHolder);
+        final M criteriaEntity = isFrontAction(centreContextHolder)
+            ? createFrontActionCriteriaEntity(
+                centreContextHolder.getModifHolder(),
+                companionFinder,
+                critGenerator,
+                miType,
+                saveAsName,
+                user,
+                webUiConfig,
+                sharingModel
+            )
+            : createPreviouslyRunCriteriaEntity(
+                (String) centreContextHolder.getCustomObject().get(PREVIOUSLY_RUN_DIFF_STRING_KEY),
+                companionFinder,
+                critGenerator,
+                miType,
+                saveAsName,
+                user,
+                webUiConfig,
+                sharingModel
+            );
+        criteriaEntity.setCentreContextHolder(centreContextHolder);
         criteriaEntity.setExportQueryRunner(
             customObject -> stream(
                 webUiConfig,
@@ -1352,8 +1364,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     /// The criteria entity keeps `previouslyRunDiffString`, so that adjusting the centre also adjusts the diff string.
     ///
     /// If the centre has not been run in the client, `previouslyRunDiffString` is `null`.
-    /// The criteria entity is then created from FRESH centre.
-    /// See `createCriteriaEntityForContext` for the actions that use it before a run.
+    /// The criteria entity is then created from FRESH centre of `user` if it exists.
+    /// Otherwise, it is created from the default centre.
+    /// Nothing is saved, see `CentreUpdater.findFreshCentreOrDefault`.
+    /// See `createCriteriaEntityForContext` for the actions without a diff string.
     ///
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createPreviouslyRunCriteriaEntity(
         final String previouslyRunDiffString,
@@ -1367,7 +1381,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     ) {
         final var previouslyRunCentre = previouslyRunDiffString != null
             ? restorePreviouslyRunCentre(previouslyRunDiffString, miType, webUiConfig, companionFinder)
-            : updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, webUiConfig, companionFinder);
+            : findFreshCentreOrDefault(user, miType, saveAsName, webUiConfig, companionFinder);
         final M previouslyRunCriteriaEntity = createCriteriaValidationPrototype(
             miType,
             saveAsName,
@@ -1381,6 +1395,34 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         );
         previouslyRunCriteriaEntity.setPreviouslyRunDiffString(previouslyRunDiffString);
         return previouslyRunCriteriaEntity;
+    }
+
+    /// Creates selection criteria entity of a front action, which represents the selection criteria that the user sees.
+    /// It is created from FRESH centre of `user` if it exists, and from the default centre otherwise.
+    /// Then `modifiedPropertiesHolder` is applied to it, which carries the criteria edited, but not yet validated.
+    /// Nothing is saved, see `CentreUpdater.findFreshCentreOrDefault`.
+    ///
+    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createFrontActionCriteriaEntity(
+        final Map<String, Object> modifiedPropertiesHolder,
+        final ICompanionObjectFinder companionFinder,
+        final ICriteriaGenerator critGenerator,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final User user,
+        final IWebUiConfig webUiConfig,
+        final ICentreConfigSharingModel sharingModel
+    ) {
+        return applyModifHolder(
+            findFreshCentreOrDefault(user, miType, saveAsName, webUiConfig, companionFinder),
+            modifiedPropertiesHolder,
+            companionFinder,
+            critGenerator,
+            miType,
+            saveAsName,
+            user,
+            webUiConfig,
+            sharingModel
+        );
     }
 
     /// Creates selection criteria entity from `modifPropsHolder`.
@@ -1410,11 +1452,42 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             webUiConfig,
             companionFinder
         );
-        applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
+        final M appliedCriteriaEntity = applyModifHolder(
+            originalCdtmae,
+            modifiedPropertiesHolder,
+            companionFinder,
+            critGenerator,
+            miType,
+            saveAsName,
+            user,
+            webUiConfig,
+            sharingModel
+        );
+
+        // need to commit changed fresh centre after modifiedPropertiesHolder has been applied!
+        commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, originalCdtmae, null /* newDesc */, webUiConfig, companionFinder);
+        return appliedCriteriaEntity;
+    }
+
+    /// Creates selection criteria entity from `centre`, and applies `modifiedPropertiesHolder` to it.
+    /// The values and meta-values of `modifiedPropertiesHolder` change `centre` in memory, and nothing is saved.
+    ///
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M applyModifHolder(
+        final ICentreDomainTreeManagerAndEnhancer centre,
+        final Map<String, Object> modifiedPropertiesHolder,
+        final ICompanionObjectFinder companionFinder,
+        final ICriteriaGenerator critGenerator,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Optional<String> saveAsName,
+        final User user,
+        final IWebUiConfig webUiConfig,
+        final ICentreConfigSharingModel sharingModel
+    ) {
+        applyMetaValues(centre, getEntityType(miType), modifiedPropertiesHolder);
         final M validationPrototype = createCriteriaValidationPrototype(
             miType,
             saveAsName,
-            originalCdtmae,
+            centre,
             companionFinder,
             critGenerator,
             maybeVersion(modifiedPropertiesHolder).getAsLong(),
@@ -1422,16 +1495,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             webUiConfig,
             sharingModel
         );
-        final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
-                modifiedPropertiesHolder,
-                validationPrototype,
-                getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
-                companionFinder//
+        return constructCriteriaEntityAndResetMetaValues(
+            modifiedPropertiesHolder,
+            validationPrototype,
+            getOriginalManagedType(validationPrototype.getType(), centre),
+            companionFinder
         ).getKey();
-
-        // need to commit changed fresh centre after modifiedPropertiesHolder has been applied!
-        commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, originalCdtmae, null /* newDesc */, webUiConfig, companionFinder);
-        return appliedCriteriaEntity;
     }
 
     /// Returns `true` in case where `modifiedPropertiesHolder` is empty and should not be used for `criteriaValidationPrototype` application, `false` otherwise.
