@@ -133,6 +133,25 @@ public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestC
         assertNoPreviouslyRunCentreIsPersisted();
     }
 
+    /// Silent adjusting is what refresh and navigate use for the housekeeping of dynamic columns.
+    /// The diff string that they return to the client must carry the same change as FRESH and SAVED centres.
+    ///
+    @Test
+    public void adjusting_the_centre_silently_changes_FRESH_and_SAVED_centres_and_the_diff_string_of_the_client() {
+        editDescCriterion("*run*");
+        final var criteriaEntity = previouslyRunCriteriaEntity(run());
+        editDescCriterion("*edited after the run*");
+
+        criteriaEntity.adjustCentreSilently(withPageCapacity(44));
+
+        final var adjustedPreviouslyRunCentre = restore(criteriaEntity.previouslyRunDiffString());
+        assertEquals(44, pageCapacityOf(adjustedPreviouslyRunCentre));
+        assertEquals("Criteria of the last run must be kept.", "*run*", descCriterionOf(adjustedPreviouslyRunCentre));
+        assertEquals(44, pageCapacity(user, FRESH_CENTRE_NAME, empty()));
+        assertEquals(44, pageCapacity(user, SAVED_CENTRE_NAME, empty()));
+        assertNoPreviouslyRunCentreIsPersisted();
+    }
+
     @Test
     public void column_widths_go_to_the_diff_string_of_the_client_and_only_they_are_copied_to_FRESH_centre() {
         editDescCriterion("*run*");
