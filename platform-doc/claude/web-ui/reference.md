@@ -216,6 +216,13 @@ action(CopyWorkOrderAction.class)
 
 **Context options:** `.withCurrentEntity()`, `.withSelectedEntities()`, `.withSelectionCrit()`, `.withMasterEntity()`, `.withComputation((entity, context) -> value)`
 
+**Selection criteria in a context** — what `selectionCrit()` holds in a producer or companion depends on where the action is:
+- Actions on the results view (top-level, row, property and insertion point actions) get the criteria of the last run in that browser tab or device, which produced the visible results.
+- Front actions (`addFrontAction`) get the criteria that the user sees: FRESH centre with the edits not yet validated applied.
+  Such edits may be invalid, so a producer that reads criteria values should check `selectionCrit().isValid()` first.
+- When a front action is opened from a tiny hyperlink, it gets FRESH centre of the user who opens the link, if that user has the configuration, and the default centre otherwise.
+  The edits stored in the link are applied to it.
+
 **Post-actions** — execute JS after action completes:
 ```java
 action(MyAction.class)

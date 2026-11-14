@@ -51,6 +51,9 @@ See `web-ui/reference.md` § *Dynamic Columns*.
 
 `.withCurrentEntity()`, `.withSelectedEntities()`, `.withSelectionCrit()`, `.withMasterEntity()`, `.withComputation((entity, context) -> value)`
 
+`selectionCrit()` holds the last run for actions on the results view, and the criteria on screen for front actions, which may be invalid.
+See `web-ui/reference.md` § *Action Configuration*.
+
 ## Master Kinds and Open Tokens
 
 There are exactly two master kinds — **simple** (`SimpleMasterBuilder`) and **compound** (`CompoundMasterBuilder`):
