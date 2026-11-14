@@ -10,6 +10,9 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
@@ -19,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static java.util.Arrays.stream;
 import static java.util.Optional.empty;
@@ -27,6 +31,8 @@ import static org.junit.Assert.*;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.critName;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.FRONT;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.TOP_LEVEL;
@@ -34,10 +40,13 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.ACTION_KIND_KEY;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.PREVIOUSLY_RUN_DIFF_STRING_KEY;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createPreviouslyRunCriteriaEntity;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.NONE;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.STALE;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.authoriseCriteriaEntity;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createCriteriaIndication;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.validateCriteriaBeforeRunning;
 
 /// Tests that the PREVIOUSLY_RUN centre is kept by each client as a diff string, independently of other clients (issue #2875).
 ///
@@ -48,9 +57,19 @@ import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.creat
 public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestCase {
 
     @Inject private EntityFactory entityFactory;
+    @Inject private ISecurityTokenProvider securityTokenProvider;
 
     private static final String DESC_CRITERION = critName(UserRole.class, DESC);
     private static final String UNSAFE_DESC = "<script> alert(1) </script>";
+    private static final String ERR_DENIED = "Denied.";
+
+    /// Permits every security token, so that only validation can fail.
+    ///
+    private static final IAuthorisationModel PERMITTING_AUTHORISATION = authorisationModel(token -> successful());
+
+    /// Denies every security token, as for a user whose role was changed after the run.
+    ///
+    private static final IAuthorisationModel DENYING_AUTHORISATION = authorisationModel(token -> failure(ERR_DENIED));
 
     private User user;
 
@@ -299,6 +318,42 @@ public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestC
         assertEquals("*named by other*", descCriterionOf(criteriaEntity.getCentreDomainTreeMangerAndEnhancer()));
     }
 
+    //////////////////////////////////// Refresh and navigate ////////////////////////////////////
+
+    @Test
+    public void criteria_restored_from_a_diff_string_on_refresh_pass_validation_and_authorisation() {
+        editDescCriterion("*run*");
+        final var criteriaEntity = criteriaEntityRestoredOnRefresh(run());
+
+        final var result = validateCriteriaBeforeRunning(criteriaEntity, PERMITTING_AUTHORISATION, securityTokenProvider);
+
+        assertTrue(result.isSuccessful());
+    }
+
+    @Test
+    public void criteria_restored_from_a_diff_string_on_refresh_fail_with_their_validation_result_if_invalid() {
+        final var editedFreshCentre = freshCentre();
+        editedFreshCentre.getFirstTick().setValue(UserRole.class, DESC, UNSAFE_DESC);
+        final var criteriaEntity = criteriaEntityRestoredOnRefresh(createPreviouslyRunDiffString(editedFreshCentre, MI_TYPE, webUiConfig));
+
+        final var result = validateCriteriaBeforeRunning(criteriaEntity, PERMITTING_AUTHORISATION, securityTokenProvider);
+
+        assertFalse(result.isSuccessful());
+        assertEquals(criteriaEntity.isValid().getMessage(), result.getMessage());
+    }
+
+    @Test
+    public void valid_criteria_restored_from_a_diff_string_on_refresh_fail_authorisation_if_reading_is_not_permitted() {
+        editDescCriterion("*run*");
+        final var criteriaEntity = criteriaEntityRestoredOnRefresh(run());
+
+        final var result = validateCriteriaBeforeRunning(criteriaEntity, DENYING_AUTHORISATION, securityTokenProvider);
+
+        assertFalse(result.isSuccessful());
+        assertEquals(ERR_DENIED, result.getMessage());
+        assertEquals(ERR_DENIED, authoriseCriteriaEntity(criteriaEntity, DENYING_AUTHORISATION, securityTokenProvider).getMessage());
+    }
+
     //////////////////////////////////// Criteria indication ////////////////////////////////////
 
     @Test
@@ -375,6 +430,25 @@ public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestC
         );
     }
 
+    /// Creates the criteria entity that refresh and navigate restore from `previouslyRunDiffString`.
+    /// This is what `CriteriaResource.put` does.
+    ///
+    private EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> criteriaEntityRestoredOnRefresh(
+        final String previouslyRunDiffString
+    ) {
+        return createCriteriaValidationPrototype(
+            MI_TYPE,
+            empty(),
+            restore(previouslyRunDiffString),
+            coFinder,
+            critGenerator,
+            0L,
+            user,
+            webUiConfig,
+            sharingModel
+        );
+    }
+
     private ICentreDomainTreeManagerAndEnhancer restore(final String previouslyRunDiffString) {
         return restorePreviouslyRunCentre(previouslyRunDiffString, MI_TYPE, webUiConfig, coFinder);
     }
@@ -410,6 +484,30 @@ public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestC
 
     private static int pageCapacityOf(final ICentreDomainTreeManagerAndEnhancer centre) {
         return centre.getSecondTick().getPageCapacity();
+    }
+
+    /// An authorisation model that authorises every security token with `authorise`.
+    ///
+    private static IAuthorisationModel authorisationModel(final Function<Class<? extends ISecurityToken>, Result> authorise) {
+        return new IAuthorisationModel() {
+            @Override
+            public Result authorise(final Class<? extends ISecurityToken> token) {
+                return authorise.apply(token);
+            }
+
+            @Override
+            public void start() {
+            }
+
+            @Override
+            public void stop() {
+            }
+
+            @Override
+            public boolean isStarted() {
+                return true;
+            }
+        };
     }
 
     private void assertNoPreviouslyRunCentreIsPersisted() {
