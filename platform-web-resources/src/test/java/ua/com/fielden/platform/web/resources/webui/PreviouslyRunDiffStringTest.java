@@ -50,6 +50,7 @@ public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestC
     @Inject private EntityFactory entityFactory;
 
     private static final String DESC_CRITERION = critName(UserRole.class, DESC);
+    private static final String UNSAFE_DESC = "<script> alert(1) </script>";
 
     private User user;
 
@@ -204,6 +205,27 @@ public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestC
 
         assertEquals("*typed*", criteriaEntity.get(DESC_CRITERION));
         assertTrue("No configuration must be saved for the user who opens the link.", configsOf(other).isEmpty());
+    }
+
+    @Test
+    public void criteria_entity_of_a_front_action_with_an_invalid_edit_is_invalid_but_is_still_created() {
+        final var criteriaEntity = criteriaEntityForContext(user, FRONT, empty(), empty(), of(UNSAFE_DESC));
+
+        assertFalse(criteriaEntity.isValid().isSuccessful());
+    }
+
+    @Test
+    public void context_with_a_diff_string_of_invalid_criteria_fails_with_their_validation_result() {
+        final var editedFreshCentre = freshCentre();
+        editedFreshCentre.getFirstTick().setValue(UserRole.class, DESC, UNSAFE_DESC);
+        final var editedDiffString = createPreviouslyRunDiffString(editedFreshCentre, MI_TYPE, webUiConfig);
+
+        final var failure = assertThrows(
+            Result.class,
+            () -> criteriaEntityForContext(user, TOP_LEVEL, empty(), of(editedDiffString), empty())
+        );
+
+        assertFalse(failure.isSuccessful());
     }
 
     @Test
