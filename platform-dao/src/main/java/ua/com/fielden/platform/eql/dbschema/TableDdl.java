@@ -434,7 +434,19 @@ public class TableDdl {
         };
     }
 
+    /// Returns the SQL expression for the `id` of a union-typed property, whose column name is `columnName`.
+    /// The expression lists the union members in the order of [#unionMemberColumns(Class, String)], which matches the order used by EQL.
+    ///
     public static String mkUnionExprSql(final Class<? extends AbstractUnionEntity> unionType, final String columnName) {
+        return unionMemberColumns(unionType, columnName).stream()
+                .map(memberCol -> "WHEN %s IS NOT NULL THEN %s".formatted(memberCol, memberCol))
+                .collect(joining(" ", "CASE ", " END"));
+    }
+
+    /// Returns the names of the columns for the members of a union-typed property, whose column name is `columnName`.
+    /// The members are sorted by property name.
+    ///
+    public static List<String> unionMemberColumns(final Class<? extends AbstractUnionEntity> unionType, final String columnName) {
         final var unionProps = unionProperties(unionType).stream().sorted(comparing(Field::getName)).toList();
         if (unionProps.isEmpty()) {
             throw new EntityDefinitionException(ERR_UNION_ENTITY_HAS_NO_UNION_MEMBERS.formatted(unionType.getTypeName()));
@@ -445,10 +457,9 @@ public class TableDdl {
                     if (sMapTo == null) {
                         throw new DbSchemaException(ERR_MISSING_MAP_TO_IN_UNION_ENTITY.formatted(member.getName(), unionType));
                     }
-                    final var memberCol = columnName + "_" + (isEmpty(sMapTo.value()) ? member.getName().toUpperCase() : sMapTo.value());
-                    return "WHEN %s IS NOT NULL THEN %s".formatted(memberCol, memberCol);
+                    return columnName + "_" + (isEmpty(sMapTo.value()) ? member.getName().toUpperCase() : sMapTo.value());
                 })
-                .collect(joining(" ", "CASE ", " END"));
+                .toList();
     }
 
     /// Determines whether a column, originating from the specified property path, should be indexed, and in what order.
