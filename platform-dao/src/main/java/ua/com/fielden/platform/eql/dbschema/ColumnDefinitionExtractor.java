@@ -5,23 +5,23 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.utils.ImmutableMapUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.lang.reflect.Field;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,14 +31,11 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static ua.com.fielden.platform.audit.AuditUtils.isAuditEntityType;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
-import static ua.com.fielden.platform.eql.dbschema.ColumnIndex.Order.ASC;
-import static ua.com.fielden.platform.eql.dbschema.ColumnIndex.Order.DESC;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.jdbcSqlTypeFor;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.eql.dbschema.TableDdl.mkUnionExprSql;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
@@ -49,7 +46,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 ///
 public class ColumnDefinitionExtractor {
 
-    private static final String
+    static final String
             ERR_UNEXPECTED_HIB_TYPE = "Unexpected Hibernate type [%s] for property [%s.%s].",
             ERR_MISSING_MAP_TO_IN_UNION_ENTITY = "Property [%s] in union entity type [%s] is not annotated MapTo.",
             ERR_MISSING_IS_PROP_IN_UNION_ENTITY = "Property [%s] in union entity type [%s] is not annotated IsProperty.",
@@ -74,17 +71,19 @@ public class ColumnDefinitionExtractor {
     ///   For example, the set of keys for property `note : RichText` is `{note.coreText, note.formattedText}`.
     /// - If the property is union-typed, the map contains entries for each union member, with each key representing a full path to the member.
     ///   For example, the set of keys for union-typed property `location : Location`, where union members are `workshop, station`, is `{location.workshop, location.station}`.
+    ///   With SQL Server the map contains one more entry, keyed by the property's own name, for the computed column that represents the union's `id`.
+    ///   For the example above, the set of keys is `{location, location.workshop, location.station}`.
     /// - Otherwise, the map contains a single entry, with the key equal to the specified property's name.
     ///
     public Map<String, ColumnDefinition> extractFromProperty(
             final Class<? extends AbstractEntity<?>> enclosingEntityType,
             final String propName,
-            final Class<?> propType, 
-            final IsProperty isProperty, 
-            final MapTo mapTo, 
-            final PersistentType persistedType, 
-            final boolean required, 
-            final boolean unique, 
+            final Class<?> propType,
+            final IsProperty isProperty,
+            final MapTo mapTo,
+            final PersistentType persistedType,
+            final boolean required,
+            final boolean unique,
             final Optional<Integer> compositeKeyMemberOrder)
     {
         final String columnName = nameClause(propName, mapTo.value());
@@ -95,7 +94,24 @@ public class ColumnDefinitionExtractor {
 
         if (isUnionEntityType(propType)) {
             final var propUnionEntityType = (Class<? extends AbstractUnionEntity>) propType;
-            return unionProperties(propUnionEntityType).stream()
+            final var maybeUnionComputedColumn = switch (HibernateHelpers.getDbVersion(dialect)) {
+                case MSSQL -> {
+                    final var expr = mkUnionExprSql(propUnionEntityType, columnName);
+                    yield of(new ColumnDefinition(
+                            false, // Not unique -- the constraint is already enforced on the member columns.
+                            empty(), // The computed column is not a key member, even if the union-typed property is.
+                            true, // Nullable -- only if PERSISTED, can it be non-nullable.
+                            columnName,
+                            propType,
+                            jdbcSqlTypeFor((Type) hibType),
+                            isProperty.length(), isProperty.scale(), isProperty.precision(),
+                            mapTo.defaultValue(),
+                            of(expr),
+                            dialect));
+                }
+                default -> Optional.<ColumnDefinition>empty();
+            };
+            final var unionMemberColumns = unionProperties(propUnionEntityType).stream()
                     .collect(toImmutableMap(
                             sField -> propName + '.' + sField.getName(),
                             sField -> {
@@ -114,25 +130,25 @@ public class ColumnDefinitionExtractor {
                                                             sField.getType(), jdbcSqlTypeFor((Type) hibType),
                                                             sIsProperty.length(), sIsProperty.scale(), sIsProperty.precision(),
                                                             sMapTo.defaultValue(),
-                                                            maybeIndexFor(propUnionEntityType, sField.getType(), sField.getName()),
+                                                            empty(),
                                                             dialect);
                             }));
+            return ImmutableMapUtils.unionLeft(maybeUnionComputedColumn.map(it -> Map.of(propName, it)).orElseGet(Map::of),
+                                               unionMemberColumns);
         } else {
             if (hibType instanceof Type t) {
                 return ImmutableMap.of(propName,
                                        new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                             columnName, propType,
                                                             jdbcSqlTypeFor(t),
-                                                            length, scale, precision, mapTo.defaultValue(),
-                                                            maybeIndexFor(enclosingEntityType, propType, propName),
+                                                            length, scale, precision, mapTo.defaultValue(), empty(),
                                                             dialect));
             } else if (hibType instanceof UserType t) {
                 return ImmutableMap.of(propName,
                                        new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                             columnName, propType,
                                                             jdbcSqlTypeFor(t),
-                                                            length, scale, precision, mapTo.defaultValue(),
-                                                            maybeIndexFor(enclosingEntityType, propType, propName),
+                                                            length, scale, precision, mapTo.defaultValue(), empty(),
                                                             dialect));
             } else if (hibType instanceof CompositeUserType compositeUserType) {
                 final List<Pair<String, Integer>> subProps = jdbcSqlTypeFor(compositeUserType);
@@ -183,17 +199,10 @@ public class ColumnDefinitionExtractor {
                                            final String sColumnName = subProps.size() == 1 ? parentColumn
                                                    : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(sColumnNameSuggestion) ? sName.toUpperCase() : sColumnNameSuggestion));
 
-                                           final Optional<ColumnIndex> sMaybeIndex;
-                                           if (RichText.class.isAssignableFrom(propType) && RichText.SEARCH_TEXT.equals(sField.getName())) {
-                                               sMaybeIndex = Optional.of(new ColumnIndex(ASC));
-                                           } else {
-                                               sMaybeIndex = maybeIndexFor(sType, sField.getType(), sName);
-                                           }
-
                                            return new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                                        sColumnName, sField.getType(), sSqlType,
                                                                        sLength, sScale, sPrecision,
-                                                                       sMapTo.defaultValue(), sMaybeIndex, dialect);
+                                                                       sMapTo.defaultValue(), empty(), dialect);
                                        })
                 );
             } else {
@@ -202,23 +211,10 @@ public class ColumnDefinitionExtractor {
         }
     }
 
-    private Optional<ColumnIndex> maybeIndexFor(
-            final Class<?> enclosingType,
-            final Class<?> propType,
-            final String propName)
-    {
-        if (isAuditEntityType(enclosingType) && propName.equals(AbstractAuditEntity.AUDIT_DATE) && propType == Date.class) {
-            return Optional.of(new ColumnIndex(DESC));
-        }
-        if (isPersistentEntityType(propType)
-            && !AbstractPersistentEntity.CREATED_BY.equals(propName)
-            && !AbstractPersistentEntity.LAST_UPDATED_BY.equals(propName))
-        {
-            return Optional.of(new ColumnIndex(ASC));
-        }
-        else {
-            return empty();
-        }
+    /// Returns the RDBMS dialect that this extractor generates column definitions for.
+    ///
+    Dialect dialect() {
+        return dialect;
     }
 
     private boolean isNullable(final Class<?> propType, final boolean required) {
@@ -246,8 +242,16 @@ public class ColumnDefinitionExtractor {
         return of(first(columns.values()).orElseThrow());
     }
     
-    private String nameClause(final String propName, final String columnNameSuggestion) {
+    static String nameClause(final String propName, final String columnNameSuggestion) {
         return (isNotBlank(columnNameSuggestion) ? columnNameSuggestion : propName.toUpperCase() + "_");
+    }
+
+    public static String mkColumnName(final Class<?> type, final CharSequence property) {
+        final var mapTo = getPropertyAnnotation(MapTo.class, type, property.toString());
+        if (mapTo == null) {
+            throw new InvalidArgumentException("Missing @%s on [%s.%s].".formatted(MapTo.class.getSimpleName(), type.getName(), property));
+        }
+        return nameClause(property.toString(), mapTo.value());
     }
 
 }

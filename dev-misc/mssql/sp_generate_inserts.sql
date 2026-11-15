@@ -46,7 +46,16 @@ Purpose: To generate INSERT statements from existing data.
 Written by: Narayana Vyas Kondreddi
             http://vyaskn.tripod.com
 
-            with edits by the TG team
+            with edits by the TG team:
+            * Column metadata is read in a single set-based query from sys.columns by object_id,
+              instead of a per-column loop over INFORMATION_SCHEMA.COLUMNS (requires SQL Server 2017+ for STRING_AGG).
+            * (n)char/(n)varchar and binary columns of up to 333 bytes are scripted without a conversion to (max).
+            * Identity and computed columns are detected correctly when the caller is not dbo (e.g. a test login).
+            * SET IDENTITY_INSERT targets @target_table when it is specified.
+            * Correct literals for date, time, datetimeoffset (quoted ISO 8601), binary/varbinary (0x...),
+              xml and json (quoted), wide decimal/numeric values, and float/real (round-trip precision).
+            * Trailing spaces in varchar/nvarchar values are preserved.
+            * An empty table returns an empty result set straight away, without the informational messages.
 
 Acknowledgements:
         Divya Kalra -- For beta testing
@@ -62,15 +71,8 @@ Date modified: May 1st 2002 19:50 GMT
 
 Email:   vyaskn@hotmail.com
 
-NOTE: This procedure may not work with tables with too many columns.
-      Results can be unpredictable with huge text columns or SQL Server 2000's sql_variant data types
-      Whenever possible, Use @include_column_list parameter to omit column list in the INSERT statement, for better results
-      IMPORTANT: This procedure is not tested with internation data (Extended characters or Unicode). If needed
-      you might want to convert the datatypes of character variables in this procedure to their respective unicode counterparts
-      like nchar and nvarchar
-
-      ALSO NOTE THAT THIS PROCEDURE IS NOT UPDATED TO WORK WITH NEW DATA TYPES INTRODUCED IN SQL SERVER 2005 / YUKON
-
+NOTE: sql_variant, hierarchyid, geometry, geography and other types not listed above are scripted as quoted
+      Unicode strings, relying on implicit conversion; spatial values lose their SRID.
 
 Example 1:  To generate INSERT statements for table 'titles':
 
@@ -153,7 +155,7 @@ IF ((@cols_to_include IS NOT NULL) AND (@cols_to_exclude IS NOT NULL))
     END
 
 --Making sure the @cols_to_include and @cols_to_exclude parameters are receiving values in proper format
-IF ((@cols_to_include IS NOT NULL) AND (PATINDEX('''%''',@cols_to_include COLLATE Latin1_General_BIN) = 0))
+IF ((@cols_to_include IS NOT NULL) AND (PATINDEX('''%''',@cols_to_include COLLATE DATABASE_DEFAULT) = 0))
     BEGIN
         RAISERROR('Invalid use of @cols_to_include property',16,1)
         PRINT 'Specify column names surrounded by single quotes and separated by commas'
@@ -161,7 +163,7 @@ IF ((@cols_to_include IS NOT NULL) AND (PATINDEX('''%''',@cols_to_include COLLAT
         RETURN -1 --Failure. Reason: Invalid use of @cols_to_include property
     END
 
-IF ((@cols_to_exclude IS NOT NULL) AND (PATINDEX('''%''',@cols_to_exclude COLLATE Latin1_General_BIN) = 0))
+IF ((@cols_to_exclude IS NOT NULL) AND (PATINDEX('''%''',@cols_to_exclude COLLATE DATABASE_DEFAULT) = 0))
     BEGIN
         RAISERROR('Invalid use of @cols_to_exclude property',16,1)
         PRINT 'Specify column names surrounded by single quotes and separated by commas'
@@ -182,43 +184,54 @@ IF (PARSENAME(@table_name,3)) IS NOT NULL
 --Checking for the existence of 'user table' or 'view'
 --This procedure is not written to work on system tables
 --To script the data in system tables, just create a view on the system tables and script the view instead
+--The object is resolved once; without @owner, the caller's default schema is used, the same as for the generated INSERTs.
 
-IF @owner IS NULL
+DECLARE @Object_ID int,
+        @Schema_Name sysname
+
+SET @Object_ID = OBJECT_ID(CASE WHEN @owner IS NULL THEN '' ELSE QUOTENAME(LTRIM(RTRIM(@owner))) + '.' END + QUOTENAME(@table_name))
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = @Object_ID AND type IN ('U','V'))
     BEGIN
-        IF ((OBJECT_ID(@table_name,'U') IS NULL) AND (OBJECT_ID(@table_name,'V') IS NULL))
-            BEGIN
-                RAISERROR('User table or view not found.',16,1)
-                PRINT 'You may see this error, if you are not the owner of this table or view. In that case use @owner parameter to specify the owner name.'
-                PRINT 'Make sure you have SELECT permission on that table or view.'
-                RETURN -1 --Failure. Reason: There is no user table or view with this name
-            END
+        RAISERROR('User table or view not found.',16,1)
+        PRINT 'You may see this error, if you are not the owner of this table or view. In that case use @owner parameter to specify the owner name.'
+        PRINT 'Make sure you have SELECT permission on that table or view.'
+        RETURN -1 --Failure. Reason: There is no user table or view with this name
     END
-ELSE
+
+SET @Schema_Name = OBJECT_SCHEMA_NAME(@Object_ID)
+
+--Returning an empty result set straight away for an empty table, which is common when scripting all tables of a database.
+--The result set is the same as without this shortcut; only the informational messages are omitted.
+IF @from IS NULL AND @disable_constraints = 0 AND OBJECTPROPERTY(@Object_ID, 'IsUserTable') = 1
     BEGIN
-        IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @table_name AND (TABLE_TYPE = 'BASE TABLE' OR TABLE_TYPE = 'VIEW') AND TABLE_SCHEMA = @owner)
+        DECLARE @Has_Rows bit = 0
+        DECLARE @Has_Rows_Query nvarchar(max) = N'SELECT @Has_Rows = 1 WHERE EXISTS (SELECT 1 FROM ' + QUOTENAME(@Schema_Name) + N'.' + QUOTENAME(@table_name) + N' WITH (NOLOCK))'
+        EXEC sp_executesql @Has_Rows_Query, N'@Has_Rows bit OUTPUT', @Has_Rows OUTPUT
+        IF @Has_Rows = 0
             BEGIN
-                RAISERROR('User table or view not found.',16,1)
-                PRINT 'You may see this error, if you are not the owner of this table. In that case use @owner parameter to specify the owner name.'
-                PRINT 'Make sure you have SELECT permission on that table or view.'
-                RETURN -1 --Failure. Reason: There is no user table or view with this name
+                SELECT CAST(NULL AS nvarchar(max)) WHERE 1 = 0
+                RETURN 0
             END
     END
 
 --Variable declarations
-DECLARE @Column_ID int,
-        @Column_List varchar(8000),
-        @Column_Name varchar(128),
-        @Start_Insert varchar(786),
-        @Data_Type varchar(128),
-        @Actual_Values varchar(max),    --This is the string that will be finally executed to generate INSERT statements
-        @IDN varchar(128)               --Will contain the IDENTITY column's name in the table
+DECLARE @Column_List nvarchar(max),
+        @Start_Insert nvarchar(1000),
+        @Actual_Values nvarchar(max),   --This is the string that will be finally executed to generate INSERT statements
+        @IDN sysname,                   --Will contain the IDENTITY column's name in the table
+        @Inline_Max_Bytes int           --string and binary columns up to this size are scripted without converting to (max)
 
 --Variable Initialization
 SET @IDN = ''
-SET @Column_ID = 0
-SET @Column_Name = ''
 SET @Column_List = ''
 SET @Actual_Values = ''
+-- A scripted value that is not (max) is converted to nvarchar(4000) when appended to the nvarchar(max) INSERT,
+-- so it must fit in 4000 characters.
+-- Escaping a line terminator turns 1 byte of varchar into 12 characters ('+CHAR(13)+'),
+-- 2 bytes of nvarchar into 14 ('+NCHAR(13)+N'), and 1 byte of binary becomes 2 hex digits.
+-- varchar is the worst case per byte: 333 bytes * 12 + 2 quotes = 3998 characters still fit.
+SET @Inline_Max_Bytes = 333
 
 IF @owner IS NULL
     BEGIN
@@ -230,152 +243,111 @@ ELSE
     END
 
 
---To get the first column's ID
+--Selecting the columns to script, in their ordinal order
+DECLARE @Columns TABLE (Column_ID int PRIMARY KEY, Column_Name sysname, Data_Type sysname, Max_Length smallint, Is_Identity bit)
 
-SELECT	@Column_ID = MIN(ORDINAL_POSITION)
-FROM	INFORMATION_SCHEMA.COLUMNS (NOLOCK)
-WHERE 	TABLE_NAME = @table_name AND
-(@owner IS NULL OR TABLE_SCHEMA = @owner)
+INSERT  @Columns (Column_ID, Column_Name, Data_Type, Max_Length, Is_Identity)
+SELECT  c.column_id,
+        c.name,
+        CASE WHEN t.is_assembly_type = 1 THEN t.name ELSE TYPE_NAME(c.system_type_id) END, -- the base type for alias types, e.g. sysname -> nvarchar
+        c.max_length,
+        c.is_identity
+FROM    sys.columns c
+        JOIN sys.types t ON t.user_type_id = c.user_type_id
+WHERE   c.object_id = @Object_ID
+        AND (@cols_to_include IS NULL OR CHARINDEX('''' + c.name + '''', @cols_to_include) <> 0) --Selecting only user specified columns
+        AND (@cols_to_exclude IS NULL OR CHARINDEX('''' + c.name + '''', @cols_to_exclude) = 0)
+        AND (@omit_identity = 0 OR c.is_identity = 0)      --Determing whether to include or exclude the IDENTITY column
+        AND (@omit_computed_cols = 0 OR c.is_computed = 0) --Making sure whether to output computed columns or not
+        AND (@omit_images = 0 OR t.name <> 'image')
 
---Loop through all the columns of the table, to get the column names and their data types
-WHILE @Column_ID IS NOT NULL
+--Tables with columns of IMAGE data type are not supported for obvious reasons
+IF EXISTS (SELECT 1 FROM @Columns WHERE Data_Type = 'image')
     BEGIN
-        SELECT @Column_Name = QUOTENAME(COLUMN_NAME),
-        @Data_Type = DATA_TYPE
-        FROM   INFORMATION_SCHEMA.COLUMNS (NOLOCK)
-        WHERE  ORDINAL_POSITION = @Column_ID AND
-        TABLE_NAME = @table_name AND
-        (@owner IS NULL OR TABLE_SCHEMA = @owner)
-
-
-        IF @cols_to_include IS NOT NULL --Selecting only user specified columns
-        BEGIN
-            IF CHARINDEX( '''' + SUBSTRING(@Column_Name,2,LEN(@Column_Name)-2) + '''',@cols_to_include) = 0
-            BEGIN
-                GOTO SKIP_LOOP
-            END
-        END
-
-        IF @cols_to_exclude IS NOT NULL --Selecting only user specified columns
-        BEGIN
-            IF CHARINDEX( '''' + SUBSTRING(@Column_Name,2,LEN(@Column_Name)-2) + '''',@cols_to_exclude) <> 0
-            BEGIN
-                GOTO SKIP_LOOP
-            END
-        END
-
-        --Making sure to output SET IDENTITY_INSERT ON/OFF in case the table has an IDENTITY column
-        IF (SELECT COLUMNPROPERTY( OBJECT_ID(QUOTENAME(COALESCE(@owner,USER_NAME())) + '.' + @table_name),SUBSTRING(@Column_Name,2,LEN(@Column_Name) - 2),'IsIdentity')) = 1
-        BEGIN
-            IF @omit_identity = 0 --Determing whether to include or exclude the IDENTITY column
-                SET @IDN = @Column_Name
-            ELSE
-                GOTO SKIP_LOOP
-        END
-
-        --Making sure whether to output computed columns or not
-        IF @omit_computed_cols = 1
-        BEGIN
-            IF (SELECT COLUMNPROPERTY( OBJECT_ID(QUOTENAME(COALESCE(@owner,USER_NAME())) + '.' + @table_name),SUBSTRING(@Column_Name,2,LEN(@Column_Name) - 2),'IsComputed')) = 1
-            BEGIN
-                GOTO SKIP_LOOP
-            END
-        END
-
-        --Tables with columns of IMAGE data type are not supported for obvious reasons
-        IF(@Data_Type in ('image'))
-            BEGIN
-                IF (@omit_images = 0)
-                    BEGIN
-                        RAISERROR('Tables with image columns are not supported.',16,1)
-                        PRINT 'Use @omit_images = 1 parameter to generate INSERTs for the rest of the columns.'
-                        PRINT 'DO NOT omit Column List in the INSERT statements. If you omit column list using @include_column_list=0, the generated INSERTs will fail.'
-                        RETURN -1 --Failure. Reason: There is a column with image data type
-                    END
-                ELSE
-                    BEGIN
-                        GOTO SKIP_LOOP
-                    END
-            END
-
-        --Determining the data type of the column and depending on the data type, the VALUES part of
-        --the INSERT statement is generated. Care is taken to handle columns with NULL values. Also
-        --making sure, not to lose any data from flot, real, money, smallmomey, datetime columns
-        SET @Actual_Values = @Actual_Values  +
-        CASE
-            -- Line terminators are replaced by string concatenation.
-            -- E.g., 'hello\nworld' -> 'hello' + char(10) + 'world'
-            -- CONVERT(varchar(max), ...) is necessary to avoid truncating the output of REPLACE at 8000 bytes.
-            WHEN @Data_Type IN ('char','varchar')
-                THEN
-                    'COALESCE('''''''' + REPLACE(REPLACE(REPLACE(RTRIM(CONVERT(varchar(max),' + @Column_Name + ')),'''''''',''''''''''''),CHAR(13),'''''' + CHAR(13) + ''''''),CHAR(10),'''''' + CHAR(10) + '''''')+'''''''',''NULL'')'
-            WHEN @Data_Type IN ('nchar','nvarchar')
-                THEN
-                    'COALESCE(''N'' + '''''''' + REPLACE(REPLACE(REPLACE(RTRIM(CONVERT(nvarchar(max),' + @Column_Name + ')),'''''''',''''''''''''),CHAR(13),'''''' + CHAR(13) + ''''''),CHAR(10),'''''' + CHAR(10) + '''''')+'''''''',''NULL'')'
-            WHEN @Data_Type IN ('datetime','datetime2','smalldatetime')
-                THEN
-                    'COALESCE('''''''' + RTRIM(CONVERT(char,' + @Column_Name + ',109) COLLATE DATABASE_DEFAULT)+'''''''',''NULL'')'
-            WHEN @Data_Type IN ('uniqueidentifier')
-                THEN
-                    'COALESCE('''''''' + REPLACE(CONVERT(varchar(128),RTRIM(' + @Column_Name + ') COLLATE DATABASE_DEFAULT),'''''''','''''''''''')+'''''''',''NULL'')'
-            -- Line terminators are handled the same as for 'varchar'.
-            WHEN @Data_Type IN ('text')
-                THEN
-                    'COALESCE('''''''' + REPLACE(REPLACE(REPLACE(CONVERT(varchar(max),' + @Column_Name + ') COLLATE DATABASE_DEFAULT,'''''''',''''''''''''),CHAR(13),'''''' + CHAR(13) + ''''''),CHAR(10),'''''' + CHAR(10) + '''''')+'''''''',''NULL'')'
-            WHEN @Data_Type IN ('ntext')
-                THEN
-                    'COALESCE(''N'' + '''''''' + REPLACE(REPLACE(REPLACE(CONVERT(nvarchar(max),' + @Column_Name + ') COLLATE DATABASE_DEFAULT,'''''''',''''''''''''),CHAR(13),'''''' + CHAR(13) + ''''''),CHAR(10),'''''' + CHAR(10) + '''''')+'''''''',''NULL'')'
-            WHEN @Data_Type IN ('binary','varbinary')
-                THEN
-                    'COALESCE(RTRIM(CONVERT(char,' + 'CONVERT(int,' + @Column_Name + ') COLLATE DATABASE_DEFAULT) COLLATE DATABASE_DEFAULT),''NULL'')'
-            WHEN @Data_Type IN ('timestamp','rowversion')
-                THEN
-                    CASE
-                        WHEN @include_timestamp = 0
-                            THEN
-                                '''DEFAULT'''
-                            ELSE
-                                'COALESCE(RTRIM(CONVERT(char,' + 'CONVERT(int,' + @Column_Name + ') COLLATE DATABASE_DEFAULT) COLLATE DATABASE_DEFAULT),''NULL'')'
-                    END
-            WHEN @Data_Type IN ('float','real','money','smallmoney')
-                THEN
-                    'COALESCE(LTRIM(RTRIM(' + 'CONVERT(varchar, ' +  @Column_Name  + ',2) COLLATE DATABASE_DEFAULT' + ')),''NULL'')'
-                ELSE
-                    'COALESCE(LTRIM(RTRIM(' + 'CONVERT(varchar, ' +  @Column_Name  + ') COLLATE DATABASE_DEFAULT' + ')),''NULL'')'
-        END   + '+' +  ''',''' + ' + '
-
-        --Generating the column list for the INSERT statement
-        SET @Column_List = @Column_List +  @Column_Name + ','
-
-        SKIP_LOOP: --The label used in GOTO
-
-		SELECT 	@Column_ID = MIN(ORDINAL_POSITION)
-		FROM 	INFORMATION_SCHEMA.COLUMNS (NOLOCK)
-		WHERE 	TABLE_NAME = @table_name AND
-		ORDINAL_POSITION > @Column_ID AND
-		(@owner IS NULL OR TABLE_SCHEMA = @owner)
-
-    --Loop ends here!
+        RAISERROR('Tables with image columns are not supported.',16,1)
+        PRINT 'Use @omit_images = 1 parameter to generate INSERTs for the rest of the columns.'
+        PRINT 'DO NOT omit Column List in the INSERT statements. If you omit column list using @include_column_list=0, the generated INSERTs will fail.'
+        RETURN -1 --Failure. Reason: There is a column with image data type
     END
 
---To get rid of the extra characters that got concatenated during the last run through the loop
-SET @Column_List = LEFT(@Column_List,len(@Column_List) - 1)
-SET @Actual_Values = LEFT(@Actual_Values,len(@Actual_Values) - 6)
-
-IF LTRIM(@Column_List) = ''
+IF NOT EXISTS (SELECT 1 FROM @Columns)
     BEGIN
         RAISERROR('No columns to select. There should at least be one column to generate the output',16,1)
         RETURN -1 --Failure. Reason: Looks like all the columns are omitted using the @cols_to_exclude parameter
     END
 
+--Making sure to output SET IDENTITY_INSERT ON/OFF in case the table has an IDENTITY column (not applicable to views)
+SELECT @IDN = QUOTENAME(Column_Name) FROM @Columns WHERE Is_Identity = 1 AND OBJECTPROPERTY(@Object_ID, 'IsUserTable') = 1
+
+--Determining the data type of the column and depending on the data type, the VALUES part of
+--the INSERT statement is generated. Care is taken to handle columns with NULL values. Also
+--making sure, not to lose any data from flot, real, money, smallmomey, datetime columns
+SELECT  @Column_List = STRING_AGG(CONVERT(nvarchar(max), QUOTENAME(Column_Name)), ',') WITHIN GROUP (ORDER BY Column_ID),
+        @Actual_Values = STRING_AGG(CONVERT(nvarchar(max),
+            CASE l.Kind
+                -- Quotes are doubled and line terminators are replaced by string concatenation.
+                -- E.g., 'hello\nworld' -> 'hello' + char(10) + 'world'
+                -- For Unicode values, NCHAR and N'...' keep the characters after a line terminator intact.
+                -- For (n)varchar(max), text and ntext values, the concatenation starts with an empty (n)varchar(max),
+                -- otherwise the concatenated literals are truncated at 8000 bytes when the INSERT is executed.
+                WHEN 'S' THEN 'COALESCE(' + CASE WHEN n.Is_Max = 1 THEN '''CAST('''''''' AS varchar(max))+''''''' ELSE '''''''''' END + ' + REPLACE(REPLACE(REPLACE(' + v.Val + ','''''''',''''''''''''),CHAR(13),''''''+CHAR(13)+''''''),CHAR(10),''''''+CHAR(10)+'''''')+'''''''',''NULL'')'
+                WHEN 'N' THEN 'COALESCE(' + CASE WHEN n.Is_Max = 1 THEN '''CAST(N'''''''' AS nvarchar(max))+N''''''' ELSE '''N''''''' END + ' + REPLACE(REPLACE(REPLACE(' + v.Val + ','''''''',''''''''''''),CHAR(13),''''''+NCHAR(13)+N''''''),CHAR(10),''''''+NCHAR(10)+N'''''')+'''''''',''NULL'')'
+                WHEN 'Q' THEN 'COALESCE('''''''' + ' + v.Val + '+'''''''',''NULL'')'
+                WHEN 'U' THEN 'COALESCE(' + v.Val + ',''NULL'')'
+                ELSE v.Val
+            END), '+'',''+') WITHIN GROUP (ORDER BY Column_ID)
+FROM    @Columns
+        CROSS APPLY (SELECT QUOTENAME(Column_Name) AS Col,
+                            CASE WHEN Max_Length = -1 OR Max_Length > @Inline_Max_Bytes THEN 1 ELSE 0 END AS Is_Large,
+                            CASE WHEN Max_Length = -1 OR Data_Type IN ('text','ntext') THEN 1 ELSE 0 END AS Is_Max) n
+        CROSS APPLY (SELECT CASE
+                                WHEN Data_Type IN ('char','varchar','text') THEN 'S'
+                                WHEN Data_Type IN ('date','time','datetime','datetime2','smalldatetime','datetimeoffset','uniqueidentifier') THEN 'Q'
+                                WHEN Data_Type IN ('bit','tinyint','smallint','int','bigint','decimal','numeric','float','real','money','smallmoney','binary','varbinary') THEN 'U'
+                                WHEN Data_Type = 'timestamp' AND @include_timestamp = 1 THEN 'U'
+                                WHEN Data_Type = 'timestamp' THEN 'D'
+                                ELSE 'N' -- nchar, nvarchar, ntext, xml, json and anything else is scripted as a Unicode string
+                            END AS Kind) l
+        CROSS APPLY (SELECT CASE
+                                WHEN Data_Type = 'char' AND Is_Large = 0 THEN 'RTRIM(' + Col + ') COLLATE DATABASE_DEFAULT'
+                                WHEN Data_Type = 'char' THEN 'RTRIM(CONVERT(varchar(max),' + Col + ')) COLLATE DATABASE_DEFAULT'
+                                WHEN Data_Type = 'nchar' AND Is_Large = 0 THEN 'RTRIM(' + Col + ') COLLATE DATABASE_DEFAULT'
+                                WHEN Data_Type = 'nchar' THEN 'RTRIM(CONVERT(nvarchar(max),' + Col + ')) COLLATE DATABASE_DEFAULT'
+                                WHEN Data_Type IN ('varchar','nvarchar') AND Is_Large = 0 THEN Col + ' COLLATE DATABASE_DEFAULT'
+                                WHEN l.Kind = 'S' THEN 'CONVERT(varchar(max),' + Col + ') COLLATE DATABASE_DEFAULT'
+                                WHEN l.Kind = 'N' THEN 'CONVERT(nvarchar(max),' + Col + ') COLLATE DATABASE_DEFAULT'
+                                -- ISO 8601 (style 126) is independent of the session language and DATEFORMAT, and keeps full precision.
+                                WHEN Data_Type = 'uniqueidentifier' THEN 'CONVERT(char(36),' + Col + ')'
+                                WHEN l.Kind = 'Q' THEN 'CONVERT(varchar(40),' + Col + ',126)'
+                                WHEN l.Kind = 'D' THEN '''DEFAULT'''
+                                -- A 0x... literal; style 2 is hex without the prefix (style 1 returns '' rather than 0x for an empty varbinary(max)).
+                                WHEN Data_Type IN ('binary','varbinary','timestamp') AND Is_Large = 1 THEN '''0x''+CONVERT(varchar(max),' + Col + ',2)'
+                                WHEN Data_Type IN ('binary','varbinary','timestamp') THEN '''0x''+CONVERT(varchar(' + CONVERT(varchar(10), Max_Length * 2) + '),' + Col + ',2)'
+                                -- Style 3 produces 17 significant digits, which round-trip exactly.
+                                WHEN Data_Type IN ('float','real') THEN 'CONVERT(varchar(30),' + Col + ',3)'
+                                WHEN Data_Type IN ('money','smallmoney') THEN 'CONVERT(varchar(30),' + Col + ',2)'
+                                ELSE 'CONVERT(varchar(50),' + Col + ')'
+                            END AS Val) v
+
 --Forming the final string that will be executed, to output the INSERT statements
+--The SELECT returns one INSERT per row, concatenated from the column values with +.
+--+ is evaluated left to right, and a non-(max) intermediate result is silently truncated at 8000 bytes,
+--so the INSERT text starts as nvarchar(max), which makes every intermediate result nvarchar(max).
+--E.g., for table T (ID int, NAME varchar(50)), @Actual_Values becomes:
+--    SELECT CONVERT(nvarchar(max),'INSERT INTO [T] ')+'([ID],[NAME]'+')' +'VALUES('+
+--           COALESCE(CONVERT(varchar(50),[ID]),'NULL')
+--           +','+
+--           COALESCE('''' + REPLACE(REPLACE(REPLACE([NAME] COLLATE DATABASE_DEFAULT,'''',''''''),CHAR(13),'''+CHAR(13)+'''),CHAR(10),'''+CHAR(10)+''')+'''','NULL')
+--           +')' FROM [T](NOLOCK)
+--and for row (1, 'O''Brien') it returns:
+--    INSERT INTO [T] ([ID],[NAME])VALUES(1,'O''Brien')
 IF (@include_column_list <> 0)
     BEGIN
         SET @Actual_Values =
             'SELECT ' +
             CASE WHEN @top IS NULL OR @top < 0 THEN '' ELSE ' TOP ' + LTRIM(STR(@top)) + ' ' END +
-            '''' + RTRIM(@Start_Insert) +
-            ' ''+' + '''(' + RTRIM(@Column_List) +  '''+' + ''')''' +
+            'CONVERT(nvarchar(max),''' + RTRIM(@Start_Insert) +
+            ' '')+' + '''(' + RTRIM(@Column_List) +  '''+' + ''')''' +
             ' +''VALUES(''+ ' +  @Actual_Values  + '+'')''' + ' ' +
             COALESCE(@from,' FROM ' + CASE WHEN @owner IS NULL THEN '' ELSE '[' + LTRIM(RTRIM(@owner)) + '].' END + '[' + rtrim(@table_name) + ']' + '(NOLOCK)')
     END
@@ -384,8 +356,8 @@ ELSE IF (@include_column_list = 0)
         SET @Actual_Values =
             'SELECT ' +
             CASE WHEN @top IS NULL OR @top < 0 THEN '' ELSE ' TOP ' + LTRIM(STR(@top)) + ' ' END +
-            '''' + RTRIM(@Start_Insert) +
-            ' '' +''VALUES(''+ ' +  @Actual_Values + '+'')''' + ' ' +
+            'CONVERT(nvarchar(max),''' + RTRIM(@Start_Insert) +
+            ' '') +''VALUES(''+ ' +  @Actual_Values + '+'')''' + ' ' +
             COALESCE(@from,' FROM ' + CASE WHEN @owner IS NULL THEN '' ELSE '[' + LTRIM(RTRIM(@owner)) + '].' END + '[' + rtrim(@table_name) + ']' + '(NOLOCK)')
     END
 
@@ -418,13 +390,13 @@ PRINT ''
 --Determining whether to print IDENTITY_INSERT or not
 IF (@IDN <> '')
     BEGIN
-        PRINT 'SET IDENTITY_INSERT ' + QUOTENAME(COALESCE(@owner,USER_NAME())) + '.' + QUOTENAME(@table_name) + ' ON'
+        PRINT 'SET IDENTITY_INSERT ' + QUOTENAME(@Schema_Name) + '.' + QUOTENAME(COALESCE(@target_table,@table_name)) + ' ON'
         PRINT 'GO'
         PRINT ''
     END
 
 
-IF @disable_constraints = 1 AND (OBJECT_ID(QUOTENAME(COALESCE(@owner,USER_NAME())) + '.' + @table_name, 'U') IS NOT NULL)
+IF @disable_constraints = 1 AND OBJECTPROPERTY(@Object_ID, 'IsUserTable') = 1
     BEGIN
         IF @owner IS NULL
             BEGIN
@@ -449,7 +421,7 @@ PRINT 'PRINT ''Done'''
 PRINT ''
 
 
-IF @disable_constraints = 1 AND (OBJECT_ID(QUOTENAME(COALESCE(@owner,USER_NAME())) + '.' + @table_name, 'U') IS NOT NULL)
+IF @disable_constraints = 1 AND OBJECTPROPERTY(@Object_ID, 'IsUserTable') = 1
     BEGIN
         IF @owner IS NULL
             BEGIN
@@ -466,7 +438,7 @@ IF @disable_constraints = 1 AND (OBJECT_ID(QUOTENAME(COALESCE(@owner,USER_NAME()
 PRINT ''
 IF (@IDN <> '')
     BEGIN
-        PRINT 'SET IDENTITY_INSERT ' + QUOTENAME(COALESCE(@owner,USER_NAME())) + '.' + QUOTENAME(@table_name) + ' OFF'
+        PRINT 'SET IDENTITY_INSERT ' + QUOTENAME(@Schema_Name) + '.' + QUOTENAME(COALESCE(@target_table,@table_name)) + ' OFF'
         PRINT 'GO'
     END
 
@@ -483,8 +455,8 @@ PRINT 'Created the procedure'
 GO
 
 
---Mark procedure as system object
-EXEC sys.sp_MS_marksystemobject sp_generate_inserts
+--Mark procedure as system object, so that it runs in the context of the calling database
+EXEC sys.sp_MS_marksystemobject 'dbo.sp_generate_inserts'
 GO
 
 PRINT 'Granting EXECUTE permission on sp_generate_inserts to all users'
@@ -494,4 +466,3 @@ SET NOCOUNT OFF
 GO
 
 PRINT 'Done'
-
