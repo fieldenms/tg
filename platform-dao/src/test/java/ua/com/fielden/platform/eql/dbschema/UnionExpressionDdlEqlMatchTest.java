@@ -67,7 +67,7 @@ public class UnionExpressionDdlEqlMatchTest extends AbstractDaoTestCase {
                 TGBOGIE_ AS T_1""");
         assertThat(ddl.createIndicesSchema(dialect))
                 .contains("CREATE INDEX I_TGBOGIE__LOCATION_ ON TGBOGIE_" +
-                          "((CASE WHEN LOCATION__WAGONSLOT IS NOT NULL THEN LOCATION__WAGONSLOT WHEN LOCATION__WORKSHOP IS NOT NULL THEN LOCATION__WORKSHOP END) ASC)");
+                          "((CASE WHEN LOCATION__WAGONSLOT IS NOT NULL THEN LOCATION__WAGONSLOT WHEN LOCATION__WORKSHOP IS NOT NULL THEN LOCATION__WORKSHOP END) ASC);");
     }
 
 }

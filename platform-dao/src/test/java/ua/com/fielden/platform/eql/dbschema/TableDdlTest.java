@@ -143,7 +143,7 @@ public class TableDdlTest {
                            "PLACE__SIMPLE bigint, " +
                            "PLACE__REFS bigint );");
         assertThat(Ddl.of(MSSQL, Entity_WithUnion.class).indexes())
-                .contains("CREATE INDEX I_ENTITY_WITHUNION__PLACE_ ON ENTITY_WITHUNION_(PLACE_ ASC)");
+                .contains("CREATE INDEX I_ENTITY_WITHUNION__PLACE_ ON ENTITY_WITHUNION_(PLACE_ ASC);");
     }
 
     @Test
@@ -229,8 +229,8 @@ public class TableDdlTest {
         assertThat(Ddl.of(H2, Entity_WithRefs.class).indexes())
                 .containsExactly(
                         "CREATE UNIQUE INDEX KUI_REFS_TABLE ON REFS_TABLE(KEY_);",
-                        "CREATE INDEX I_REFS_TABLE_SIMPLE_ ON REFS_TABLE(SIMPLE_ ASC)",
-                        "CREATE INDEX I_REFS_TABLE_OTHER_ ON REFS_TABLE(OTHER_ ASC)");
+                        "CREATE INDEX I_REFS_TABLE_SIMPLE_ ON REFS_TABLE(SIMPLE_ ASC);",
+                        "CREATE INDEX I_REFS_TABLE_OTHER_ ON REFS_TABLE(OTHER_ ASC);");
     }
 
     @Test
@@ -238,14 +238,14 @@ public class TableDdlTest {
         assertThat(Ddl.of(H2, Entity_Persistent.class).indexes())
                 .containsExactly(
                         "CREATE UNIQUE INDEX KUI_ENTITY_PERSISTENT_ ON ENTITY_PERSISTENT_(KEY_);",
-                        "CREATE INDEX I_ENTITY_PERSISTENT__ASSIGNEE_ ON ENTITY_PERSISTENT_(ASSIGNEE_ ASC)");
+                        "CREATE INDEX I_ENTITY_PERSISTENT__ASSIGNEE_ ON ENTITY_PERSISTENT_(ASSIGNEE_ ASC);");
     }
 
     @Test
     public void union_typed_property_yields_an_index_per_union_member() {
         assertThat(Ddl.of(H2, Entity_WithUnion.class).indexes())
-                .contains("CREATE INDEX I_ENTITY_WITHUNION__PLACE__SIMPLE ON ENTITY_WITHUNION_(PLACE__SIMPLE ASC)",
-                          "CREATE INDEX I_ENTITY_WITHUNION__PLACE__REFS ON ENTITY_WITHUNION_(PLACE__REFS ASC)");
+                .contains("CREATE INDEX I_ENTITY_WITHUNION__PLACE__SIMPLE ON ENTITY_WITHUNION_(PLACE__SIMPLE ASC);",
+                          "CREATE INDEX I_ENTITY_WITHUNION__PLACE__REFS ON ENTITY_WITHUNION_(PLACE__REFS ASC);");
     }
 
     /// A union-typed key member is represented in the business key by one column per union member, in every RDBMS.
@@ -265,9 +265,9 @@ public class TableDdlTest {
         assertThat(Ddl.of(MSSQL, Entity_WithUnionKeyMember.class).indexes())
                 .containsExactlyInAnyOrder(
                         "CREATE UNIQUE INDEX KUI_ENTITY_WITHUNIONKEYMEMBER_ ON ENTITY_WITHUNIONKEYMEMBER_(PLACE__SIMPLE, PLACE__REFS, NAME_);",
-                        "CREATE INDEX I_ENTITY_WITHUNIONKEYMEMBER__PLACE_ ON ENTITY_WITHUNIONKEYMEMBER_(PLACE_ ASC)",
-                        "CREATE INDEX I_ENTITY_WITHUNIONKEYMEMBER__PLACE__SIMPLE ON ENTITY_WITHUNIONKEYMEMBER_(PLACE__SIMPLE ASC)",
-                        "CREATE INDEX I_ENTITY_WITHUNIONKEYMEMBER__PLACE__REFS ON ENTITY_WITHUNIONKEYMEMBER_(PLACE__REFS ASC)");
+                        "CREATE INDEX I_ENTITY_WITHUNIONKEYMEMBER__PLACE_ ON ENTITY_WITHUNIONKEYMEMBER_(PLACE_ ASC);",
+                        "CREATE INDEX I_ENTITY_WITHUNIONKEYMEMBER__PLACE__SIMPLE ON ENTITY_WITHUNIONKEYMEMBER_(PLACE__SIMPLE ASC);",
+                        "CREATE INDEX I_ENTITY_WITHUNIONKEYMEMBER__PLACE__REFS ON ENTITY_WITHUNIONKEYMEMBER_(PLACE__REFS ASC);");
     }
 
     /// Uniqueness of a union-typed property is enforced per union member.
@@ -291,7 +291,7 @@ public class TableDdlTest {
         assertThat(Ddl.of(H2, Entity_WithRichText.class).indexes())
                 .containsExactly(
                         "CREATE UNIQUE INDEX KUI_ENTITY_WITHRICHTEXT_ ON ENTITY_WITHRICHTEXT_(KEY_);",
-                        "CREATE INDEX I_ENTITY_WITHRICHTEXT__NOTE_SEARCHTEXT ON ENTITY_WITHRICHTEXT_(NOTE_SEARCHTEXT ASC)");
+                        "CREATE INDEX I_ENTITY_WITHRICHTEXT__NOTE_SEARCHTEXT ON ENTITY_WITHRICHTEXT_(NOTE_SEARCHTEXT ASC);");
     }
 
     @Test
@@ -299,9 +299,9 @@ public class TableDdlTest {
         assertThat(Ddl.of(H2, Entity_Audit.class).indexes())
                 .containsExactly(
                         "CREATE UNIQUE INDEX KUI_ENTITY_AUDIT_ ON ENTITY_AUDIT_(AUDITEDENTITY_, AUDITEDVERSION_);",
-                        "CREATE INDEX I_ENTITY_AUDIT__AUDITEDENTITY_ ON ENTITY_AUDIT_(AUDITEDENTITY_ ASC)",
-                        "CREATE INDEX I_ENTITY_AUDIT__AUDITDATE_ ON ENTITY_AUDIT_(AUDITDATE_ DESC)",
-                        "CREATE INDEX I_ENTITY_AUDIT__AUDITUSER_ ON ENTITY_AUDIT_(AUDITUSER_ ASC)");
+                        "CREATE INDEX I_ENTITY_AUDIT__AUDITEDENTITY_ ON ENTITY_AUDIT_(AUDITEDENTITY_ ASC);",
+                        "CREATE INDEX I_ENTITY_AUDIT__AUDITDATE_ ON ENTITY_AUDIT_(AUDITDATE_ DESC);",
+                        "CREATE INDEX I_ENTITY_AUDIT__AUDITUSER_ ON ENTITY_AUDIT_(AUDITUSER_ ASC);");
     }
 
     @Test
@@ -342,7 +342,7 @@ public class TableDdlTest {
     @Test
     public void expression_index_is_created_for_union_typed_properties_on_PostgreSQL_only() {
         final var unionExprIndex = "CREATE INDEX I_ENTITY_WITHUNION__PLACE_ ON ENTITY_WITHUNION_" +
-                      "((CASE WHEN PLACE__SIMPLE IS NOT NULL THEN PLACE__SIMPLE WHEN PLACE__REFS IS NOT NULL THEN PLACE__REFS END) ASC)";
+                      "((CASE WHEN PLACE__SIMPLE IS NOT NULL THEN PLACE__SIMPLE WHEN PLACE__REFS IS NOT NULL THEN PLACE__REFS END) ASC);";
         assertThat(Ddl.of(POSTGRESQL, Entity_WithUnion.class).indexes()).contains(unionExprIndex);
         assertThat(Ddl.of(MSSQL, Entity_WithUnion.class).indexes())
                 .doesNotContain(unionExprIndex);
