@@ -199,12 +199,26 @@ public class EntityContainerEnhancer {
                 .collect(groupingBy(e_p -> e_p._2.getId(), mapping(e_p -> e_p._1, toList())));
     }
 
+    /// Containers of property `propName` that were retrieved together with the rows in `propertyValuesIds`, one for each distinct ID.
+    ///
+    /// Each row carries its own container, and rows that reference the same entity carry equal containers, so only one of them for each ID (that of the first row) is enhanced (recursively) and then assigned to all rows with that ID.
+    /// This keeps enhancement linear in the number of rows, rather than quadratic in the number of rows that share a reference.
+    /// One container per ID is also required for correctness, as the enhancement of a collectional property expects its owners to be distinct.
+    ///
+    /// @param propertyValuesIds  rows grouped by the ID of their non-empty container of `propName`, as produced by [#getEntityPropertyIds(List, String)]
+    ///
     private <E extends AbstractEntity<?>, T extends AbstractEntity<?>> List<EntityContainer<T>> getRetrievedPropertyInstances(
-            final List<EntityContainer<E>> entities, final String propName) {
-        return entities.stream()
-                .map(entity -> (EntityContainer<T>) entity.getEntities().get(propName))
-                .filter(prop -> prop != null && !prop.isEmpty() && !prop.notYetInitialised())
-                .toList();
+            final Map<Long, List<EntityContainer<E>>> propertyValuesIds,
+            final String propName)
+    {
+        final List<EntityContainer<T>> instances = new ArrayList<>(propertyValuesIds.size());
+        for (final var rows : propertyValuesIds.values()) {
+            final var prop = (EntityContainer<T>) rows.getFirst().getEntities().get(propName);
+            if (!prop.notYetInitialised()) {
+                instances.add(prop);
+            }
+        }
+        return instances;
     }
 
     private <E extends AbstractEntity<?> ,T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(
@@ -220,7 +234,7 @@ public class EntityContainerEnhancer {
 
         if (!propertyValuesIds.isEmpty()) {
             // Constructing model for retrieving property instances based on the provided fetch model and list of instances ids
-            final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
+            final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(propertyValuesIds, propertyName);
             // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once.
             //            Such assumption relies on the fact that once a join to a property has been made, all its columns are yielded automatically.
             final List<EntityContainer<T>> enhancedPropInstances = retrievedPropertyInstances.isEmpty()
@@ -260,7 +274,7 @@ public class EntityContainerEnhancer {
 
         if (!propertyValuesIds.isEmpty()) {
             // Constructing model for retrieving property instances based on the provided fetch model and list of instances ids
-            final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
+            final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(propertyValuesIds, propertyName);
             // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once. Such assumption relied on fact that once join to property has been made all its columns had been yielded automatically.
             final List<EntityContainer<T>> enhancedPropInstances = retrievedPropertyInstances.isEmpty()
                     ? getDataInBatches(session, propertyValuesIds.keySet(), ID, fetchModel, paramValues)

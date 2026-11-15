@@ -91,6 +91,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgMeterReading.class);
         add(TgVehicleFuelUsage.class);
         add(TgFuelType.class);
+        add(TgEntityWithIsPropertyOverriddenId.class);
         add(TgModelCount.class);
         add(TgModelYearCount.class);
         add(TgPublishedYearly.class);
