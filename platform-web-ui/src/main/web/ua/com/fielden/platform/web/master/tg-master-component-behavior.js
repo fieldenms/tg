@@ -114,6 +114,7 @@ const componentStyles = `
  * The height set by the user is never less than the visible height of the component, so that every change is seen as it is made:
  * the resizer shrinks a component in a flexible row only until the component fits the row, and a smaller height can be set once the master is made smaller.
  * The height set by the user is remembered in the browser under the user, `entityType` and the element id, and takes the place of the declared height.
+ * The element id of a component bound to the entity is its position among such components, so a remembered height follows that position when such components are added, removed or reordered in the master.
  * It is never less than `minHeight`.
  * The component cannot be resized while it is blocked.
  *

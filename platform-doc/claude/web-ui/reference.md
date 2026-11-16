@@ -204,6 +204,7 @@ Each component takes a layout cell in the order of declaration, as an editor doe
 In a `FLEXIBLE_ROW` of the master layout, a component grows with the master, and shrinks with the master down to the height that it keeps at least; in a row that takes the height of its content, it has that height.
 
 The element id is `component_4_<property>` for a component in place of an editor, and `component-<n>` for the `n`-th component bound to the entity, counted from `0`.
+The height set by the user is remembered under the element id, so for a component bound to the entity it follows the position of the component among such components: once components bound to the entity are added, removed or reordered in the master, a remembered height applies to the component that takes that position, until the user restores the declared height with a double tap on the resizer.
 
 The configuration is validated as it is declared, except for an element name derived from the import path, which is validated when the master is built, and errors are reported with `EntityMasterConfigurationException`, with messages that are public constants of `AbstractComponentWidget` and `WidgetSelector`:
 
