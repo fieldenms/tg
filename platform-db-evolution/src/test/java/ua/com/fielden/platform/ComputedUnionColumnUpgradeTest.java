@@ -1,7 +1,9 @@
 package ua.com.fielden.platform;
 
+import org.assertj.core.groups.Tuple;
 import org.junit.After;
 import org.junit.Test;
+import ua.com.fielden.platform.IComputedUnionColumnUpgrade.OutdatedUnionIndex;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -21,7 +23,12 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -154,8 +161,7 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
         // The index as it was before member `workshop` was added.
         replaceUnionIndex("CASE WHEN LOCATION__WAGONSLOT IS NOT NULL THEN LOCATION__WAGONSLOT END", "ASC");
         assertThat(upgrade.findOutdated().allInDomain())
-                .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::entityType, IComputedUnionColumnUpgrade.OutdatedUnionIndex::property,
-                            IComputedUnionColumnUpgrade.OutdatedUnionIndex::unionType, IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
+                .extracting(OutdatedUnionIndex::entityType, OutdatedUnionIndex::property, OutdatedUnionIndex::unionType, OutdatedUnionIndex::problem)
                 .containsExactly(tuple(TgBogie.class, TgBogie.LOCATION, TgBogieLocation.class, OUTDATED));
 
         exec(upgrade.createSql().property(TgBogie.class, TgBogie.LOCATION));
@@ -203,10 +209,7 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
     @WithDbVersion({POSTGRESQL, MSSQL})
     public void a_dropped_index_is_reported_as_missing() {
         dropUnionIndex();
-        assertThat(upgrade.findOutdated().allInDomain())
-                .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::entityType, IComputedUnionColumnUpgrade.OutdatedUnionIndex::property,
-                            IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
-                .containsExactly(tuple(TgBogie.class, TgBogie.LOCATION, MISSING));
+        assertThat(problems(upgrade.findOutdated().allInDomain())).containsExactly(tuple(TgBogie.class, TgBogie.LOCATION, MISSING));
     }
 
     @Test
@@ -215,18 +218,9 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
         dropUnionIndex();
         final var missingBogieLocation = tuple(TgBogie.class, TgBogie.LOCATION, MISSING);
 
-        assertThat(upgrade.findOutdated().propertiesWithType(TgBogieLocation.class))
-                .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::entityType, IComputedUnionColumnUpgrade.OutdatedUnionIndex::property,
-                            IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
-                .containsExactly(missingBogieLocation);
-        assertThat(upgrade.findOutdated().propertiesOf(List.of(TgBogie.class)))
-                .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::entityType, IComputedUnionColumnUpgrade.OutdatedUnionIndex::property,
-                            IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
-                .containsExactly(missingBogieLocation);
-        assertThat(upgrade.findOutdated().property(TgBogie.class, TgBogie.LOCATION))
-                .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::entityType, IComputedUnionColumnUpgrade.OutdatedUnionIndex::property,
-                            IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
-                .containsExactly(missingBogieLocation);
+        assertThat(problems(upgrade.findOutdated().propertiesWithType(TgBogieLocation.class))).containsExactly(missingBogieLocation);
+        assertThat(problems(upgrade.findOutdated().propertiesOf(List.of(TgBogie.class)))).containsExactly(missingBogieLocation);
+        assertThat(problems(upgrade.findOutdated().property(TgBogie.class, TgBogie.LOCATION))).containsExactly(missingBogieLocation);
 
         assertThat(upgrade.findOutdated().propertiesWithType(UnionEntity.class)).isEmpty();
         assertThat(upgrade.findOutdated().propertiesOf(List.of(AuditedEntity.class))).isEmpty();
@@ -236,37 +230,39 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
     @WithDbVersion({POSTGRESQL, MSSQL})
     public void an_index_with_members_in_a_different_order_is_reported_as_outdated() {
         replaceUnionIndex("CASE WHEN LOCATION__WORKSHOP IS NOT NULL THEN LOCATION__WORKSHOP WHEN LOCATION__WAGONSLOT IS NOT NULL THEN LOCATION__WAGONSLOT END", "ASC");
-        assertThat(upgrade.findOutdated().allInDomain())
-                .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::property, IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
-                .containsExactly(tuple(TgBogie.LOCATION, OUTDATED));
+        assertThat(problems(upgrade.findOutdated().allInDomain())).containsExactly(tuple(TgBogie.class, TgBogie.LOCATION, OUTDATED));
     }
 
     @Test
     @WithDbVersion({POSTGRESQL, MSSQL})
     public void a_descending_index_is_reported_as_outdated() {
         replaceUnionIndex("CASE WHEN LOCATION__WAGONSLOT IS NOT NULL THEN LOCATION__WAGONSLOT WHEN LOCATION__WORKSHOP IS NOT NULL THEN LOCATION__WORKSHOP END", "DESC");
-        assertThat(upgrade.findOutdated().allInDomain())
-                .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::property, IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
-                .containsExactly(tuple(TgBogie.LOCATION, OUTDATED));
+        assertThat(problems(upgrade.findOutdated().allInDomain())).containsExactly(tuple(TgBogie.class, TgBogie.LOCATION, OUTDATED));
     }
 
     @Test
     @WithDbVersion({POSTGRESQL, MSSQL})
     public void an_index_with_a_branch_that_yields_a_member_other_than_the_one_it_tests_is_reported_as_outdated() {
         replaceUnionIndex("CASE WHEN LOCATION__WAGONSLOT IS NOT NULL THEN LOCATION__WORKSHOP WHEN LOCATION__WORKSHOP IS NOT NULL THEN LOCATION__WORKSHOP END", "ASC");
-        assertThat(upgrade.findOutdated().allInDomain())
-                .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::property, IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
-                .containsExactly(tuple(TgBogie.LOCATION, OUTDATED));
+        assertThat(problems(upgrade.findOutdated().allInDomain())).containsExactly(tuple(TgBogie.class, TgBogie.LOCATION, OUTDATED));
     }
 
     @Test
     @WithDbVersion({POSTGRESQL, MSSQL})
     public void a_reported_index_is_printed_as_its_property_union_type_problem_and_details() {
-        final var outdated = new IComputedUnionColumnUpgrade.OutdatedUnionIndex(TgBogie.class, TgBogie.LOCATION, TgBogieLocation.class, OUTDATED, "Some details.");
+        final var outdated = new OutdatedUnionIndex(TgBogie.class, TgBogie.LOCATION, TgBogieLocation.class, OUTDATED, "Some details.");
         assertThat(outdated).hasToString("TgBogie.location (TgBogieLocation): OUTDATED — Some details.");
     }
 
     // :::::::::::::::::::::::: Helpers ::::::::::::::::::::::::
+
+    /// Represents each reported index by its entity type, property and problem, for comparison with `tuple(entityType, property, problem)`.
+    ///
+    private static List<Tuple> problems(final List<OutdatedUnionIndex> outdated) {
+        return outdated.stream()
+                .map(it -> tuple(it.entityType(), it.property(), it.problem()))
+                .toList();
+    }
 
     /// Returns the definition of the index (and, for SQL Server, the computed column) for `TgBogie.location`, as recorded in the database catalog.
     /// The result is empty if the index does not exist.
@@ -356,14 +352,12 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
         final var ddl = new TableDdl(new ColumnDefinitionExtractor(getInstance(HibernateTypeMappings.class), dialect), TgBogie.class);
         dropUnionIndex();
         switch (dbVersion) {
-            case POSTGRESQL -> ddl.createIndicesSchema(List.of(BOGIE_LOCATION_INDEX)).forEach(this::exec);
-            case MSSQL -> {
-                final var column = ddl.getColumnDefinition(TgBogie.LOCATION);
-                exec("ALTER TABLE %s ADD %s".formatted(BOGIE_TABLE, column.schemaString(dialect)));
-                ddl.createIndicesSchema(column).forEach(this::exec);
-            }
+            case POSTGRESQL -> {}
+            // SQL Server indexes the computed column, which must exist first.
+            case MSSQL -> exec("ALTER TABLE %s ADD %s".formatted(BOGIE_TABLE, ddl.getColumnDefinition(TgBogie.LOCATION).schemaString(dialect)));
             default -> throw unexpectedDbVersion();
         }
+        ddl.createIndicesSchema(List.of(BOGIE_LOCATION_INDEX)).forEach(this::exec);
         assertThat(unionIndexDefinition()).as("The union index should be recreated from the current DDL.").isNotEmpty();
     }
 

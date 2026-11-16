@@ -237,9 +237,12 @@ public class TableDdl {
     }
 
     /// Generates DDL statements for all indexes whose names are contained in `indexNames`.
+    /// Names are matched exactly, as produced by [#indexName(CharSequence, CharSequence)].
     ///
     /// Unique indexes are not included — they are generated as part of [#createIndicesSchema(Dialect)],
     /// which produces the complete set of indexes for this table.
+    ///
+    /// It is **not** an error for a name to match no non-unique index of this table, including the name of a unique index — such names are ignored.
     ///
     public List<String> createIndicesSchema(final Collection<String> indexNames) {
         return indexes.stream()
