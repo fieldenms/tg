@@ -55,6 +55,9 @@ const AltScrollWheelZoom = L.Map.ScrollWheelZoom.extend({
  * the mouse wheel without Option scrolls the master.
  * As for centre maps, the controls start with a Fit to bounds button, which fits the drawn features into view as 'show' does.
  *
+ * If an extension point fails once the Leaflet map is created, the map is removed before the error is rethrown,
+ * so that 'mapDiv' can host a map again, as when 'tg-map-component' creates the GIS component again.
+ *
  * @param mapDiv -- the element of the map
  * @param host -- the element with Shadow DOM that contains 'mapDiv', where the styles are inserted
  * @param otherStyles -- the names of style modules of the subclass, such as those of its marker factory
@@ -71,24 +74,30 @@ export const MasterGisComponent = function (mapDiv, host, ...otherStyles) {
         zoomControl: false, // added below in the same position as for centre maps
         scrollWheelZoom: false, // replaced by 'altScrollWheelZoom'
         doubleClickZoom: false
-    }).setView(this.defaultCoordinates(), this.defaultZoomLevel());
-    this._map.addHandler('altScrollWheelZoom', AltScrollWheelZoom);
-    this._map.altScrollWheelZoom.enable();
-    this._map.addControl(easyButton('fa-compress', () => this.fitToFeatures(this._features), 'Fit to bounds')); // above the zoom buttons, as for centre maps
-    this._map.addControl(L.control.zoom({ position: 'topleft' }));
-    this._map.addControl(L.control.scale({ imperial: false, position: 'bottomleft' }));
-    const baseLayers = this._baseLayers.getBaseLayers();
-    if (Object.keys(baseLayers).length > 1) {
-        this._map.addControl(L.control.layers(baseLayers));
-    }
-
-    this._markerFactory = this.createMarkerFactory();
-    this._layer = L.geoJSON(null, {
-        pointToLayer: (feature, latlng) => this._markerFactory.createFeatureMarker(feature, latlng),
-        onEachFeature: (feature, layer) => layer.bindPopup(() => this.createPopupContent(feature)) // the content is created when the popup opens
     });
-    this._clusterGroup = this.createMarkerClusterGroup();
-    this._map.addLayer(this._clusterGroup || this._layer);
+    try {
+        this._map.setView(this.defaultCoordinates(), this.defaultZoomLevel());
+        this._map.addHandler('altScrollWheelZoom', AltScrollWheelZoom);
+        this._map.altScrollWheelZoom.enable();
+        this._map.addControl(easyButton('fa-compress', () => this.fitToFeatures(this._features), 'Fit to bounds')); // above the zoom buttons, as for centre maps
+        this._map.addControl(L.control.zoom({ position: 'topleft' }));
+        this._map.addControl(L.control.scale({ imperial: false, position: 'bottomleft' }));
+        const baseLayers = this._baseLayers.getBaseLayers();
+        if (Object.keys(baseLayers).length > 1) {
+            this._map.addControl(L.control.layers(baseLayers));
+        }
+
+        this._markerFactory = this.createMarkerFactory();
+        this._layer = L.geoJSON(null, {
+            pointToLayer: (feature, latlng) => this._markerFactory.createFeatureMarker(feature, latlng),
+            onEachFeature: (feature, layer) => layer.bindPopup(() => this.createPopupContent(feature)) // the content is created when the popup opens
+        });
+        this._clusterGroup = this.createMarkerClusterGroup();
+        this._map.addLayer(this._clusterGroup || this._layer);
+    } catch (error) {
+        this._map.remove();
+        throw error;
+    }
 };
 
 /**

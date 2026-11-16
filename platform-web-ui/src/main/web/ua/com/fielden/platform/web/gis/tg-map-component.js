@@ -4,6 +4,7 @@ import '/resources/egi/tg-responsive-toolbar.js';
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { TgMasterComponentBehavior } from '/resources/master/tg-master-component-behavior.js';
+import { UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
 
 const template = html`
     <style>
@@ -93,6 +94,8 @@ const template = html`
  * the value is a single entity or a collection of entities, which must be fetched with the master entity.
  *
  * The map is created once it has a size, and is released when the component is detached.
+ * A GIS component that cannot be loaded or created, such as one whose extension point fails, is reported to the user as an unexpected error,
+ * once while the component is attached: it is created again, and reported again if it fails, only once the component is attached again, as when its master is opened again.
  * The component fills the height of its layout cell, so that it grows with the master in a flexible row of the master layout, such as 'FLEXIBLE_ROW' of 'LayoutComposer'.
  * Its height is not less than 'min-height', which is also its height in a row laid out to the heights of its content.
  * With a height declared with 'withHeight' in the Entity Master DSL, the component is resizable by the user, and keeps that height, or the height set by the user, at least, as described in 'TgMasterComponentBehavior'.
@@ -199,7 +202,11 @@ class TgMapComponent extends mixinBehaviors([TgMasterComponentBehavior], Polymer
 
     connectedCallback() {
         super.connectedCallback();
-        this._gisComponentClass = this._gisComponentClass || this._loadGisComponentClass();
+        if (!this._gisComponentClass) {
+            this._gisComponentClass = this._loadGisComponentClass();
+            // a failure to load is reported once the map has a size, as described in '_sizeChanged', rather than as soon as the component is attached
+            this._gisComponentClass.catch(() => {});
+        }
         this._resizeObserver = new ResizeObserver(() => this._sizeChangedAsync());
         this._resizeObserver.observe(this.$.map);
     }
@@ -209,6 +216,8 @@ class TgMapComponent extends mixinBehaviors([TgMasterComponentBehavior], Polymer
         this._resizeObserver.disconnect();
         this._resizeObserver = null;
         cancelAnimationFrame(this._sizeChangedFrame);
+        // a GIS component that failed is created again once the component is attached again, as 'MasterGisComponent' leaves no map behind when it fails
+        this._gisComponentFailed = false;
         if (this.gisComponent) {
             this.gisComponent.remove();
             this._setGisComponent(null);
@@ -274,6 +283,8 @@ class TgMapComponent extends mixinBehaviors([TgMasterComponentBehavior], Polymer
     /**
      * Creates the GIS component once the map has a size, and updates the map after later changes of size; the map has no size while hidden.
      * The toolbar is resized with the map, as they have the same width.
+     * An error in loading or creating the GIS component, or in drawing the entities, is reported to the user and to the server by 'tg-global-error-handler', as an unhandled rejection;
+     * a GIS component that cannot be loaded or created is not created again while the component stays attached, so that the error is reported once rather than at every change of size.
      */
     _sizeChanged() {
         const mapDiv = this.$.map;
@@ -285,38 +296,37 @@ class TgMapComponent extends mixinBehaviors([TgMasterComponentBehavior], Polymer
         }
         if (this.gisComponent) {
             this.gisComponent.invalidateSize();
-        } else if (!this._creatingGis) {
+        } else if (!this._creatingGis && !this._gisComponentFailed) {
             this._creatingGis = true;
             this._gisComponentClass.then(GisComponentClass => {
                 this._creatingGis = false;
-                if (GisComponentClass && this.isConnected && !this.gisComponent) {
+                if (this.isConnected && !this.gisComponent) {
                     // the GIS component is kept as soon as it creates the map, so that an error in drawing never leads to a second map in the same element
                     this._setGisComponent(new GisComponentClass(mapDiv, this));
                     this.gisComponent.showLabels(this._labelsShown);
                     this.gisComponent.show(this._entities || []);
                 }
+            }).catch(error => {
+                this._creatingGis = false;
+                this._gisComponentFailed = !this.gisComponent;
+                throw error;
             });
         }
     }
 
     /**
-     * Loads the GIS component class, resolving to null if it cannot be loaded, in which case the component shows no map.
+     * Loads the GIS component class, rejecting if the attributes that name it are missing, or its module cannot be loaded or does not export it, in which case the component shows no map.
      */
     _loadGisComponentClass() {
         const uri = this.gisComponentUri, name = this.gisComponentName;
         if (!uri || !name) {
-            console.error(`tg-map-component: attributes 'gis-component-uri' and 'gis-component-name' are required, but are [${uri}] and [${name}].`);
-            return Promise.resolve(null);
+            return Promise.reject(new UnexpectedCustomError(`tg-map-component: attributes 'gis-component-uri' and 'gis-component-name' are required, but are [${uri}] and [${name}].`));
         }
         return import(`/resources/${uri}.js`).then(module => {
             if (typeof module[name] !== 'function') {
-                console.error(`tg-map-component: module [/resources/${uri}.js] does not export GIS component [${name}].`);
-                return null;
+                throw new UnexpectedCustomError(`tg-map-component: module [/resources/${uri}.js] does not export GIS component [${name}].`);
             }
             return module[name];
-        }).catch(error => {
-            console.error(`tg-map-component: module [/resources/${uri}.js] with GIS component [${name}] cannot be loaded.`, error);
-            return null;
         });
     }
 }
