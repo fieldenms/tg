@@ -1,6 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
-import { FOCUSABLE_ELEMENTS_SELECTOR, tearDownEvent, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
+import { FOCUSABLE_ELEMENTS_SELECTOR, tearDownEvent, deepestActiveElement, getFlattenedParentAnd, isInert } from '/resources/reflection/tg-polymer-utils.js';
 
 function _onCaptureKeyDown (event) {
     if (event.ctrlKey || event.metaKey) {
@@ -57,10 +57,25 @@ function _getCurrentFocusableElements (container) {
     return queryElements(container, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
 };
 
+/**
+ * Determines whether 'element' of 'container' is in a master component of 'container', such as a required criterion of a centre embedded by 'tg-centre-component':
+ * whether any of the ancestors of 'element' up to 'container' in the flattened tree is a master component, which is marked with attribute 'tg-master-component'.
+ */
+function _isInMasterComponentOf (element, container) {
+    const componentOrContainer = getFlattenedParentAnd(element, current => current === container || current.hasAttribute('tg-master-component'));
+    return !!componentOrContainer && componentOrContainer !== container;
+};
+
+/**
+ * Returns the focusable elements of the required editors of 'container', other than those in a master component of 'container' and those that are inert,
+ * as the content of a component is entered only with Enter, and the elements of a blocked component cannot be focused, as described in 'TgMasterComponentBehavior'.
+ * The required editors in the content of a component are reached from within the component, as from the selection view of a centre that it embeds.
+ */
 function _getCurrentRequiredFocusableElements (container) {
     return queryElements(container, "[required]")
+        .filter(editor => !_isInMasterComponentOf(editor, container))
         .map(editor => queryElements(editor, FOCUSABLE_ELEMENTS_SELECTOR)[0])
-        .filter(element => !element.disabled && element.offsetParent !== null);
+        .filter(element => !element.disabled && element.offsetParent !== null && !isInert(element, container));
 };
 
 export const TgRequiredPropertiesFocusTraversalBehavior = {
