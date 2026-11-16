@@ -237,6 +237,7 @@ public class VehicleModelChanged implements IComponentRefreshCondition<Vehicle> 
 ```
 
 `ComponentRefreshContext` provides the validated entity, with the changes of the user and the values that definers set in turn, and the properties whose values the user changed since the previous validation, which the dirtiness of properties does not tell.
+The changed properties are the top-level properties of the master entity, which its editors represent, so `isChanged` of a dot-notated property, such as `Vehicle_.model().make()`, is always false.
 The condition is created with the injector, so its dependencies are injected.
 The keys of the components whose conditions hold are returned with the validation result, and the master asks those components to refresh.
 What refreshing does is up to the component, which implements `refresh()` (see *Application components*), such as running an embedded centre again.

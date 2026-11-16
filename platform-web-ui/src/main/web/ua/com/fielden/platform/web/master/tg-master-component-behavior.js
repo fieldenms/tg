@@ -184,14 +184,14 @@ const TgMasterComponentBehaviorImpl = {
         },
 
         /**
-         * The title of the property that the component represents, or the title declared for a component bound to the entity.
+         * The declared title of the component, or otherwise the title of the property that it represents; a component bound to the entity has a title only if it is declared.
          */
         propTitle: {
             type: String
         },
 
         /**
-         * The description of the property that the component represents, or the description declared for a component bound to the entity.
+         * The declared description of the component, or otherwise the description of the property that it represents; a component bound to the entity has a description only if it is declared.
          */
         propDesc: {
             type: String

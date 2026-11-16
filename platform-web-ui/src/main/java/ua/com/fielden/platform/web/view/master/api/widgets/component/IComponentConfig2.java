@@ -11,6 +11,8 @@ public interface IComponentConfig2<T extends AbstractEntity<?>> extends ICompone
     ///
     /// The user changes the height that the component keeps at least by dragging the resizer at its bottom right corner, and restores the declared height by double tapping the resizer.
     /// The height set by the user is remembered in the browser, for the user, the entity type of the master and the component.
+    /// A component bound to the entity, added with `addComponent`, is identified by its position among such components,
+    /// so a remembered height follows that position when such components are added, removed or reordered in the master.
     /// It is never less than the visible height of the component, so that the resizer shrinks a component in a flexible row only until the component fits the row.
     /// The component cannot be resized while it is blocked.
     ///

@@ -21,6 +21,7 @@ public record ComponentRefreshContext<T extends AbstractEntity<?>>(T entity, Set
     }
 
     /// Determines whether the user changed the value of property `propName` of the master entity, which is given by its name or by its metamodel reference, such as `Vehicle_.model()`.
+    /// The changed properties are the top-level properties of the master entity, which its editors represent, so a dot-notated property, such as `Vehicle_.model().make()`, is never changed.
     ///
     public boolean isChanged(final CharSequence propName) {
         return changedProps.contains(propName.toString());
