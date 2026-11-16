@@ -36,7 +36,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 class ComputedUnionColumnUpgradeImpl implements IComputedUnionColumnUpgrade {
 
     private static final String
-            ERR_NOT_UNION_TYPED = "The type of [%s.%s] is not a union entity.",
+            ERR_NOT_PERSISTENT_UNION_TYPED = "[%s.%s] is not a persistent union-typed property.",
             ERR_UNSUPPORTED_DB = "Unsupported DB: [%s].",
             ERR_CATALOG_QUERY = "Could not read the database catalog for [%s.%s].",
             ERR_MISSING_COMPUTED_COLUMN = "Computed column [%s.%s] does not exist.",
@@ -92,11 +92,13 @@ class ComputedUnionColumnUpgradeImpl implements IComputedUnionColumnUpgrade {
     }
 
     @Override
-    public List<OutdatedUnionIndex> findOutdated() {
-        final var props = unionProperties(appDomainProvider.entityTypes()).toList();
-        return transactionalExecutionProvider.get().execFn(conn -> props.stream()
-                .flatMap(prop -> findProblem(conn, prop).stream())
-                .toList());
+    public UnionPropertySelector<List<OutdatedUnionIndex>> findOutdated() {
+        return select(properties -> {
+            final var props = properties.toList();
+            return transactionalExecutionProvider.get().execFn(conn -> props.stream()
+                    .flatMap(prop -> findProblem(conn, prop).stream())
+                    .toList());
+        });
     }
 
     /// Returns a selector that applies `action` to the selected properties.
@@ -109,13 +111,13 @@ class ComputedUnionColumnUpgradeImpl implements IComputedUnionColumnUpgrade {
             }
 
             @Override
-            public T property(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
-                return action.apply(Stream.of(unionProperty(entityType, property.toString())));
+            public T propertiesOf(final Iterable<Class<? extends AbstractEntity<?>>> entityTypes) {
+                return action.apply(unionProperties(entityTypes));
             }
 
             @Override
-            public T propertiesOf(final Iterable<Class<? extends AbstractEntity<?>>> entityTypes) {
-                return action.apply(unionProperties(entityTypes));
+            public T property(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
+                return action.apply(Stream.of(unionProperty(entityType, property.toString())));
             }
 
             @Override
@@ -154,8 +156,9 @@ class ComputedUnionColumnUpgradeImpl implements IComputedUnionColumnUpgrade {
     }
 
     private UnionProperty unionProperty(final Class<? extends AbstractEntity<?>> entityType, final String property) {
-        final var unionType = asUnion(domainMetadata.forProperty(entityType, property).type().javaType())
-                .orElseThrow(() -> new InvalidArgumentException(ERR_NOT_UNION_TYPED.formatted(entityType.getName(), property)));
+        final var unionType = domainMetadata.forProperty(entityType, property).asPersistent()
+                .flatMap(prop -> asUnion(prop.type().javaType()))
+                .orElseThrow(() -> new InvalidArgumentException(ERR_NOT_PERSISTENT_UNION_TYPED.formatted(entityType.getName(), property)));
         final var tableName = eqlTables.getTableForEntityTypeOrThrow(entityType).name();
         final var columnName = mkColumnName(entityType, property);
         return new UnionProperty(entityType, property, unionType, tableName, columnName, indexName(tableName, columnName));

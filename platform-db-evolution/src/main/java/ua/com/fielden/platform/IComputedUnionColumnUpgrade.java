@@ -13,10 +13,12 @@ import java.util.List;
 /// * For PostgreSQL, an expression index.
 ///
 /// This utility generates SQL scripts for the following cases:
-/// * Upgrading a database created before such indexes were introduced — [#createSql()].
+/// * Upgrading a database created before such indexes were introduced — `createSql().allInDomain()`.
 /// * Changing the members of a union type, which changes the expression for every property of that type — [#dropSql()] and [#createSql()].
 ///
 /// [#findOutdated()] compares the database with the current DDL and reports the indexes that are missing or outdated.
+///
+/// Each operation covers the properties chosen with [UnionPropertySelector], e.g., `findOutdated().propertiesWithType(MeterCapable.class)`.
 ///
 /// Only union-typed properties of the current domain are covered.
 /// Computed columns and indexes for properties that are no longer union-typed, or no longer exist, are not reported or dropped.
@@ -24,90 +26,55 @@ import java.util.List;
 @ImplementedBy(ComputedUnionColumnUpgradeImpl.class)
 public interface IComputedUnionColumnUpgrade {
 
-    /// Produces an SQL script that creates the missing computed union columns and indexes for the selected persistent union-typed properties.
+    /// Produces an SQL script that creates the missing computed union columns and indexes for the selected properties.
     /// Existing computed columns and indexes are skipped, so the script can be rerun.
     ///
     /// Refer to [#dropSql()] for its use when the members of a union type change.
     ///
     UnionPropertySelector<String> createSql();
 
-    /// Selects persistent union-typed properties for an operation, which produces a result of type `T`.
-    ///
-    interface UnionPropertySelector<T> {
-
-        /// Selects all properties from all registered domain types.
-        ///
-        T allInDomain();
-
-        /// Selects all properties that are present in the specified entity types.
-        ///
-        T propertiesOf(Iterable<Class<? extends AbstractEntity<?>>> entityTypes);
-
-        /// Selects the specified property.
-        /// It is an error if the property is not union-typed.
-        ///
-        T property(Class<? extends AbstractEntity<?>> entityType, CharSequence property);
-
-        /// Selects all properties in the application domain whose type is `unionType`.
-        ///
-        T propertiesWithType(Class<? extends AbstractUnionEntity> unionType);
-    }
-
-    /// Produces an SQL script that drops the computed union columns and indexes for the selected persistent union-typed properties.
+    /// Produces an SQL script that drops the computed union columns and indexes for the selected properties.
     /// Computed columns and indexes that do not exist are skipped, so the script can be rerun.
     ///
     /// When the members of a union type change, the expression for each of its properties changes, and existing indexes no longer match it.
-    /// They are recreated for the properties selected by [UnionPropertySelector#propertiesWithType(Class)] for that union type:
+    /// To recreate them:
     ///
-    /// 1. Execute this script before adding or dropping member columns.
+    /// 1. Execute `dropSql().propertiesWithType(unionType)` before adding or dropping member columns.
     ///    SQL Server does not allow dropping a column that is used by a computed column.
     /// 2. Add or drop the member columns.
-    /// 3. Execute the script produced by [#createSql()].
+    /// 3. Execute `createSql().propertiesWithType(unionType)`.
     ///
     UnionPropertySelector<String> dropSql();
 
-    /// @deprecated Use `createSql().allInDomain()`.
-    ///
-    @Deprecated(forRemoval = true, since = "2.5.12")
-    default String sql() {
-        return createSql().allInDomain();
-    }
-
-    /// @deprecated Use `createSql().propertiesOf(entityTypes)`.
-    ///
-    @Deprecated(forRemoval = true, since = "2.5.12")
-    default String sql(final Iterable<Class<? extends AbstractEntity<?>>> entityTypes) {
-        return createSql().propertiesOf(entityTypes);
-    }
-
-    /// @deprecated Use `createSql().property(entityType, property)`.
-    ///
-    @Deprecated(forRemoval = true, since = "2.5.12")
-    default String sql(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
-        return createSql().property(entityType, property);
-    }
-
-    /// @deprecated Use `createSql().propertiesWithType(unionType)`.
-    ///
-    @Deprecated(forRemoval = true, since = "2.5.12")
-    default String createSql(final Class<? extends AbstractUnionEntity> unionType) {
-        return createSql().propertiesWithType(unionType);
-    }
-
-    /// @deprecated Use `dropSql().propertiesWithType(unionType)`.
-    ///
-    @Deprecated(forRemoval = true, since = "2.5.12")
-    default String dropSql(final Class<? extends AbstractUnionEntity> unionType) {
-        return dropSql().propertiesWithType(unionType);
-    }
-
-    /// Compares the computed union columns and indexes in the database with those defined by the current DDL.
-    /// Returns those that are missing or outdated, and an empty list if the database is up to date.
+    /// Compares the computed union columns and indexes in the database with those defined by the current DDL for the selected properties.
+    /// Returns those that are missing or outdated, and an empty list if they are up to date.
     ///
     /// * A [Problem#MISSING] index is created by [#createSql()].
     /// * An [Problem#OUTDATED] index is recreated by [#dropSql()] followed by [#createSql()] for the properties of its union type.
     ///
-    List<OutdatedUnionIndex> findOutdated();
+    UnionPropertySelector<List<OutdatedUnionIndex>> findOutdated();
+
+    /// Selects the persistent union-typed properties that an operation covers, and performs it, producing a result of type `T`.
+    ///
+    interface UnionPropertySelector<T> {
+
+        /// Selects all properties of all registered domain types.
+        ///
+        T allInDomain();
+
+        /// Selects all properties of the specified entity types.
+        ///
+        T propertiesOf(Iterable<Class<? extends AbstractEntity<?>>> entityTypes);
+
+        /// Selects the specified property.
+        /// It is an error if the property is not persistent and union-typed.
+        ///
+        T property(Class<? extends AbstractEntity<?>> entityType, CharSequence property);
+
+        /// Selects all properties of all registered domain types whose type is `unionType`.
+        ///
+        T propertiesWithType(Class<? extends AbstractUnionEntity> unionType);
+    }
 
     /// A union-typed property whose computed column or index in the database differs from the current DDL.
     ///

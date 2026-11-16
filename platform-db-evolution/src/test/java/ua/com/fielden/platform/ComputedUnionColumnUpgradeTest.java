@@ -12,6 +12,7 @@ import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
+import ua.com.fielden.platform.sample.domain.AuditedEntity;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
@@ -122,7 +123,15 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
     public void upgrade_of_a_property_that_is_not_union_typed_is_rejected() {
         assertThatThrownBy(() -> upgrade.createSql().property(TgBogie.class, TgBogie.BOGIE_CLASS))
                 .isInstanceOf(InvalidArgumentException.class)
-                .hasMessageContaining(TgBogie.BOGIE_CLASS);
+                .hasMessage("[%s.%s] is not a persistent union-typed property.".formatted(TgBogie.class.getName(), TgBogie.BOGIE_CLASS));
+    }
+
+    @Test
+    @WithDbVersion({POSTGRESQL, MSSQL})
+    public void upgrade_of_a_union_typed_property_that_is_not_persistent_is_rejected() {
+        assertThatThrownBy(() -> upgrade.dropSql().property(TgBogie.class, TgBogie.LOCATION_CRIT))
+                .isInstanceOf(InvalidArgumentException.class)
+                .hasMessage("[%s.%s] is not a persistent union-typed property.".formatted(TgBogie.class.getName(), TgBogie.LOCATION_CRIT));
     }
 
     // :::::::::::::::::::::::: Changes to the members of a union type ::::::::::::::::::::::::
@@ -144,7 +153,7 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
 
         // The index as it was before member `workshop` was added.
         replaceUnionIndex("CASE WHEN LOCATION__WAGONSLOT IS NOT NULL THEN LOCATION__WAGONSLOT END", "ASC");
-        assertThat(upgrade.findOutdated())
+        assertThat(upgrade.findOutdated().allInDomain())
                 .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::entityType, IComputedUnionColumnUpgrade.OutdatedUnionIndex::property,
                             IComputedUnionColumnUpgrade.OutdatedUnionIndex::unionType, IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
                 .containsExactly(tuple(TgBogie.class, TgBogie.LOCATION, TgBogieLocation.class, OUTDATED));
@@ -156,7 +165,7 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
         exec(upgrade.createSql().propertiesWithType(TgBogieLocation.class));
 
         assertThat(unionIndexDefinition()).isEqualTo(definitionFromDdl);
-        assertThat(upgrade.findOutdated()).isEmpty();
+        assertThat(upgrade.findOutdated().allInDomain()).isEmpty();
     }
 
     @Test
@@ -175,7 +184,7 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
             exec(upgrade.createSql().propertiesWithType(TgBogieLocation.class));
 
             assertThat(unionIndexDefinition()).isEqualTo(definitionFromDdl);
-            assertThat(upgrade.findOutdated()).isEmpty();
+            assertThat(upgrade.findOutdated().allInDomain()).isEmpty();
         } finally {
             dropUnionIndex();
             dropColumnIfExists(REMOVED_MEMBER_COLUMN);
@@ -187,14 +196,14 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
     @Test
     @WithDbVersion({POSTGRESQL, MSSQL})
     public void nothing_is_outdated_in_a_database_created_with_the_current_DDL() {
-        assertThat(upgrade.findOutdated()).isEmpty();
+        assertThat(upgrade.findOutdated().allInDomain()).isEmpty();
     }
 
     @Test
     @WithDbVersion({POSTGRESQL, MSSQL})
     public void a_dropped_index_is_reported_as_missing() {
         dropUnionIndex();
-        assertThat(upgrade.findOutdated())
+        assertThat(upgrade.findOutdated().allInDomain())
                 .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::entityType, IComputedUnionColumnUpgrade.OutdatedUnionIndex::property,
                             IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
                 .containsExactly(tuple(TgBogie.class, TgBogie.LOCATION, MISSING));
@@ -202,9 +211,32 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
 
     @Test
     @WithDbVersion({POSTGRESQL, MSSQL})
+    public void only_the_selected_properties_are_checked() {
+        dropUnionIndex();
+        final var missingBogieLocation = tuple(TgBogie.class, TgBogie.LOCATION, MISSING);
+
+        assertThat(upgrade.findOutdated().propertiesWithType(TgBogieLocation.class))
+                .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::entityType, IComputedUnionColumnUpgrade.OutdatedUnionIndex::property,
+                            IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
+                .containsExactly(missingBogieLocation);
+        assertThat(upgrade.findOutdated().propertiesOf(List.of(TgBogie.class)))
+                .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::entityType, IComputedUnionColumnUpgrade.OutdatedUnionIndex::property,
+                            IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
+                .containsExactly(missingBogieLocation);
+        assertThat(upgrade.findOutdated().property(TgBogie.class, TgBogie.LOCATION))
+                .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::entityType, IComputedUnionColumnUpgrade.OutdatedUnionIndex::property,
+                            IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
+                .containsExactly(missingBogieLocation);
+
+        assertThat(upgrade.findOutdated().propertiesWithType(UnionEntity.class)).isEmpty();
+        assertThat(upgrade.findOutdated().propertiesOf(List.of(AuditedEntity.class))).isEmpty();
+    }
+
+    @Test
+    @WithDbVersion({POSTGRESQL, MSSQL})
     public void an_index_with_members_in_a_different_order_is_reported_as_outdated() {
         replaceUnionIndex("CASE WHEN LOCATION__WORKSHOP IS NOT NULL THEN LOCATION__WORKSHOP WHEN LOCATION__WAGONSLOT IS NOT NULL THEN LOCATION__WAGONSLOT END", "ASC");
-        assertThat(upgrade.findOutdated())
+        assertThat(upgrade.findOutdated().allInDomain())
                 .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::property, IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
                 .containsExactly(tuple(TgBogie.LOCATION, OUTDATED));
     }
@@ -213,7 +245,7 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
     @WithDbVersion({POSTGRESQL, MSSQL})
     public void a_descending_index_is_reported_as_outdated() {
         replaceUnionIndex("CASE WHEN LOCATION__WAGONSLOT IS NOT NULL THEN LOCATION__WAGONSLOT WHEN LOCATION__WORKSHOP IS NOT NULL THEN LOCATION__WORKSHOP END", "DESC");
-        assertThat(upgrade.findOutdated())
+        assertThat(upgrade.findOutdated().allInDomain())
                 .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::property, IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
                 .containsExactly(tuple(TgBogie.LOCATION, OUTDATED));
     }
@@ -222,7 +254,7 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
     @WithDbVersion({POSTGRESQL, MSSQL})
     public void an_index_with_a_branch_that_yields_a_member_other_than_the_one_it_tests_is_reported_as_outdated() {
         replaceUnionIndex("CASE WHEN LOCATION__WAGONSLOT IS NOT NULL THEN LOCATION__WORKSHOP WHEN LOCATION__WORKSHOP IS NOT NULL THEN LOCATION__WORKSHOP END", "ASC");
-        assertThat(upgrade.findOutdated())
+        assertThat(upgrade.findOutdated().allInDomain())
                 .extracting(IComputedUnionColumnUpgrade.OutdatedUnionIndex::property, IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
                 .containsExactly(tuple(TgBogie.LOCATION, OUTDATED));
     }
