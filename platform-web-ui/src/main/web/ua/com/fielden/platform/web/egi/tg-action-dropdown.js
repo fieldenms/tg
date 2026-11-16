@@ -9,8 +9,7 @@ import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import { FlattenedNodesObserver } from '/resources/polymer/@polymer/polymer/lib/utils/flattened-nodes-observer.js';
 
-import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
-import { _removeAllLightDOMChildrenFrom } from '/resources/reflection/tg-polymer-utils.js';
+import { _removeAllLightDOMChildrenFrom, tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -25,7 +24,7 @@ const template = html`
         }
     </style>
     <!-- on-up rather than on-tap for the inside-click close: child tg-ui-action elements call stopPropagation on the tap event when they run, so an on-tap listener here never fires and the dropdown stays open after the action. The lower-level up event still bubbles. -->
-    <iron-dropdown class="action-dropdown" id="dropdown" always-on-top style="color:black" on-up="_closeDropdown" on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
+    <iron-dropdown class="action-dropdown" id="dropdown" always-on-top restore-focus-on-close style="color:black" on-up="_closeDropdown" on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-canceled="_dropdownCanceled">
         <div slot="dropdown-content" class="dropdown-content">
             <div class="button-container">
                 <slot id="actions_selector"></slot>
@@ -40,6 +39,9 @@ const template = html`
  * `open(actions, currentEntity, currentIndices, positionTarget)` swaps the dropdown's light-DOM children to the supplied `actions`, propagates `currentEntity` to each child, sets each child's `currentIndex` from the matching position in `currentIndices`, then positions itself next to `positionTarget` and opens.
  * Children become and remain direct light-DOM children of this dropdown until the next `open()` replaces them; they are not returned to their original parent on close.
  * This is intentional — owners such as `tg-property-column` keep their own JS references to the action elements (e.g. `customActions`) and continue to use them (e.g. for cell tap) regardless of where the elements live in the DOM tree.
+ *
+ * Once closed, the dropdown returns the focus to the element that was focused when it opened, such as the button that opened it, unless the focus has moved elsewhere, such as to a dialog opened by an action.
+ * Esc that closes the dropdown is consumed by it, so that it does not reach the elements around the dropdown, such as a master component, which moves the focus out of its content on Esc.
  */
 Polymer({
 
@@ -84,8 +86,6 @@ Polymer({
             observer: "_currentIndicesChanged"
         }
     },
-
-    behaviors: [ TgFocusRestorationBehavior ],
 
     ready: function () {
         // Observe the actions slot so the latest `currentEntity` and `currentIndices` are re-applied to any newly-slotted children.
@@ -143,7 +143,12 @@ Polymer({
         this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item.actions.forEach(action => action._updateSpinnerIfNeeded()));
     },
 
-    _dropdownClosed: function() {
-        this.restoreActiveElement();
+    /**
+     * Consumes the key, such as Esc, that closed the dropdown, while the document captures it, so that it does not reach the focused element and the elements around it.
+     */
+    _dropdownCanceled: function (event) {
+        if (event.detail instanceof KeyboardEvent) {
+            tearDownEvent(event.detail);
+        }
     }
 });

@@ -19,6 +19,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentRefreshCondition;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentre;
 
 import java.util.Map;
@@ -251,9 +252,19 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
     }
 
     /// Returns the map between property names and action selector for properties those have associated action.
+    /// Components bound to the entity with an associated action are included under their component keys, such as `component-0`.
     ///
     public Map<String, ? extends IEntityMultiActionSelector> getPropertyActionSelectors() {
         return masterConfig.propertyActionSelectors().entrySet().stream()
+                .map(entry -> t2(entry.getKey(), injector.getInstance(entry.getValue())))
+                .collect(toMap(tt -> tt._1, tt -> tt._2));
+    }
+
+    /// Returns the declared conditions for refreshing components after a validation of the entity, created with the injector,
+    /// and keyed as [#getPropertyActionSelectors()] is: by the property name of a component in place of an editor, and by the component key of a component bound to the entity.
+    ///
+    public Map<String, ? extends IComponentRefreshCondition<T>> getComponentRefreshConditions() {
+        return masterConfig.componentRefreshConditions().entrySet().stream()
                 .map(entry -> t2(entry.getKey(), injector.getInstance(entry.getValue())))
                 .collect(toMap(tt -> tt._1, tt -> tt._2));
     }

@@ -1,6 +1,7 @@
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
-import { isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
+import { isInHierarchy, tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
@@ -75,7 +76,7 @@ const template = html`
             <paper-icon-button id="expandToolbarButton" tooltip-text="Show other actions." icon="more-vert" on-tap="_showMoreActions" class="invisible"></paper-icon-button>
         </div>
     </div>
-    <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="8" always-on-top>
+    <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="8" always-on-top restore-focus-on-close on-iron-overlay-canceled="_dropdownCanceled">
         <div id="hiddenToolbar" class="dropdown-content" slot="dropdown-content" disabled$="[[disabled]]">
             <div id="specificActionContainer"></div>
             <div id="standartActionContainer"></div>
@@ -125,7 +126,11 @@ const findTopMostSlot = function (node, parent) {
     return slot;
 };
 
-export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior], PolymerElement) {
+/**
+ * The toolbar exposes the elements of its shadow tree, such as the button that shows the actions that do not fit and those actions while they are shown, to the selection of elements of `TgElementSelectorBehavior`,
+ * so that the focus traversals that select the focusable elements with it, such as that of the content of a master component, include them.
+ */
+export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior, TgElementSelectorBehavior], PolymerElement) {
 
     static get template() { 
         return template;
@@ -191,9 +196,23 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
         return observer;
     }
 
+    /**
+     * Opens the dropdown with the actions that do not fit into the toolbar.
+     * Once closed, the dropdown returns the focus to the element that was focused when it opened, such as the button that opened it, unless the focus has moved elsewhere.
+     */
     _showMoreActions (e) {
         e.preventDefault();
         this.$.dropdown.open();
+    }
+
+    /**
+     * Consumes the key, such as Esc, that closed the dropdown, while the document captures it, so that it does not reach the focused element and the elements around the toolbar,
+     * such as a master component, which moves the focus out of its content on Esc.
+     */
+    _dropdownCanceled (event) {
+        if (event.detail instanceof KeyboardEvent) {
+            tearDownEvent(event.detail);
+        }
     }
 
     /**
