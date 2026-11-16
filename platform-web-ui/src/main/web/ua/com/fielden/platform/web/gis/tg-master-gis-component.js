@@ -55,8 +55,8 @@ const AltScrollWheelZoom = L.Map.ScrollWheelZoom.extend({
  * the mouse wheel without Option scrolls the master.
  * As for centre maps, the controls start with a Fit to bounds button, which fits the drawn features into view as 'show' does.
  *
- * If an extension point fails once the Leaflet map is created, the map is removed before the error is rethrown,
- * so that 'mapDiv' can host a map again, as when 'tg-map-component' creates the GIS component again.
+ * If creating the GIS component fails, as when an extension point fails, the Leaflet map, if it is created, and the styles appended to 'host' are removed before the error is rethrown,
+ * so that 'tg-map-component' can create the GIS component again in the same element, without a second map or a second copy of the styles.
  *
  * @param mapDiv -- the element of the map
  * @param host -- the element with Shadow DOM that contains 'mapDiv', where the styles are inserted
@@ -65,17 +65,16 @@ const AltScrollWheelZoom = L.Map.ScrollWheelZoom.extend({
 export const MasterGisComponent = function (mapDiv, host, ...otherStyles) {
     this._host = host;
     this._reflector = new TgReflector();
-    appendStylesTo(host, leafletStylesName, leafletEasybuttonStylesName, tgIconFactoryStylesName, tgMasterGisComponentStylesName, ...otherStyles);
+    const styles = appendStylesTo(host, leafletStylesName, leafletEasybuttonStylesName, tgIconFactoryStylesName, tgMasterGisComponentStylesName, ...otherStyles);
     this._features = [];
-
-    this._baseLayers = this.createBaseLayers();
-    this._map = L.map(mapDiv, {
-        layers: [this._baseLayers.getBaseLayer(this.defaultBaseLayer())],
-        zoomControl: false, // added below in the same position as for centre maps
-        scrollWheelZoom: false, // replaced by 'altScrollWheelZoom'
-        doubleClickZoom: false
-    });
     try {
+        this._baseLayers = this.createBaseLayers();
+        this._map = L.map(mapDiv, {
+            layers: [this._baseLayers.getBaseLayer(this.defaultBaseLayer())],
+            zoomControl: false, // added below in the same position as for centre maps
+            scrollWheelZoom: false, // replaced by 'altScrollWheelZoom'
+            doubleClickZoom: false
+        });
         this._map.setView(this.defaultCoordinates(), this.defaultZoomLevel());
         this._map.addHandler('altScrollWheelZoom', AltScrollWheelZoom);
         this._map.altScrollWheelZoom.enable();
@@ -95,7 +94,10 @@ export const MasterGisComponent = function (mapDiv, host, ...otherStyles) {
         this._clusterGroup = this.createMarkerClusterGroup();
         this._map.addLayer(this._clusterGroup || this._layer);
     } catch (error) {
-        this._map.remove();
+        if (this._map) {
+            this._map.remove();
+        }
+        styles.remove();
         throw error;
     }
 };

@@ -93,7 +93,8 @@ const template = html`
  * What is drawn is the value of 'property-name' for a component in place of an editor, and the entity itself for a component bound to the entity;
  * the value is a single entity or a collection of entities, which must be fetched with the master entity.
  *
- * The map is created once it has a size, and is released when the component is detached.
+ * The map is created once, the first time it has a size, and is kept while the component is detached, as the map of a centre is, so that a cached master shows it again;
+ * later changes of size, including the attaching of the component again, update it.
  * A GIS component that cannot be loaded or created, such as one whose extension point fails, is reported to the user as an unexpected error,
  * once while the component is attached: it is created again, and reported again if it fails, only once the component is attached again, as when its master is opened again.
  * The component fills the height of its layout cell, so that it grows with the master in a flexible row of the master layout, such as 'FLEXIBLE_ROW' of 'LayoutComposer'.
@@ -216,12 +217,8 @@ class TgMapComponent extends mixinBehaviors([TgMasterComponentBehavior], Polymer
         this._resizeObserver.disconnect();
         this._resizeObserver = null;
         cancelAnimationFrame(this._sizeChangedFrame);
-        // a GIS component that failed is created again once the component is attached again, as 'MasterGisComponent' leaves no map behind when it fails
+        // a GIS component that failed is created again once the component is attached again, as 'MasterGisComponent' leaves neither a map nor styles behind when it fails
         this._gisComponentFailed = false;
-        if (this.gisComponent) {
-            this.gisComponent.remove();
-            this._setGisComponent(null);
-        }
     }
 
     /**
