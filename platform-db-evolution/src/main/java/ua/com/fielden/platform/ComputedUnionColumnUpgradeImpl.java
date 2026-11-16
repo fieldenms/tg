@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -35,7 +36,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 class ComputedUnionColumnUpgradeImpl implements IComputedUnionColumnUpgrade {
 
     private static final String
-            ERR_NOT_UNION_TYPED = "The type of [%s.%s] is not a union entity.",
+            ERR_NOT_PERSISTENT_UNION_TYPED = "[%s.%s] is not a persistent union-typed property.",
             ERR_UNSUPPORTED_DB = "Unsupported DB: [%s].",
             ERR_CATALOG_QUERY = "Could not read the database catalog for [%s.%s].",
             ERR_MISSING_COMPUTED_COLUMN = "Computed column [%s.%s] does not exist.",
@@ -81,42 +82,49 @@ class ComputedUnionColumnUpgradeImpl implements IComputedUnionColumnUpgrade {
     }
 
     @Override
-    public String sql() {
-        return sql(appDomainProvider.entityTypes());
+    public UnionPropertySelector<String> createSql() {
+        return select(properties -> properties.map(this::createSql).collect(joining("\n")));
     }
 
     @Override
-    public String sql(final Iterable<Class<? extends AbstractEntity<?>>> entityTypes) {
-        return unionProperties(entityTypes).map(this::createSql).collect(joining("\n"));
+    public UnionPropertySelector<String> dropSql() {
+        return select(properties -> properties.map(this::dropSql).collect(joining("\n")));
     }
 
     @Override
-    public String sql(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
-        return createSql(unionProperty(entityType, property.toString()));
+    public UnionPropertySelector<List<OutdatedUnionIndex>> findOutdated() {
+        return select(properties -> {
+            final var props = properties.toList();
+            return transactionalExecutionProvider.get().execFn(conn -> props.stream()
+                    .flatMap(prop -> findProblem(conn, prop).stream())
+                    .toList());
+        });
     }
 
-    @Override
-    public String dropSql(final Class<? extends AbstractUnionEntity> unionType) {
-        return unionProperties(appDomainProvider.entityTypes())
-                .filter(prop -> prop.unionType().equals(unionType))
-                .map(this::dropSql)
-                .collect(joining("\n"));
-    }
+    /// Returns a selector that applies `action` to the selected properties.
+    ///
+    private <T> UnionPropertySelector<T> select(final Function<Stream<UnionProperty>, T> action) {
+        return new UnionPropertySelector<>() {
+            @Override
+            public T allInDomain() {
+                return propertiesOf(appDomainProvider.entityTypes());
+            }
 
-    @Override
-    public String createSql(final Class<? extends AbstractUnionEntity> unionType) {
-        return unionProperties(appDomainProvider.entityTypes())
-                .filter(prop -> prop.unionType().equals(unionType))
-                .map(this::createSql)
-                .collect(joining("\n"));
-    }
+            @Override
+            public T propertiesOf(final Iterable<Class<? extends AbstractEntity<?>>> entityTypes) {
+                return action.apply(unionProperties(entityTypes));
+            }
 
-    @Override
-    public List<OutdatedUnionIndex> findOutdated() {
-        final var props = unionProperties(appDomainProvider.entityTypes()).toList();
-        return transactionalExecutionProvider.get().execFn(conn -> props.stream()
-                .flatMap(prop -> findProblem(conn, prop).stream())
-                .toList());
+            @Override
+            public T property(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
+                return action.apply(Stream.of(unionProperty(entityType, property.toString())));
+            }
+
+            @Override
+            public T propertiesWithType(final Class<? extends AbstractUnionEntity> unionType) {
+                return action.apply(unionProperties(appDomainProvider.entityTypes()).filter(prop -> prop.unionType().equals(unionType)));
+            }
+        };
     }
 
     /// A union-typed persistent property, together with the names of the database objects that the current DDL defines for it.
@@ -148,8 +156,9 @@ class ComputedUnionColumnUpgradeImpl implements IComputedUnionColumnUpgrade {
     }
 
     private UnionProperty unionProperty(final Class<? extends AbstractEntity<?>> entityType, final String property) {
-        final var unionType = asUnion(domainMetadata.forProperty(entityType, property).type().javaType())
-                .orElseThrow(() -> new InvalidArgumentException(ERR_NOT_UNION_TYPED.formatted(entityType.getName(), property)));
+        final var unionType = domainMetadata.forProperty(entityType, property).asPersistent()
+                .flatMap(prop -> asUnion(prop.type().javaType()))
+                .orElseThrow(() -> new InvalidArgumentException(ERR_NOT_PERSISTENT_UNION_TYPED.formatted(entityType.getName(), property)));
         final var tableName = eqlTables.getTableForEntityTypeOrThrow(entityType).name();
         final var columnName = mkColumnName(entityType, property);
         return new UnionProperty(entityType, property, unionType, tableName, columnName, indexName(tableName, columnName));
