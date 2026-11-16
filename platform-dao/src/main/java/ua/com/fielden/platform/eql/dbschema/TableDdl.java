@@ -236,6 +236,18 @@ public class TableDdl {
                 .collect(toList());
     }
 
+    /// Generates DDL statements for all indexes whose names are contained in `indexNames`.
+    ///
+    /// Unique indexes are not included — they are generated as part of [#createIndicesSchema(Dialect)],
+    /// which produces the complete set of indexes for this table.
+    ///
+    public List<String> createIndicesSchema(final Collection<String> indexNames) {
+        return indexes.stream()
+                .filter(idx -> indexNames.contains(idx.name()))
+                .map(this::indexToSql)
+                .toList();
+    }
+
     private String indexToSql(final Index index) {
         return switch (index) {
             case Index.Column it -> "CREATE INDEX %s ON %s(%s %s);".formatted(

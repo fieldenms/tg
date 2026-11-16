@@ -19,12 +19,7 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -357,9 +352,7 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
         final var ddl = new TableDdl(new ColumnDefinitionExtractor(getInstance(HibernateTypeMappings.class), dialect), TgBogie.class);
         dropUnionIndex();
         switch (dbVersion) {
-            case POSTGRESQL -> ddl.createIndicesSchema(dialect).stream()
-                    .filter(stmt -> stmt.startsWith("CREATE INDEX %s ".formatted(BOGIE_LOCATION_INDEX)))
-                    .forEach(this::exec);
+            case POSTGRESQL -> ddl.createIndicesSchema(List.of(BOGIE_LOCATION_INDEX)).forEach(this::exec);
             case MSSQL -> {
                 final var column = ddl.getColumnDefinition(TgBogie.LOCATION);
                 exec("ALTER TABLE %s ADD %s".formatted(BOGIE_TABLE, column.schemaString(dialect)));
