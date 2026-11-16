@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -81,34 +82,13 @@ class ComputedUnionColumnUpgradeImpl implements IComputedUnionColumnUpgrade {
     }
 
     @Override
-    public String sql() {
-        return sql(appDomainProvider.entityTypes());
+    public UnionPropertySelector<String> createSql() {
+        return select(properties -> properties.map(this::createSql).collect(joining("\n")));
     }
 
     @Override
-    public String sql(final Iterable<Class<? extends AbstractEntity<?>>> entityTypes) {
-        return unionProperties(entityTypes).map(this::createSql).collect(joining("\n"));
-    }
-
-    @Override
-    public String sql(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
-        return createSql(unionProperty(entityType, property.toString()));
-    }
-
-    @Override
-    public String dropSql(final Class<? extends AbstractUnionEntity> unionType) {
-        return unionProperties(appDomainProvider.entityTypes())
-                .filter(prop -> prop.unionType().equals(unionType))
-                .map(this::dropSql)
-                .collect(joining("\n"));
-    }
-
-    @Override
-    public String createSql(final Class<? extends AbstractUnionEntity> unionType) {
-        return unionProperties(appDomainProvider.entityTypes())
-                .filter(prop -> prop.unionType().equals(unionType))
-                .map(this::createSql)
-                .collect(joining("\n"));
+    public UnionPropertySelector<String> dropSql() {
+        return select(properties -> properties.map(this::dropSql).collect(joining("\n")));
     }
 
     @Override
@@ -117,6 +97,32 @@ class ComputedUnionColumnUpgradeImpl implements IComputedUnionColumnUpgrade {
         return transactionalExecutionProvider.get().execFn(conn -> props.stream()
                 .flatMap(prop -> findProblem(conn, prop).stream())
                 .toList());
+    }
+
+    /// Returns a selector that applies `action` to the selected properties.
+    ///
+    private <T> UnionPropertySelector<T> select(final Function<Stream<UnionProperty>, T> action) {
+        return new UnionPropertySelector<>() {
+            @Override
+            public T allInDomain() {
+                return propertiesOf(appDomainProvider.entityTypes());
+            }
+
+            @Override
+            public T property(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
+                return action.apply(Stream.of(unionProperty(entityType, property.toString())));
+            }
+
+            @Override
+            public T propertiesOf(final Iterable<Class<? extends AbstractEntity<?>>> entityTypes) {
+                return action.apply(unionProperties(entityTypes));
+            }
+
+            @Override
+            public T propertiesWithType(final Class<? extends AbstractUnionEntity> unionType) {
+                return action.apply(unionProperties(appDomainProvider.entityTypes()).filter(prop -> prop.unionType().equals(unionType)));
+            }
+        };
     }
 
     /// A union-typed persistent property, together with the names of the database objects that the current DDL defines for it.

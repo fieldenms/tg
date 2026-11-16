@@ -79,7 +79,7 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
         dropUnionIndex();
         assertThat(unionIndexDefinition()).isEmpty();
 
-        exec(upgrade.sql(TgBogie.class, TgBogie.LOCATION));
+        exec(upgrade.createSql().property(TgBogie.class, TgBogie.LOCATION));
 
         assertThat(unionIndexDefinition()).isEqualTo(definitionFromDdl);
     }
@@ -90,7 +90,7 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
         final var definitionFromDdl = unionIndexDefinition();
 
         dropUnionIndex();
-        final var sql = upgrade.sql(TgBogie.class, TgBogie.LOCATION);
+        final var sql = upgrade.createSql().property(TgBogie.class, TgBogie.LOCATION);
         exec(sql);
         exec(sql);
 
@@ -103,7 +103,7 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
         final var unionIndexesFromDdl = unionIndexNamesInDatabase();
         assertThat(unionIndexesFromDdl).contains(BOGIE_LOCATION_INDEX);
 
-        final var sql = upgrade.sql();
+        final var sql = upgrade.createSql().allInDomain();
         assertThat(createdIndexes(sql).keySet()).isEqualTo(unionIndexesFromDdl);
 
         exec(sql);
@@ -113,14 +113,14 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
     @Test
     @WithDbVersion({POSTGRESQL, MSSQL})
     public void upgrade_of_specific_entity_types_is_limited_to_their_tables() {
-        assertThat(createdIndexes(upgrade.sql(List.of(TgBogie.class))))
+        assertThat(createdIndexes(upgrade.createSql().propertiesOf(List.of(TgBogie.class))))
                 .containsExactly(Map.entry(BOGIE_LOCATION_INDEX, BOGIE_TABLE));
     }
 
     @Test
     @WithDbVersion({POSTGRESQL, MSSQL})
     public void upgrade_of_a_property_that_is_not_union_typed_is_rejected() {
-        assertThatThrownBy(() -> upgrade.sql(TgBogie.class, TgBogie.BOGIE_CLASS))
+        assertThatThrownBy(() -> upgrade.createSql().property(TgBogie.class, TgBogie.BOGIE_CLASS))
                 .isInstanceOf(InvalidArgumentException.class)
                 .hasMessageContaining(TgBogie.BOGIE_CLASS);
     }
@@ -133,8 +133,8 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
         final var expected = unionIndexNamesForPropertiesOfType(UnionEntity.class);
         assertThat(expected).hasSizeGreaterThan(1);
 
-        assertThat(createdIndexes(upgrade.createSql(UnionEntity.class)).keySet()).isEqualTo(expected);
-        assertThat(droppedIndexes(upgrade.dropSql(UnionEntity.class))).isEqualTo(expected);
+        assertThat(createdIndexes(upgrade.createSql().propertiesWithType(UnionEntity.class)).keySet()).isEqualTo(expected);
+        assertThat(droppedIndexes(upgrade.dropSql().propertiesWithType(UnionEntity.class))).isEqualTo(expected);
     }
 
     @Test
@@ -149,11 +149,11 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
                             IComputedUnionColumnUpgrade.OutdatedUnionIndex::unionType, IComputedUnionColumnUpgrade.OutdatedUnionIndex::problem)
                 .containsExactly(tuple(TgBogie.class, TgBogie.LOCATION, TgBogieLocation.class, OUTDATED));
 
-        exec(upgrade.sql(TgBogie.class, TgBogie.LOCATION));
+        exec(upgrade.createSql().property(TgBogie.class, TgBogie.LOCATION));
         assertThat(unionIndexDefinition()).isNotEqualTo(definitionFromDdl);
 
-        exec(upgrade.dropSql(TgBogieLocation.class));
-        exec(upgrade.createSql(TgBogieLocation.class));
+        exec(upgrade.dropSql().propertiesWithType(TgBogieLocation.class));
+        exec(upgrade.createSql().propertiesWithType(TgBogieLocation.class));
 
         assertThat(unionIndexDefinition()).isEqualTo(definitionFromDdl);
         assertThat(upgrade.findOutdated()).isEmpty();
@@ -170,9 +170,9 @@ public class ComputedUnionColumnUpgradeTest extends AbstractDaoTestCase {
             replaceUnionIndex("CASE WHEN %1$s IS NOT NULL THEN %1$s WHEN LOCATION__WAGONSLOT IS NOT NULL THEN LOCATION__WAGONSLOT WHEN LOCATION__WORKSHOP IS NOT NULL THEN LOCATION__WORKSHOP END"
                               .formatted(REMOVED_MEMBER_COLUMN), "ASC");
 
-            exec(upgrade.dropSql(TgBogieLocation.class));
+            exec(upgrade.dropSql().propertiesWithType(TgBogieLocation.class));
             exec("ALTER TABLE %s DROP COLUMN %s".formatted(BOGIE_TABLE, REMOVED_MEMBER_COLUMN));
-            exec(upgrade.createSql(TgBogieLocation.class));
+            exec(upgrade.createSql().propertiesWithType(TgBogieLocation.class));
 
             assertThat(unionIndexDefinition()).isEqualTo(definitionFromDdl);
             assertThat(upgrade.findOutdated()).isEmpty();
