@@ -8,7 +8,7 @@ import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 public interface IEntityTypeEnhancement {
 
     /// Returns a Java class that represents `instance`, with its [UserDefinedCalculatedProperty] records as calculated properties,
-    /// and returns it as part of an enhanced entity type.
+    /// and returns it as part of an enhanced entity type, [EnhancedEntityType#type].
     /// If `instance` has no such records, the Java class is its base type.
     ///
     /// `instance` must be persisted, and may be uninstrumented.
@@ -20,5 +20,9 @@ public interface IEntityTypeEnhancement {
     /// @throws WebApiException  if `instance` or any of its properties is invalid for any other reason
     ///
     EnhancedEntityType javaTypeFor(UserDefinedEnhancedEntityType instance);
+
+    /// Validates the specified name for use in the Web API, as a type or property name.
+    ///
+    Result validateName(CharSequence name);
 
 }

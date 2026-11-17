@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.sample.domain.TgUnion;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
@@ -41,12 +42,13 @@ import java.util.Map;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static ua.com.fielden.platform.utils.CollectionUtil.append;
-import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
+import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
+import static ua.com.fielden.platform.utils.CollectionUtil.*;
 import static ua.com.fielden.platform.web_api.EntityTypeEnhancer.*;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
-import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeBaseTypeValidator.ERR_NO_SUCH_DOMAIN_TYPE;
+import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeBaseTypeValidator.ERR_NO_SUCH_BASE_TYPE;
 import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeNameValidator.ERR_NAME_OF_DOMAIN_TYPE;
+import static ua.com.fielden.platform.web_api.validators.UserDefinedCalculatedPropertyNameValidator.ERR_INVALID_NAME;
 import static ua.com.fielden.platform.web_api.validators.UserDefinedCalculatedPropertyNameValidator.ERR_PROPERTY_OF_BASE_TYPE;
 
 /// Tests for enhanced entity types, defined with [IWebApi#enhanceEntityType].
@@ -397,7 +399,38 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
                 .hasMessage(ERR_NAME_OF_DOMAIN_TYPE.formatted("EntityNewAction", EntityNewAction.class.getName()));
 
         final var withoutBaseType = storedEntityType("MyVehicle").setBaseType("no.such.Type");
-        assertRejected(() -> enhancement.javaTypeFor(withoutBaseType), ERR_NO_SUCH_DOMAIN_TYPE.formatted("no.such.Type"));
+        assertThatThrownBy(() -> enhancement.javaTypeFor(withoutBaseType))
+                .isInstanceOf(Result.class)
+                .hasMessage(ERR_NO_SUCH_BASE_TYPE.formatted("no.such.Type"));
+    }
+
+    @Test
+    public void stored_properties_are_validated_when_an_enhanced_entity_type_is_instantiated() {
+        enhance("MyModel", "TgVehicleModel", props("price", "2 * 3"));
+        // Properties are retrieved by `javaTypeFor` itself, so a property name that has become invalid,
+        // because the base type has attained a property with that name, is simulated by changing the stored base type.
+        save(co$(UserDefinedEnhancedEntityType.class).findByKeyAndFetch(UserDefinedEnhancedEntityTypeCo.FETCH_PROVIDER.fetchModel(), "MyModel", getUser())
+                     .setBaseType(TgVehicle.class.getCanonicalName()));
+        assertThat(storedEntityType("MyModel").getBaseType()).as("The stored base type is TgVehicle.").isEqualTo(TgVehicle.class.getCanonicalName());
+        assertThat(isPropertyPresent(TgVehicle.class, "price")).as("TgVehicle has property price.").isTrue();
+
+        assertThatThrownBy(() -> getInstance(IEntityTypeEnhancement.class).javaTypeFor(storedEntityType("MyModel")))
+                .isInstanceOf(Result.class)
+                .hasMessage(ERR_PROPERTY_OF_BASE_TYPE.formatted("price", "TgVehicle"));
+    }
+
+    @Test
+    public void an_existing_enhanced_entity_type_that_has_become_invalid_cannot_be_enhanced() {
+        final var existing = enhance("MyModel", "TgVehicleModel", props("myNumber", "2 * 3")).entityType();
+
+        // Withdrawing the token makes the stored base type invalid.
+        runWithoutToken(TgVehicleModel_CanReadModel_Token.class, () -> {
+            assertRejected(() -> enhance("MyModel", null, props("otherNumber", "4")),
+                           ERR_ENHANCEMENT_FAILED.formatted("MyModel", "otherNumber", "") + " " + ERR_NO_SUCH_BASE_TYPE.formatted(TgVehicleModel.class.getCanonicalName()));
+            assertUnchanged(existing);
+        });
+        // A positive control: the same request succeeds when the model can be read.
+        enhance("MyModel", null, props("otherNumber", "4"));
     }
 
     @Test
@@ -475,18 +508,23 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
 
     @Test
     public void names_of_enhanced_entity_types_must_be_valid_Java_identifiers_and_GraphQL_names() {
-        for (final var name : List.of("1Vehicle", "class", "My$Vehicle", "Véhicule", "__Vehicle", "My Vehicle", "")) {
-            assertRejected(() -> enhance(name, "TgVehicle", props("myNumber", "2 * 3")), ERR_INVALID_NAME.formatted(name));
+        for (final var name : List.of("1Vehicle", "class", "My$Vehicle", "Véhicule", "__Vehicle", "My Vehicle")) {
+            assertRejected(() -> enhance(name, "TgVehicle", props("myNumber", "2 * 3")),
+                           ERR_ENHANCEMENT_FAILED.formatted(name, "myNumber", "") + " " + ERR_INVALID_NAME.formatted(name));
             assertThat(webApi.findEnhancedEntityType(name)).isEmpty();
         }
-        assertRejected(() -> enhance(null, "TgVehicle", props("myNumber", "2 * 3")), ERR_INVALID_NAME.formatted((Object) null));
+        assertThat(listOf("", null))
+                .allSatisfy(name -> assertThatThrownBy(() -> enhance(name, "TgVehicle", props("myNumber", "2 * 3")))
+                        .isInstanceOf(InvalidArgumentException.class)
+                        .hasMessage(ERR_ENHANCED_ENTITY_TYPE_NAME_MUST_NOT_BE_EMPTY));
     }
 
     @Test
     public void names_of_added_properties_must_be_valid_Java_identifiers_and_GraphQL_names() {
         for (final var name : List.of("1prop", "new", "my$prop", "propé", "__prop")) {
-            assertRejected(() -> enhance("MyVehicle", "TgVehicle", props(name, "2 * 3")), ERR_INVALID_NAME.formatted(name));
-            assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
+            assertRejected(() -> enhance("MyVehicle", "TgVehicle", props(name, "2 * 3")),
+                           ERR_ENHANCEMENT_FAILED.formatted("MyVehicle", name, "") + " " + ERR_INVALID_NAME.formatted(name));
+            assertNotDefined("MyVehicle");
         }
     }
 
@@ -508,16 +546,22 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
     public void a_base_type_must_be_a_queryable_domain_entity_type() {
         enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
 
-        for (final var baseType : List.of("NoSuchType", "TgUnion", "MyVehicle", "TgVehicle_Agg", "String")) {
+        for (final var baseType : List.of("NoSuchType", "MyVehicle", "TgVehicle_Agg", "String")) {
             assertRejected(() -> enhance("OtherVehicle", baseType, props()), ERR_NO_SUCH_BASE_TYPE.formatted(baseType));
             assertNotDefined("OtherVehicle");
         }
+
+        assertThat(getInstance(IApplicationDomainProvider.class).entityTypes()).as("TgUnion is a domain entity type.").contains(TgUnion.class);
+        assertRejected(() -> enhance("OtherVehicle", "TgUnion", props()),
+                       ERR_ENHANCEMENT_FAILED.formatted("OtherVehicle", "", "") + " " + ERR_NO_SUCH_BASE_TYPE.formatted(TgUnion.class.getCanonicalName()));
+        assertNotDefined("OtherVehicle");
     }
 
     @Test
     public void a_base_type_must_be_a_type_whose_model_the_user_can_read() {
         runWithoutToken(TgVehicleModel_CanReadModel_Token.class, () -> {
-            assertRejected(() -> enhance("MyModel", "TgVehicleModel", props()), ERR_NO_SUCH_BASE_TYPE.formatted("TgVehicleModel"));
+            assertRejected(() -> enhance("MyModel", "TgVehicleModel", props()),
+                           ERR_ENHANCEMENT_FAILED.formatted("MyModel", "", "") + " " + ERR_NO_SUCH_BASE_TYPE.formatted(TgVehicleModel.class.getCanonicalName()));
             assertNotDefined("MyModel");
         });
         // A positive control: the same request succeeds when the model can be read.

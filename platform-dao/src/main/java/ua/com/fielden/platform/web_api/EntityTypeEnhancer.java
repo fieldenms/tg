@@ -1,13 +1,17 @@
 package ua.com.fielden.platform.web_api;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import graphql.schema.GraphQLSchema;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.session.WithTransaction;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
@@ -25,17 +29,19 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.CollectionUtil;
-import ua.com.fielden.platform.utils.ImmutableMapUtils;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web_api.IWebApi.Enhancement;
 import ua.com.fielden.platform.web_api.IWebApi.PropertyDefinition;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
-import ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeNameValidator;
-import ua.com.fielden.platform.web_api.validators.UserDefinedCalculatedPropertyNameValidator;
 
 import javax.lang.model.SourceVersion;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.function.Function.identity;
@@ -46,10 +52,13 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer.Stage.stage2;
+import static ua.com.fielden.platform.error.Result.failuref;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
-import static ua.com.fielden.platform.web_api.FieldVisibility.isModelReadable;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web_api.FieldVisibility.visibilityPredicate;
-import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeBaseTypeValidator.ERR_NO_SUCH_DOMAIN_TYPE;
+import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeBaseTypeValidator.ERR_NO_SUCH_BASE_TYPE;
+import static ua.com.fielden.platform.web_api.validators.UserDefinedCalculatedPropertyNameValidator.ERR_INVALID_NAME;
 
 /// Defines enhanced entity types, as specified by [IWebApi#enhanceEntityType], and instantiates them as Java classes.
 ///
@@ -57,17 +66,17 @@ import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeBaseT
 /// This class holds no state, so holding instantiated enhanced entity types is up to the caller.
 ///
 @Singleton
-public class EntityTypeEnhancer implements IEntityTypeEnhancement {
+public class EntityTypeEnhancer extends WithTransaction implements IEntityTypeEnhancement {
 
     private static final Logger LOGGER = getLogger(EntityTypeEnhancer.class);
 
+    private static final Pattern GRAPHQL_NAME = Pattern.compile("[_A-Za-z][_0-9A-Za-z]*");
+
     public static final String
-            ERR_INVALID_NAME = "[%s] is not a valid name. A name must be a Java identifier other than a keyword, consisting of letters, digits and underscores, and must not start with a digit or with two underscores.",
             ERR_BASE_TYPE_REQUIRED = "Entity type [%s] does not exist, so a base type is required to create it.",
             ERR_BASE_TYPE_OF_EXISTING_TYPE = "Entity type [%s] exists, so a base type cannot be specified.",
             ERR_NAME_TAKEN_BY_TYPE = "Name [%s] cannot be used, as type [%s] exists.",
             ERR_NAME_TAKEN_BY_ROOT_FIELD = "Name [%s] cannot be used, as root field [%s] exists.",
-            ERR_NO_SUCH_BASE_TYPE = "[%s] cannot be a base type. A base type must be a queryable domain entity type.",
             ERR_DUPLICATE_PROPERTY = "Property [%s] is specified more than once.",
             ERR_ADDED_PROPERTY_EXISTS = "Property [%s] cannot be added, as entity type [%s] has it. Remove it first.",
             ERR_REMOVED_PROPERTY_OF_BASE_TYPE = "Property [%s] cannot be removed, as it belongs to base type [%s].",
@@ -76,12 +85,11 @@ public class EntityTypeEnhancer implements IEntityTypeEnhancement {
             ERR_PROPERTY_CANNOT_BE_ADDED = "Property [%s] cannot be added.",
             ERR_UNAUTHORISED_ACCESS = "The expression of property [%s] refers to properties that cannot be read: [%s].",
             ERR_ENTITY_TYPE_OF_ANOTHER_USER = "Entity type [%s] belongs to user [%s], so it cannot be instantiated for user [%s].",
-            ERR_ENHANCEMENT_FAILED = "Entity type [%s] could not be enhanced by adding properties [%s] and removing properties [%s].";
+            ERR_ENHANCEMENT_FAILED = "Entity type [%s] could not be enhanced by adding properties [%s] and removing properties [%s].",
+            ERR_ENHANCED_ENTITY_TYPE_NAME_MUST_NOT_BE_EMPTY = "Enhanced entity type name must not be empty.";
 
     public static final String
             WARN_NO_SUCH_PROPERTIES_TO_REMOVE = "Entity type [%s] has no properties [%s], so they were not removed.";
-
-    private static final Pattern GRAPHQL_NAME = Pattern.compile("[_A-Za-z][_0-9A-Za-z]*");
 
     private final IApplicationDomainProvider appDomainProvider;
     private final GraphQLCommon common;
@@ -118,11 +126,10 @@ public class EntityTypeEnhancer implements IEntityTypeEnhancement {
 
     /// Defines enhanced entity type `name` for the current user, as specified by [IWebApi#enhanceEntityType], and stores it.
     ///
-    /// This method must run in a transaction, so that the records it changes are restored if it, or its caller, fails.
-    ///
     /// @param schema  the current user's schema
     /// @throws WebApiException  if the request is rejected or fails for any other reason, such as a record that cannot be saved
     ///
+    @SessionRequired
     public Enhancement enhance(
             final GraphQLSchema schema,
             final String name,
@@ -130,13 +137,15 @@ public class EntityTypeEnhancer implements IEntityTypeEnhancement {
             final List<PropertyDefinition> addProperties,
             final List<String> removeProperties)
     {
+        if (StringUtils.isEmpty(name)) {
+            throw new InvalidArgumentException(ERR_ENHANCED_ENTITY_TYPE_NAME_MUST_NOT_BE_EMPTY);
+        }
+
         try {
             final var user = userProvider.getUser();
             if (user == null) {
                 throw new WebApiException("Current user is missing.");
             }
-
-            validateName(name);
 
             final UserDefinedEnhancedEntityTypeCo co$EntityType = coFinder.find(UserDefinedEnhancedEntityType.class);
             final UserDefinedCalculatedPropertyCo co$Property = coFinder.find(UserDefinedCalculatedProperty.class);
@@ -146,56 +155,55 @@ public class EntityTypeEnhancer implements IEntityTypeEnhancement {
                 if (baseType == null) {
                     throw new WebApiException(ERR_BASE_TYPE_REQUIRED.formatted(name));
                 }
-                baseEntityType = findBaseType(schema, baseType);
+                baseEntityType = getDomainType(baseType);
                 validateNameIsFree(schema, new WebApiEntityType(name, baseEntityType, baseEntityType));
             }
             else if (baseType != null) {
                 throw new WebApiException(ERR_BASE_TYPE_OF_EXISTING_TYPE.formatted(name));
             }
             else {
-                baseEntityType = findBaseType(existingType.get());
+                baseEntityType = co$EntityType.baseTypeAsJavaType(existingType.get());
             }
 
+            firstDuplicate(addProperties, PropertyDefinition::name).ifPresent(prop -> {
+                throw new WebApiException(ERR_DUPLICATE_PROPERTY.formatted(prop.name()));
+            });
+
+            // (name, property)
             final Map<String, UserDefinedCalculatedProperty> existingProperties = existingType.map(co$Property::findByEntityType).orElse(List.of())
                     .stream().collect(toMap(UserDefinedCalculatedProperty::getName, identity()));
-            final var addedNames = new HashSet<String>();
-            for (final var property : addProperties) {
-                validateName(property.name());
-                if (!addedNames.add(property.name())) {
-                    throw new WebApiException(ERR_DUPLICATE_PROPERTY.formatted(property.name()));
-                }
-                UserDefinedCalculatedPropertyNameValidator.validate(property.name(), baseEntityType).ifFailure(Result::throwRuntime);
-                if (existingProperties.containsKey(property.name())) {
-                    throw new WebApiException(ERR_ADDED_PROPERTY_EXISTS.formatted(property.name(), name));
-                }
-            }
-            final var absentRemovedNames = new LinkedHashSet<String>();
-            for (final var property : removeProperties) {
-                if (isPropertyPresent(baseEntityType, property)) {
-                    throw new WebApiException(ERR_REMOVED_PROPERTY_OF_BASE_TYPE.formatted(property, baseEntityType.getSimpleName()));
-                }
-                if (addedNames.contains(property)) {
-                    throw new WebApiException(ERR_PROPERTY_ADDED_AND_REMOVED.formatted(property));
-                }
-                if (!existingProperties.containsKey(property)) {
-                    absentRemovedNames.add(property);
-                }
-            }
 
-            // (property, expression)
-            // Properties that will be present in the enhanced entity type after this operation.
-            final var expressions = ImmutableMapUtils.unionLeft(
-                    Maps.transformValues(Maps.filterKeys(existingProperties, p -> !removeProperties.contains(p)), UserDefinedCalculatedProperty::getExpression),
-                    addProperties.stream().collect(toMap(PropertyDefinition::name, PropertyDefinition::expression)));
+            addProperties.stream().filter(prop -> existingProperties.containsKey(prop.name())).findFirst().ifPresent(prop -> {
+                throw new WebApiException(ERR_ADDED_PROPERTY_EXISTS.formatted(prop.name(), name));
+            });
 
-            removeProperties.stream().filter(existingProperties::containsKey).forEach(property -> {
-                final var referringProperties = expressions.entrySet().stream()
-                        .filter(entry -> referencedProperties(entry.getValue()).contains(property))
-                        .map(Map.Entry::getKey)
+            removeProperties.stream().filter(rmP -> addProperties.stream().anyMatch(addP -> addP.name().equals(rmP))).findFirst().ifPresent(rmP -> {
+                throw new WebApiException(ERR_PROPERTY_ADDED_AND_REMOVED.formatted(rmP));
+            });
+
+            removeProperties.stream().filter(prop -> isPropertyPresent(baseEntityType, prop)).findFirst().ifPresent(prop -> {
+                throw new WebApiException(ERR_REMOVED_PROPERTY_OF_BASE_TYPE.formatted(prop, baseEntityType.getSimpleName()));
+            });
+
+            final var absentRemovedNames = removeProperties.stream().filter(prop -> !existingProperties.containsKey(prop)).toList();
+
+            // (property, {referencedProperties})
+            // Includes all properties that will be present in the enhanced entity type after this operation.
+            final var references = Stream.concat(existingProperties.entrySet().stream()
+                                                         .filter(entry -> !removeProperties.contains(entry.getKey()))
+                                                         .map(entry -> t2(entry.getValue().getName(), entry.getValue().getExpression())),
+                                                 addProperties.stream().map(prop -> t2(prop.name(), prop.expression())))
+                    .map(t2-> t2.map2(EntityTypeEnhancer::referencedProperties))
+                    .toList();
+
+            removeProperties.stream().filter(existingProperties::containsKey).forEach(rmProp -> {
+                final var referringProperties = references.stream()
+                        .filter(t2 -> t2._2.contains(rmProp))
+                        .map(T2::_1)
                         .sorted()
                         .toList();
                 if (!referringProperties.isEmpty()) {
-                    throw new WebApiException(ERR_REMOVED_PROPERTY_IS_REFERENCED.formatted(property, CollectionUtil.toString(referringProperties, ", ")));
+                    throw new WebApiException(ERR_REMOVED_PROPERTY_IS_REFERENCED.formatted(rmProp, CollectionUtil.toString(referringProperties, ", ")));
                 }
             });
 
@@ -203,7 +211,7 @@ public class EntityTypeEnhancer implements IEntityTypeEnhancement {
                     .orElseGet(() -> co$EntityType.save(co$EntityType.new_()
                                                                 .setName(name)
                                                                 .setUser(user)
-                                                                .setBaseType(baseEntityType.getName()),
+                                                                .setBaseType(baseEntityType.getCanonicalName()),
                                                         Optional.of(UserDefinedEnhancedEntityTypeCo.FETCH_PROVIDER.fetchModel()))
                                                   .asRight().value());
             final var removedIds = removeProperties.stream().map(existingProperties::get).filter(Objects::nonNull).map(AbstractEntity::getId).toList();
@@ -242,6 +250,18 @@ public class EntityTypeEnhancer implements IEntityTypeEnhancement {
         }
     }
 
+    private <T> Optional<T> firstDuplicate(final Iterable<T> xs, final Function<T, ?> getKey) {
+        final var keys = new HashSet<>();
+        for (final var x : xs) {
+            final var key = getKey.apply(x);
+            if (keys.contains(key)) {
+                return Optional.of(x);
+            }
+            keys.add(key);
+        }
+        return Optional.empty();
+    }
+
     @Override
     public EnhancedEntityType javaTypeFor(final UserDefinedEnhancedEntityType instance) {
         if (!instance.isPersisted()) {
@@ -252,11 +272,15 @@ public class EntityTypeEnhancer implements IEntityTypeEnhancement {
         if (user == null || !user.getId().equals(instance.getUser().getId())) {
             throw new WebApiException(ERR_ENTITY_TYPE_OF_ANOTHER_USER.formatted(instance.getName(), instance.getUser(), user));
         }
-        EnhancedEntityTypeNameValidator.validate(instance.getName(), appDomainProvider).ifFailure(Result::throwRuntime);
-        final var baseType = findBaseType(instance);
+
+        instrumentedCopy(instance).isValid().ifFailure(Result::throwRuntime);
+
+        final UserDefinedEnhancedEntityTypeCo coUserDefinedEnhancedEntityType = coFinder.find(UserDefinedEnhancedEntityType.class, true);
+        final var baseType = coUserDefinedEnhancedEntityType.baseTypeAsJavaType(instance);
+
         final UserDefinedCalculatedPropertyCo coProperty = coFinder.find(UserDefinedCalculatedProperty.class, true);
         final var properties = coProperty.findByEntityType(instance);
-        properties.forEach(property -> UserDefinedCalculatedPropertyNameValidator.validate(property.getName(), baseType).ifFailure(Result::throwRuntime));
+        properties.forEach(property -> instrumentedCopy(property).isValid().ifFailure(Result::throwRuntime));
 
         final var enhancedType = generate(instance.getName(),
                                           baseType,
@@ -271,6 +295,20 @@ public class EntityTypeEnhancer implements IEntityTypeEnhancement {
             }
         }
         return enhancedType;
+    }
+
+    @Override
+    public Result validateName(final CharSequence name) {
+        if (!SourceVersion.isIdentifier(name)
+            || SourceVersion.isKeyword(name)
+            || !GRAPHQL_NAME.matcher(name).matches()
+            || Strings.CS.startsWith(name, "__"))
+        {
+            return failuref(ERR_INVALID_NAME, name);
+        }
+        else {
+            return successful();
+        }
     }
 
     /// Generates an enhanced entity type, or uses `baseType` if `properties` is empty.
@@ -346,17 +384,6 @@ public class EntityTypeEnhancer implements IEntityTypeEnhancement {
         }
     }
 
-    private static void validateName(final @Nullable String name) {
-        if (name == null
-            || !SourceVersion.isIdentifier(name)
-            || SourceVersion.isKeyword(name)
-            || !GRAPHQL_NAME.matcher(name).matches()
-            || name.startsWith("__"))
-        {
-            throw new WebApiException(ERR_INVALID_NAME.formatted(name));
-        }
-    }
-
     /// Ensures that none of the GraphQL definitions for a new entity type would clash with an existing one.
     /// These definitions are named after the name of `entityType` alone.
     ///
@@ -376,23 +403,11 @@ public class EntityTypeEnhancer implements IEntityTypeEnhancement {
         }
     }
 
-    /// Finds a domain type named `name` that can be a base type for the current user.
+    /// Returns a domain type whose simple name is `name`.
     ///
-    private Class<? extends AbstractEntity<?>> findBaseType(final GraphQLSchema schema, final String name) {
-        return common.streamQueryableTypes(appDomainProvider)
-                .filter(type -> type.getSimpleName().equals(name))
-                .filter(type -> common.containsRootFieldForType(schema, WebApiEntityType.domainType(type)))
-                .filter(type -> isModelReadable(type, authorisationModel, securityTokenProvider))
-                .findFirst()
+    private Class<? extends AbstractEntity<?>> getDomainType(final String name) {
+        return appDomainProvider.entityTypes().stream().filter(ty -> name.equals(ty.getSimpleName())).findFirst()
                 .orElseThrow(() -> new WebApiException(ERR_NO_SUCH_BASE_TYPE.formatted(name)));
-    }
-
-    /// Finds the base type of a stored enhanced entity type.
-    ///
-    private Class<? extends AbstractEntity<?>> findBaseType(final UserDefinedEnhancedEntityType entityType) {
-        final String name = entityType.getBaseType();
-        return appDomainProvider.entityTypes().stream().filter(type -> type.getName().equals(name)).findFirst()
-                .orElseThrow(() -> new WebApiException(ERR_NO_SUCH_DOMAIN_TYPE.formatted(entityType.getBaseType())));
     }
 
     /// Finds the paths in the expression of calculated `property` of `entityType` that the current user cannot read, in alphabetical order.
@@ -442,6 +457,16 @@ public class EntityTypeEnhancer implements IEntityTypeEnhancement {
                         ex);
             return Optional.of(path);
         }
+    }
+
+    private <E extends AbstractEntity<?>> E instrumentedCopy(final E instance) {
+        final var co$ = (IEntityDao<E>) coFinder.find(instance.getType());
+        return EntityUtils.copy(instance, co$.new_());
+    }
+
+    @Override
+    public User getUser() {
+        return userProvider.getUser();
     }
 
 }

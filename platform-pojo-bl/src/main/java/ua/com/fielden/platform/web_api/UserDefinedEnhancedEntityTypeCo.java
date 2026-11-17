@@ -2,10 +2,12 @@ package ua.com.fielden.platform.web_api;
 
 import ua.com.fielden.platform.companion.ISaveWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.security.user.User;
 
 import java.util.List;
+import java.util.Optional;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
@@ -23,5 +25,13 @@ public interface UserDefinedEnhancedEntityTypeCo extends IEntityDao<UserDefinedE
         final var query = select(UserDefinedEnhancedEntityType.class).where().prop(USER).eq().val(user).model();
         return getAllEntities(from(query).with(FETCH_PROVIDER.fetchModel()).with(orderBy().prop(NAME).asc().model()).model());
     }
+
+    /// Returns the Java type corresponding to [UserDefinedEnhancedEntityType#baseType].
+    ///
+    Class<? extends AbstractEntity<?>> baseTypeAsJavaType(UserDefinedEnhancedEntityType instance);
+
+    /// Finds the Java type corresponding to [UserDefinedEnhancedEntityType#baseType].
+    ///
+    Optional<Class<? extends AbstractEntity<?>>> findBaseTypeAsJavaType(UserDefinedEnhancedEntityType instance);
 
 }

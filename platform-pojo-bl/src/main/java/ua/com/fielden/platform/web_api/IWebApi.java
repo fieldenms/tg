@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web_api;
 
 import jakarta.annotation.Nullable;
+import ua.com.fielden.platform.security.tokens.Template;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.util.List;
@@ -50,9 +51,7 @@ public interface IWebApi {
     ///
     record PropertyDefinition(String name, String expression) {}
 
-    /// The outcome of [#enhanceEntityType].
-    ///
-    /// @param warnings  messages about parts of the request that were ignored
+    /// The result of [#enhanceEntityType].
     ///
     record Enhancement(EnhancedEntityType entityType, List<String> warnings) {}
 
@@ -62,20 +61,26 @@ public interface IWebApi {
     /// Otherwise, `removeProperties` are removed from that type, and then `addProperties` are added to it.
     /// The expression of an added property may refer to the other properties of the enhanced entity type, including those added by the same request.
     ///
-    /// A request either takes full effect or none.
-    /// It is rejected if:
-    /// - `name` or a property name is not both a Java identifier other than a keyword and a GraphQL name;
-    /// - a new type is requested without `baseType`, or `baseType` is not a queryable domain type whose model the user can read;
-    /// - `baseType` is specified for an existing type;
-    /// - the name of a new type, or a name derived from it, names a type or a root field of the user's GraphQL schema;
-    /// - `addProperties` contains a property of the base type or of the existing enhanced type, or the same name twice;
-    /// - `removeProperties` contains a property of the base type, or a property from `addProperties`;
-    /// - an expression is invalid, or refers to a property that the user cannot read;
-    /// - removing a property will break existing references to it from other properties' expressions.
+    /// This operation is performed atomically, either taking full effect or none.
     ///
-    /// A property in `removeProperties` that the enhanced entity type does not have is ignored with a warning.
+    /// The operation is subject to the following validation rules:
+    /// - All names (`name` and property names) must be valid Java identifiers and GraphQL names.
+    /// - If the enhanced entity type does not exist, `baseType` is required.
+    ///   Otherwise, `baseType` must no be specified.
+    /// - `baseType` must be a queryable domain type whose model the user can read ([Template#READ_MODEL]).
+    /// - `name` and all names derived from it must be unique in the user's GraphQL schema.
+    /// - `addProperties` must not contain properties of the base type or of the existing enhanced type, or the same name twice.
+    /// - `removeProperties` must not contain a property of the base type, or a property from `addProperties`.
+    /// - The added property expressions must be valid.
+    ///   In particular, all properties referenced by the expressions must be accessible to the user.
+    /// - `removeProperties` must not contain a property whose removal will break existing references to it from other properties' expressions.
     ///
+    /// A property in `removeProperties` that the enhanced entity type does not have is ignored with a warning ([Enhancement#warnings]).
+    ///
+    /// @param name  Web API name of the enhanced entity type
     /// @param baseType  the GraphQL type name of a domain type, required only to create a new type
+    /// @param addProperties  properties to be added to the enhanced entity type
+    /// @param removeProperties  properties to be removed from the enhanced entity type
     /// @throws WebApiException  if the request is rejected
     ///
     Enhancement enhanceEntityType(String name, @Nullable String baseType, List<PropertyDefinition> addProperties, List<String> removeProperties);

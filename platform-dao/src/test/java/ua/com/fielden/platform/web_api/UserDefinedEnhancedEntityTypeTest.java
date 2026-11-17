@@ -12,7 +12,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static ua.com.fielden.platform.web_api.UserDefinedEnhancedEntityType.BASE_TYPE;
 import static ua.com.fielden.platform.web_api.UserDefinedEnhancedEntityType.NAME;
-import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeBaseTypeValidator.ERR_NO_SUCH_DOMAIN_TYPE;
+import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeBaseTypeValidator.ERR_NO_SUCH_BASE_TYPE;
 import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeNameValidator.ERR_NAME_OF_DOMAIN_TYPE;
 
 /// Tests for the validation of [UserDefinedEnhancedEntityType].
@@ -38,7 +38,7 @@ public class UserDefinedEnhancedEntityTypeTest extends AbstractDaoTestCase {
         assertThat(domainTypes).extracting(Class::getName).as("No domain entity type is named no.such.Type.").doesNotContain("no.such.Type");
         final var withoutBaseType = new_composite(UserDefinedEnhancedEntityType.class, "MyVehicle", getUser()).setBaseType("no.such.Type");
         assertThat(withoutBaseType.getProperty(BASE_TYPE).getFirstFailure())
-                .hasMessage(ERR_NO_SUCH_DOMAIN_TYPE.formatted("no.such.Type"));
+                .hasMessage(ERR_NO_SUCH_BASE_TYPE.formatted("no.such.Type"));
 
         // A positive control: the name of a domain entity type is accepted.
         assertThat(domainTypes).as("TgVehicle is a domain entity type.").contains(TgVehicle.class);

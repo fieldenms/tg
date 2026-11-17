@@ -7,17 +7,17 @@ If there is no enhanced type named `name`, the system creates a new entity type 
 Else, if it exists, the system removes from it the properties specified in `removeProperties`, and then adds to it the properties specified in `addProperties`.
 
 The enhanced entity type is known by `name` in the Web API only.
-Its Java type is a subclass of `baseType`, generated and named by the system, which keeps track of the Java type for each `name`.
-However, if the enhanced entity type has no properties, `baseType` itself is used.
-`baseType` itself never changes.
+Its underlying Java type is a generated sublcass of `baseType` with an internal name, which the system associates with `name`.
 
-A call either takes full effect or none.
-If a call fails, the Web API remains unchanged.
+If, as a result of the tool call, the enhanced entity type ends up with no properties, the system may associate `name` with `baseType` itself.
+
+`enhance_entity_type` is performed atomically, either taking full effect or none.
 
 **Scope is per user**: The enhanced entity type exists only for the user who created it.
 Therefore, two enhanced entity types, each created by a different user, may share the same `name`.
 
-**Authorisation**: A user may query an enhanced entity type, and see it in the domain meta-schema, if and only if the user may do so for its base type.
+**Authorisation**: Enhanced entity types inherit access rules from their base types. 
+A user may query an enhanced entity type, and see it in the domain meta-schema, if and only if the user may do so for its base type.
 
 How the system stores and manages the added properties is described in [Model of user-defined calculated properties](#model-of-user-defined-calculated-properties).
 The Web API, in the form of GraphQL, is changed as described in [GraphQL](#graphql).
@@ -30,14 +30,14 @@ Input schema:
   * Required if the enhanced entity type does not exist.
   * It is an error if this parameter is specified while the enhanced entity type exists.
   * It is an error if this is not the name of a queryable domain entity type whose model the user may read.
-    E.g., an enhanced entity type is not a domain type, hence cannot be used as a base type.
-* `addProperties : [Property]` -- list of properties to add to the enhanced type, empty if omitted.
+    E.g., an enhanced entity type may not be used as a base type.
+* `addProperties : [Property]` -- list of properties to add to the enhanced type.
   * It is an error if this list contains a property from `baseType` (matched by `name`).
   * It is an error if the enhanced entity type already exists and this list contains one of its properties (matched by `name`).
     In such a case, that property has to be removed before it can be added.
-    Therefore, to change the expression of a property, the caller removes the property in one call and adds it in another.
+    Therefore, to change the expression of a property, it should be removed first and then added again.
   * It is an error if this list contains two properties with the same `name`.
-* `removeProperties : [String]` -- list of properties to remove from the enhanced type, empty if omitted.
+* `removeProperties : [String]` -- list of properties to remove from the enhanced type.
   * Properties of the base type cannot be removed.
     It is an error if this list contains a property from `baseType`.
   * It is an error if this list contains a property from `addProperties`.
