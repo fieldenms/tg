@@ -60,7 +60,7 @@ A tool error (`isError`) means only that the tool input was malformed or that pr
 ### `enhance_entity_type`
 
 Creates an _enhanced entity type_, which extends a domain entity type with calculated properties, or changes an existing one.
-The tool is specified in [`tool-enhance-entity-type.md`](../../platform-doc/spec/mcp/custom-calculated-properties/tool-enhance-entity-type.md); this section summarises it and describes its implementation.
+The tool is specified in [`entity-type-enhancement.md`](../../platform-doc/spec/mcp/custom-calculated-properties/entity-type-enhancement.md); this section summarises it and describes its implementation.
 
 **Parameters:**
 

@@ -7,7 +7,7 @@ If there is no enhanced type named `name`, the system creates a new entity type 
 Else, if it exists, the system removes from it the properties specified in `removeProperties`, and then adds to it the properties specified in `addProperties`.
 
 The enhanced entity type is known by `name` in the Web API only.
-Its underlying Java type is a generated sublcass of `baseType` with an internal name, which the system associates with `name`.
+Its underlying Java type is a generated subclass of `baseType` with an internal name, which the system associates with `name`.
 
 If, as a result of the tool call, the enhanced entity type ends up with no properties, the system may associate `name` with `baseType` itself.
 
@@ -158,7 +158,7 @@ Since user-defined calculated properties are persisted, there are 2 kinds of lif
 * Persistence level: Stored in the database as long as necessary.
 * Application level: Instantiated as Java classes that reside in the server's memory until evicted.
 
-TODO: Define lifetime policies. For now, all records are indefinitely stored at both levels.
+TODO: Define lifetime policies. For now, all persisted records are stored until deleted.
 
 ## Limits
 
@@ -168,3 +168,44 @@ Options to consider later:
 * Max number of enhanced entity types per user (persistence level).
 * Max number of properties per user (persistence level).
 * Max number of properties per enhanced entity type (persistence level).
+
+# Tool `remove_enhanced_entity_type`
+
+Removes an enhanced entity type.
+
+## Input schema
+
+* `name : String`, required -- name of the type to remove.
+
+## Output
+
+The tool's output has no structure, returning a text message on success.
+
+A call that fails returns a tool error (`isError`) with a message that states the reason.
+
+## Description
+
+If the specified enhanced entity type does not exist, this operation is a noop.
+
+<!-- TODO: Make this a common definition. -->
+For an enhanced entity type to exist, there must be a persisted record of `UserDefinedEnhancedEntityType` with a corresponding `name` and `user`.
+
+It should be noted that this notion of existence makes the following situation possible:
+* An enhanced entity type named `X` is created.
+* The next release of the application adds a domain type named `X`.
+* Calling `remove_enhanced_entity_type(name: X)` removes the persisted records and succeeds, despite there being a domain type with the same name.
+
+Changes to the GraphQL schema and the deletion of persisted records are performed as a single atomic operation.
+
+### Authorisation
+
+An enhanced entity type can be removed only by the user that created it.
+However, this authorisation rule is effectively unreachable due to the definition of existence: a record created by user A does not exist from the perspective of user B.
+
+### GraphQL
+
+The named type, if it exists, is removed from the user's set of enhanced entity types, and the user's GraphQL schema is rebuilt.
+
+### Model and Data
+
+The persisted record of `UserDefinedEnhancedEntityType` that represents the named type is deleted, together with the associated `UserDefinedCalculatedProperty` records.
