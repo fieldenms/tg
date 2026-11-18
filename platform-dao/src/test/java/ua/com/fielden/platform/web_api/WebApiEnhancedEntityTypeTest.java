@@ -306,6 +306,31 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void an_enhanced_entity_type_named_as_a_domain_entity_type_is_left_out_of_the_schema() {
+        enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
+        // An entity type named as a domain entity type, e.g., because the domain entity type was added after the entity type had been created.
+        // The name validator rejects such a name, so the name is assigned in the initialising mode, which skips validation.
+        final var namedAsDomainType = new_(UserDefinedEnhancedEntityType.class).setUser(getUser()).setBaseType(TgVehicle.class.getName());
+        namedAsDomainType.beginInitialising();
+        namedAsDomainType.setName("EntityNewAction");
+        namedAsDomainType.endInitialising();
+        save(namedAsDomainType);
+        assertThat(storedEntityType("EntityNewAction").getBaseType()).isEqualTo(TgVehicle.class.getName());
+        webApi.evictUserEnhancedEntityTypes();
+
+        assertThat(webApi.findEnhancedEntityType("EntityNewAction")).isEmpty();
+        assertTypeIsAbsent("EntityNewAction");
+        assertThat(execute("{myVehicle {key(order: ASC_1) myNumber}}"))
+                .isEqualTo(result(Map.of("myVehicle", List.of(Map.of("key", "CAR1", "myNumber", 6), Map.of("key", "CAR2", "myNumber", 6)))));
+
+        // A positive control: once renamed, the entity type is registered.
+        save(co$(UserDefinedEnhancedEntityType.class).findByKeyAndFetch(UserDefinedEnhancedEntityTypeCo.FETCH_PROVIDER.fetchModel(), "EntityNewAction", getUser())
+                     .setName("Renamed"));
+        webApi.evictUserEnhancedEntityTypes();
+        assertThat(webApi.findEnhancedEntityType("Renamed")).isPresent();
+    }
+
+    @Test
     public void an_enhanced_entity_type_whose_registration_in_the_schema_causes_an_error_is_left_out_of_the_schema() {
         enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
         final var aggFieldNames = fieldNames("TgVehicle_Agg");
