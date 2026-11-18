@@ -10,7 +10,7 @@ import ua.com.fielden.platform.eql.dbschema.test_entities.Entity_WithIdOverrideM
 import ua.com.fielden.platform.eql.dbschema.test_entities.Entity_WithIdOverrideMapToUnderscoreId;
 import ua.com.fielden.platform.eql.dbschema.test_entities.Entity_WithIdOverrideMapToWrong;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.Provider;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappingsProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -23,7 +23,7 @@ import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDb
 public class TableDdlIdOverrideTest {
 
     private static final IDbVersionProvider dbVersionProvider = constantDbVersion(H2);
-    private static final HibernateTypeMappings hibernateTypeMappings = new Provider(dbVersionProvider).get();
+    private static final HibernateTypeMappings hibernateTypeMappings = new PlatformHibernateTypeMappingsProvider(dbVersionProvider).get();
     private static final Dialect dialect = new H2Dialect();
     private static final ColumnDefinitionExtractor extractor = new ColumnDefinitionExtractor(hibernateTypeMappings, dialect);
 

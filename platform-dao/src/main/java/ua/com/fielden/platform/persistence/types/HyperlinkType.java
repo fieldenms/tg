@@ -1,6 +1,11 @@
 package ua.com.fielden.platform.persistence.types;
 
-import static java.lang.String.format;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.usertype.UserType;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.persistence.types.exceptions.UserTypeException;
+import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.markers.IHyperlinkType;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -8,20 +13,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.usertype.UserType;
+import static java.lang.String.format;
+import static ua.com.fielden.platform.persistence.types.exceptions.UserTypeException.invalidPersistedRepresentation;
 
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.persistence.types.exceptions.UserTypeException;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.markers.IHyperlinkType;
-
-/**
- * This is a user type to assist Hibernated in mapping properties of type {@link Hyperlink}.
- *  
- * @author TG Team
- *
- */
 public class HyperlinkType implements UserType, IHyperlinkType {
 
     public static final HyperlinkType INSTANCE = new HyperlinkType();
@@ -39,35 +33,36 @@ public class HyperlinkType implements UserType, IHyperlinkType {
 	}
 
 	@Override
-	public Object instantiate(final Object argument, final EntityFactory factory) {
-        if (argument == null) {
-            return null;
-        }
-
-        try {
-            return new Hyperlink((String) argument);
-        } catch (final Exception e) {
-            throw new UserTypeException(format("Could not instantiate instance of [%s] with value [%s] due to: %s.", Hyperlink.class.getName(), argument, e.getMessage()), e);
-        }
+	public Hyperlink instantiate(final Object argument, final EntityFactory factory) {
+        return switch (argument) {
+            case String s -> {
+                try {
+                    yield new Hyperlink(s);
+                } catch (final Exception ex) {
+                    throw new UserTypeException(format("Hyperlink could not be instantiated from [%s].", s), ex);
+                }
+            }
+            case null -> null;
+            default -> throw invalidPersistedRepresentation("Hyperlink", argument);
+        };
 	}
 
 	@Override
-	public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SharedSessionContractImplementor session, final Object owner) throws SQLException {
-		final String name = resultSet.getString(names[0]);
-		Object result = null;
-		if (!resultSet.wasNull()) {
-			try {
-				result = new Hyperlink(name);
-			} catch (final Exception e) {
-				throw new UserTypeException(format("Colour for value [%s] could not be instantiated.", name), e);
-			}
-		}
-		return result;
-	}
+    public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SharedSessionContractImplementor session, final Object owner) throws SQLException {
+        final String name = resultSet.getString(names[0]);
+        if (resultSet.wasNull()) {
+            return null;
+        }
+        try {
+            return new Hyperlink(name);
+        } catch (final Exception ex) {
+            throw new UserTypeException(format("Hyperlink could not be instantiated from [%s].", name), ex);
+        }
+    }
 
 	@Override
 	public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index, final SharedSessionContractImplementor session) throws SQLException {
-		if (null == value) {
+		if (value == null) {
 			preparedStatement.setNull(index, Types.VARCHAR);
 		} else {
 			preparedStatement.setString(index, value.toString());
