@@ -69,17 +69,20 @@ The exception is a server-side failure, such as a database error: its message na
 
 ## GraphQL
 
-The GraphQL schema is updated for the user:
-* If the enhanced entity type does not exist, an object type is created for it, with the name `name` and all fields of `baseType`.
-  The same is done for the corresponding condition and aggregation types.
-* The enhanced entity type, the condition and aggregation types are redefined by removing fields specified in `removeProperties` and adding fields specified in `addProperties`.
-* Root fields are created for the enhanced entity type and the aggregation type, if they do not exist.
-* The domain meta-schema (`_entityType`) describes the enhanced entity type as it describes a domain entity type, including the added properties.
-  Field `_EntityType.baseType` is the name of the base type of an enhanced entity type, and `null` for a domain entity type.
+For each user, the system maintains a set of enhanced entity types, each named by the `name` parameter of the call that created it.
+Creating or changing an enhanced entity type adds it to that set or replaces its previous version.
 
+The user's GraphQL schema is rebuilt, as specified in [GraphQL Schema](../../graphql/schema.md), from the domain entity types together with the user's enhanced entity types.
 The schema is rebuilt in the same atomic operation as the persistence of records.
 
+In the domain meta-schema, field `_EntityType.baseType` is the name of the base type of an enhanced entity type, and `null` otherwise.
+
 TODO: How does the schema stay in sync when another node adds new properties?
+
+### Performance
+
+When the enhanced entity type exists, the system may rebuild the schema incrementally.
+E.g., by redefining the existing GraphQL type: removing fields from `removeProperties` and adding fields from `addProperties`.
 
 ### Recovery from failures to register enhanced entity types in the schema
 
