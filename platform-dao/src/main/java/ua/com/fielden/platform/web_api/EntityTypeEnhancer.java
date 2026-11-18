@@ -43,7 +43,6 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -85,11 +84,17 @@ public class EntityTypeEnhancer extends WithTransaction implements IEntityTypeEn
             ERR_PROPERTY_CANNOT_BE_ADDED = "Property [%s] cannot be added.",
             ERR_UNAUTHORISED_ACCESS = "The expression of property [%s] refers to properties that cannot be read: [%s].",
             ERR_ENTITY_TYPE_OF_ANOTHER_USER = "Entity type [%s] belongs to user [%s], so it cannot be instantiated for user [%s].",
+            ERR_INVALID_ENTITY_TYPE = "Enhanced entity type [%s] is invalid. %s",
+            ERR_INVALID_PROPERTY = "Property [%s] of enhanced entity type [%s] is invalid. %s",
             ERR_ENHANCEMENT_FAILED = "Entity type [%s] could not be enhanced by adding properties [%s] and removing properties [%s].",
             ERR_ENHANCED_ENTITY_TYPE_NAME_MUST_NOT_BE_EMPTY = "Enhanced entity type name must not be empty.";
 
     public static final String
             WARN_NO_SUCH_PROPERTIES_TO_REMOVE = "Entity type [%s] has no properties [%s], so they were not removed.";
+
+    public static String errEnhancementFailed(final String name, final String addedProperties, final String removedProperties, final String reason) {
+        return ERR_ENHANCEMENT_FAILED.formatted(name, addedProperties, removedProperties) + "\n" + reason;
+    }
 
     private final IApplicationDomainProvider appDomainProvider;
     private final GraphQLCommon common;
@@ -126,8 +131,10 @@ public class EntityTypeEnhancer extends WithTransaction implements IEntityTypeEn
 
     /// Defines enhanced entity type `name` for the current user, as specified by [IWebApi#enhanceEntityType], and stores it.
     ///
-    /// @param schema  the current user's schema
-    /// @throws WebApiException  if the request is rejected or fails for any other reason, such as a record that cannot be saved
+    /// An exception thrown by this method should be reported to the API user only if it is an instance of [WebApiException].
+    /// Otherwise, the exception should not be reported to avoid information disclosure.
+    ///
+    /// @param schema  the schema that will contain the enhanced type
     ///
     @SessionRequired
     public Enhancement enhance(
@@ -208,22 +215,23 @@ public class EntityTypeEnhancer extends WithTransaction implements IEntityTypeEn
             });
 
             final var entityType = existingType
-                    .orElseGet(() -> co$EntityType.save(co$EntityType.new_()
-                                                                .setName(name)
-                                                                .setUser(user)
-                                                                .setBaseType(baseEntityType.getCanonicalName()),
-                                                        Optional.of(UserDefinedEnhancedEntityTypeCo.FETCH_PROVIDER.fetchModel()))
-                                                  .asRight().value());
+                    .orElseGet(() -> {
+                        final var instance = co$EntityType.new_().setName(name).setUser(user).setBaseType(baseEntityType.getCanonicalName());
+                        instance.isValid().ifFailure(ex -> {
+                            throw new WebApiException(ERR_INVALID_ENTITY_TYPE.formatted(name, ex.getMessage()), ex);
+                        });
+                        return co$EntityType.save(instance, Optional.of(UserDefinedEnhancedEntityTypeCo.FETCH_PROVIDER.fetchModel())).asRight().value();
+                    });
             final var removedIds = removeProperties.stream().map(existingProperties::get).filter(Objects::nonNull).map(AbstractEntity::getId).toList();
             if (!removedIds.isEmpty()) {
                 co$Property.batchDelete(removedIds);
             }
             for (final var property : addProperties) {
-                co$Property.save(co$Property.new_()
-                                         .setEntityType(entityType)
-                                         .setName(property.name())
-                                         .setExpression(property.expression()),
-                                 Optional.empty());
+                final var instance = co$Property.new_().setEntityType(entityType).setName(property.name()).setExpression(property.expression());
+                instance.isValid().ifFailure(ex -> {
+                    throw new WebApiException(ERR_INVALID_PROPERTY.formatted(property.name(), name, ex.getMessage()), ex);
+                });
+                co$Property.save(instance, Optional.empty());
             }
 
             final var enhancedType = javaTypeFor(entityType);
@@ -236,15 +244,12 @@ public class EntityTypeEnhancer extends WithTransaction implements IEntityTypeEn
                     : List.of(WARN_NO_SUCH_PROPERTIES_TO_REMOVE.formatted(name, CollectionUtil.toString(absentRemovedNames, ", ")));
             return new Enhancement(enhancedType, warnings);
         } catch (final Exception ex) {
-            final var msg = format(ERR_ENHANCEMENT_FAILED,
-                                   name,
-                                   CollectionUtil.toString(addProperties, PropertyDefinition::name, ", "),
-                                   CollectionUtil.toString(removeProperties, ", "));
+            final var addedNames = CollectionUtil.toString(addProperties, PropertyDefinition::name, ", ");
+            final var removedNames = CollectionUtil.toString(removeProperties, ", ");
+            final var msg = ERR_ENHANCEMENT_FAILED.formatted(name, addedNames, removedNames);
+            LOGGER.error(msg, ex);
             throw switch (ex) {
-                case WebApiException it -> it;
-                // TODO Develop a comprehensive approach of reporting the reasons of failures to the client.
-                //      Only the message of a validation result is reported, as it is meant for users, while the messages of other exceptions may reveal server-side information.
-                case Result it -> new WebApiException("%s %s".formatted(msg, it.getMessage()), it);
+                case WebApiException it -> new WebApiException(errEnhancementFailed(name, addedNames, removedNames, it.getMessage()), it);
                 default -> new WebApiException(msg, ex);
             };
         }
@@ -262,6 +267,9 @@ public class EntityTypeEnhancer extends WithTransaction implements IEntityTypeEn
         return Optional.empty();
     }
 
+    /// An exception thrown by this method should be reported to the API user only if it is an instance of [WebApiException].
+    /// Otherwise, the exception should not be reported to avoid information disclosure.
+    ///
     @Override
     public EnhancedEntityType javaTypeFor(final UserDefinedEnhancedEntityType instance) {
         if (!instance.isPersisted()) {
@@ -273,14 +281,18 @@ public class EntityTypeEnhancer extends WithTransaction implements IEntityTypeEn
             throw new WebApiException(ERR_ENTITY_TYPE_OF_ANOTHER_USER.formatted(instance.getName(), instance.getUser(), user));
         }
 
-        instrumentedCopy(instance).isValid().ifFailure(Result::throwRuntime);
+        instrumentedCopy(instance).isValid().ifFailure(ex -> {
+            throw new WebApiException(ERR_INVALID_ENTITY_TYPE.formatted(instance.getName(), ex.getMessage()), ex);
+        });
 
         final UserDefinedEnhancedEntityTypeCo coUserDefinedEnhancedEntityType = coFinder.find(UserDefinedEnhancedEntityType.class, true);
         final var baseType = coUserDefinedEnhancedEntityType.baseTypeAsJavaType(instance);
 
         final UserDefinedCalculatedPropertyCo coProperty = coFinder.find(UserDefinedCalculatedProperty.class, true);
         final var properties = coProperty.findByEntityType(instance);
-        properties.forEach(property -> instrumentedCopy(property).isValid().ifFailure(Result::throwRuntime));
+        properties.forEach(property -> instrumentedCopy(property).isValid().ifFailure(ex -> {
+            throw new WebApiException(ERR_INVALID_PROPERTY.formatted(property.getName(), instance.getName(), ex.getMessage()), ex);
+        }));
 
         final var enhancedType = generate(instance.getName(),
                                           baseType,

@@ -32,8 +32,7 @@ import static ua.com.fielden.platform.mcp.TgMcpServer.TOOL_ENHANCE_ENTITY_TYPE;
 import static ua.com.fielden.platform.mcp.test_config.TgMcpServerTestCaseConfiguration.TEST_WEB_API_KEY_MCP;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertInstanceOf;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.web_api.EntityTypeEnhancer.ERR_BASE_TYPE_REQUIRED;
-import static ua.com.fielden.platform.web_api.EntityTypeEnhancer.ERR_UNAUTHORISED_ACCESS;
+import static ua.com.fielden.platform.web_api.EntityTypeEnhancer.*;
 
 public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
 
@@ -207,7 +206,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
         final var result = enhanceEntityType(Map.of("name", "MyVehicle",
                                                     "addProperties", List.of(Map.of("name", "myNumber", "expression", "2 * 3"))));
         assertTrue(result.isError());
-        assertThat(text(result)).isEqualTo(ERR_BASE_TYPE_REQUIRED.formatted("MyVehicle"));
+        assertThat(text(result)).isEqualTo(errEnhancementFailed("MyVehicle", "myNumber", "", ERR_BASE_TYPE_REQUIRED.formatted("MyVehicle")));
         assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
     }
 
@@ -217,7 +216,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
                                                     "baseType", "TgVehicle",
                                                     "addProperties", List.of(Map.of("name", "myNumber", "expression", "2 * noSuchProp"))));
         assertTrue(result.isError());
-        assertThat(text(result)).startsWith("Property [myNumber] cannot be added.");
+        assertThat(text(result)).isEqualTo(errEnhancementFailed("MyVehicle", "myNumber", "", ERR_PROPERTY_CANNOT_BE_ADDED.formatted("myNumber")));
         assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
     }
 
@@ -229,7 +228,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
         runWithoutToken(TgVehicle_CanRead_price_Token.class, () -> {
             final var result = enhanceEntityType(arguments);
             assertTrue(result.isError());
-            assertThat(text(result)).isEqualTo(ERR_UNAUTHORISED_ACCESS.formatted("myPrice", "price"));
+            assertThat(text(result)).isEqualTo(errEnhancementFailed("MyVehicle", "myPrice", "", ERR_UNAUTHORISED_ACCESS.formatted("myPrice", "price")));
             assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
         });
         // A positive control: the same request succeeds when the token is held.

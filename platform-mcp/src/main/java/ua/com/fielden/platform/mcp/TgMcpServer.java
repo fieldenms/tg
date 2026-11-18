@@ -23,7 +23,6 @@ import ua.com.fielden.platform.web_api.GraphQLCommon;
 import ua.com.fielden.platform.web_api.IWebApi;
 import ua.com.fielden.platform.web_api.IWebApi.Enhancement;
 import ua.com.fielden.platform.web_api.IWebApi.PropertyDefinition;
-import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -309,11 +308,7 @@ public class TgMcpServer {
         try {
             enhancement = webApi.enhanceEntityType(name, baseType, addProperties.get(), removeProperties.stream().map(String.class::cast).toList());
         } catch (final Exception ex) {
-            LOGGER.error(() -> "Error enhancing entity type [%s].".formatted(name), ex);
-            return switch (ex) {
-                case WebApiException _ -> errorResult(ex.getMessage());
-                default -> errorResult("Error enhancing entity type [%s]: %s".formatted(name, ex.getMessage()));
-            };
+            return errorResult(ex.getMessage());
         }
 
         final var entityType = enhancement.entityType();
