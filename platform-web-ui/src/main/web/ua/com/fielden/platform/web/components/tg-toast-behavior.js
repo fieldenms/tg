@@ -46,7 +46,6 @@ const paperToastStyle = html`
             }
         </style>
     </custom-style>`;
-paperToastStyle.setAttribute('style', 'display: none;');
 document.head.appendChild(paperToastStyle.content);
 
 export const TgToastBehavior = {

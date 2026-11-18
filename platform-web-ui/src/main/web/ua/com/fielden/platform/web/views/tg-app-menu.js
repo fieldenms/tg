@@ -89,6 +89,12 @@ const template = html`
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        /* The watermark is purely decorative and must never intercept pointer events. */
+        /* Its style is application-specific and may position it over any part of the application. */
+        /* Without this rule it would swallow taps that are meant for whatever it happens to overlay. */
+        #watermark {
+            pointer-events: none;
+        }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
 
