@@ -75,14 +75,29 @@ public class ConfirmationPreAction implements IPreAction {
         return new JsCode(
             (withProgress ? """
                 if (action) {
+                    // Avoid capturing of focus and restoration of focus after action completion with `withProgress` preAction.
+                    // This allows "normal" functioning in cases where link was inserted into app that had focus on some element.
+                    // By "normal" functioning we mean automatic focusing of affirmative button allowing to repeat the action on errors.
+                    // It is of very little value to return focus to previously focused element.
+                    // This is because mostly the link will be opened in new tab / window, and even otherwise the user would have to
+                    //   do the action of link pasting into address bar, which means they already lost context of previously focused item.
+                    action.persistActiveElement = () => {};
+                    action.restoreActiveElement = () => {};
                     // In case where { withProgress: true } option was used, override action completion logic to close the dialog.
                     const isActionInProgressChanged = action.isActionInProgressChanged.bind(action);
                     action.isActionInProgressChanged = (function (newValue, oldValue) {
                         isActionInProgressChanged(newValue, oldValue);
+                        // If action progress has been stopped.
                         if (newValue === false && oldValue === true) {
-                            self.closeConfirmationDialog();
+                            self.confirmationDialog(dialog => dialog.enableActions(action));
                         }
                     }).bind(action);
+                    action.isActionSuccessfulChanged = (newValue, oldValue) => {
+                        // If action has become successful.
+                        if (newValue && !oldValue) {
+                            self.confirmationDialog(dialog => dialog.close());
+                        }
+                    };
                 }
             """ : "") + """
                 return self.confirm('%s', [%s]%s);
