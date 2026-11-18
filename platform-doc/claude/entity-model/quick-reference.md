@@ -15,7 +15,7 @@ Entities annotated with `@MapEntityTo` are persistent.
 
 **Entity-level:** `@MapEntityTo`, `@KeyType`, `@CompanionObject`, `@EntityTitle(value, desc)`, `@DisplayDescription`, `@DescRequired`, `@DescTitle`, `@Subtitles`, `@DeactivatableDependencies`, `@DomainEntity`, `@WithMetaModel`, `@WithoutMetaModel`, `@SupportsEntityExistsValidation`, `@Audited`
 
-**Property-level:** `@IsProperty`, `@MapTo`, `@Title`, `@Observable` (required on all setters), `@Calculated`, `@Required`, `@Final`, `@Readonly`, `@UpperCase`, `@DateOnly`, `@TimeOnly`, `@Dependent`, `@CompositeKeyMember(n)`, `@SkipEntityExistsValidation`, `@LeProperty`, `@GeProperty`, `@CritOnly`, `@DisableAuditing`
+**Property-level:** `@IsProperty`, `@MapTo`, `@Title`, `@Observable` (required on all setters), `@Calculated`, `@Required`, `@Final`, `@Readonly`, `@UpperCase`, `@DateOnly`, `@TimeOnly`, `@Dependent`, `@CompositeKeyMember(n)`, `@SkipEntityExistsValidation`, `@LeProperty`, `@GeProperty`, `@CritOnly`, `@DisableAuditing`, `@Invisible`
 
 **`@IsProperty` parameters:** `(Long.class)` for collection element type, `(length = 8000)` for string length, `(assignBeforeSave = true)` for auto-assigned values.
 `MaxLengthValidator` is implicit for `String` properties — do not declare it manually.
@@ -24,6 +24,11 @@ Entities annotated with `@MapEntityTo` are persistent.
 
 **`@CritOnly` on persistent entities is an anti-pattern** — use a synthetic `Re*` wrapper.
 Exception: generative entities (implement `WithCreatedByUser<T>`).
+
+**`@Invisible` keeps the value of a property on the server**: it is never serialised, a value supplied by a client is not applied, and the property is excluded from entity centres and the Web API (GraphQL).
+The property is an ordinary one for the server-side logic.
+`@Invisible(centreOnly = true)` only excludes a property from entity centres and the Web API.
+See *Values That Stay on the Server* in `security/quick-reference.md`.
 
 ## Property Declaration
 

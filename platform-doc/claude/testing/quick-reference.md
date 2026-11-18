@@ -16,7 +16,7 @@ For the underlying interception mechanism see *Property Declaration* in `entity-
 | Property validator (`@BeforeChange`) — failure | After `entity.setProp(value)`: `entity.getProperty(prop).isValid()` (boolean) or `.getFirstFailure().getMessage()` for exact-match |
 | Property validator (`@BeforeChange`) — warning | After `entity.setProp(value)`: `entity.getProperty(prop).hasWarnings()` or `.getFirstWarning().getMessage()` |
 | Entity-level (`validate()` override) | `entity.isValid()` — directly returns the `Result` of `validate()`. Use `.isSuccessful()` and `.getMessage()` |
-| Definer (`@AfterChange`) | After `entity.setProp(value)`: assert side effects on other properties (e.g., computed `shiftDuration`) or on metaproperty state (`isRequired()`, `isEditable()`, `isVisible()`) |
+| Definer (`@AfterChange`) | After `entity.setProp(value)`: assert side effects on other properties (e.g., computed `shiftDuration`) or on metaproperty state (`isRequired()`, `isEditable()`) |
 
 `AbstractEntity.isValid()` is `return validate();` — calling it runs property-level validators (via `super.validate()`) and then the override's cross-property check.
 
