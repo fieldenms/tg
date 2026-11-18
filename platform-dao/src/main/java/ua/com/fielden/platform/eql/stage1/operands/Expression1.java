@@ -8,6 +8,7 @@ import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.stream.Collectors.toSet;
@@ -30,6 +31,10 @@ public record Expression1 (ISingleOperand1<? extends ISingleOperand2<?>> first,
                 items.stream().map(el -> el.operand().collectEntityTypes()).flatMap(Set::stream),
                 first.collectEntityTypes().stream())
                 .collect(toSet());
+    }
+
+    public Stream<ISingleOperand1<?>> streamOperands() {
+        return Stream.concat(Stream.of(first), items.stream().map(CompoundSingleOperand1::operand));
     }
 
     @Override

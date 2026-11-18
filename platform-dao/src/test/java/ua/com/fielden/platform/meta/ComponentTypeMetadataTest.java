@@ -13,6 +13,7 @@ import java.util.Currency;
 
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
+import static ua.com.fielden.platform.types.Money.*;
 
 public class ComponentTypeMetadataTest {
 
@@ -27,19 +28,19 @@ public class ComponentTypeMetadataTest {
     @Test
     public void metadata_is_generated_for_type_Money() {
         ComponentA.of(assertPresent("Expected metadata to have been generated.", generator.forComponent(Money.class)))
-                .assertProperty("amount", p -> p
+                .assertProperty(AMOUNT, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .type().assertIs(Primitive.class).assertJavaType(BigDecimal.class))
-                .assertProperty("exTaxAmount", p -> p
+                .assertProperty(EX_TAX_AMOUNT, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .type().assertIs(Primitive.class).assertJavaType(BigDecimal.class))
-                .assertProperty("taxAmount", p -> p
+                .assertProperty(TAX_AMOUNT, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .type().assertIs(Primitive.class).assertJavaType(BigDecimal.class))
-                .assertProperty("taxPercent", p -> p
+                .assertProperty(TAX_PERCENT, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .type().assertIs(Primitive.class).assertJavaType(Integer.class))
-                .assertProperty("currency", p -> p
+                .assertProperty(CURRENCY, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .type().assertIs(Primitive.class).assertJavaType(Currency.class))
         ;

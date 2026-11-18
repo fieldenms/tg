@@ -15,6 +15,8 @@ import org.hibernate.type.Type;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IMoneyWithTaxAmountType;
 
+import static ua.com.fielden.platform.types.Money.*;
+
 /**
  * Hibernate type for storing tax sensitive instances of type {@link Money}. This type expects that {@link Money} is mapped into three columns -- one for storing full amount,
  * second for storing tax amount and thirds for currency
@@ -49,7 +51,7 @@ public class MoneyWithTaxAmountType extends AbstractCompositeUserType implements
         if (allArgumentsAreNull(arguments)) {
             return null;
         }
-        return new Money((BigDecimal) arguments.get("amount"), (BigDecimal) arguments.get("taxAmount"), (Currency) arguments.get("currency"));
+        return new Money((BigDecimal) arguments.get(AMOUNT), (BigDecimal) arguments.get(TAX_AMOUNT), (Currency) arguments.get(CURRENCY));
     }
 
     @Override
@@ -69,7 +71,7 @@ public class MoneyWithTaxAmountType extends AbstractCompositeUserType implements
 
     @Override
     public String[] getPropertyNames() {
-        return new String[] { "amount", "taxAmount", "currency" };
+        return new String[] { AMOUNT, TAX_AMOUNT, CURRENCY };
     }
 
     @Override

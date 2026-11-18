@@ -516,7 +516,6 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                             with(propName, fetchIdOnly(et.javaType()));
                         }
                     } else {
-                        getSinglePropertyOfComponentType(pm).ifPresent(prop -> primProps.add(propName + "." + prop));
                         primProps.add(propName);
                     }
                 }

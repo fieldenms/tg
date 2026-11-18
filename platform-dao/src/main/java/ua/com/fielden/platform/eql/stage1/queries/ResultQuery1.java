@@ -51,7 +51,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
 
     public final @Nullable IRetrievalModel<?> retrievalModel;
 
-    public ResultQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType, final IRetrievalModel<?> retrievalModel) {
+    public ResultQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType, final @Nullable IRetrievalModel<?> retrievalModel) {
         super(queryComponents, requireNonNull(resultType));
         this.retrievalModel = retrievalModel;
     }

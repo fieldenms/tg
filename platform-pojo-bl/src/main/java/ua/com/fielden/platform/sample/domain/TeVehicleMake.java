@@ -58,12 +58,16 @@ public class TeVehicleMake extends AbstractEntity<String> {
     @IsProperty
     @Calculated
     private Money p9;
-    protected static final ExpressionModel p9_ = expr().val(1).model();
+    protected static final ExpressionModel
+            p9_ = expr().val(1).model(),
+            p9_currency_ = expr().val(null).model();
 
     @IsProperty
     @Calculated
     private Money p8;
-    protected static final ExpressionModel p8_ = expr().val(2).model();
+    protected static final ExpressionModel
+            p8_ = expr().val(2).model(),
+            p8_currency_ = expr().val(null).model();
 
     @IsProperty
     @Calculated

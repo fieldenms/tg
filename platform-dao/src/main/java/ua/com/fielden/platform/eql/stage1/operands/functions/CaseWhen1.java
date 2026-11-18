@@ -15,10 +15,7 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ToString;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -62,6 +59,10 @@ public record CaseWhen1 (List<T2<ICondition1<? extends ICondition2<?>>, ISingleO
         }
         
         return result;
+    }
+
+    public Optional<ISingleOperand1<? extends ISingleOperand2<?>>> maybeElseOperand() {
+        return Optional.ofNullable(elseOperand);
     }
 
     @Override

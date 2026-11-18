@@ -259,10 +259,17 @@ The stage 1→2 transformation is not always 1:1.
 For example, `yield().val(null).as("location")` where `location` is a union type expands into one null yield per union member (`location.workshop`, `location.wagonSlot`, etc.).
 This expansion uses `domainMetadata` to resolve the union type and its members.
 
-`Yields1.transform()` also applies `ExpandSingleComponentTypedYield1`, which rewrites a yield whose alias targets a property of a component type with a single component into a yield with the alias of that component.
-For example, `yield().val(null).as("price")` where `price : Money` under the platform default mapping (`SimpleMoneyType`, `amount` only) becomes `yield().val(null).as("price.amount")`, so that null type resolution (below) infers `BigDecimal` rather than `Money`, for which no SQL-level cast exists under PostgreSQL.
-Properties whose component representation has several components (e.g. `Money` mapped with tax and currency) are left untouched.
-This is a temporary measure pending [#2675](https://github.com/fieldenms/tg/issues/2675), which is to replace it.
+`Yields1.transform()` then applies `ExpandMoneyTypedYield1` (a singleton) to every yield produced by the union expansion.
+It applies to an aliased yield of a query with a result type whose property at that alias is `Money`-typed, and expands that yield into one yield per component of the destination property (`amount`, plus `currency` if the destination is mapped with one).
+For example, `yield().prop("price").as("price")` where `price : Money` is mapped with `amount` only (`SimpleMoneyType`) becomes `yield().prop("price.amount").as("price.amount")`.
+A destination mapped with a currency as well gets a second yield aliased `price.currency`.
+
+The `amount` yield reuses the original operand as is.
+The `currency` yield's operand is inferred by `MoneyComponentInference`, which scans the tail-position operands of the original expression (through `Expression1`, `CaseWhen1`, etc.) for the first property that is `Money` with a `currency` component, and yields that property's `currency` path.
+Components already yielded explicitly by the query are left untouched — this is also the only way to supply a component that cannot be inferred.
+Inference does not traverse sub-queries, and fails when no source property carries the component (e.g. yielding an `amount`-only `Money` into a destination mapped with a currency); either case raises `EqlStage1ProcessingException` demanding an explicit yield for that component.
+
+A consequence of this expansion is that yields into `Money`-typed properties are always typed at component level, so null type resolution (below) infers `BigDecimal` for `yield().val(null).as("price")` rather than `Money`, for which no SQL-level cast exists under PostgreSQL.
 
 ### Null Type Resolution in Yields
 

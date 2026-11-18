@@ -3,7 +3,11 @@
  */
 package ua.com.fielden.platform.persistence.types;
 
-import static java.util.Currency.getInstance;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.Type;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAndExTaxAmountType;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -12,12 +16,9 @@ import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.BigDecimalType;
-import org.hibernate.type.Type;
-
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAndExTaxAmountType;
+import static java.util.Currency.getInstance;
+import static ua.com.fielden.platform.types.Money.EX_TAX_AMOUNT;
+import static ua.com.fielden.platform.types.Money.TAX_AMOUNT;
 
 /**
  * Hibernate user type for storing {@link Money} instances with taxes (persisting/retrieving problems may occur, if tax is not specified in {@link Money} instance). This class
@@ -31,7 +32,7 @@ public class SimplyMoneyWithTaxAndExTaxAmountType extends AbstractCompositeUserT
     
     @Override
     public String[] getPropertyNames() {
-        return new String[] { "exTaxAmount", "taxAmount" };
+        return new String[] { EX_TAX_AMOUNT, TAX_AMOUNT };
     }
 
     @Override
@@ -67,8 +68,8 @@ public class SimplyMoneyWithTaxAndExTaxAmountType extends AbstractCompositeUserT
         if (allArgumentsAreNull(arguments)) {
             return null;
         }
-        final BigDecimal taxAmount = (BigDecimal) arguments.get("taxAmount");
-        final BigDecimal exTaxAmount = (BigDecimal) arguments.get("exTaxAmount");
+        final BigDecimal taxAmount = (BigDecimal) arguments.get(TAX_AMOUNT);
+        final BigDecimal exTaxAmount = (BigDecimal) arguments.get(EX_TAX_AMOUNT);
         return new Money(exTaxAmount.add(taxAmount), taxAmount, getInstance(Locale.getDefault()));
     }
 

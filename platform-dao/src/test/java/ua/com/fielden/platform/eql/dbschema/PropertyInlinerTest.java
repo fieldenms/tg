@@ -20,6 +20,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertEmpty;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
+import static ua.com.fielden.platform.types.Money.AMOUNT;
 
 public class PropertyInlinerTest extends AbstractDaoTestCase {
 
@@ -32,7 +33,7 @@ public class PropertyInlinerTest extends AbstractDaoTestCase {
         assertEquals(Money.class, propMoney.type().javaType());
 
         assertInlined(propMoney,
-                      props -> assertEquals(Set.of("amount"),
+                      props -> assertEquals(Set.of(AMOUNT),
                                             props.stream().map(PropertyMetadata::name).collect(toSet())));
     }
 

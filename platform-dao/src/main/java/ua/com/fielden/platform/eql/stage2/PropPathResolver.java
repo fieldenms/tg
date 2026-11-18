@@ -16,6 +16,7 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
+import ua.com.fielden.platform.eql.stage1.MoneyComponentInference;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
@@ -91,12 +92,18 @@ public class PropPathResolver implements IPropPathResolver {
 
     private final QuerySourceInfoProvider querySourceInfoProvider;
     private final IDomainMetadata domainMetadata;
+    private final MoneyComponentInference moneyComponentInference;
 
     // TODO: Make protected once dependent EQL tests are refactored and use IoC.
     @Inject
-    public PropPathResolver(final QuerySourceInfoProvider querySourceInfoProvider, final IDomainMetadata domainMetadata) {
+    public PropPathResolver(
+            final QuerySourceInfoProvider querySourceInfoProvider,
+            final IDomainMetadata domainMetadata,
+            final MoneyComponentInference moneyComponentInference)
+    {
         this.querySourceInfoProvider = querySourceInfoProvider;
         this.domainMetadata = domainMetadata;
+        this.moneyComponentInference = moneyComponentInference;
     }
 
     @Override
@@ -215,7 +222,7 @@ public class PropPathResolver implements IPropPathResolver {
 
     private Expression2 compile(final ISource2<?> source, final ExpressionModel model, final QueryModelToStage1Transformer gen) {
         final Expression1 exp1 = new EqlCompiler(gen).compile(model.tokens(), EqlCompilationResult.StandaloneExpression.class).model();
-        final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata, List.of(List.of(source)));
+        final var context = TransformationContextFromStage1To2.mkContext(querySourceInfoProvider, domainMetadata, gen, moneyComponentInference, List.of(List.of(source)));
         return exp1.transform(context);
     }
 
