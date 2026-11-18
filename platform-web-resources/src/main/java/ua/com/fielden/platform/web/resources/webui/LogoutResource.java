@@ -8,6 +8,7 @@ import org.restlet.Response;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
+import ua.com.fielden.platform.cypher.LogReference;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.ISsoSessionController;
 import ua.com.fielden.platform.security.session.ISsoSessionController.Tokens;
@@ -21,7 +22,6 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 import java.util.Optional;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.restlet.data.MediaType.TEXT_HTML;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
@@ -81,7 +81,7 @@ public class LogoutResource extends AbstractWebResource {
             // However, some OPs do not send `sid`, such as Okta, where the front-channel logout is still evolving.
             // In the case of TG-based app request, a corresponding `sid` needs to be identified from the current session.
             final String sid = getQueryValue("sid");
-            logger.debug(() -> format("LOGOUT sid (if any): [%s]", sid));
+            logger.debug(() -> "LOGOUT sid (if any): [%s]".formatted(LogReference.of(sid)));
             if (!isEmpty(sid)) {
                 coUserSession.clearAllWithSid(sid);
             }

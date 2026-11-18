@@ -297,15 +297,6 @@ var _createEntityInstancePropPrototype = function () {
     }
 
     /**
-     * Returns 'true' when the instance property is visible, false otherwise.
-     *
-     * IMPORTANT: do not use '_visible' field directly!
-     */
-    EntityInstanceProp.prototype.isVisible = function () {
-        return typeof this._visible === 'undefined' ? true : this._visible;
-    }
-
-    /**
      * Returns validation result (failure or warning) for the instance property or 'null' if successful without warnings.
      *
      * IMPORTANT: do not use '_validationResult' field directly!

@@ -31,6 +31,9 @@ import static ua.com.fielden.platform.utils.DefinersExecutor.definersExecutor;
  *
  */
 public class FactoryForTestingEntities {
+    /// The value of invisible properties of the entities that this factory creates.
+    public static final String INVISIBLE_VALUE = "Not-for-clients";
+
     private final EntityFactory factory;
     private final Date testingDate;
 
@@ -238,13 +241,6 @@ public class FactoryForTestingEntities {
         return finalise(ent);
     }
 
-    public EntityWithString createEntityWithStringNonVisible() {
-        final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
-        entity.setProp("okay");
-        entity.getProperty("prop").setVisible(false);
-        return finalise(entity);
-    }
-
     public EntityWithMetaProperty createRequiredMetaPropThatBecameNonRequired() {
         final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
         entity.beginInitialising();
@@ -265,14 +261,23 @@ public class FactoryForTestingEntities {
         return entity;
     }
 
-    public EntityWithMetaProperty createNonVisibleMetaPropThatBecameVisible() {
-        final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
+    /// Creates an entity with values in an invisible property and in a property that is excluded from entity centres only.
+    ///
+    /// @param id  the ID of the entity, or `null` for a new entity
+    ///
+    public EntityWithMetaProperty createEntityWithInvisibleProps(final Long id) {
+        final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, id);
         entity.beginInitialising();
-        entity.set("nonVisibleProp", "Ok");
+        entity.set("invisibleProp", INVISIBLE_VALUE);
+        entity.set("invisibleInCentresProp", "Ok");
         definersExecutor().execute(entity);
-
-        entity.getProperty("nonVisibleProp").setVisible(true);
         return entity;
+    }
+
+    /// The same as [#createEntityWithInvisibleProps(Long)], but uninstrumented.
+    ///
+    public EntityWithMetaProperty createUninstrumentedEntityWithInvisibleProps(final Long id) {
+        return EntityFactory.newPlainEntity(EntityWithMetaProperty.class, id).setInvisibleProp(INVISIBLE_VALUE).setInvisibleInCentresProp("Ok");
     }
 
     public EntityWithMetaProperty createNonDefaultChangeCountMetaPropThatBecameDefault() {

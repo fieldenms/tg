@@ -434,4 +434,27 @@ public final class AnnotationReflector {
         }
         return isSecrete;
     }
+
+    /// Returns `true` if `field` is an invisible property: one annotated with [Invisible], unless with `centreOnly = true`.
+    /// The value of an invisible property is not available to clients (see [Invisible]).
+    ///
+    public static boolean isInvisible(final Field field) {
+        final Invisible invisible = getAnnotation(field, Invisible.class);
+        return invisible != null && !invisible.centreOnly();
+    }
+
+    /// Returns `true` if `propName` is an invisible property of `entityType` (see [#isInvisible(Field)]),
+    /// and `false` otherwise, including the case where `entityType` has no such property.
+    ///
+    public static boolean isInvisibleProperty(final Class<?> entityType, final String propName) {
+        try {
+            final Invisible invisible = getPropertyAnnotation(Invisible.class, entityType, propName);
+            return invisible != null && !invisible.centreOnly();
+        } catch (final Exception ex) {
+            // There is no such property.
+            // For example, a custom property of a holder of modified properties or a property of a generated criteria type.
+            return false;
+        }
+    }
+
 }

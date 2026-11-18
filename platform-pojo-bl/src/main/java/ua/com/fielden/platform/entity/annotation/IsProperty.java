@@ -189,6 +189,8 @@ public @interface IsProperty {
      * Alternatively, a template may consist of a single {@code z} character, serving as a {@code toString} representation of the displayed entity.
      * <p>
      * The default template is {@code ""}, which is equivalent to applying template {@code #itv} to every key member.
+     * <p>
+     * Key members annotated with {@link Invisible} (without {@code centreOnly}) are not counted: {@code i} is the position of a key member among those that are not invisible.
      */
     String displayAs() default DEFAULT_DISPLAY_AS;
 }

@@ -10,15 +10,19 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.error.Informative;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.*;
+import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.entities.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
@@ -28,7 +32,9 @@ import ua.com.fielden.platform.web.utils.PropertyConflict;
 import java.math.BigDecimal;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities.INVISIBLE_VALUE;
 import static ua.com.fielden.platform.error.Result.*;
 import static ua.com.fielden.platform.utils.DefinersExecutor.definersExecutor;
 
@@ -61,6 +67,9 @@ public class EntitySerialisationWithJacksonTest {
                 EntityWithInteger.class,
                 EntityWithString.class,
                 EntityWithMetaProperty.class,
+                EntityWithInvisibleKeyMember.class,
+                EntityWithInvisibleDesc.class,
+                EntityWithDescInvisibleInCentres.class,
                 EntityWithBoolean.class,
                 EntityWithDate.class,
                 EntityWithOtherEntity.class,
@@ -356,17 +365,6 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_non_visible_prop_should_be_restored() {
-        final EntityWithString entity = factory.createEntityWithStringNonVisible();
-        final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
-
-        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
-        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
-        assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
-        assertFalse("Incorrect prop visibility.", restoredEntity.getProperty("prop").isVisible());
-    }
-
-    @Test
     public void entity_with_changedFromOriginal_prop_should_be_restored_and_its_original_value_properly_restored_too() {
         final EntityWithSameEntity entity = factory.createEntityWithSameEntityThatIsChangedFromOriginal();
         assertEquals("Incorrect prop.", "key3", entity.getProp().getKey());
@@ -611,13 +609,183 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void non_visible_meta_property_that_became_visible_restores() {
-        final AbstractEntity<?> entity = factory.createNonVisibleMetaPropThatBecameVisible();
-        final String value = "Ok";
-        checkMetaValues(entity.getProperty("nonVisibleProp"), null, null, value, value, value, null, value, false, 0, true, true, false, true);
+    public void invisible_property_is_not_serialised_for_an_instrumented_entity() {
+        final EntityWithMetaProperty entity = factory.createEntityWithInvisibleProps(1L);
+        assertEquals(INVISIBLE_VALUE, entity.getInvisibleProp());
 
-        final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
-        checkMetaValues(restoredEntity.getProperty("nonVisibleProp"), null, null, value, value, value, null, value, false, 0, true, true, false, true);
+        final String json = new String(jacksonSerialiser.serialise(entity), UTF_8);
+        assertFalse("The value of an invisible property should not be serialised.", json.contains(INVISIBLE_VALUE));
+        assertFalse("An invisible property should not be serialised, including its meta-information.", json.contains("invisibleProp"));
+        assertTrue("Other properties should be serialised.", json.contains("\"requiredProp\""));
+    }
+
+    @Test
+    public void invisible_property_is_not_serialised_for_an_uninstrumented_entity() {
+        final EntityWithMetaProperty entity = factory.createUninstrumentedEntityWithInvisibleProps(1L);
+        assertEquals(INVISIBLE_VALUE, entity.getInvisibleProp());
+
+        final String json = new String(jacksonSerialiser.serialise(entity), UTF_8);
+        assertFalse("The value of an invisible property should not be serialised.", json.contains(INVISIBLE_VALUE));
+        assertFalse("An invisible property should not be serialised.", json.contains("invisibleProp"));
+        assertTrue("Other properties should be serialised.", json.contains("\"requiredProp\""));
+    }
+
+    @Test
+    public void property_that_is_invisible_in_centres_only_is_serialised_and_restored() {
+        for (final EntityWithMetaProperty entity : List.of(factory.createEntityWithInvisibleProps(1L), factory.createUninstrumentedEntityWithInvisibleProps(1L))) {
+            final byte[] serialised = jacksonSerialiser.serialise(entity);
+            assertTrue(new String(serialised, UTF_8).contains("\"invisibleInCentresProp\":\"Ok\""));
+
+            final EntityWithMetaProperty restoredEntity = jacksonDeserialiser.deserialise(serialised, EntityWithMetaProperty.class);
+            assertEquals("Ok", restoredEntity.getInvisibleInCentresProp());
+        }
+    }
+
+    @Test
+    public void meta_property_is_not_visible_for_an_invisible_property_and_visible_for_a_property_that_is_invisible_in_centres_only() {
+        final EntityWithMetaProperty entity = factory.createEntityWithInvisibleProps(1L);
+        assertFalse(entity.getProperty("invisibleProp").isVisible());
+        assertTrue(entity.getProperty("invisibleInCentresProp").isVisible());
+    }
+
+    @Test
+    public void invisible_property_of_a_persisted_entity_is_proxied_upon_deserialisation() {
+        for (final EntityWithMetaProperty entity : List.of(factory.createEntityWithInvisibleProps(1L), factory.createUninstrumentedEntityWithInvisibleProps(1L))) {
+            final EntityWithMetaProperty restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithMetaProperty.class);
+
+            assertTrue(restoredEntity.proxiedPropertyNames().contains("invisibleProp"));
+            assertThrows(StrictProxyException.class, restoredEntity::getInvisibleProp);
+            assertFalse(restoredEntity.proxiedPropertyNames().contains("invisibleInCentresProp"));
+        }
+    }
+
+    @Test
+    public void invisible_property_of_a_new_entity_has_no_value_upon_deserialisation_and_can_be_assigned() {
+        for (final EntityWithMetaProperty entity : List.of(factory.createEntityWithInvisibleProps(null), factory.createUninstrumentedEntityWithInvisibleProps(null))) {
+            final EntityWithMetaProperty restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithMetaProperty.class);
+
+            assertFalse(restoredEntity.proxiedPropertyNames().contains("invisibleProp"));
+            assertNull(restoredEntity.getInvisibleProp());
+            assertEquals("Assigned", restoredEntity.setInvisibleProp("Assigned").getInvisibleProp());
+        }
+    }
+
+    @Test
+    public void value_supplied_for_an_invisible_property_is_ignored_upon_deserialisation() {
+        final String visiblePropWithValue = "\"invisibleInCentresProp\":\"Ok\"";
+        final String suppliedValue = "Supplied";
+        for (final EntityWithMetaProperty entity : List.of(factory.createEntityWithInvisibleProps(null), factory.createUninstrumentedEntityWithInvisibleProps(null),
+                                                         factory.createEntityWithInvisibleProps(1L), factory.createUninstrumentedEntityWithInvisibleProps(1L))) {
+            final String json = new String(jacksonSerialiser.serialise(entity), UTF_8);
+            assertTrue(json.contains(visiblePropWithValue));
+            final String jsonWithSuppliedValue = json.replace(visiblePropWithValue, "\"invisibleProp\":\"%s\",\"invisibleProp@\":{\"_visible\":true},%s".formatted(suppliedValue, visiblePropWithValue));
+
+            final EntityWithMetaProperty restoredEntity = jacksonDeserialiser.deserialise(jsonWithSuppliedValue.getBytes(UTF_8), EntityWithMetaProperty.class);
+            assertEquals("Ok", restoredEntity.getInvisibleInCentresProp());
+            if (restoredEntity.isPersisted()) {
+                assertThrows(StrictProxyException.class, restoredEntity::getInvisibleProp);
+            } else {
+                assertNull(restoredEntity.getInvisibleProp());
+                if (restoredEntity.isInstrumented()) {
+                    assertFalse(restoredEntity.getProperty("invisibleProp").isVisible());
+                }
+            }
+        }
+    }
+
+    @Test
+    public void type_information_for_clients_does_not_include_invisible_properties() {
+        final EntityType typeInfo = ((TgJackson) jacksonSerialiser).getTypeTable().get(EntityWithMetaProperty.class.getName());
+        assertNotNull(typeInfo);
+        assertFalse(typeInfo.get_props().containsKey("invisibleProp"));
+        assertTrue(typeInfo.get_props().containsKey("invisibleInCentresProp"));
+        assertTrue(typeInfo.get_props().containsKey("requiredProp"));
+    }
+
+    @Test
+    public void invisible_key_member_is_not_part_of_the_composite_key_for_clients_and_is_not_serialised() {
+        final EntityType typeInfo = ((TgJackson) jacksonSerialiser).getTypeTable().get(EntityWithInvisibleKeyMember.class.getName());
+        assertNotNull(typeInfo);
+        assertEquals(List.of("name"), typeInfo.get_compositeKeyNames());
+        assertFalse(typeInfo.get_props().containsKey("code"));
+
+        final EntityWithInvisibleKeyMember entity = factory.getFactory().newEntity(EntityWithInvisibleKeyMember.class, 1L);
+        entity.beginInitialising();
+        entity.setName("Name1").setCode(INVISIBLE_VALUE);
+        definersExecutor().execute(entity);
+
+        final String json = new String(jacksonSerialiser.serialise(entity), UTF_8);
+        assertTrue(json.contains("\"name\":\"Name1\""));
+        assertFalse(json.contains(INVISIBLE_VALUE));
+        assertFalse(json.contains("\"code\""));
+    }
+
+    @Test
+    public void redeclared_desc_that_is_invisible_has_a_meta_property_that_is_not_visible_and_is_not_serialised() {
+        final EntityType typeInfo = ((TgJackson) jacksonSerialiser).getTypeTable().get(EntityWithInvisibleDesc.class.getName());
+        assertNotNull(typeInfo);
+        assertFalse(typeInfo.get_props().containsKey("desc"));
+
+        final EntityWithInvisibleDesc entity = factory.getFactory().newEntity(EntityWithInvisibleDesc.class, 1L);
+        entity.beginInitialising();
+        entity.setKey("Key1");
+        entity.setDesc(INVISIBLE_VALUE);
+        definersExecutor().execute(entity);
+
+        assertFalse(entity.getProperty("desc").isVisible());
+        assertTrue(entity.getProperty("key").isVisible());
+
+        final String json = new String(jacksonSerialiser.serialise(entity), UTF_8);
+        assertTrue(json.contains("\"key\":\"Key1\""));
+        assertFalse(json.contains(INVISIBLE_VALUE));
+        assertFalse(json.contains("\"desc\""));
+    }
+
+    @Test
+    public void redeclared_desc_that_is_invisible_in_centres_only_has_a_visible_meta_property_and_is_serialised() {
+        final EntityType typeInfo = ((TgJackson) jacksonSerialiser).getTypeTable().get(EntityWithDescInvisibleInCentres.class.getName());
+        assertNotNull(typeInfo);
+        assertTrue(typeInfo.get_props().containsKey("desc"));
+
+        final EntityWithDescInvisibleInCentres entity = factory.getFactory().newEntity(EntityWithDescInvisibleInCentres.class, 1L);
+        entity.beginInitialising();
+        entity.setKey("Key1");
+        entity.setDesc("Desc1");
+        definersExecutor().execute(entity);
+
+        assertTrue(entity.getProperty("desc").isVisible());
+        assertTrue(new String(jacksonSerialiser.serialise(entity), UTF_8).contains("\"desc\":\"Desc1\""));
+    }
+
+    /// Attribute `visible` of meta-properties and serialisation are determined by the same predicate, `AnnotationReflector.isInvisible`.
+    /// This test asserts that they agree for every property of entity types with invisible properties, including `key` and `desc`:
+    /// an invisible property has a meta-property that is not visible, and a property with such a meta-property is not known to clients.
+    ///
+    @Test
+    public void visibility_of_meta_properties_agrees_with_invisibility_of_properties_and_with_the_properties_known_to_clients() {
+        final List<Class<? extends AbstractEntity<?>>> entityTypes = List.of(
+                EntityWithMetaProperty.class,
+                EntityWithInvisibleKeyMember.class,
+                EntityWithInvisibleDesc.class,
+                EntityWithDescInvisibleInCentres.class,
+                EntityWithCompositeKey.class,
+                EntityWithString.class);
+        for (final var entityType : entityTypes) {
+            final EntityType typeInfo = ((TgJackson) jacksonSerialiser).getTypeTable().get(entityType.getName());
+            assertNotNull(typeInfo);
+            final AbstractEntity<?> entity = factory.getFactory().newEntity(entityType, 1L);
+            final boolean hasCompositeKey = Finder.getKeyMembers(entityType).size() > 1;
+            assertFalse(entity.getProperties().isEmpty());
+            entity.getProperties().forEach((name, metaProp) -> {
+                final String prop = "%s.%s".formatted(entityType.getSimpleName(), name);
+                final boolean invisible = AnnotationReflector.isInvisible(Finder.getFieldByName(entityType, name));
+                final boolean compositeKey = AbstractEntity.KEY.equals(name) && hasCompositeKey;
+                assertEquals("Unexpected visibility of the meta-property for [%s].".formatted(prop), !invisible && !compositeKey, metaProp.isVisible());
+                if (!metaProp.isVisible()) {
+                    assertFalse("Property [%s] should not be known to clients.".formatted(prop), typeInfo.get_props().containsKey(name));
+                }
+            });
+        }
     }
 
     @Test

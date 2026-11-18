@@ -35,6 +35,7 @@ import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonPropertie
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isInvisible;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
@@ -123,7 +124,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             final List<String> compositeKeyNames = new ArrayList<>();
             final List<Field> keyMembers = Finder.getKeyMembers(type);
             for (final Field keyMember : keyMembers) {
-                compositeKeyNames.add(keyMember.getName());
+                // A composite key is not serialised: clients compose it from the key members named here, which leaves invisible members out.
+                if (!isInvisible(keyMember)) {
+                    compositeKeyNames.add(keyMember.getName());
+                }
             }
             entityTypeInfo.set_compositeKeyNames(compositeKeyNames);
 
@@ -288,15 +292,16 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         return boolean.class == fieldType || !isAbstract(modifiers) && !isInterface(modifiers);
     }
 
-    /**
-     * Creates list of {@link CachedProperty} instances for the specified <code>type</code> based on its property definitions.
-     *
-     * @param type
-     * @return
-     */
+    /// Creates a list of [CachedProperty] instances for `type` based on its property definitions.
+    /// These are the properties that are serialised and deserialised, and that the type information for clients describes.
+    ///
+    /// Invisible properties ([Invisible]) are not included.
+    /// Hence, their values are never serialised, values supplied for them are ignored upon deserialisation, and clients do not know of them.
+    ///
     public static <T extends AbstractEntity<?>> List<CachedProperty> createCachedProperties(final Class<T> type) {
         return unmodifiableList(
             streamRealProperties(type) // composite 'key' field is not included in real props set
+            .filter(field -> !isInvisible(field))
             .map(field -> new CachedProperty(field, type))
             .collect(toList())
         );

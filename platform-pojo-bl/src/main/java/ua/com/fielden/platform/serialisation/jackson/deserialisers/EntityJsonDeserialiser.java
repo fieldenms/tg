@@ -35,6 +35,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static java.util.Optional.of;
@@ -44,6 +45,7 @@ import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.fromString;
 import static ua.com.fielden.platform.entity.proxy.EntityProxyContainer.proxy;
+import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
 import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
 import static ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser.VALIDATION_RESULT;
@@ -69,6 +71,8 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private final Field versionField;
     private final Class<T> entityType;
     private final Map<String, CachedProperty> properties;
+    /// The names of invisible properties of the entity type, which are not among `properties`.
+    private final Set<String> invisibleProps;
     private final ISerialisationTypeEncoder serialisationTypeEncoder;
     private final boolean propertyDescriptorType;
     private final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
@@ -91,6 +95,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             TAKE_SECOND, // very unlikely to have duplicates here (see un-overridden CachedProperty.equals and EntitySerialiser.createCachedProperties); however, for safety, do not throw IllegalStateException as in Collectors.throwingMerger (used by Collectors.toMap(keyMapper, valueMapper) method)
             LinkedHashMap::new // preserve iteration order through this map exactly as in original List<CachedProperty>
         ));
+        this.invisibleProps = streamRealProperties(entityType).filter(AnnotationReflector::isInvisible).map(Field::getName).collect(toImmutableSet());
         this.serialisationTypeEncoder = serialisationTypeEncoder;
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
 
@@ -134,8 +139,13 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final JsonNode instrumentedJsonNode = node.get("@_i");
             final boolean uninstrumented = instrumentedJsonNode == null;
 
-            final Set<String> proxiedProps = properties.keySet().stream()
-                    .filter(prop -> node.get(prop) == null)
+            // Properties that were not serialised are proxied.
+            // So are the invisible properties of a persisted entity, which are never serialised: their values exist, but are not known here.
+            // The invisible properties of a new entity are not proxied, as a proxied property can be neither read nor assigned.
+            // They are left without values instead, so that the server-side logic can assign them (e.g., upon saving).
+            final Set<String> proxiedProps = Stream.concat(
+                            properties.keySet().stream().filter(prop -> node.get(prop) == null),
+                            id == null ? Stream.empty() : invisibleProps.stream())
                     .collect(toImmutableSet());
 
             final T entity;
@@ -334,13 +344,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 metaProperty.getEntity().beginInitialising();
                 metaProperty.setRequired(getRequiredDefault(), customErrorMsgForRequiredness);
                 metaProperty.getEntity().endInitialising();
-            }
-            final JsonNode visibleNode = metaPropNode.get("_visible");
-            if (visibleNode != null) {
-                assertNonEmptyNode(visibleNode);
-                metaProperty.setVisible(visibleNode.asBoolean());
-            } else {
-                metaProperty.setVisible(getVisibleDefault());
             }
         }
         return metaProperty;

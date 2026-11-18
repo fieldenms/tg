@@ -209,7 +209,7 @@ public final class SseServlet extends HttpServlet {
         final Authenticator auth = oAuth.get();
         try {
             if (!auth.hash.equals(crypto.calculateRFC2104HMAC(auth.token, hashingKey))) {
-                LOGGER.debug(() -> "SSE request: authenticator %s cannot be verified. A tempered authenticator is suspected.".formatted(auth));
+                LOGGER.debug(() -> "SSE request: authenticator [%s] cannot be verified. A tampered authenticator is suspected.".formatted(auth.logRef()));
                 return empty();
             }
         } catch (final SignatureException ex) {

@@ -325,12 +325,12 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         return key;
     }
 
+    /// Indicates whether the property is visible, which is determined by its definition and does not change.
+    /// A property annotated with `@Invisible` (without `centreOnly`) is not visible, including `key` and `desc` that an entity type redeclares.
+    /// Property `key` of an entity with a composite key is not visible either.
+    ///
     public boolean isVisible() {
         throw new StrictProxyException(format("Invalid call [isVisible] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void setVisible(final boolean visible) {
-        throw new StrictProxyException(format("Invalid call [setVisible] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
     public String getCustomErrorMsgForRequiredness() {

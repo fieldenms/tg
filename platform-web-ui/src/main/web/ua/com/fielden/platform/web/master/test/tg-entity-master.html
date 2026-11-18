@@ -75,7 +75,6 @@
                     assert.strictEqual(entity.prop('integerProp').validationResult(), null, 'The entity response instance prop should have empty validation result.');
                     assert.strictEqual(entity.prop('integerProp').isRequired(), false, 'The entity response instance prop should be not required.');
                     assert.strictEqual(entity.prop('integerProp').isEditable(), true, 'The entity response instance prop should be editable.');
-                    assert.strictEqual(entity.prop('integerProp').isVisible(), true, 'The entity response instance prop should be visible.');
                 
                     // binding value ok?
                     assert.strictEqual(typeof bindingEntity.get('integerProp'), 'object', 'Binding property should be initialised.');
@@ -149,7 +148,6 @@
                     assert.strictEqual(entity.prop('integerProp').validationResult(), null, 'The entity response instance prop should have empty validation result.');
                     assert.strictEqual(entity.prop('integerProp').isRequired(), false, 'The entity response instance prop should be not required.');
                     assert.strictEqual(entity.prop('integerProp').isEditable(), true, 'The entity response instance prop should be editable.');
-                    assert.strictEqual(entity.prop('integerProp').isVisible(), true, 'The entity response instance prop should be visible.');
 
                     // binding value ok?
                     assert.ok(bindingEntity.get('integerProp'), 'Binding property should be initialised.');

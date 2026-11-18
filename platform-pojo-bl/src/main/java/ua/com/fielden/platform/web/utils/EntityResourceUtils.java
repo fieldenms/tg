@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -66,6 +67,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isInvisibleProperty;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isCollectional;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
@@ -179,7 +181,7 @@ public class EntityResourceUtils {
         // iterate through untouched properties first:
         //  (the order of application does not really matter - untouched properties were really applied earlier through some definers, that originate from touched properties)
         modifiedPropertiesHolder.forEach((name, value) -> {
-            if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION) && !name.startsWith("@") /* custom properties disregarded */ && !touchedProps.contains(name)) {
+            if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION) && !name.startsWith("@") /* custom properties disregarded */ && !touchedProps.contains(name) && isAvailableToClients(type, name)) {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) value;
                 // The 'modified' properties are marked using the existence of "val" sub-property.
                 try {
@@ -201,6 +203,9 @@ public class EntityResourceUtils {
         //  (the order of application is strictly the same as was done by the user in Web UI client - the only difference is
         //  such that properties, that were touched twice or more times, will be applied only once)
         for (final String touchedProp : touchedProps) {
+            if (!isAvailableToClients(type, touchedProp)) {
+                continue;
+            }
             final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(touchedProp);
             // The 'modified' properties are marked using the existence of "val" sub-property.
             try {
@@ -229,6 +234,19 @@ public class EntityResourceUtils {
         disregardTouchedRequiredPropertiesWithEmptyValue(entity, touchedProps, isCriteriaEntity);
 
         return entity;
+    }
+
+    /// Indicates whether property `name` of `type` is available to clients, and so may be applied to an entity with a value that a client supplied.
+    ///
+    /// Invisible properties are not ([Invisible]): their values are not sent to clients, hence a value for such a property does not originate from the Web UI.
+    /// Such a value is not applied, which is logged.
+    ///
+    private static boolean isAvailableToClients(final Class<?> type, final String name) {
+        if (isInvisibleProperty(type, name)) {
+            logger.warn(() -> "A value was supplied for invisible property [%s.%s]. It was not applied.".formatted(type.getSimpleName(), name));
+            return false;
+        }
+        return true;
     }
 
     /// Handles errors that occur in the process of restoring property values and assigning them.

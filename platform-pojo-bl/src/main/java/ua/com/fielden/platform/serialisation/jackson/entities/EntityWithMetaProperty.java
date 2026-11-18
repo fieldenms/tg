@@ -47,9 +47,15 @@ public class EntityWithMetaProperty extends AbstractEntity<String> {
     
     @IsProperty
     @MapTo
-    @Title("Non-visible Prop")
-    @Invisible // non-visible by definition
-    private String nonVisibleProp;
+    @Title("Invisible Prop")
+    @Invisible // its value is not available to clients
+    private String invisibleProp;
+
+    @IsProperty
+    @MapTo
+    @Title("Invisible In Centres Prop")
+    @Invisible(centreOnly = true) // excluded from entity centres only
+    private String invisibleInCentresProp;
     
     @IsProperty
     @MapTo
@@ -67,13 +73,23 @@ public class EntityWithMetaProperty extends AbstractEntity<String> {
     }
     
     @Observable
-    public EntityWithMetaProperty setNonVisibleProp(final String nonVisibleProp) {
-        this.nonVisibleProp = nonVisibleProp;
+    public EntityWithMetaProperty setInvisibleProp(final String invisibleProp) {
+        this.invisibleProp = invisibleProp;
         return this;
     }
-    
-    public String getNonVisibleProp() {
-        return nonVisibleProp;
+
+    public String getInvisibleProp() {
+        return invisibleProp;
+    }
+
+    @Observable
+    public EntityWithMetaProperty setInvisibleInCentresProp(final String invisibleInCentresProp) {
+        this.invisibleInCentresProp = invisibleInCentresProp;
+        return this;
+    }
+
+    public String getInvisibleInCentresProp() {
+        return invisibleInCentresProp;
     }
     
     @Observable

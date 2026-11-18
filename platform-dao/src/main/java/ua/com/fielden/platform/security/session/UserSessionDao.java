@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import ua.com.fielden.platform.cypher.LogReference;
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -39,6 +40,9 @@ import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import static ua.com.fielden.platform.security.session.Authenticator.mkToken;
 
 /// DAO implementation for companion object {@link IUserSession}.
+///
+/// Authenticators, series IDs and SSO session identifiers are never written to logs, as each is sufficient to use or to end a session.
+/// Log messages refer to them with [Authenticator#logRef()] and [LogReference], which identify a value consistently without disclosing it.
 ///
 /// Session times — the expiry time and the time of last access — are instants of the server clock, [IUniversalConstants#serverNow].
 /// [IUniversalConstants#now] is not used, as in the independent time-zone mode it shifts the instant by the offset of the request time-zone,
@@ -168,7 +172,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         try {
             // Delete user sessions and SSO sessions from the database in a separate transaction.
             final int count = deleteSessionsBySid(sid);
-            logger.info(() -> "User sessions deleted [%s] for sid [%s].".formatted(count, sid));
+            logger.info(() -> "User sessions deleted [%s] for sid [%s].".formatted(count, LogReference.of(sid)));
             return count;
         } finally {
             // Remove all matching user sessions from cache, even if the DB delete failed.
@@ -189,14 +193,14 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         try {
             ssoSessionController.invalidate(sid);
         } catch (final Exception ex) {
-            logger.error(() -> "Could not invalidate SSO sessions for sid [%s].".formatted(sid), ex);
+            logger.error(() -> "Could not invalidate SSO sessions for sid [%s].".formatted(LogReference.of(sid)), ex);
         }
 
         // Second, but more importantly, invalidate user sessions.
         try {
             return this.defaultBatchDelete(select(UserSession.class).where().prop("sid").eq().val(sid).model());
         } catch (final Exception ex) {
-            logger.error(() -> "Could not delete user sessions by sid [%s].".formatted(sid), ex);
+            logger.error(() -> "Could not delete user sessions by sid [%s].".formatted(LogReference.of(sid)), ex);
             return 0;
         }
     }
@@ -295,7 +299,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         try {
             if (!auth.hash.equals(crypto.calculateRFC2104HMAC(auth.token, hashingKey))) {
                 // Authenticator has been tampered with.
-                logger.warn(() -> "The provided authenticator %s cannot be verified. A tampered authenticator is suspected.".formatted(auth));
+                logger.warn(() -> "The provided authenticator [%s] cannot be verified. A tampered authenticator is suspected.".formatted(auth.logRef()));
                 // Remove user sessions that are identified with the provided series ID.
                 // Series ID is the only possibly reliable piece of the authenticator at this stage as it is hard to forge algorithmically.
                 // Therefore, in the worst case scenario that an authenticator has been stolen and the series ID is being reused,
@@ -304,7 +308,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                 // It is also possible that the provided series ID is fraudulent and does not match any existing sessions
                 // Then, no problems -- just deny the access and request explicit re-authentication.
                 final int count = removeSessionsForUsersBy(auth.seriesId);
-                logger.debug(() -> "Removed %s session(s) for series ID %s".formatted(count, auth.seriesId));
+                logger.debug(() -> "Removed %s session(s) for series ID [%s].".formatted(count, LogReference.of(auth.seriesId)));
                 return Optional.empty();
             }
 
@@ -319,10 +323,10 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         // The next logical thing to check is whether the user making the request and the user specified in the authenticator match.
         if (!user.getKey().equals(auth.username)) {
             // Authenticator has been stolen.
-            logger.warn(() -> "The provided authenticator %s does not reference the current user %s. A stolen authenticator is suspected.".formatted(auth, user.getKey()));
+            logger.warn(() -> "The provided authenticator [%s] does not reference the current user [%s]. A stolen authenticator is suspected.".formatted(auth.logRef(), user.getKey()));
             // Similarly, as described previously, we need to remove all sessions for user(s) that are associated with the series ID in the presented authenticator.
             final int count = removeSessionsForUsersBy(auth.seriesId);
-            logger.debug(() -> "Removed %s session(s) for series ID %s".formatted(count, auth.seriesId));
+            logger.debug(() -> "Removed %s session(s) for series ID [%s].".formatted(count, LogReference.of(auth.seriesId)));
             return Optional.empty();
         }
 
@@ -352,15 +356,15 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             // Remove all user sessions in the theft scenario.
             if (shouldConsiderTheftScenario) {
                 // If the session was not found in the cache, then proceed with the theft story...
-                logger.warn(() -> "A seemingly correct authenticator [%s] did not have a corresponding session record.".formatted(auth));
+                logger.warn(() -> "A seemingly correct authenticator [%s] did not have a corresponding session record.".formatted(auth.logRef()));
                 // In this case, sessions are removed based on the username and series ID, which are required, taking into consideration that the series ID could have been already regenerated.
                 final int count = clearAllFoUserAndBySeriesId(user, auth);
-                logger.debug(() -> "Removed %s session(s) for series ID [%s].".formatted(count, auth.seriesId));
+                logger.debug(() -> "Removed %s session(s) for series ID [%s].".formatted(count, LogReference.of(auth.seriesId)));
                 return Optional.empty();
             }
             // Otherwise, just return an empty result, indicating no user session could be found.
             else {
-                logger.warn(() -> "A seemingly correct authenticator [%s] did not have a corresponding sesssion record, access denied (skip regeneration == %s).".formatted(auth, skipRegeneration));
+                logger.warn(() -> "A seemingly correct authenticator [%s] did not have a corresponding session record, access denied (skip regeneration == %s).".formatted(auth.logRef(), skipRegeneration));
                 return Optional.empty();
             }
         }

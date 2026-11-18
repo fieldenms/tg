@@ -206,26 +206,6 @@ public class DefaultValueContract {
         return equalsEx(metaProperty.isRequired(), getRequiredDefault());
     }
 
-    ///////////////////////////////////////////////// VISIBLE /////////////////////////////////////////////////
-    /**
-     * Returns the default value of <code>visible</code> property.
-     *
-     * @return
-     */
-    public static boolean getVisibleDefault() {
-        return true;
-    }
-
-    /**
-     * Returns <code>true</code> if the value of <code>visible</code> property is default, <code>false</code> otherwise.
-     *
-     * @param metaProperty
-     * @return
-     */
-    public static <M> boolean isVisibleDefault(final MetaProperty<M> metaProperty) {
-        return equalsEx(metaProperty.isVisible(), getVisibleDefault());
-    }
-
     ///////////////////////////////////////////////// VALIDATION RESULT /////////////////////////////////////////////////
     /**
      * Returns the default value of <code>ValidationResult</code> property.

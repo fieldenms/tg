@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 
+import ua.com.fielden.platform.cypher.LogReference;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -140,9 +141,19 @@ public final class Authenticator {
         return EntityUtils.equalsEx(this.value, that.value);
     }
 
+    /// The string representation of this authenticator, which is the value of the authenticating cookie.
+    /// It must not be written to logs; use [#logRef()] instead.
+    ///
     @Override
     public String toString() {
         return value;
+    }
+
+    /// A reference to this authenticator for use in logs: its username, and a reference to its value ([LogReference]).
+    /// It identifies the same authenticator across log messages, without disclosing the series ID or the hash.
+    ///
+    public String logRef() {
+        return "%s%s%s".formatted(username, AUTHENTICATOR_SEPARATOR, LogReference.of(value));
     }
 
 }

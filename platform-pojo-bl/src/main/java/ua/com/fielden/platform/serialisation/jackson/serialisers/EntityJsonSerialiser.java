@@ -196,9 +196,6 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                             if (!isRequiredDefault(metaProperty)) {
                                 existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, metaProperty.isRequired());
                             }
-                            if (!isVisibleDefault(metaProperty)) {
-                                existingMetaProps.put("_visible", metaProperty.isVisible());
-                            }
                             if (!isValidationResultDefault(metaProperty)) {
                                 existingMetaProps.put(VALIDATION_RESULT, getValidationResult(metaProperty));
                             }
