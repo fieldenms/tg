@@ -638,12 +638,20 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                     final IAfterChangeEventHandler<?> definer = metaPropertyFactory.create(this, field);
                     // create meta-property
                     final boolean isUpperCase = AnnotationReflector.isAnnotationPresent(field, UpperCase.class);
+                    // Attribute `visible` of a meta-property states whether the value of its property is available to clients.
+                    // Serialisation, the application of values that clients supply, and entity centres decide that by `AnnotationReflector.isInvisible` alone.
+                    // The attribute is determined by the same predicate, for every property, so that it cannot disagree with them.
+                    // This matters for `key` and `desc`, which are otherwise initialised differently from other properties (see `initProperty`):
+                    // an entity type may redeclare them, and annotate them with `@Invisible`.
+                    // In addition, `key` of an entity with a composite key is not visible, as such a key is represented by its members.
+                    final boolean isVisible = !AnnotationReflector.isInvisible(field) && !(KEY.equals(propName) && keyMembers.size() > 1);
                     final MetaProperty<?> metaProperty = new MetaPropertyFull(
                             this,
                             field,
                             type,
                             false,
                             isKey,
+                            isVisible,
                             isCollectional,
                             isPropertyAnnotation.assignBeforeSave(),
                             propertyAnnotationType,
@@ -654,7 +662,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                             definer,
                             extractDependentProperties(field, fieldsForProperties));
                     // define meta-property properties used most commonly for UI construction: required, editable, title and desc //
-                    initProperty(keyMembers, field, metaProperty);
+                    initProperty(field, metaProperty);
                     // put meta-property in the map associating it with a corresponding property name
                     properties.put(propName, metaProperty);
                 } catch (final Exception e) {
@@ -943,13 +951,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     /**
      * Initialises meta-property properties used most commonly for UI construction such as required, editable, title and desc.
      *
-     * @param keyMembers
      * @param field
      * @param metaProperty
      */
-    private void initProperty(final List<Field> keyMembers, final Field field, final MetaProperty<?> metaProperty) {
+    private void initProperty(final Field field, final MetaProperty<?> metaProperty) {
         if (KEY.equals(field.getName())) {
-            metaProperty.setVisible(!(KEY.equals(field.getName()) && keyMembers.size() > 1)); // if entity is composite then "key" should be inactive
             metaProperty.setEditable(!isAnnotationPresentForClass(KeyReadonly.class, getType()));
             metaProperty.setRequired(true);
             if (isAnnotationPresentForClass(KeyTitle.class, getType())) {
@@ -966,8 +972,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 metaProperty.setDesc(StringUtils.isEmpty(title.desc()) ? title.value() : title.desc());
             }
         } else {
-            metaProperty.setVisible(!AnnotationReflector.isAnnotationPresent(field, Invisible.class)
-                    || (AnnotationReflector.isAnnotationPresent(field, Invisible.class) && AnnotationReflector.getAnnotation(field, Invisible.class).centreOnly()));
             metaProperty.setEditable(!AnnotationReflector.isAnnotationPresent(field, Readonly.class));
 
             // TODO may need to relax this condition for composite key member in order to support empty composite members

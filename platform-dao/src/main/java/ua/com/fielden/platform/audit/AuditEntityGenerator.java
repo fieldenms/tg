@@ -23,6 +23,7 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.StreamUtils;
 
@@ -212,6 +213,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
     /// -  Declare inactive audit-properties for removed audited properties.
     ///    When an audited property is removed, we no longer want to inherit its audit-property, so we must hide it
     ///    by declaring it anew as a plain property annotated with [InactiveAuditProperty].
+    /// -  Declare anew the audit-properties, active or inactive, that differ from their audited properties in annotation [Invisible].
     ///
     private T2<AuditEntitySpec, JavaFile> generateAuditEntityN(
             final Class<? extends AbstractEntity<?>> auditedType,
@@ -246,37 +248,47 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                 .filter(auditProp -> auditedProperties.stream().noneMatch(auditedProp -> isAuditPropertyFor(auditProp, auditedProp)))
                 .collect(toSet());
 
-        newAuditedProperties.stream()
-                .map(pm -> {
-                    final var propBuilder = propertyBuilder(auditPropertyName(pm.name()),
-                                                            pm.type().genericJavaType())
-                            .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, auditedType, pm.name())))
-                            .addAnnotation(mkMapToForAudit(auditedType, pm.name()))
-                            .addAnnotation(getPropertyAnnotationOptionally(PersistentType.class, auditedType, pm.name()))
-                            .addAnnotation(javaPoet.getAnnotation(Final.class));
+        // Audit-properties that remain active, but differ from their audited properties in annotation `@Invisible`.
+        // This happens when an audited property is made invisible (or visible) after its audit-property was generated.
+        // Such audit-properties are declared anew, which hides the inherited ones,
+        // so that the latest audit-entity type always agrees with the audited type on which values stay on the server.
+        final var auditedPropertiesWithChangedInvisibility = auditedProperties.stream()
+                .filter(auditedProp -> activeAuditProperties.stream()
+                        .anyMatch(auditProp -> isAuditPropertyFor(auditProp, auditedProp)
+                                               && !Objects.equals(getPropertyAnnotationOptionally(Invisible.class, auditedType, auditedProp.name()),
+                                                                  getPropertyAnnotationOptionally(Invisible.class, prevAuditEntityType, auditProp.name()))))
+                .collect(toSet());
 
-                    final var propTitle = nonBlankPropertyTitle(pm.name(), auditedType);
-                    if (!propTitle.isEmpty()) {
-                        propBuilder.addAnnotation(AnnotationSpecs.title(propTitle, TEMPLATE_TITLE_DESC.formatted(propTitle)));
-                    }
-
-                    return propBuilder.build();
+        // Audit-properties that are already inactive, whose audited properties are still declared (their auditing is disabled),
+        // and differ from them in annotation `@Invisible`.
+        // An inactive audit-property keeps the values that were recorded while it was active,
+        // so it is declared anew for the same reason as an active one.
+        final var inactiveAuditPropertiesWithChangedInvisibility = domainMetadata.forEntity(prevAuditEntityType)
+                .properties()
+                .stream()
+                .filter(p -> p.get(AUDIT_PROPERTY).filter(not(KAuditProperty.Data::active)).isPresent())
+                .filter(auditProp -> {
+                    final var auditedPropName = auditedPropertyName(auditProp.name());
+                    return auditedPropName != null
+                           // A property that is audited again is among the new audited properties.
+                           && auditedProperties.stream().noneMatch(auditedProp -> auditedProp.name().equals(auditedPropName))
+                           && Finder.isPropertyPresent(auditedType, auditedPropName)
+                           && !Objects.equals(getPropertyAnnotationOptionally(Invisible.class, auditedType, auditedPropName),
+                                              getPropertyAnnotationOptionally(Invisible.class, prevAuditEntityType, auditProp.name()));
                 })
+                .collect(toSet());
+
+        Stream.concat(newAuditedProperties.stream(), auditedPropertiesWithChangedInvisibility.stream())
+                .map(pm -> mkAuditProperty(auditedType, pm))
                 .forEach(a3tBuilder::addProperty);
 
         auditPropertiesToDeactivate.stream()
-                .map(pm -> {
-                    final var propBuilder = propertyBuilder(pm.name(), pm.type().genericJavaType())
-                            .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, prevAuditEntityType, pm.name())))
-                            .addAnnotation(InactiveAuditProperty.class);
+                .map(pm -> mkInactiveAuditProperty(auditedType, prevAuditEntityType, pm, INACTIVE_AUDIT_PROPERTY_TITLE_SUFFIX))
+                .forEach(a3tBuilder::addProperty);
 
-                    final var propTitle = nonBlankPropertyTitle(pm.name(), prevAuditEntityType);
-                    if (!propTitle.isEmpty()) {
-                        propBuilder.addAnnotation(title(propTitle + INACTIVE_AUDIT_PROPERTY_TITLE_SUFFIX, TEMPLATE_TITLE_DESC.formatted(propTitle)));
-                    }
-
-                    return propBuilder.build();
-                })
+        // The title of an audit-property that is already inactive has the suffix.
+        inactiveAuditPropertiesWithChangedInvisibility.stream()
+                .map(pm -> mkInactiveAuditProperty(auditedType, prevAuditEntityType, pm, ""))
                 .forEach(a3tBuilder::addProperty);
 
         return a3tBuilder.build()
@@ -326,25 +338,76 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
         final var auditedEntityMetadata = domainMetadata.forEntity(auditedType);
         auditedEntityMetadata.properties().stream()
                 .filter(prop -> isAudited(auditedType, prop.name()))
-                .map(pm -> {
-                    final var propBuilder = propertyBuilder(auditPropertyName(pm.name()),
-                                                            pm.type().genericJavaType())
-                            .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, auditedType, pm.name())))
-                            .addAnnotation(mkMapToForAudit(auditedType, pm.name()))
-                            .addAnnotation(getPropertyAnnotationOptionally(PersistentType.class, auditedType, pm.name()))
-                            .addAnnotation(javaPoet.getAnnotation(Final.class));
-
-                    final var propTitle = nonBlankPropertyTitle(pm.name(), auditedType);
-                    if (!propTitle.isEmpty()) {
-                        propBuilder.addAnnotation(AnnotationSpecs.title(propTitle, TEMPLATE_TITLE_DESC.formatted(propTitle)));
-                    }
-
-                    return propBuilder.build();
-                })
+                .map(pm -> mkAuditProperty(auditedType, pm))
                 .forEach(a3tBuilder::addProperty);
 
         return a3tBuilder.build()
                 .map2(typeSpec -> JavaFile.builder(auditPkg, typeSpec).build());
+    }
+
+    /// Builds an audit-property for an audited property.
+    ///
+    /// Annotation `@Invisible` is declared on the audit-property as it is on the audited property (including `centreOnly`).
+    /// An audit-property holds the values of its audited property, so they are made available to clients on the same terms:
+    /// the values of an invisible property are recorded in audit records, but are not serialised, and are excluded from entity centres and the Web API.
+    ///
+    private PropertySpec mkAuditProperty(final Class<? extends AbstractEntity<?>> auditedType, final PropertyMetadata pm) {
+        final var propBuilder = propertyBuilder(auditPropertyName(pm.name()),
+                                                pm.type().genericJavaType())
+                .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, auditedType, pm.name())))
+                .addAnnotation(mkMapToForAudit(auditedType, pm.name()))
+                .addAnnotation(getPropertyAnnotationOptionally(PersistentType.class, auditedType, pm.name()))
+                .addAnnotation(javaPoet.getAnnotation(Final.class))
+                .addAnnotation(getPropertyAnnotationOptionally(Invisible.class, auditedType, pm.name()));
+
+        final var propTitle = nonBlankPropertyTitle(pm.name(), auditedType);
+        if (!propTitle.isEmpty()) {
+            propBuilder.addAnnotation(AnnotationSpecs.title(propTitle, TEMPLATE_TITLE_DESC.formatted(propTitle)));
+        }
+
+        return propBuilder.build();
+    }
+
+    /// Builds an inactive audit-property from an audit-property of the previous audit-entity type.
+    /// It is a plain property that hides the inherited one.
+    ///
+    /// @param titleSuffix  a suffix for the title of the audit-property in the previous audit-entity type
+    ///
+    private PropertySpec mkInactiveAuditProperty(
+            final Class<? extends AbstractEntity<?>> auditedType,
+            final Class<? extends AbstractEntity<?>> prevAuditEntityType,
+            final PropertyMetadata pm,
+            final String titleSuffix)
+    {
+        final var propBuilder = propertyBuilder(pm.name(), pm.type().genericJavaType())
+                .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, prevAuditEntityType, pm.name())))
+                .addAnnotation(InactiveAuditProperty.class)
+                .addAnnotation(invisibleForInactiveAuditProperty(auditedType, prevAuditEntityType, pm.name()));
+
+        final var propTitle = nonBlankPropertyTitle(pm.name(), prevAuditEntityType);
+        if (!propTitle.isEmpty()) {
+            final var origTitle = substringBeforeLast(propTitle, INACTIVE_AUDIT_PROPERTY_TITLE_SUFFIX);
+            propBuilder.addAnnotation(title(propTitle + titleSuffix, TEMPLATE_TITLE_DESC.formatted(origTitle)));
+        }
+
+        return propBuilder.build();
+    }
+
+    /// Returns annotation `@Invisible` for an inactive audit-property, if it should have one.
+    ///
+    /// An inactive audit-property keeps the values that were recorded while it was active, and they remain in audit records.
+    /// If the audited property is still declared (i.e., its auditing was disabled), its annotation is used.
+    /// Otherwise, the audited property was removed, and the annotation of the audit-property in the previous audit-entity type is retained.
+    ///
+    private static Optional<Invisible> invisibleForInactiveAuditProperty(
+            final Class<? extends AbstractEntity<?>> auditedType,
+            final Class<? extends AbstractEntity<?>> prevAuditEntityType,
+            final String auditPropName)
+    {
+        final var auditedPropName = auditedPropertyName(auditPropName);
+        return auditedPropName != null && Finder.isPropertyPresent(auditedType, auditedPropName)
+               ? getPropertyAnnotationOptionally(Invisible.class, auditedType, auditedPropName)
+               : getPropertyAnnotationOptionally(Invisible.class, prevAuditEntityType, auditPropName);
     }
 
     private boolean isAudited(final Class<? extends AbstractEntity<?>> auditedType, final String propName) {
@@ -734,8 +797,10 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                     propBuilder.addAnnotation(title(title, TEMPLATE_TITLE_DESC.formatted(origTitle)));
                     prop.annotations()
                             .stream()
+                            // `@Invisible` is among the retained annotations, as this is the type that entity centres query and whose instances are serialised.
                             .filter(as -> typeNameEquals(as.type, InactiveAuditProperty.class)
-                                          || typeNameEquals(as.type, PersistentType.class))
+                                          || typeNameEquals(as.type, PersistentType.class)
+                                          || typeNameEquals(as.type, Invisible.class))
                             .forEach(propBuilder::addAnnotation);
                     return propBuilder.build();
                 })

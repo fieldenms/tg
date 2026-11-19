@@ -165,6 +165,65 @@ A link with a longer validity, such as the 24-hour activation link for a new use
 Requests for a user in cooldown and for an unknown user receive the same response and the same response-time adjustment, so that the response does not disclose whether an account exists.
 Expiry of reset links and user sessions is computed with `serverNow()`, not `now()` (see gotcha 11 in `CLAUDE.md`).
 
+## Values That Stay on the Server
+
+### Invisible properties
+
+`@Invisible` (without `centreOnly`) makes a property invisible: its value is not available to clients.
+`AnnotationReflector.isInvisible(Field)` and `isInvisibleProperty(Class, String)` are the predicates for it: serialisation, the application of values from clients and meta-properties use them.
+Entity centres and the Web API check for the annotation itself, as `centreOnly` properties are excluded from them too.
+
+**Serialisation** — `EntitySerialiser.createCachedProperties` leaves invisible properties out of the properties of an entity type.
+This one list drives the serialiser (`EntityJsonSerialiser`), the deserialiser (`EntityJsonDeserialiser`) and the type information for clients (`EntityType`), so that:
+- the value and the meta-information of an invisible property are never serialised, for instrumented and uninstrumented entities, whether or not the property is fetched;
+- the type information does not describe the property, and the composite key that clients know (`_compositeKeyNames`) consists of the key members that are not invisible;
+- a value supplied for the property in the JSON of an entity is ignored.
+
+**Deserialisation** — an entity received from a client has no values for its invisible properties.
+For a persisted entity (one with an ID) they are proxied, as properties that were not fetched: the values exist, but are not known, and reading or assigning one fails with `StrictProxyException`, rather than yielding `null` or replacing a value that is not known.
+For a new entity they are not proxied: they are left without values, so that the server-side logic can assign them.
+
+**New entities** — a new entity is produced once, serialised, and restored from what the client sends back (`CentreContextHolder.originallyProducedEntity`, see `EntityRestorationUtils.createValidationPrototype`).
+Hence, a value that a producer assigns to an invisible property is not retained until the entity is saved.
+Assign invisible properties upon saving, in the companion.
+A persisted entity is retrieved again by its ID for every request, so its invisible properties have their values, if the fetch model includes them.
+
+**Values from clients** — `EntityResourceUtils.apply` does not apply a value supplied for an invisible property, touched or not, and logs a warning, as the Web UI never sends one.
+
+**Entity centres and the Web API** — `AbstractDomainTreeRepresentation.isExcluded` excludes invisible properties, including those with `centreOnly = true`, so they can be neither selection criteria nor result-set properties, and have no GraphQL fields.
+
+**Key members** — an invisible key member is not serialised either, and clients compose the key from the remaining members.
+If none remains, the key is not available to clients, as a key that was not fetched; entity centres identify entities by ID.
+Clients refer to key members by position among those that they know, so an invisible key member shifts the positions of the members after it: in templates of `@IsProperty(displayAs = ...)` (`#1v`, `#2tv`), and when text typed into an autocompleter is split between key members to create a new entity.
+The string representation of an entity on the server still includes all key members, and is used in messages that reach clients, so a key member is not a place for a secret.
+
+**Meta-properties** — `MetaProperty.isVisible()` is `false` for an invisible property.
+The attribute is determined by the definition of a property, with the same predicate as serialisation, and cannot be changed at runtime.
+This holds for every property, including `key` and `desc` that an entity type redeclares; `key` of an entity with a composite key is not visible either.
+
+**Auditing** — generic auditing records the values of invisible properties as those of any other property, and keeps them on the server.
+The audit-property generated for an audited property is annotated with `@Invisible` as the audited property is (including `centreOnly`), in the persistent audit-entity types and in the synthetic one, which is the type that audit centres query and whose instances are serialised.
+Audit centres have neither criteria nor columns for such audit-properties; a change to an invisible property is still reported among the changed properties of an audit record, by name.
+Annotate an invisible property with `@DisableAuditing` in addition where its values should not be kept in audit records at all.
+Audit types are generated sources: after a change in `@Invisible` of a property that is, or was, audited, run `GenAudit` again.
+With auditing enabled, an application does not start while its audit types disagree with an audited type on this annotation (see `auditing/reference.md` § *Invisible properties*).
+
+**`@DenyIntrospection`** is a different mechanism, and does not affect serialisation.
+On an entity type, it excludes the type from domain introspection: from entity centres (`AbstractDomainTreeRepresentation.isExcluded`, for the type itself and for properties of that type), the Web API (`GraphQLService`) and the Domain Explorer.
+An entity type annotated with it cannot have an entity centre.
+On a property, it only prevents the property from being modelled with `PropertyDescriptor`; the property remains available to entity centres and the Web API.
+
+### Sensitive values in logs
+
+An authenticator (the value of the authenticating cookie), its series ID and an SSO session identifier (`UserSession.sid`) are each sufficient to act on a session: to use it, or, with `/logout?sid=`, to end it.
+Tokens of identity providers are of the same kind.
+None of them is written to logs.
+
+`LogReference.of(value)` returns a reference to such a value: the first 10 hexadecimal digits of its SHA-256 digest, or `none` for an absent value.
+`Authenticator.logRef()` returns the username and a reference to the value of the authenticator; `Authenticator.toString()` returns the value itself, and must not be logged.
+`UserSessionDao`, `LogoutResource` and `SseServlet` log references only.
+A reference is the same for the same value, so log messages about one session can be related, and the reference of a known value can be computed to find them.
+
 ## Runtime-generated tokens for audit types
 
 Security tokens for audit types (`Re{E}_a3t_CanRead_Token`, `Re{E}_a3t_CanReadModel_Token`) are generated at application startup by `ISecurityTokenGenerator` and served through `ISecurityTokenProvider`.

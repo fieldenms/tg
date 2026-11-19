@@ -116,7 +116,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     // Some external to meta-property logic may define whether the value of <code>editable</code>.                 //
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private boolean editable = true;
-    private boolean visible = true;
+    private final boolean visible;
     private boolean required = false;
     private String customErrorMsgForRequiredness;
     private final boolean requiredByDefinition;
@@ -157,6 +157,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             final Class<?> type,
             final boolean isProxy,
             final boolean isKey,
+            final boolean isVisible,
             final boolean isCollectional,
             final boolean shouldAssignBeforeSave,
             final Class<?> propertyAnnotationType,
@@ -171,6 +172,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         this.validationAnnotations.addAll(validationAnnotations);
         this.validators = validators;
         this.aceHandler = aceHandler;
+        this.visible = isVisible;
         this.collectional = isCollectional;
         this.shouldAssignBeforeSave = shouldAssignBeforeSave;
         this.propertyAnnotationType = propertyAnnotationType;
@@ -824,11 +826,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     @Override
     public final boolean isVisible() {
         return visible;
-    }
-
-    @Override
-    public final void setVisible(final boolean visible) {
-        this.visible = visible;
     }
 
     @Override

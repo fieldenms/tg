@@ -54,7 +54,6 @@
                     assert.strictEqual(entity.prop('richTextProp').validationResult(), null, 'The entity instance prop should have empty validation result.');
                     assert.strictEqual(entity.prop('richTextProp').isRequired(), false, 'The entity instance prop should be not required.');
                     assert.strictEqual(entity.prop('richTextProp').isEditable(), true, 'The entity instance prop should be editable.');
-                    assert.strictEqual(entity.prop('richTextProp').isVisible(), true, 'The entity instance prop should be visible.');
                 
                     // binding value ok?
                     assert.strictEqual(typeof bindingEntity.get('richTextProp'), 'object', 'Binding property should be initialised.');
@@ -83,7 +82,6 @@
                     assert.strictEqual(entity.prop('richTextProp').validationResult(), null, 'The entity instance prop should have empty validation result.');
                     assert.strictEqual(entity.prop('richTextProp').isRequired(), false, 'The entity instance prop should be not required.');
                     assert.strictEqual(entity.prop('richTextProp').isEditable(), true, 'The entity instance prop should be editable.');
-                    assert.strictEqual(entity.prop('richTextProp').isVisible(), true, 'The entity instance prop should be visible.');
 
                     // binding value ok?
                     assert.ok(bindingEntity.get('richTextProp'), 'Binding property should be initialised.');

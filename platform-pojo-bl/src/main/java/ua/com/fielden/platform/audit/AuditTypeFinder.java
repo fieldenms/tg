@@ -7,11 +7,14 @@ import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.audit.annotations.AuditFor;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -22,6 +25,7 @@ import static java.util.Comparator.comparing;
 import static java.util.Comparator.comparingLong;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.*;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
 
 /// Finds and provides navigation over audit types related to a given audited entity type.
 ///
@@ -59,7 +63,12 @@ final class AuditTypeFinder implements IAuditTypeFinder {
             ERR_AUDIT_ENTITY_TYPE_VERSION_MISSING = "Persistent audit-entity type with version %s for [%s] does not exist.",
             ERR_AUDIT_PROP_TYPE_MISSING = "Persistent audit-prop type does not exist for audited type [%s].",
             ERR_AUDIT_PROP_TYPE_VERSION_MISSING = "Persistent audit-prop type with version %s for [%s] does not exist.",
-            ERR_UNEXPECTED_AUDIT_TYPE = "Expected an audit type, but the actual type was [%s].";
+            ERR_UNEXPECTED_AUDIT_TYPE = "Expected an audit type, but the actual type was [%s].",
+            ERR_AUDIT_TYPES_DISAGREE_ON_INVISIBLE = """
+                Audit types for audited type [%s] disagree with it on annotation @Invisible.
+                Audit-properties that should be annotated as their audited properties are: %s
+                Values recorded in audit records would otherwise be available to clients differently from the values of the audited properties.
+                Generate the audit types for [%s] again.""";
 
     private final AuditingMode auditingMode;
 
@@ -357,6 +366,17 @@ final class AuditTypeFinder implements IAuditTypeFinder {
                         synAuditPropGroup.size(),
                         synAuditPropGroup.stream().map(Class::getTypeName).collect(joining(", "))));
             }
+
+            final var auditPropertiesThatDisagreeOnInvisible = Stream.of(auditEntityTypes.getLast(), synAuditEntityGroup.getFirst())
+                    .flatMap(auditType -> auditPropertiesThatDisagreeOnInvisible(auditedType, auditType))
+                    .toList();
+            if (!auditPropertiesThatDisagreeOnInvisible.isEmpty()) {
+                throw new EntityDefinitionException(format(
+                        ERR_AUDIT_TYPES_DISAGREE_ON_INVISIBLE,
+                        auditedType.getTypeName(),
+                        String.join(", ", auditPropertiesThatDisagreeOnInvisible),
+                        auditedType.getSimpleName()));
+            }
         }
 
         return new Context<E>(auditedType,
@@ -364,6 +384,31 @@ final class AuditTypeFinder implements IAuditTypeFinder {
                               (List) auditPropTypes,
                               (Class) synAuditEntityGroup.stream().findFirst().orElse(null),
                               (Class) synAuditPropGroup.stream().findFirst().orElse(null));
+    }
+
+    /// Returns the audit-properties of `auditType`, as `Type.property`, that are not annotated with `@Invisible` as their audited properties are.
+    ///
+    /// An audit-property holds the values of its audited property, and is generated with the same annotation `@Invisible` (including `centreOnly`),
+    /// so that the recorded values are available to clients on the same terms as the audited ones.
+    /// Audit types are generated sources, and get out of line when the annotation of a property that is already audited changes.
+    /// Then the values recorded for an invisible property would be serialised and shown by audit centres, until the audit types are generated again.
+    /// This is why a disagreement is reported as an error when auditing is enabled.
+    ///
+    /// Inactive audit-properties are included, as they hold recorded values too.
+    /// An audit-property whose audited property is no longer declared has nothing to agree with.
+    ///
+    private static Stream<String> auditPropertiesThatDisagreeOnInvisible(final Class<? extends AbstractEntity<?>> auditedType, final Class<?> auditType) {
+        return Finder.streamRealProperties((Class<? extends AbstractEntity<?>>) auditType)
+                .map(Field::getName)
+                .filter(AuditUtils::isAuditProperty)
+                .filter(auditProp -> {
+                    final var auditedProp = AuditUtils.auditedPropertyName(auditProp);
+                    return auditedProp != null
+                           && Finder.isPropertyPresent(auditedType, auditedProp)
+                           && !Objects.equals(getPropertyAnnotationOptionally(Invisible.class, auditedType, auditedProp),
+                                              getPropertyAnnotationOptionally(Invisible.class, auditType, auditProp));
+                })
+                .map(auditProp -> "%s.%s".formatted(auditType.getSimpleName(), auditProp));
     }
 
     private static boolean isAudited(final Class<?> type) {

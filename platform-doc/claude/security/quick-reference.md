@@ -119,6 +119,27 @@ The state is held in memory per application server, and time is measured with a 
 
 See *Login Lockout and Password Reset Cooldown* in `reference.md` for the exact attempt counting, lockout and reset link rules.
 
+## Values That Stay on the Server
+
+**`@Invisible` properties** — the value of a property annotated with `@Invisible` is not available to clients:
+- it is never serialised (`EntitySerialiser.createCachedProperties`), whether or not the property is fetched, and clients do not know of the property (it is absent from the type information);
+- a value that a client supplies for it is not applied (`EntityResourceUtils.apply`), and is ignored upon deserialisation;
+- it is excluded from entity centres and the Web API (`AbstractDomainTreeRepresentation.isExcluded`);
+- its audited values are invisible too: the generated audit-property carries the same annotation, so audit centres do not show them.
+  After a change in `@Invisible` of a property that is, or was, audited, rerun `GenAudit`: the application does not start until the audit types agree with the audited type.
+
+Use it for values that only the server should know, e.g. tokens and identifiers that grant access.
+Such a property has no place on an entity master, as clients do not know of it; assign it in the server-side logic.
+`@Invisible(centreOnly = true)` is a different thing: it only excludes a property from entity centres and the Web API, and the property is serialised.
+`AnnotationReflector.isInvisible` tells the two apart.
+
+Do not make a key member invisible to protect its value: the string representation of an entity includes its key, and appears in messages.
+
+**Logs** — values that are sufficient to use or to end a session (authenticators, series IDs, SSO session identifiers, tokens) are not written to logs.
+Refer to them with `LogReference.of(value)` (the first 10 hexadecimal digits of the SHA-256 digest) and `Authenticator.logRef()`, which identify a value across log messages without disclosing it.
+
+See *Values That Stay on the Server* in `reference.md` for deserialisation, new entities, key members (including the positions of key members at clients) and meta-properties.
+
 ## Topic-Specific Gotcha
 
 **Audit security tokens are runtime-generated — do not hand-write them.**

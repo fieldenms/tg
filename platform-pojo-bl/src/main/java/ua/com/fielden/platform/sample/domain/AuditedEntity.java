@@ -17,10 +17,15 @@ import java.util.Date;
 /// Entity for testing of auditing facilities.
 /// Its use should be limited to auditing tests, as its structure is prone to change.
 ///
-/// This entity emulates a scenario where its structure has changed over time,
-/// resulting in two audit-entity types: [AuditedEntity_a3t_1] and [AuditedEntity_a3t_2].
-/// The change concerns the removal of property `str1`, which is reflected in
-/// [AuditedEntity_a3t_2] as property `a3t_str1`, annotated with [InactiveAuditProperty].
+/// This entity emulates a scenario where its structure has changed over time, resulting in several audit-entity types:
+/// - [AuditedEntity_a3t_2] reflects the removal of property `str1` as property `a3t_str1`, annotated with [InactiveAuditProperty].
+/// - [AuditedEntity_a3t_3] audits the properties added afterwards (`colour`, `hyperlink`).
+/// - [AuditedEntity_a3t_4] reflects invisible properties:
+///   new properties `secret` and `token`, annotated with [Invisible], and `date1`, which was annotated with `@Invisible(centreOnly = true)` after it had been audited.
+///   It also audits new property `note`, which was not invisible at the time.
+/// - [AuditedEntity_a3t_5] reflects the removal of invisible property `token`,
+///   and property `note` being annotated with both [Invisible] and [DisableAuditing]:
+///   their audit-properties are inactive and invisible.
 ///
 @KeyType(String.class)
 @MapEntityTo
@@ -29,9 +34,9 @@ import java.util.Date;
 public class AuditedEntity extends AbstractPersistentEntity<String> {
 
     public enum Property implements IConvertableToPath {
-        key, date1, date2, bool1, str2, str3, richText, union, invalidate, colour, hyperlink,
+        key, date1, date2, bool1, str2, str3, richText, union, invalidate, colour, hyperlink, secret, note,
         // Removed properties that are retained by previous audit-entity types.
-        str1;
+        str1, token;
 
         @Override
         public String toPath() {
@@ -41,6 +46,7 @@ public class AuditedEntity extends AbstractPersistentEntity<String> {
 
     @IsProperty
     @MapTo
+    @Invisible(centreOnly = true)
     private Date date1;
 
     @IsProperty
@@ -84,6 +90,37 @@ public class AuditedEntity extends AbstractPersistentEntity<String> {
     @IsProperty
     @MapTo
     private Hyperlink hyperlink;
+
+    @IsProperty
+    @MapTo
+    @Invisible
+    private String secret;
+
+    @IsProperty
+    @MapTo
+    @Invisible
+    @DisableAuditing
+    private String note;
+
+    public String getSecret() {
+        return secret;
+    }
+
+    @Observable
+    public AuditedEntity setSecret(final String secret) {
+        this.secret = secret;
+        return this;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    @Observable
+    public AuditedEntity setNote(final String note) {
+        this.note = note;
+        return this;
+    }
 
     public Colour getColour() {
         return colour;

@@ -4,14 +4,18 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.junit.Test;
 import ua.com.fielden.platform.audit.annotations.DisableAuditing;
+import ua.com.fielden.platform.audit.annotations.InactiveAuditProperty;
+import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
 import ua.com.fielden.platform.meta.PropertyNature;
 import ua.com.fielden.platform.sample.domain.AuditedEntity;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
@@ -30,10 +34,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_ENTITY;
 import static ua.com.fielden.platform.audit.AuditUtils.auditPropertyName;
+import static ua.com.fielden.platform.audit.AuditUtils.auditedPropertyName;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.meta.PropertyNature.*;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
+import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.Finder.streamProperties;
 import static ua.com.fielden.platform.reflection.Reflector.newParameterizedType;
@@ -68,9 +74,102 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
         final var propsWithDisableAuditing = streamProperties(AuditedEntity.class, DisableAuditing.class)
                 .map(Field::getName)
                 .collect(toSet());
-        assertEquals(Set.of(AuditedEntity.Property.str3.toPath()), propsWithDisableAuditing);
+        assertEquals(Set.of(AuditedEntity.Property.str3.toPath(), AuditedEntity.Property.note.toPath()), propsWithDisableAuditing);
+        // Property `str3` has never been audited.
         assertFalse(isPropertyPresent(auditType, auditPropertyName(AuditedEntity.Property.str3)));
         assertFalse(isPropertyPresent(synAuditType, auditPropertyName(AuditedEntity.Property.str3)));
+        // Property `note` was audited before its auditing was disabled, hence its audit-property is retained as inactive.
+        assertTrue(isPropertyAnnotationPresent(InactiveAuditProperty.class, auditType, auditPropertyName(AuditedEntity.Property.note)));
+        assertTrue(isPropertyAnnotationPresent(InactiveAuditProperty.class, synAuditType, auditPropertyName(AuditedEntity.Property.note)));
+    }
+
+    @Test
+    public void active_audit_properties_are_annotated_with_Invisible_as_their_audited_properties_are() {
+        final var activeAuditProps = getInstance(IDomainMetadata.class).forEntity(auditType)
+                .properties()
+                .stream()
+                .filter(p -> p.get(AUDIT_PROPERTY).filter(KAuditProperty.Data::active).isPresent())
+                .map(PropertyMetadata::name)
+                .collect(toSet());
+        assertThat(activeAuditProps)
+                .contains(auditPropertyName(AuditedEntity.Property.secret), auditPropertyName(AuditedEntity.Property.date1), auditPropertyName(AuditedEntity.Property.str2));
+
+        for (final var auditProp : activeAuditProps) {
+            final var expected = getPropertyAnnotationOptionally(Invisible.class, AuditedEntity.class, auditedPropertyName(auditProp));
+            assertEquals("Audit-property [%s] of the audit-entity type.".formatted(auditProp),
+                         expected, getPropertyAnnotationOptionally(Invisible.class, auditType, auditProp));
+            assertEquals("Audit-property [%s] of the synthetic audit-entity type.".formatted(auditProp),
+                         expected, getPropertyAnnotationOptionally(Invisible.class, synAuditType, auditProp));
+        }
+
+        // The annotation is declared as on the audited property, including `centreOnly`.
+        assertThat(getPropertyAnnotationOptionally(Invisible.class, synAuditType, auditPropertyName(AuditedEntity.Property.secret)))
+                .hasValueSatisfying(annot -> assertFalse(annot.centreOnly()));
+        assertThat(getPropertyAnnotationOptionally(Invisible.class, synAuditType, auditPropertyName(AuditedEntity.Property.date1)))
+                .hasValueSatisfying(annot -> assertTrue(annot.centreOnly()));
+        assertThat(getPropertyAnnotationOptionally(Invisible.class, synAuditType, auditPropertyName(AuditedEntity.Property.str2)))
+                .isEmpty();
+    }
+
+    /// Property `date1` has been audited since version 1 of the audit-entity type, and was annotated with `@Invisible` after version 3 had been generated.
+    ///
+    @Test
+    public void audit_property_is_declared_anew_when_Invisible_is_declared_on_its_audited_property() {
+        final var auditTypes = auditTypeFinder.navigate(AuditedEntity.class);
+        final var auditProp = auditPropertyName(AuditedEntity.Property.date1);
+
+        assertThat(getPropertyAnnotationOptionally(Invisible.class, auditTypes.auditEntityType(3), auditProp))
+                .isEmpty();
+        assertThat(getPropertyAnnotationOptionally(Invisible.class, auditTypes.auditEntityType(4), auditProp))
+                .hasValueSatisfying(annot -> assertTrue(annot.centreOnly()));
+        assertEquals(auditTypes.auditEntityType(4), getFieldByName(auditType, auditProp).getDeclaringClass());
+
+        final var auditPropMetadata = getInstance(IDomainMetadata.class).forProperty(auditType, auditProp);
+        assertTrue(auditPropMetadata.isPersistent());
+        assertThat(auditPropMetadata.get(AUDIT_PROPERTY)).hasValueSatisfying(data -> assertTrue(data.active()));
+    }
+
+    /// Property `token` was invisible when it was removed from the audited entity.
+    /// Property `note` was annotated with `@Invisible` at the same time as its auditing was disabled.
+    ///
+    @Test
+    public void inactive_audit_properties_for_invisible_properties_are_invisible() {
+        final var auditTypes = auditTypeFinder.navigate(AuditedEntity.class);
+        final var tokenAuditProp = auditPropertyName(AuditedEntity.Property.token);
+        final var noteAuditProp = auditPropertyName(AuditedEntity.Property.note);
+
+        assertFalse(isPropertyPresent(AuditedEntity.class, AuditedEntity.Property.token.toPath()));
+        assertTrue(isInvisibleProperty(auditTypes.auditEntityType(4), tokenAuditProp));
+
+        assertTrue(isInvisibleProperty(AuditedEntity.class, AuditedEntity.Property.note.toPath()));
+        assertFalse(isInvisibleProperty(auditTypes.auditEntityType(4), noteAuditProp));
+
+        for (final var auditProp : Set.of(tokenAuditProp, noteAuditProp)) {
+            for (final var type : Set.of(auditType, synAuditType)) {
+                assertTrue("[%s.%s] should be inactive.".formatted(type.getSimpleName(), auditProp),
+                           isPropertyAnnotationPresent(InactiveAuditProperty.class, type, auditProp));
+                assertTrue("[%s.%s] should be invisible.".formatted(type.getSimpleName(), auditProp),
+                           isInvisibleProperty(type, auditProp));
+            }
+        }
+    }
+
+    /// Entity centres query the synthetic audit-entity type, and it is its instances that are serialised.
+    ///
+    @Test
+    public void values_of_invisible_audit_properties_are_not_serialised() {
+        final var serialisedProps = EntitySerialiser.createCachedProperties(synAuditType)
+                .stream()
+                .map(prop -> prop.field().getName())
+                .collect(toSet());
+
+        assertThat(serialisedProps)
+                .contains(auditPropertyName(AuditedEntity.Property.str2),
+                          // Invisible in entity centres only.
+                          auditPropertyName(AuditedEntity.Property.date1))
+                .doesNotContain(auditPropertyName(AuditedEntity.Property.secret),
+                                auditPropertyName(AuditedEntity.Property.token),
+                                auditPropertyName(AuditedEntity.Property.note));
     }
 
     /**
@@ -106,6 +205,9 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
                         new Prop(auditPropertyName(AuditedEntity.Property.invalidate), boolean.class, PERSISTENT),
                         new Prop(auditPropertyName(AuditedEntity.Property.colour), Colour.class, PERSISTENT),
                         new Prop(auditPropertyName(AuditedEntity.Property.hyperlink), Hyperlink.class, PERSISTENT),
+                        new Prop(auditPropertyName(AuditedEntity.Property.secret), String.class, PERSISTENT),
+                        new Prop(auditPropertyName(AuditedEntity.Property.note), String.class, PLAIN),
+                        new Prop(auditPropertyName(AuditedEntity.Property.token), String.class, PLAIN),
                         new Prop(auditPropertyName("str1"), String.class, PLAIN))
                 .sorted(Comparator.comparing(Prop::name))
                 .toList();

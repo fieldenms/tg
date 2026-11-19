@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.web.audit;
 
 import org.junit.Test;
+import ua.com.fielden.platform.audit.AuditUtils;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.sample.domain.AuditedEntity;
 import ua.com.fielden.platform.types.Colour;
@@ -11,6 +13,7 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.resources.test.AbstractWebResourceWithDaoTestCase;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -19,6 +22,7 @@ import static ua.com.fielden.platform.audit.AbstractAuditEntity.*;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.CHANGED_PROPS;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.CHANGED_PROPS_CRIT;
 import static ua.com.fielden.platform.audit.AuditUtils.auditPropertyName;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.*;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridForCentre;
@@ -43,7 +47,6 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
                         AUDIT_USER,
                         CHANGED_PROPS_CRIT,
                         auditPropertyName(AuditedEntity.Property.key),
-                        auditPropertyName(AuditedEntity.Property.date1),
                         auditPropertyName(AuditedEntity.Property.date2),
                         auditPropertyName(AuditedEntity.Property.bool1),
                         auditPropertyName(AuditedEntity.Property.str1),
@@ -66,7 +69,6 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
                         AUDIT_USER,
                         CHANGED_PROPS,
                         auditPropertyName(AuditedEntity.Property.key),
-                        auditPropertyName(AuditedEntity.Property.date1),
                         auditPropertyName(AuditedEntity.Property.date2),
                         auditPropertyName(AuditedEntity.Property.bool1),
                         auditPropertyName(AuditedEntity.Property.str1),
@@ -99,6 +101,18 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
     }
 
     @Test
+    public void audit_entity_centre_for_audited_entity_does_not_contain_invisible_audit_properties() {
+        final var synAuditEntityType = auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType();
+        assertInvisibleAuditPropertiesNotInCentre(auditWebUiConfigFactory.createCentreConfig(AuditedEntity.class, synAuditEntityType));
+    }
+
+    @Test
+    public void audit_entity_embedded_centre_for_audited_entity_does_not_contain_invisible_audit_properties() {
+        final var synAuditEntityType = auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType();
+        assertInvisibleAuditPropertiesNotInCentre(auditWebUiConfigFactory.createEmbeddedCentreConfig(synAuditEntityType));
+    }
+
+    @Test
     public void audit_entity_embedded_centre_criteria_for_audited_entity() {
         final var synAuditEntityType = auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType();
         final var ecc = auditWebUiConfigFactory.createEmbeddedCentreConfig(synAuditEntityType);
@@ -109,7 +123,6 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
                         AUDIT_USER,
                         CHANGED_PROPS_CRIT,
                         auditPropertyName(AuditedEntity.Property.key),
-                        auditPropertyName(AuditedEntity.Property.date1),
                         auditPropertyName(AuditedEntity.Property.date2),
                         auditPropertyName(AuditedEntity.Property.bool1),
                         auditPropertyName(AuditedEntity.Property.str1),
@@ -131,7 +144,6 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
                         AUDIT_USER,
                         CHANGED_PROPS,
                         auditPropertyName(AuditedEntity.Property.key),
-                        auditPropertyName(AuditedEntity.Property.date1),
                         auditPropertyName(AuditedEntity.Property.date2),
                         auditPropertyName(AuditedEntity.Property.bool1),
                         auditPropertyName(AuditedEntity.Property.str1),
@@ -161,6 +173,24 @@ public class AuditWebUiConfigFactoryTest extends AbstractWebResourceWithDaoTestC
         final var synAuditEntityType = auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType();
         assertAuditedPropertyNotInCrit(auditWebUiConfigFactory.createEmbeddedCentreConfig(synAuditEntityType),
                                        AuditedEntity.class, AuditedEntity.Property.hyperlink, Hyperlink.class);
+    }
+
+    /// Asserts that the audit-properties of `AuditedEntity` that are annotated with `@Invisible` are neither criteria nor result-set properties of `ecc`.
+    /// This includes inactive audit-properties, and those that are invisible in entity centres only.
+    ///
+    private void assertInvisibleAuditPropertiesNotInCentre(final EntityCentreConfig<?> ecc) {
+        final var synAuditEntityType = auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType();
+        final var invisibleAuditProps = Stream.of(AuditedEntity.Property.secret, AuditedEntity.Property.token, AuditedEntity.Property.note, AuditedEntity.Property.date1)
+                .map(AuditUtils::auditPropertyName)
+                .toList();
+        invisibleAuditProps.forEach(prop -> assertTrue("[%s] should be annotated with @Invisible.".formatted(prop),
+                                                       isPropertyAnnotationPresent(Invisible.class, synAuditEntityType, prop)));
+
+        assertThat(assertPresent(ecc.getSelectionCriteria()))
+                .doesNotContainAnyElementsOf(invisibleAuditProps);
+        assertThat(assertPresent(ecc.getResultSetProperties()))
+                .extracting(prop -> prop.propName.orElse(""))
+                .doesNotContainAnyElementsOf(invisibleAuditProps);
     }
 
     /// Asserts that the criteria layout for each screen device is a single-column grid with as many cells as there are criteria.
