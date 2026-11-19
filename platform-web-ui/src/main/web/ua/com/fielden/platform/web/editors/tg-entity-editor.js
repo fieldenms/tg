@@ -1470,17 +1470,27 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTapHandlerBehaviour], 
         return "";
     }
 
+    /**
+     * Creates an array of { separator, title?, value } objects that represent the value of the entity-typed property of 'entity' in the input layer.
+     * The value is displayed according to the 'displayAs' template of the property.
+     * A template error is logged to the console, and the value is then displayed according to the default template ''.
+     *
+     * A union value is displayed as its active entity, according to the 'displayAs' template of the active union property.
+     * The 'displayAs' template of the union-typed property itself is not applied, because it addresses key members by position, and only the member types have key members.
+     */
     _createTitleObject (entity) {
         if (entity !== null) {
             const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
-            const metaProp = this.reflector().getEntityTypeProp(this.reflector().tg_getFullEntity(entity), this.propertyName);
-            if (entityValue !== null && !Array.isArray(entityValue) 
+            if (entityValue !== null && !Array.isArray(entityValue)
                     && this.reflector().isEntity(entityValue) && entityValue.type().shouldDisplayDescription()) {
+                const [valueToDisplay, template] = entityValue.type().isUnionEntity()
+                    ? [entityValue._activeEntity(), entityValue.type().prop(entityValue._activeProperty()).displayAs()]
+                    : [entityValue, this.reflector().getEntityTypeProp(this.reflector().tg_getFullEntity(entity), this.propertyName).displayAs()];
                 try {
-                    return composeEntityValue(entityValue, metaProp.displayAs());
+                    return composeEntityValue(valueToDisplay, template);
                 } catch (e) {
                     console.error(e.msg);
-                    return composeEntityValue(entityValue, '');
+                    return composeEntityValue(valueToDisplay, '');
                 }
             }
         }

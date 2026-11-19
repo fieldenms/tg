@@ -29,6 +29,7 @@
     <script type="module">
 
         import '/app/tg-reflector.js';
+        import '/resources/editors/tg-entity-editor.js';
         import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
 
         suite('entity editor layer formatted text', function() {
@@ -479,6 +480,93 @@
                 const target = '#2.2tv#1.2tv#1.1tv#2.1tv', result = 'Type: Lead-Acid Rolling Stock Type: Wagon Minor Component: Batteries';
                 test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
             })();
+
+        });
+
+        /// The input layer of an editor of a union-typed property, which displays the active entity according to the template of the active union property.
+        /// `TgBogie.location` is of union type `TgBogieLocation`,
+        /// with union property `wagonSlot` of composite type `TgWagonSlot` (key members `wagon` and `position`),
+        /// and union property `workshop` of non-composite type `TgWorkshop`.
+        ///
+        suite('entity editor layer formatted text for union-typed property', function () {
+            const PACKAGE = 'ua.com.fielden.platform.sample.domain';
+            const BOGIE = `${PACKAGE}.TgBogie`, BOGIE_LOCATION = `${PACKAGE}.TgBogieLocation`,
+                  WAGON_SLOT = `${PACKAGE}.TgWagonSlot`, WAGON = `${PACKAGE}.TgWagon`, WORKSHOP = `${PACKAGE}.TgWorkshop`;
+            let reflector, editor, locationProp, wagonSlotProp, bogieLocationType, originalMetadata;
+
+            setup(function () {
+                reflector = document.querySelector('#reflector');
+                editor = document.createElement('tg-entity-editor');
+                editor.propertyName = 'location';
+                locationProp = reflector.findTypeByName(BOGIE).prop('location');
+                bogieLocationType = reflector.findTypeByName(BOGIE_LOCATION);
+                wagonSlotProp = bogieLocationType.prop('wagonSlot');
+                // The metadata, modified by tests, is shared by all suites, and so it is restored after each test.
+                originalMetadata = [locationProp._displayAs, wagonSlotProp._displayAs, bogieLocationType._displayDesc];
+                bogieLocationType._displayDesc = true;
+            });
+
+            teardown(function () {
+                [locationProp._displayAs, wagonSlotProp._displayAs, bogieLocationType._displayDesc] = originalMetadata;
+            });
+
+            const newEntity = (typeName, props) => Object.assign(reflector.newEntity(typeName), props);
+
+            /// A binding entity for a bogie at `location`, which is the editor's input.
+            ///
+            const bogieAt = location => ({ '@@origin': newEntity(BOGIE, { key: 'BOGIE1', location }) });
+
+            const wagonSlotLocation = () => newEntity(BOGIE_LOCATION, {
+                wagonSlot: newEntity(WAGON_SLOT, { wagon: newEntity(WAGON, { key: 'WAGON1' }), position: 5 }),
+                workshop: null
+            });
+
+            const workshopLocation = () => newEntity(BOGIE_LOCATION, {
+                wagonSlot: null,
+                workshop: newEntity(WORKSHOP, { key: 'WORKSHOP1' })
+            });
+
+            /// The text of the input layer for `titleObject`, as rendered by the editor's `inputLayerTemplate`.
+            ///
+            const layerText = titleObject => titleObject
+                .map(({ separator, title, value }) => (separator || '') + (title ? `${title}: ` : '') + value)
+                .join('');
+
+            test('displays composite active entity as title-value pairs if the active union property has no template', function () {
+                assert.strictEqual(layerText(editor._createTitleObject(bogieAt(wagonSlotLocation()))), 'Wagon: WAGON1 Position: 5');
+            });
+
+            test('displays composite active entity according to the template of the active union property', function () {
+                wagonSlotProp._displayAs = '#2vs#1v';
+                assert.strictEqual(layerText(editor._createTitleObject(bogieAt(wagonSlotLocation()))), '5 WAGON1');
+            });
+
+            test('displays composite active entity as title-value pairs and logs the error if the template of the active union property is invalid', function () {
+                wagonSlotProp._displayAs = '#3v';
+                const errors = [];
+                const consoleError = console.error;
+                console.error = msg => errors.push(msg);
+                try {
+                    assert.strictEqual(layerText(editor._createTitleObject(bogieAt(wagonSlotLocation()))), 'Wagon: WAGON1 Position: 5');
+                } finally {
+                    console.error = consoleError;
+                }
+                assert.deepEqual(errors, ['Key with index 3 does not exist in TgWagonSlot entity type.']);
+            });
+
+            test('ignores the template of the union-typed property', function () {
+                locationProp._displayAs = '#2v';
+                assert.strictEqual(layerText(editor._createTitleObject(bogieAt(wagonSlotLocation()))), 'Wagon: WAGON1 Position: 5');
+            });
+
+            test('displays non-composite active entity as its key', function () {
+                assert.strictEqual(layerText(editor._createTitleObject(bogieAt(workshopLocation()))), 'WORKSHOP1');
+            });
+
+            test('displays nothing if the union type does not display description', function () {
+                bogieLocationType._displayDesc = false;
+                assert.strictEqual(layerText(editor._createTitleObject(bogieAt(wagonSlotLocation()))), '');
+            });
 
         });
 
