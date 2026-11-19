@@ -12,8 +12,11 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.web_api.UserDefinedEnhancedEntityType.BASE_TYPE;
 import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeBaseTypeValidator.ERR_NO_SUCH_BASE_TYPE;
 
@@ -32,6 +35,22 @@ public class UserDefinedEnhancedEntityTypeDao extends CommonEntityDao<UserDefine
     @Override
     protected IFetchProvider<UserDefinedEnhancedEntityType> createFetchProvider() {
         return FETCH_PROVIDER;
+    }
+
+    @Override
+    @SessionRequired
+    public int batchDelete(final Collection<Long> entitiesIds) {
+        // Delete all associated properties.
+        co$(UserDefinedCalculatedProperty.class).batchDelete(select(UserDefinedCalculatedProperty.class).where()
+                .prop(UserDefinedCalculatedProperty.ENTITY_TYPE).in().values(entitiesIds)
+                .model());
+
+        return defaultBatchDelete(entitiesIds);
+    }
+
+    @Override
+    public int batchDelete(final List<UserDefinedEnhancedEntityType> entities) {
+        return defaultBatchDelete(entities);
     }
 
     @Override

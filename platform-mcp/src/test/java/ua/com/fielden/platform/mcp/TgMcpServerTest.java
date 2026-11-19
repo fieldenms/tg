@@ -27,8 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.mcp.McpConfig.WEB_API_KEY_MCP_HTTP_HEADER;
-import static ua.com.fielden.platform.mcp.TgMcpServer.QUERY_GUIDE_RESOURCE_URI;
-import static ua.com.fielden.platform.mcp.TgMcpServer.TOOL_ENHANCE_ENTITY_TYPE;
+import static ua.com.fielden.platform.mcp.TgMcpServer.*;
 import static ua.com.fielden.platform.mcp.test_config.TgMcpServerTestCaseConfiguration.TEST_WEB_API_KEY_MCP;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertInstanceOf;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -260,6 +259,48 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Tool remove_enhanced_entity_type
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    @Test
+    public void tool_remove_enhanced_entity_type_removes_an_entity_type_so_that_execute_query_no_longer_reaches_it() {
+        enhanceEntityType(Map.of("name", "MyVehicle",
+                                 "baseType", "TgVehicle",
+                                 "addProperties", List.of(Map.of("name", "myNumber", "expression", "2 * 3"))));
+        final var query = "{myVehicle {key(order: ASC_1) myNumber}}";
+        assertThat(executeQuery(query).structuredContent())
+                .as("MyVehicle can be queried.")
+                .isEqualTo(Map.of("data", Map.of("myVehicle", List.of(Map.of("key", "CAR1", "myNumber", 6), Map.of("key", "CAR2", "myNumber", 6)))));
+
+        final var result = removeEnhancedEntityType(Map.of("name", "MyVehicle"));
+        assertFalse(result.isError());
+        assertThat(text(result)).isEqualTo("The specified type was removed successfully.");
+
+        assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
+        final Map<String, Object> structuredContent = assertInstanceOf(Map.class, executeQuery(query).structuredContent());
+        assertThat(assertInstanceOf(List.class, structuredContent.get("errors"))).isNotEmpty();
+        assertThat(structuredContent).doesNotContainKey("data");
+    }
+
+    @Test
+    public void tool_remove_enhanced_entity_type_does_nothing_if_the_entity_type_does_not_exist() {
+        assertThat(webApi.findEnhancedEntityType("MyVehicle")).as("MyVehicle does not exist.").isEmpty();
+
+        final var result = removeEnhancedEntityType(Map.of("name", "MyVehicle"));
+        assertFalse(result.isError());
+        assertThat(text(result)).isEqualTo("The specified type could not be removed.");
+    }
+
+    @Test
+    public void tool_remove_enhanced_entity_type_returns_an_error_if_arguments_are_malformed() {
+        for (final Map<String, Object> args : List.<Map<String, Object>>of(Map.of(), Map.of("name", 1))) {
+            final var result = removeEnhancedEntityType(args);
+            assertTrue(result.isError());
+            assertThat(text(result)).as("Arguments %s", args).isEqualTo("Argument [name] is required and must be a string.");
+        }
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Invalid requests
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -332,6 +373,12 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     private McpSchema.CallToolResult enhanceEntityType(final Map<String, Object> arguments) {
         try (final var client = client()) {
             return client.callTool(McpSchema.CallToolRequest.builder(TOOL_ENHANCE_ENTITY_TYPE).arguments(arguments).build());
+        }
+    }
+
+    private McpSchema.CallToolResult removeEnhancedEntityType(final Map<String, Object> arguments) {
+        try (final var client = client()) {
+            return client.callTool(McpSchema.CallToolRequest.builder(TOOL_REMOVE_ENHANCED_ENTITY_TYPE).arguments(arguments).build());
         }
     }
 

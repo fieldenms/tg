@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web_api;
 
+import com.google.common.collect.Streams;
 import org.junit.After;
 import org.junit.Test;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
@@ -34,23 +35,27 @@ import ua.com.fielden.platform.web_api.IWebApi.PropertyDefinition;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
 import static ua.com.fielden.platform.utils.CollectionUtil.*;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchEntityForPropOf;
 import static ua.com.fielden.platform.web_api.EntityTypeEnhancer.*;
+import static ua.com.fielden.platform.web_api.UserDefinedCalculatedProperty.ENTITY_TYPE;
 import static ua.com.fielden.platform.web_api.WebApiUtils.*;
 import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeBaseTypeValidator.ERR_NO_SUCH_BASE_TYPE;
 import static ua.com.fielden.platform.web_api.validators.EnhancedEntityTypeNameValidator.ERR_NAME_OF_DOMAIN_TYPE;
 import static ua.com.fielden.platform.web_api.validators.UserDefinedCalculatedPropertyNameValidator.ERR_INVALID_NAME;
 import static ua.com.fielden.platform.web_api.validators.UserDefinedCalculatedPropertyNameValidator.ERR_PROPERTY_OF_BASE_TYPE;
 
-/// Tests for enhanced entity types, defined with [IWebApi#enhanceEntityType].
+/// Tests for enhanced entity types, defined with [IWebApi#enhanceEntityType] and removed with [IWebApi#removeEnhancedEntityType].
 ///
 /// Each test that expects a request to be rejected also asserts that the rejected request changed nothing, neither in memory nor in the database.
 ///
@@ -754,6 +759,93 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Removal of enhanced entity types
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    @Test
+    public void removing_a_non_existing_type_is_a_noop() {
+        enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
+        runAs(OTHER_USER, () -> enhance("OtherVehicle", "TgVehicle", props("otherNumber", "8 / 2")));
+
+        assertRemovalIsNoop("NoSuchType", Set.of(getUser().getKey(), OTHER_USER));
+    }
+
+    @Test
+    public void removing_a_domain_type_is_a_noop() {
+        enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
+        runAs(OTHER_USER, () -> enhance("OtherVehicle", "TgVehicle", props("otherNumber", "8 / 2")));
+
+        assertRemovalIsNoop("TgVehicle", Set.of(getUser().getKey(), OTHER_USER));
+    }
+
+    @Test
+    public void removing_an_enhanced_type_of_another_user_is_a_noop() {
+        enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
+        runAs(OTHER_USER, () -> enhance("OtherVehicle", "TgVehicle", props("otherNumber", "8 / 2")));
+
+        assertRemovalIsNoop("OtherVehicle", Set.of(getUser().getKey(), OTHER_USER));
+        runAs(OTHER_USER, () -> assertRemovalIsNoop("MyVehicle", Set.of(UNIT_TEST_USER, OTHER_USER)));
+    }
+
+    @Test
+    public void removing_an_enhanced_entity_type_deletes_persisted_records_and_removes_the_type_from_GraphQL_schema() {
+        final var initSchema = schemaCoordinates();
+        enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
+        runAs(OTHER_USER, () -> enhance("OtherVehicle", "TgVehicle", props("otherNumber", "4")));
+        final var otherUserState = getAs(OTHER_USER, this::userState);
+
+        assertRemovalSucceeds("MyVehicle");
+        assertThat(schemaCoordinates()).containsExactlyInAnyOrderElementsOf(initSchema);
+        assertEqualUserStates(getAs(OTHER_USER, this::userState), otherUserState);
+    }
+
+    @Test
+    public void enhanced_entity_type_that_became_invalid_can_be_removed() {
+        // Create an enhanced type with an invalid name -- one that matches a base type.
+        // The name validator rejects it, so use the initialising mode to skip validation.
+        final var newNamedAsDomainType = new_(UserDefinedEnhancedEntityType.class).setUser(getUser()).setBaseType(TgVehicle.class.getName());
+        newNamedAsDomainType.beginInitialising();
+        newNamedAsDomainType.setName("EntityNewAction");
+        newNamedAsDomainType.endInitialising();
+        final var namedAsDomainType = save(newNamedAsDomainType);
+        assertThat(storedEntityType("EntityNewAction").getBaseType()).isEqualTo(TgVehicle.class.getName());
+
+        // Properties cannot be added through the Web API, as the operation will be rejected due to the enhanced entity type being invalid.
+        save(new_(UserDefinedCalculatedProperty.class)
+                     .setEntityType(namedAsDomainType)
+                     .setName("myProp")
+                     .setExpression("1"));
+        webApi.evictUserEnhancedEntityTypes();
+
+        assertThat(webApi.findEnhancedEntityType("EntityNewAction")).as("The entity type cannot be instantiated.").isEmpty();
+        assertRemovalSucceeds("EntityNewAction");
+    }
+
+    @Test
+    public void enhanced_entity_type_whose_property_became_invalid_can_be_removed() {
+        final var existingPropName = "price";
+        assertThat(isPropertyPresent(TgVehicle.class, existingPropName)).as("TgVehicle has property [%s].".formatted(existingPropName)).isTrue();
+
+        enhance("MyVehicle", "TgVehicle", props("p1", "2 * 3"));
+
+        // Create a property with an invalid name -- one that matches a property of the base type.
+        // The name validator rejects it, so use the initialising mode to skip validation.
+        final UserDefinedEnhancedEntityType enhancedEntityType = assertPresent(fetchEntityForPropOf(ENTITY_TYPE, co(UserDefinedCalculatedProperty.class), "MyVehicle", getUser()));
+        final var newInvalidProperty = new_(UserDefinedCalculatedProperty.class)
+                .setEntityType(enhancedEntityType)
+                .setExpression("1");
+        newInvalidProperty.beginInitialising();
+        newInvalidProperty.setName(existingPropName);
+        newInvalidProperty.endInitialising();
+        save(newInvalidProperty);
+        webApi.evictUserEnhancedEntityTypes();
+
+        assertThat(storedProperties("MyVehicle")).isEqualTo(Map.of("p1", "2 * 3", "price", "1"));
+        assertThat(webApi.findEnhancedEntityType("MyVehicle")).as("The entity type cannot be instantiated.").isEmpty();
+        assertRemovalSucceeds("MyVehicle");
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Utilities
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -821,6 +913,55 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         assertThat(storedProperties(entityType.name())).isEqualTo(entityType.properties());
     }
 
+    /// Asserts that removal of enhanced entity type `name` by the current user returns `false` and changes nothing for `users`.
+    ///
+    private void assertRemovalIsNoop(final String name, final Iterable<String> users) {
+        final var userStates = Streams.stream(users).collect(toMap(identity(), user -> getAs(user, this::userState)));
+        assertThat(webApi.removeEnhancedEntityType(name)).isFalse();
+        userStates.forEach((user, state) -> assertEqualUserStates(getAs(user, this::userState), state));
+    }
+
+    /// Asserts that the current user's enhanced entity type `name`, which must have properties, is removed together with them.
+    ///
+    private void assertRemovalSucceeds(final String name) {
+        final var entityType = storedEntityType(name);
+        final var typeName = entityType.getName();
+        final UserDefinedCalculatedPropertyCo coProperty = co(UserDefinedCalculatedProperty.class);
+        assertThat(coProperty.findByEntityType(entityType)).as("Entity type [%s] has stored properties.", name).isNotEmpty();
+
+        assertThat(webApi.removeEnhancedEntityType(typeName)).isTrue();
+        assertNotDefined(typeName);
+        assertThat(coProperty.findByEntityType(entityType)).isEmpty();
+    }
+
+    /// What removal of an enhanced entity type may change for a user.
+    ///
+    /// @param enhancedTypes      the user's stored enhanced entity types in memory by name, empty for those that cannot be instantiated
+    /// @param storedProperties   expressions of the stored properties of the user's enhanced entity types by type name and property name
+    /// @param schemaCoordinates  see [#schemaCoordinates()]
+    ///
+    private record UserState(Map<String, Optional<EnhancedEntityType>> enhancedTypes,
+                             Map<String, Map<String, String>> storedProperties,
+                             List<String> schemaCoordinates)
+    {}
+
+    private UserState userState() {
+        final UserDefinedEnhancedEntityTypeCo co = co(UserDefinedEnhancedEntityType.class);
+        final var names = co.findByUser(getUser()).stream().map(UserDefinedEnhancedEntityType::getName).toList();
+        return new UserState(names.stream().collect(toMap(identity(), webApi::findEnhancedEntityType)),
+                             names.stream().collect(toMap(identity(), this::storedProperties)),
+                             schemaCoordinates());
+    }
+
+    /// Compares the states component by component, so that a failure reports only the components that differ,
+    /// and differing schema coordinates as missing and unexpected ones.
+    ///
+    private static void assertEqualUserStates(final UserState actual, final UserState expected) {
+        assertThat(actual.enhancedTypes()).isEqualTo(expected.enhancedTypes());
+        assertThat(actual.storedProperties()).isEqualTo(expected.storedProperties());
+        assertThat(actual.schemaCoordinates()).containsExactlyInAnyOrderElementsOf(expected.schemaCoordinates());
+    }
+
     private UserDefinedEnhancedEntityType storedEntityType(final String name) {
         final var entityType = co(UserDefinedEnhancedEntityType.class).findByKeyAndFetch(UserDefinedEnhancedEntityTypeCo.FETCH_PROVIDER.fetchModel(), name, getUser());
         assertThat(entityType).as("Entity type [%s] is stored.", name).isNotNull();
@@ -839,6 +980,23 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         final var result = execute("{__type(name: \"%s\") {name}}".formatted(typeName));
         assertThat(errors(result)).isEmpty();
         assertThat(data(result)).containsEntry("__type", null);
+    }
+
+    /// Coordinates of the types in the current user's GraphQL schema and of their fields, e.g., `TgVehicle` and `TgVehicle.key`.
+    ///
+    private List<String> schemaCoordinates() {
+        final var result = execute("{__schema {types {name fields {name} inputFields {name}}}}");
+        assertThat(errors(result)).isEmpty();
+        final var types = (List<Map<String, Object>>) ((Map<String, Object>) data(result).get("__schema")).get("types");
+        return types.stream()
+                .flatMap(type -> {
+                    final var typeName = (String) type.get("name");
+                    final var fields = Stream.of("fields", "inputFields")
+                            .flatMap(fieldsKind -> Stream.ofNullable((List<Map<String, Object>>) type.get(fieldsKind)).flatMap(List::stream))
+                            .map(field -> typeName + "." + field.get("name"));
+                    return Stream.concat(Stream.of(typeName), fields);
+                })
+                .toList();
     }
 
     private List<String> fieldNames(final String typeName) {
@@ -861,15 +1019,22 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         return ((List<Map<String, Object>>) entityType.get("properties")).stream().map(property -> (String) property.get("name")).toList();
     }
 
-    private void runAs(final String username, final Runnable runnable) {
+    private <T> T getAs(final String username, final Supplier<T> supplier) {
         final var userProvider = getInstance(IUserProvider.class);
         final var currentUser = userProvider.getUser();
         userProvider.setUsername(username, co(User.class));
         try {
-            runnable.run();
+            return supplier.get();
         } finally {
             userProvider.setUser(currentUser);
         }
+    }
+
+    private void runAs(final String username, final Runnable runnable) {
+        getAs(username, () -> {
+            runnable.run();
+            return null;
+        });
     }
 
     @Override

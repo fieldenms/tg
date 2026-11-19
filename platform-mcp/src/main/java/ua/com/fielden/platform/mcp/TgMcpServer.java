@@ -41,6 +41,7 @@ import static ua.com.fielden.platform.utils.MiscUtilities.readResource;
 /// - `tg://query-guide` resource — GraphQL query syntax reference.
 /// - `execute_query` tool — executes GraphQL queries against the TG system.
 /// - [#TOOL_ENHANCE_ENTITY_TYPE] tool — creates or changes an entity type that extends a domain type with calculated properties.
+/// - [#TOOL_REMOVE_ENHANCED_ENTITY_TYPE] tool — removes such an entity type.
 ///
 /// Uses stateless HTTP transport.
 ///
@@ -71,7 +72,9 @@ public class TgMcpServer {
     private static final String SERVER_NAME = "tg-mcp-server";
     private static final String SERVER_VERSION = "0.1.0";
 
-    public static final String TOOL_ENHANCE_ENTITY_TYPE = "enhance_entity_type";
+    public static final String
+            TOOL_ENHANCE_ENTITY_TYPE = "enhance_entity_type",
+            TOOL_REMOVE_ENHANCED_ENTITY_TYPE = "remove_enhanced_entity_type";
 
     /// Path to the Java resource containing the contents of MCP resource [#QUERY_GUIDE_RESOURCE_URI].
     /// This Java resource is resolved via [Class#getResource(String)], which means it should be present on the classpath.
@@ -122,6 +125,7 @@ public class TgMcpServer {
                 .resources(queryGuideResource())
                 .toolCall(executeQueryTool(), this::handleExecuteQuery)
                 .toolCall(enhanceEntityTypeTool(), this::handleEnhanceEntityType)
+                .toolCall(removeEnhancedEntityTypeTool(), this::removeEnhancedEntityType)
                 .build();
         // After the builder is finished, the server will start.
     }
@@ -228,6 +232,20 @@ public class TgMcpServer {
                 .build();
     }
 
+    private McpSchema.Tool removeEnhancedEntityTypeTool() {
+        final var inputSchema = Map.of(
+                "type", "object",
+                "properties", Map.of(
+                        "name", Map.of("type", "string",
+                                       "description", "Name of the entity type to remove.")),
+                "required", List.of("name"));
+        return McpSchema.Tool.builder(TOOL_REMOVE_ENHANCED_ENTITY_TYPE, inputSchema)
+                .description("""
+                             Removes the specified enhanced entity type, if it exists.
+                             """)
+                .build();
+    }
+
     private @Nullable User getUser(final McpTransportContext context) {
         return (User) context.get(McpResource.USER_KEY);
     }
@@ -322,6 +340,27 @@ public class TgMcpServer {
                         common.rootFieldNameForAggEntity(entityType.webApiEntityType()))),
                 enhancement.warnings().stream().map(warning -> "Warning: " + warning))
                 .collect(joining("\n"));
+        return CallToolResult.builder()
+                .addTextContent(message)
+                .build();
+    }
+
+    private CallToolResult removeEnhancedEntityType(final McpTransportContext context, final CallToolRequest request) {
+        final var arguments = request.arguments();
+        if (!(arguments.get("name") instanceof String name)) {
+            return errorResult("Argument [name] is required and must be a string.");
+        }
+
+        setCurrentUser(context);
+
+        final boolean removed;
+        try {
+            removed = webApi.removeEnhancedEntityType(name);
+        } catch (final Exception ex) {
+            return errorResult(ex.getMessage());
+        }
+
+        final var message = removed ? "The specified type was removed successfully." : "The specified type could not be removed.";
         return CallToolResult.builder()
                 .addTextContent(message)
                 .build();

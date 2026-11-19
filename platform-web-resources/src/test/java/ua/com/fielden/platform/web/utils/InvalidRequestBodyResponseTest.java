@@ -31,7 +31,8 @@ import java.util.Optional;
 import java.util.zip.GZIPInputStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.restlet.data.MediaType.APPLICATION_JSON;
 import static ua.com.fielden.platform.serialisation.api.impl.Serialiser.createSerialiserWithJackson;
 import static ua.com.fielden.platform.web.resources.RestServerUtil.ERR_INVALID_REQUEST_BODY;
@@ -104,6 +105,7 @@ public class InvalidRequestBodyResponseTest {
                     @Override public Enhancement enhanceEntityType(String name, String baseType, List<PropertyDefinition> addProperties, List<String> removeProperties) { throw new UnsupportedOperationException(); }
                     @Override public Optional<EnhancedEntityType> findEnhancedEntityType(CharSequence name) { return Optional.empty(); }
                     @Override public void evictUserEnhancedEntityTypes() {}
+                    @Override public boolean removeEnhancedEntityType(final String name) {return false;}
                 },
                 AUTHORISED, restUtil, new ThreadLocalDeviceProvider(), null, null, request, response);
         representations.add(resource.query(request.getEntity()));

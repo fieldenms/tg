@@ -93,4 +93,11 @@ public interface IWebApi {
     ///
     void evictUserEnhancedEntityTypes();
 
+    /// Removes an enhanced entity type with the specified name if it exists.
+    ///
+    /// @return  true iff the type was removed
+    /// @throws WebApiException  if the specified type cannot be removed, or if an error occurred during its removal
+    ///
+    boolean removeEnhancedEntityType(String name);
+
 }

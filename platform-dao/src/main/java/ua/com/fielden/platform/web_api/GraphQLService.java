@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
@@ -169,7 +170,9 @@ public class GraphQLService implements IWebApi {
             final var userApi = cachedUserApi == null ? mkUserApi(user) : cachedUserApi;
             return transactionalExecution.get().exec(() -> {
                 final var result = entityTypeEnhancer.enhance(userApi.schema(), name, baseType, addProperties, removeProperties);
-                final var enhancedTypes = ImmutableMapUtils.insert(userApi.enhancedTypes(), name, result.entityType());
+                // The input `name` may differ in case from the stored name, so use the stored one.
+                final var typeName = result.entityType().name();
+                final var enhancedTypes = ImmutableMapUtils.insert(userApi.enhancedTypes(), typeName, result.entityType());
                 enhancement.set(result);
                 return mkUserApi(enhancedTypes);
             });
@@ -186,6 +189,31 @@ public class GraphQLService implements IWebApi {
     @Override
     public void evictUserEnhancedEntityTypes() {
         userApis.remove(currentUser().getKey());
+    }
+
+    @Override
+    public boolean removeEnhancedEntityType(final String name) {
+        try {
+            final UserDefinedEnhancedEntityTypeCo coEntityType = coFinder.find(UserDefinedEnhancedEntityType.class, true);
+            final var user = currentUser();
+            final var removed = new AtomicBoolean(false);
+            // Synchronise on the concurrent map with enhanceEntityType.
+            userApis.compute(user.getKey(), (_, cachedUserApi) -> {
+                final var entityType = coEntityType.findByKey(name, user);
+                if (entityType == null) {
+                    return cachedUserApi;
+                }
+                coEntityType.batchDelete(List.of(entityType));
+                // The user API will have to be rebuilt anyway, so we may as well remove it.
+                removed.set(true);
+                return null;
+            });
+            return removed.get();
+        } catch (final WebApiException ex) {
+            throw new WebApiException("Entity type [%s] could not be removed. %s".formatted(name, ex.getMessage()), ex);
+        } catch (final Exception ex) {
+            throw new WebApiException("Entity type [%s] could not be removed.".formatted(name), ex);
+        }
     }
 
     private UserApi loadUserApi(final User user) {
