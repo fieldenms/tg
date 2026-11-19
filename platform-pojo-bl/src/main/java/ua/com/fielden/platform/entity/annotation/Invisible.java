@@ -22,7 +22,12 @@ import java.lang.annotation.Target;
 /// For example, with the first of three key members invisible, `#1v` in a template of `@IsProperty(displayAs = ...)` stands for the value of the second key member,
 /// and text typed into an autocompleter to create a new entity is split between the second and the third.
 ///
-/// Generic auditing is not affected: an audited entity type should annotate its invisible properties with `@DisableAuditing`, if their values should not be recorded in audit records.
+/// Generic auditing records the values of invisible properties as those of any other property, and keeps them on the server:
+/// the audit-property that is generated for an audited property is annotated with `@Invisible` as the audited property is.
+/// So audit records are not a way to read such values at a client, while changes to them are still reported, by the name of the property.
+/// An audited entity type should annotate an invisible property with `@DisableAuditing` in addition, if its values should not be recorded in audit records at all.
+/// Audit types are generated sources, so they need to be generated again when this annotation is added to, changed on or removed from a property that is, or was, audited.
+/// An application with auditing enabled does not start while its audit types disagree with an audited type on this annotation.
 ///
 /// With [#centreOnly()], a property is excluded from entity centres and the Web API only.
 /// Such a property is not invisible: its value is serialised, so that it can be used on entity masters.

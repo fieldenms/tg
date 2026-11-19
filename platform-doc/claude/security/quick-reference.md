@@ -124,7 +124,9 @@ See *Login Lockout and Password Reset Cooldown* in `reference.md` for the exact 
 **`@Invisible` properties** — the value of a property annotated with `@Invisible` is not available to clients:
 - it is never serialised (`EntitySerialiser.createCachedProperties`), whether or not the property is fetched, and clients do not know of the property (it is absent from the type information);
 - a value that a client supplies for it is not applied (`EntityResourceUtils.apply`), and is ignored upon deserialisation;
-- it is excluded from entity centres and the Web API (`AbstractDomainTreeRepresentation.isExcluded`).
+- it is excluded from entity centres and the Web API (`AbstractDomainTreeRepresentation.isExcluded`);
+- its audited values are invisible too: the generated audit-property carries the same annotation, so audit centres do not show them.
+  After a change in `@Invisible` of a property that is, or was, audited, rerun `GenAudit`: the application does not start until the audit types agree with the audited type.
 
 Use it for values that only the server should know, e.g. tokens and identifiers that grant access.
 Such a property has no place on an entity master, as clients do not know of it; assign it in the server-side logic.

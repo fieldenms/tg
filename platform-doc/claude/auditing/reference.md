@@ -28,6 +28,27 @@ An entity property is *auditable* if:
 
 To opt a `key` or `desc` property out of auditing, redeclare it in the subclass and place `@DisableAuditing` on the redeclaration.
 
+### Invisible properties
+
+A property annotated with `@Invisible` is auditable: `@Invisible` concerns what clients receive, and `@DisableAuditing` what is recorded.
+Its audit-property is annotated with `@Invisible` as the audited property is (including `centreOnly`), in the persistent audit-entity type and in the synthetic one.
+Consequently, the recorded values stay on the server as the audited values do: they are not serialised (unless `centreOnly`), and audit centres have neither criteria nor columns for them.
+A change to such a property is still reported among the changed properties of an audit record, by name.
+
+Audit types are generated sources, so they follow the audited type when they are generated:
+- a new audit-property takes the annotation of its audited property;
+- an audit-property whose audited property was annotated with `@Invisible` after it had been generated (or had the annotation removed, or `centreOnly` changed) is declared anew in the generated version, which hides the inherited declaration;
+- this includes an inactive audit-property whose audited property is still declared (its auditing is disabled): it is declared anew as inactive, as it keeps the values recorded while it was active;
+- an audit-property that becomes inactive takes the annotation of its audited property, if that is still declared, and keeps its own otherwise (the audited property was removed).
+
+Hence, after a change in `@Invisible` of a property that is, or was, audited, run `GenAudit` again.
+Either version strategy brings the audit types in line: `NEW` adds a version (with its table), and `OVERWRITE_LAST` regenerates the latest version in place, with the same table structure.
+
+Audit types that are out of line would expose recorded values, so they are rejected at start-up.
+In mode `ENABLED`, `AuditTypeFinder` compares the latest persistent audit-entity type and the synthetic audit-entity type with the audited type, and throws `EntityDefinitionException` that names the audit-properties annotated differently from their audited properties.
+Audit-properties whose audited properties are no longer declared are not compared.
+Mode `GENERATION` skips the comparison, so that the generator can run.
+
 ## Generated audit types
 
 For each audited entity `E`, four types are generated:
@@ -77,6 +98,7 @@ When the audited entity's structure changes, the developer picks between two str
 1. **Generate a new version** — produces `E_a3t_{n+1}` (and regenerates the synthetic types).
    Use this when a property is added or removed, so that historical rows remain valid under the old version.
    Removed properties are declared `@InactiveAuditProperty` in the new version, effectively hiding the inherited active one.
+   A change in annotation `@Invisible` of an audited property also calls for generation (see [Invisible properties](#invisible-properties)).
 2. **Refactor an existing version in place** — modify an existing `E_a3t_{n}` directly.
    Use this for property-type changes, renames, or title changes where declaring a new property would produce a collision.
    Propagate the change through all subsequent versions that might hide the modified property, and mirror it in the synthetic `Re{E}_a3t`.

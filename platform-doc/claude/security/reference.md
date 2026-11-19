@@ -201,7 +201,12 @@ The string representation of an entity on the server still includes all key memb
 The attribute is determined by the definition of a property, with the same predicate as serialisation, and cannot be changed at runtime.
 This holds for every property, including `key` and `desc` that an entity type redeclares; `key` of an entity with a composite key is not visible either.
 
-**Auditing** — generic auditing records invisible properties as any other; annotate them with `@DisableAuditing` where the values should not be kept in audit records.
+**Auditing** — generic auditing records the values of invisible properties as those of any other property, and keeps them on the server.
+The audit-property generated for an audited property is annotated with `@Invisible` as the audited property is (including `centreOnly`), in the persistent audit-entity types and in the synthetic one, which is the type that audit centres query and whose instances are serialised.
+Audit centres have neither criteria nor columns for such audit-properties; a change to an invisible property is still reported among the changed properties of an audit record, by name.
+Annotate an invisible property with `@DisableAuditing` in addition where its values should not be kept in audit records at all.
+Audit types are generated sources: after a change in `@Invisible` of a property that is, or was, audited, run `GenAudit` again.
+With auditing enabled, an application does not start while its audit types disagree with an audited type on this annotation (see `auditing/reference.md` § *Invisible properties*).
 
 **`@DenyIntrospection`** is a different mechanism, and does not affect serialisation.
 On an entity type, it excludes the type from domain introspection: from entity centres (`AbstractDomainTreeRepresentation.isExcluded`, for the type itself and for properties of that type), the Web API (`GraphQLService`) and the Domain Explorer.

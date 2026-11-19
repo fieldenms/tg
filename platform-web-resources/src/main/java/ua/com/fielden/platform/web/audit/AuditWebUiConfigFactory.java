@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.security.user.User;
@@ -24,6 +25,7 @@ import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -32,6 +34,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.*;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions.CUSTOMISE_COLUMNS_ACTION;
@@ -82,11 +85,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
     }
 
     <T extends AbstractSynAuditEntity<?>> EntityCentreConfig<T> createEmbeddedCentreConfig(final Class<T> synAuditType) {
-        final var auditProperties = domainMetadata.forEntity(synAuditType)
-                .properties()
-                .stream()
-                .filter(p -> p.has(AUDIT_PROPERTY))
-                .collect(toImmutableList());
+        final var auditProperties = auditPropertiesForCentre(synAuditType);
 
         final EntityActionConfig standardExportAction = EXPORT_EMBEDDED_CENTRE_ACTION.mkAction(synAuditType);
         final EntityActionConfig standardSortAction = CUSTOMISE_COLUMNS_ACTION.mkAction();
@@ -151,11 +150,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
         final var standardExportAction = StandardActions.EXPORT_ACTION.mkAction(synAuditType);
         final var standardSortAction = CentreConfigurationWebUiConfig.CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
 
-        final var auditProperties = domainMetadata.forEntity(synAuditType)
-                .properties()
-                .stream()
-                .filter(p -> p.has(AUDIT_PROPERTY))
-                .collect(toImmutableList());
+        final var auditProperties = auditPropertiesForCentre(synAuditType);
 
         IAlsoCrit<T> centreBuilder1 = EntityCentreBuilder.centreFor(synAuditType)
                 .addTopAction(standardExportAction).also()
@@ -199,6 +194,21 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
         }
 
         return centreBuilder2.setRenderingCustomiser(AuditEntityRenderingCustomiser.class).build();
+    }
+
+    /// Returns the audit-properties of a synthetic audit-entity type that are used as criteria and result-set properties of its centres.
+    ///
+    /// Audit-properties annotated with `@Invisible` (with or without `centreOnly`) are left out:
+    /// they hold the values of audited properties that are excluded from entity centres, and are themselves excluded.
+    /// Changes to such properties are still reported among the changed properties of an audit record, by name.
+    ///
+    private List<PropertyMetadata> auditPropertiesForCentre(final Class<? extends AbstractSynAuditEntity<?>> synAuditType) {
+        return domainMetadata.forEntity(synAuditType)
+                .properties()
+                .stream()
+                .filter(p -> p.has(AUDIT_PROPERTY))
+                .filter(p -> !isPropertyAnnotationPresent(Invisible.class, synAuditType, p.name()))
+                .collect(toImmutableList());
     }
 
     /// Adds `property` as a criterion if its type is supported for criteria.

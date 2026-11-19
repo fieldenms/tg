@@ -10,6 +10,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 ///
 /// Properties with this annotation will not be audited.
 ///
+/// This concerns what is recorded, and is independent of `@Invisible`, which concerns what clients receive:
+/// the values of an invisible property are audited, unless it is annotated with `@DisableAuditing` as well.
+///
 @Target(FIELD)
 @Retention(RUNTIME)
 public @interface DisableAuditing {}

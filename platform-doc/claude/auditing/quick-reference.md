@@ -3,6 +3,9 @@
 Add `@Audited` to a persistent entity to enable automatic audit-record creation on save.
 Use `@DisableAuditing` on individual fields to exclude them.
 To opt `key`/`desc` out, redeclare them in the subclass first.
+An `@Invisible` property is audited, and its audit-property is generated with the same annotation, so the recorded values are not serialised and audit centres do not show them.
+After a change in `@Invisible` of a property that is, or was, audited, rerun `GenAudit`: with auditing enabled, the application fails at start-up (`EntityDefinitionException` from `AuditTypeFinder`) while audit types disagree with their audited type on this annotation.
+Add `@DisableAuditing` where the values should not be recorded at all.
 
 ## Generated Types
 

@@ -240,6 +240,29 @@ public class AuditingTest extends AbstractDaoTestCase {
         }
     }
 
+    /// An invisible property is audited as any other: annotation `@Invisible` concerns what clients receive, and `@DisableAuditing` what is recorded.
+    ///
+    @Test
+    public void values_of_invisible_properties_are_audited_and_their_changes_are_recorded() {
+        final var synAuditType = auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType();
+        final var synAuditPropType = auditTypeFinder.navigate(AuditedEntity.class).synAuditPropType();
+        final ISynAuditEntityDao<AuditedEntity> coAudit = co(synAuditType);
+        final var fetchModel = fetchAll(synAuditType).with(CHANGED_PROPS, fetchAll(synAuditPropType));
+        final var secretAuditProp = AuditUtils.auditPropertyName(AuditedEntity.Property.secret);
+
+        final var entity = save(new_(AuditedEntity.class, "A").setSecret("one"));
+        final var audit = coAudit.getAuditOrThrow(entity, fetchModel);
+        assertEquals("one", audit.getA3t(AuditedEntity.Property.secret));
+        assertThat(audit.getChangedProps().stream().map(p -> p.getProperty().getPropertyName()))
+                .contains(secretAuditProp);
+
+        final var entity_v2 = save(entity.setSecret("two"));
+        final var audit_v2 = coAudit.getAuditOrThrow(entity_v2, fetchModel);
+        assertEquals("two", audit_v2.getA3t(AuditedEntity.Property.secret));
+        assertThat(audit_v2.getChangedProps().stream().map(p -> p.getProperty().getPropertyName()))
+                .containsExactly(secretAuditProp);
+    }
+
     /// Verifies that an entity which becomes invalid upon retrieval can still be audited successfully.
     ///
     /// This scenario can occur if validation errors are suppressed (intentionally or due to a defect), allowing an invalid entity to be saved.
@@ -269,7 +292,7 @@ public class AuditingTest extends AbstractDaoTestCase {
         final CommonAuditEntityDao<AuditedEntity> coAudit = co(auditEntityType);
         final var insertStmt = coAudit.sqlInsertAuditRecordStmt();
         final var expectedInsertFromSelect = """
-                INSERT INTO AUDITEDENTITY_A3T_3_( -- Audit table.
+                INSERT INTO AUDITEDENTITY_A3T_5_( -- Audit table.
                     _ID,
                     _VERSION,
                     AUDITEDENTITY_,
@@ -287,6 +310,7 @@ public class AuditingTest extends AbstractDaoTestCase {
                     A3T_RICHTEXT_FORMATTEDTEXT,
                     A3T_RICHTEXT_CORETEXT,
                     A3T_RICHTEXT_SEARCHTEXT,
+                    A3T_SECRET_,
                     A3T_STR2,
                     A3T_UNION__PROPERTYONE,
                     A3T_UNION__PROPERTYTWO
@@ -309,6 +333,7 @@ public class AuditingTest extends AbstractDaoTestCase {
                     RICHTEXT_FORMATTEDTEXT AS A3T_RICHTEXT_FORMATTEDTEXT,
                     RICHTEXT_CORETEXT AS A3T_RICHTEXT_CORETEXT,
                     RICHTEXT_SEARCHTEXT AS A3T_RICHTEXT_SEARCHTEXT,
+                    SECRET_ AS A3T_SECRET_,
                     STR2 AS A3T_STR2,
                     UNION__PROPERTYONE AS A3T_UNION__PROPERTYONE,
                     UNION__PROPERTYTWO AS A3T_UNION__PROPERTYTWO

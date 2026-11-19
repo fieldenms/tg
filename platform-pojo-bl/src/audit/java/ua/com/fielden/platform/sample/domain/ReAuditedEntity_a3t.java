@@ -1,4 +1,4 @@
-// Generation timestamp: 2026-10-27 19:46:12 EET
+// Generation timestamp: 2026-11-19 00:00:21 AEDT
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
+import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -83,6 +84,9 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
       value = "Date 1",
       desc = "[Date 1] at the time of the audited event."
   )
+  @Invisible(
+      centreOnly = true
+  )
   @IsProperty
   private Date a3t_date1;
 
@@ -118,11 +122,28 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   private String a3t_key;
 
   @Title(
+      value = "Note [removed]",
+      desc = "[Note] at the time of the audited event."
+  )
+  @InactiveAuditProperty
+  @Invisible
+  @IsProperty
+  private String a3t_note;
+
+  @Title(
       value = "Rich Text",
       desc = "[Rich Text] at the time of the audited event."
   )
   @IsProperty
   private RichText a3t_richText;
+
+  @Title(
+      value = "Secret",
+      desc = "[Secret] at the time of the audited event."
+  )
+  @Invisible
+  @IsProperty
+  private String a3t_secret;
 
   @Title(
       value = "Str 1 [removed]",
@@ -138,6 +159,15 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   )
   @IsProperty
   private String a3t_str2;
+
+  @Title(
+      value = "Token [removed]",
+      desc = "[Token] at the time of the audited event."
+  )
+  @InactiveAuditProperty
+  @Invisible
+  @IsProperty
+  private String a3t_token;
 
   @Title(
       value = "Union Entity",
@@ -248,6 +278,16 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
     return this;
   }
 
+  public String getA3t_note() {
+    return this.a3t_note;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_note(final String a3t_note) {
+    this.a3t_note = a3t_note;
+    return this;
+  }
+
   public RichText getA3t_richText() {
     return this.a3t_richText;
   }
@@ -255,6 +295,16 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   @Observable
   public ReAuditedEntity_a3t setA3t_richText(final RichText a3t_richText) {
     this.a3t_richText = a3t_richText;
+    return this;
+  }
+
+  public String getA3t_secret() {
+    return this.a3t_secret;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_secret(final String a3t_secret) {
+    this.a3t_secret = a3t_secret;
     return this;
   }
 
@@ -275,6 +325,16 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   @Observable
   public ReAuditedEntity_a3t setA3t_str2(final String a3t_str2) {
     this.a3t_str2 = a3t_str2;
+    return this;
+  }
+
+  public String getA3t_token() {
+    return this.a3t_token;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_token(final String a3t_token) {
+    this.a3t_token = a3t_token;
     return this;
   }
 
