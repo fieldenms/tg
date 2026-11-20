@@ -171,24 +171,29 @@ public @interface IsProperty {
      */
     boolean trailingZeros() default DEFAULT_TRAILING_ZEROS;
 
-    /**
-     * Defines a template for displaying a value of a composite entity-typed property.
-     * Has no effect for other property types or for non-composite entities.
-     * The value of this attribute can be empty, which means that the displayed value would use the default pattern (i.e., composite entity property will be displayed with the title-value pattern).
-     * This attribute supports patterns like {@code #1tv#2tv}, {@code #1vs#2v}, {@code #1v}, {@code z}, {@code #1.2tv#2tv}, {@code #1.2.3v}, where:
-     * <ol>
-     *  <li>{@code #i} – the i-th key member (this must be the starting token in a template);
-     *  <li>{@code i.j} – the j-th key member in the i-th key member (the i-th key member must be a composite entity).
-     *      Arbitrary depth of key members is supported (e.g., {@code i.*.z}, where {@code *} may be replaced with any number of key members).
-     *  <li>{@code t} – title of a preceding key member
-     *      (e.g., {@code #1t} represents the title of the 1st key member, {@code #1.2t} - title of the 2nd key member in the 1st key member);
-     *  <li>{@code v} – value of a preceding key member
-     *      (e.g., {@code #1v} represents the value of the 1st key member, {@code #1.2v} - value of the 2nd key member in the 1st key member);
-     *  <li>{@code s} – an optional key member separator (mutually exclusive with {@code t}).
-     * </ol>
-     * Alternatively, a template may consist of a single {@code z} character, serving as a {@code toString} representation of the displayed entity.
-     * <p>
-     * The default template is {@code ""}, which is equivalent to applying template {@code #itv} to every key member.
-     */
+    /// Defines a template for displaying a value of a composite entity-typed property.
+    /// Has no effect for other property types or for non-composite entities.
+    /// The value of this attribute can be empty, which means that the displayed value would use the default pattern (i.e., composite entity property will be displayed with the title-value pattern).
+    /// This attribute supports patterns like `#1tv#2tv`, `#1vs#2v`, `#1v`, `z`, `#1.2tv#2tv`, `#1.2.3v`, where:
+    ///
+    /// 1. `#i` – the i-th key member (this must be the starting token in a template);
+    /// 2. `i.j` – the j-th key member in the i-th key member (the i-th key member must be a composite entity).
+    ///    Arbitrary depth of key members is supported (e.g., `i.*.z`, where `*` may be replaced with any number of key members).
+    /// 3. `t` – title of a preceding key member
+    ///    (e.g., `#1t` represents the title of the 1st key member, `#1.2t` - title of the 2nd key member in the 1st key member);
+    /// 4. `v` – value of a preceding key member
+    ///    (e.g., `#1v` represents the value of the 1st key member, `#1.2v` - value of the 2nd key member in the 1st key member);
+    /// 5. `s` – an optional key member separator (mutually exclusive with `t`).
+    ///
+    /// Alternatively, a template may consist of a single `z` character, serving as a `toString` representation of the displayed entity.
+    ///
+    /// The default template is `""`, which is equivalent to applying template `#itv` to every key member.
+    ///
+    /// An entity editor applies the template only if the type of the value is annotated with [DisplayDescription].
+    ///
+    /// A value of a union-typed property is displayed as its active entity, according to the template of the active union property.
+    /// Whether the template is applied is determined by [DisplayDescription] on the union type, not on its member types.
+    /// The template of a union-typed property itself has no effect, so that each union member type is displayed with a template for its own key members.
+    ///
     String displayAs() default DEFAULT_DISPLAY_AS;
 }
