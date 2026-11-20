@@ -526,6 +526,8 @@
                 workshop: newEntity(WORKSHOP, { key: 'WORKSHOP1' })
             });
 
+            const emptyLocation = () => newEntity(BOGIE_LOCATION, { wagonSlot: null, workshop: null });
+
             /// The text of the input layer for `titleObject`, as rendered by the editor's `inputLayerTemplate`.
             ///
             const layerText = titleObject => titleObject
@@ -563,9 +565,22 @@
                 assert.strictEqual(layerText(editor._createTitleObject(bogieAt(workshopLocation()))), 'WORKSHOP1');
             });
 
+            test('displays union value without active entity as its toString representation', function () {
+                assert.strictEqual(layerText(editor._createTitleObject(bogieAt(emptyLocation()))), reflector.KEY_NOT_ASSIGNED);
+            });
+
+            test('displays union value without active entity as its toString representation, ignoring the template of the union-typed property', function () {
+                locationProp._displayAs = '#2v';
+                assert.strictEqual(layerText(editor._createTitleObject(bogieAt(emptyLocation()))), reflector.KEY_NOT_ASSIGNED);
+            });
+
             test('displays nothing if the union type does not display description', function () {
                 bogieLocationType._displayDesc = false;
                 assert.strictEqual(layerText(editor._createTitleObject(bogieAt(wagonSlotLocation()))), '');
+            });
+
+            test('displays nothing if there is no value', function () {
+                assert.strictEqual(layerText(editor._createTitleObject(bogieAt(null))), '');
             });
 
         });

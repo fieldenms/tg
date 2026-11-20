@@ -189,8 +189,11 @@ public @interface IsProperty {
     ///
     /// The default template is `""`, which is equivalent to applying template `#itv` to every key member.
     ///
+    /// An entity editor applies the template only if the type of the value is annotated with [DisplayDescription].
+    ///
     /// A value of a union-typed property is displayed as its active entity, according to the template of the active union property.
-    /// The template of a union-typed property itself has no effect, because it addresses key members by position, and only the union member types have key members.
+    /// Whether the template is applied is determined by [DisplayDescription] on the union type, not on its member types.
+    /// The template of a union-typed property itself has no effect, so that each union member type is displayed with a template for its own key members.
     ///
     String displayAs() default DEFAULT_DISPLAY_AS;
 }
