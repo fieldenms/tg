@@ -41,7 +41,9 @@ public class ColumnDefinition {
     public final int scale;
     public final int precision;
     public final String defaultValue;
-    public final Optional<ColumnIndex> maybeIndex;
+    /// An SQL expression, present for computed columns in SQL Server.
+    public final Optional<String> maybeExpression;
+    /// Indicates whether the RDBMS supports an index on a column of this type.
     public final boolean indexApplicable;
 
     public ColumnDefinition(
@@ -55,7 +57,7 @@ public class ColumnDefinition {
             final int scale,
             final int precision,
             final String defaultValue,
-            final Optional<ColumnIndex> maybeIndex,
+            final Optional<String> maybeExpression,
             final Dialect dialect)
     {
         if (StringUtils.isEmpty(name)) {
@@ -71,10 +73,10 @@ public class ColumnDefinition {
         this.scale = scale <= -1 ? DEFAULT_NUMERIC_SCALE : scale;
         this.precision = precision <= -1 ? DEFAULT_NUMERIC_PRECISION : precision;
         this.defaultValue = defaultValue;
+        this.maybeExpression = maybeExpression;
         this.sqlTypeName = sqlTypeName(dialect);
-        this.maybeIndex = maybeIndex;
         this.indexApplicable = switch (dbVersion(dialect)) {
-            // Not all columns can be indexable.
+            // Not all columns are indexable.
             // Refer to https://learn.microsoft.com/en-us/sql/t-sql/statements/create-index-transact-sql for more details.
             case MSSQL -> switch (sqlType) {
                 case Types.VARCHAR, Types.VARBINARY, Types.NVARCHAR -> length != Integer.MAX_VALUE && !sqlTypeName.toLowerCase().contains("max");
@@ -93,15 +95,18 @@ public class ColumnDefinition {
         sb.append(name);
         sb.append(" ");
 
-        sb.append(sqlTypeName);
-
-        if (!ignoreRequiredness && !nullable) {
-            sb.append(" NOT NULL");
+        if (maybeExpression.isPresent()) {
+            sb.append("AS (").append(maybeExpression.get()).append(")");
         }
-
-        if (!defaultValue.isEmpty()) {
-            sb.append(" DEFAULT ");
-            sb.append(defaultValue);
+        else {
+            sb.append(sqlTypeName);
+            if (!ignoreRequiredness && !nullable) {
+                sb.append(" NOT NULL");
+            }
+            if (!defaultValue.isEmpty()) {
+                sb.append(" DEFAULT ");
+                sb.append(defaultValue);
+            }
         }
 
         return sb.toString();
