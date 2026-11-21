@@ -54,6 +54,12 @@ Input schema:
 A valid name, of an enhanced entity type or of a property, is both a Java identifier and a GraphQL name.
 It consists of Latin letters, digits and underscores, does not start with a digit or with two underscores, and is neither a Java keyword nor one of `true`, `false` and `null`.
 
+Type and property names are case-insensitive.
+Enforcing case sensitivity requires the database collation to be constrained.
+To avoid imposing additional database constraints, the case-insensitive approach was chosen.
+
+Specifically, parameters `name`, `addProperties.name` and `removeProperties` are all interpreted ignoring case.
+
 ## Output
 
 The tool's output has no structure, returning a text message on success.

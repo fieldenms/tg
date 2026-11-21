@@ -11,13 +11,14 @@ import ua.com.fielden.platform.web_api.UserDefinedEnhancedEntityType;
 import ua.com.fielden.platform.web_api.UserDefinedEnhancedEntityTypeCo;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.Set;
 
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
+import static ua.com.fielden.platform.reflection.Finder.streamProperties;
 
-/// Validates [UserDefinedCalculatedProperty#getName()], which must not be the name of a property of the base type.
+/// Validates [UserDefinedCalculatedProperty#getName()], which must not be the name of a property of the base type, ignoring case.
 ///
 /// The base type is that of [UserDefinedCalculatedProperty#getEntityType()], which is therefore assigned first.
 ///
@@ -52,8 +53,9 @@ public class UserDefinedCalculatedPropertyNameValidator extends AbstractBeforeCh
         }
         final UserDefinedEnhancedEntityTypeCo coUserDefinedEnhancedEntityType = co(UserDefinedEnhancedEntityType.class);
         final var baseType = coUserDefinedEnhancedEntityType.findBaseTypeAsJavaType(entityType);
-        if (baseType.isPresent() && isPropertyPresent(baseType.get(), newValue)) {
-            return failuref(ERR_PROPERTY_OF_BASE_TYPE, newValue, baseType.get().getSimpleName());
+        final var baseProperty = baseType.flatMap(type -> streamProperties(type).map(Field::getName).filter(newValue::equalsIgnoreCase).findFirst());
+        if (baseProperty.isPresent()) {
+            return failuref(ERR_PROPERTY_OF_BASE_TYPE, baseProperty.get(), baseType.get().getSimpleName());
         }
         else {
             return successful();

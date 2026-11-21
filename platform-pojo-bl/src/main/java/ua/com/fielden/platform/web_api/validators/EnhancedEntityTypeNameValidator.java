@@ -14,7 +14,7 @@ import java.util.Set;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 
-/// Validates [UserDefinedEnhancedEntityType#getName()], which must not be the simple name of a domain entity type.
+/// Validates [UserDefinedEnhancedEntityType#getName()], which must not be the simple name of a domain entity type, ignoring case.
 ///
 public class EnhancedEntityTypeNameValidator implements IBeforeChangeEventHandler<String> {
 
@@ -44,7 +44,7 @@ public class EnhancedEntityTypeNameValidator implements IBeforeChangeEventHandle
         }
 
         final var domainType = appDomainProvider.entityTypes().stream()
-                .filter(type -> type.getSimpleName().equals(newValue))
+                .filter(type -> type.getSimpleName().equalsIgnoreCase(newValue))
                 .findFirst();
         if (domainType.isPresent()) {
             return failuref(ERR_NAME_OF_DOMAIN_TYPE, newValue, domainType.get().getName());

@@ -235,6 +235,48 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         assertThat(fieldNames("YourVehicle")).contains("yourNumber").doesNotContain("myNumber");
     }
 
+    @Test
+    public void enhancement_matches_type_names_case_insensitively() {
+        enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3"));
+        assertRejected(() -> enhance("MYVEHICLE", "TgVehicle", props("otherNumber", "1")),
+                       errEnhancementFailed("MYVEHICLE", "otherNumber", "", ERR_BASE_TYPE_OF_EXISTING_TYPE.formatted("MyVehicle")));
+        final var enhancement = enhance("MYVEHICLE", null, props("otherNumber", "1"));
+        assertThat(enhancement.warnings()).isEmpty();
+        assertThat(enhancement.entityType().name()).isEqualTo("MyVehicle");
+        assertThat(enhancement.entityType().properties()).isEqualTo(Map.of("myNumber", "2 * 3", "otherNumber", "1"));
+    }
+
+    @Test
+    public void lookup_matches_type_names_case_insensitively() {
+        final var enhancedType = enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3")).entityType();
+        assertThat(enhancedType.name()).as("The type is named MyVehicle.").isEqualTo("MyVehicle");
+
+        for (final var name : List.of("MyVehicle", "myvehicle", "MYVEHICLE")) {
+            assertThat(webApi.findEnhancedEntityType(name)).as(name).contains(enhancedType);
+        }
+    }
+
+    @Test
+    public void two_user_defined_properties_with_same_name_but_different_case_are_disallowed() {
+        assertRejected(() -> enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3", "MYNUMBER", "1")),
+                       errEnhancementFailed("MyVehicle", "myNumber, MYNUMBER", "", ERR_DUPLICATE_PROPERTY.formatted("MYNUMBER")));
+        assertNotDefined("MyVehicle");
+        final var existing = enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3")).entityType();
+        assertRejected(() -> enhance("MYVEHICLE", null, props("MYNUMBER", "1")),
+                       errEnhancementFailed("MYVEHICLE", "MYNUMBER", "", ERR_ADDED_PROPERTY_EXISTS.formatted("myNumber", "MyVehicle")));
+        assertUnchanged(existing);
+    }
+
+    @Test
+    public void properties_to_remove_are_matched_case_insensitively() {
+        enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3", "otherNumber", "4"));
+        final var enhancement = enhance("MYVEHICLE", null, props(), List.of("MYNUMBER", "noSuchProp"));
+
+        assertThat(enhancement.warnings()).containsExactly(WARN_NO_SUCH_PROPERTIES_TO_REMOVE.formatted("MyVehicle", "noSuchProp"));
+        assertThat(enhancement.entityType().properties()).isEqualTo(Map.of("otherNumber", "4"));
+        assertThat(fieldNames("MyVehicle")).contains("otherNumber").doesNotContain("myNumber");
+    }
+
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Storage and instantiation
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -263,6 +305,17 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
                 .isEqualTo(result(Map.of("myVehicle", List.of(
                         Map.of("key", "CAR1", "a", 6, "b", 7, "c", 140, "z", 14),
                         Map.of("key", "CAR2", "a", 6, "b", 7, "c", 140, "z", 14)))));
+    }
+
+    @Test
+    public void lookup_of_an_evicted_type_matches_its_name_case_insensitively() {
+        final var enhancedType = enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3")).entityType();
+        webApi.evictUserEnhancedEntityTypes();
+
+        final var restoredType = webApi.findEnhancedEntityType("MYVEHICLE").orElseThrow();
+        assertThat(restoredType).as("The type is instantiated anew from the database.").isNotSameAs(enhancedType);
+        assertThat(restoredType.name()).isEqualTo("MyVehicle");
+        assertThat(restoredType.properties()).isEqualTo(enhancedType.properties());
     }
 
     @Test
@@ -606,6 +659,18 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void the_name_of_a_new_enhanced_entity_type_cannot_be_that_of_a_domain_entity_type_regardless_of_case() {
+        assertThat(getInstance(IApplicationDomainProvider.class).entityTypes()).extracting(Class::getSimpleName)
+                .as("TgVehicle is a domain entity type, and TGVEHICLE is not.")
+                .contains("TgVehicle").doesNotContain("TGVEHICLE");
+
+        assertRejected(() -> enhance("TGVEHICLE", "TgVehicle", props("myNumber", "2 * 3")),
+                       errEnhancementFailed("TGVEHICLE", "myNumber", "",
+                                            ERR_INVALID_ENTITY_TYPE.formatted("TGVEHICLE", ERR_NAME_OF_DOMAIN_TYPE.formatted("TGVEHICLE", TgVehicle.class.getName()))));
+        assertNotDefined("TGVEHICLE");
+    }
+
+    @Test
     public void the_name_of_a_new_enhanced_entity_type_cannot_produce_names_of_existing_types() {
         enhance("X_Agg", "TgVehicle", props());
 
@@ -640,6 +705,17 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void a_property_of_the_base_type_cannot_be_added_regardless_of_case() {
+        final var existing = enhance("MyVehicle", "TgVehicle", props()).entityType();
+        assertThat(isPropertyPresent(TgVehicle.class, "key")).as("TgVehicle has property key.").isTrue();
+        assertThat(isPropertyPresent(TgVehicle.class, "KEY")).as("TgVehicle has no property KEY.").isFalse();
+
+        assertRejected(() -> enhance("MYVEHICLE", null, props("KEY", "2 * 3")),
+                       errEnhancementFailed("MYVEHICLE", "KEY", "", ERR_INVALID_PROPERTY.formatted("KEY", "MyVehicle", ERR_PROPERTY_OF_BASE_TYPE.formatted("key", "TgVehicle"))));
+        assertUnchanged(existing);
+    }
+
+    @Test
     public void a_property_of_an_existing_enhanced_entity_type_cannot_be_added() {
         final var existing = enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3")).entityType();
 
@@ -659,11 +735,31 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void a_property_of_the_base_type_cannot_be_removed_regardless_of_case() {
+        final var existing = enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3")).entityType();
+        assertThat(isPropertyPresent(TgVehicle.class, "price")).as("TgVehicle has property price.").isTrue();
+        assertThat(isPropertyPresent(TgVehicle.class, "PRICE")).as("TgVehicle has no property PRICE.").isFalse();
+
+        assertRejected(() -> enhance("MyVehicle", null, props(), List.of("PRICE")),
+                       errEnhancementFailed("MyVehicle", "", "PRICE", ERR_REMOVED_PROPERTY_OF_BASE_TYPE.formatted("PRICE", "TgVehicle")));
+        assertUnchanged(existing);
+    }
+
+    @Test
     public void a_property_cannot_be_both_added_and_removed() {
         final var existing = enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3")).entityType();
 
         assertRejected(() -> enhance("MyVehicle", null, props("otherNumber", "4"), List.of("otherNumber")),
                        errEnhancementFailed("MyVehicle", "otherNumber", "otherNumber", ERR_PROPERTY_ADDED_AND_REMOVED.formatted("otherNumber")));
+        assertUnchanged(existing);
+    }
+
+    @Test
+    public void a_property_cannot_be_both_added_and_removed_regardless_of_case() {
+        final var existing = enhance("MyVehicle", "TgVehicle", props("myNumber", "2 * 3")).entityType();
+
+        assertRejected(() -> enhance("MyVehicle", null, props("otherNumber", "4"), List.of("OTHERNUMBER")),
+                       errEnhancementFailed("MyVehicle", "otherNumber", "OTHERNUMBER", ERR_PROPERTY_ADDED_AND_REMOVED.formatted("OTHERNUMBER")));
         assertUnchanged(existing);
     }
 
@@ -687,10 +783,21 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         assertRejected(() -> enhance("MyVehicle", null, props(), List.of("a")),
                        errEnhancementFailed("MyVehicle", "", "a", ERR_REMOVED_PROPERTY_IS_REFERENCED.formatted("a", "b")));
         assertRejected(() -> enhance("MyVehicle", null, props("c", "a * 2"), List.of("b", "a")),
-                       errEnhancementFailed("MyVehicle", "c", "b, a", ERR_REMOVED_PROPERTY_IS_REFERENCED.formatted("a", "c")));
+                       errEnhancementFailed("MyVehicle", "c", "a, b", ERR_REMOVED_PROPERTY_IS_REFERENCED.formatted("a", "c")));
         assertUnchanged(existing);
         // Removing both properties at once is permitted.
         assertThat(enhance("MyVehicle", null, props(), List.of("a", "b")).entityType().properties()).isEmpty();
+    }
+
+    @Test
+    public void a_property_that_another_added_property_refers_to_cannot_be_removed_regardless_of_case() {
+        final var existing = enhance("MyVehicle", "TgVehicle", props("a", "2 * 3", "b", "a + 1")).entityType();
+
+        assertRejected(() -> enhance("MyVehicle", null, props(), List.of("A")),
+                       errEnhancementFailed("MyVehicle", "", "A", ERR_REMOVED_PROPERTY_IS_REFERENCED.formatted("a", "b")));
+        assertUnchanged(existing);
+        // Removing both properties at once is permitted.
+        assertThat(enhance("MyVehicle", null, props(), List.of("A", "B")).entityType().properties()).isEmpty();
     }
 
     @Test
@@ -843,6 +950,14 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
         assertThat(storedProperties("MyVehicle")).isEqualTo(Map.of("p1", "2 * 3", "price", "1"));
         assertThat(webApi.findEnhancedEntityType("MyVehicle")).as("The entity type cannot be instantiated.").isEmpty();
         assertRemovalSucceeds("MyVehicle");
+    }
+
+    @Test
+    public void remove_enhanced_entity_type_matches_type_name_case_insensitively() {
+        enhance("MyVehicle", "TgVehicle", props("p1", "2 * 3"));
+        assertRemovalSucceeds("myvehicle");
+        enhance("MyVehicle", "TgVehicle", props("p1", "2 * 3"));
+        assertRemovalSucceeds("MYVEHICLE");
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

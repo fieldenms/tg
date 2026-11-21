@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web_api;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
@@ -77,11 +77,11 @@ public class GraphQLService implements IWebApi {
     private final Provider<TransactionalExecution> transactionalExecution;
     private final IUserProvider userProvider;
 
-    /// The enhanced entity types of a user by name, and the schema that exposes them.
+    /// The enhanced entity types of a user by name (case-insensitive), and the schema that exposes them.
     ///
     private record UserApi(Map<String, EnhancedEntityType> enhancedTypes, GraphQLSchema schema) {
         UserApi {
-            enhancedTypes = ImmutableMap.copyOf(enhancedTypes);
+            enhancedTypes = ImmutableSortedMap.copyOf(enhancedTypes, String.CASE_INSENSITIVE_ORDER);
         }
     }
 
@@ -177,7 +177,7 @@ public class GraphQLService implements IWebApi {
                 return mkUserApi(enhancedTypes);
             });
         });
-        LOGGER.info(() -> "User [%s] enhanced entity type [%s]: %s".formatted(user.getKey(), name, enhancement.get().entityType().properties()));
+        LOGGER.info(() -> "User [%s] enhanced entity type [%s]: %s".formatted(user.getKey(), enhancement.get().entityType().name(), enhancement.get().entityType().properties()));
         return enhancement.get();
     }
 

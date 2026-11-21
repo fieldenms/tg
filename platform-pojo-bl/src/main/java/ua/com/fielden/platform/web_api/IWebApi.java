@@ -77,15 +77,16 @@ public interface IWebApi {
     ///
     /// A property in `removeProperties` that the enhanced entity type does not have is ignored with a warning ([Enhancement#warnings]).
     ///
-    /// @param name  Web API name of the enhanced entity type
+    /// @param name  Web API name of the enhanced entity type (case-insensitive)
     /// @param baseType  the GraphQL type name of a domain type, required only to create a new type
-    /// @param addProperties  properties to be added to the enhanced entity type
-    /// @param removeProperties  properties to be removed from the enhanced entity type
+    /// @param addProperties  properties to be added to the enhanced entity type (names are case-insensitive)
+    /// @param removeProperties  properties to be removed from the enhanced entity type (case-insensitive)
     /// @throws WebApiException  if the request is rejected
     ///
     Enhancement enhanceEntityType(String name, @Nullable String baseType, List<PropertyDefinition> addProperties, List<String> removeProperties);
 
     /// Returns the current user's enhanced entity type named `name`, if there is one.
+    /// The name lookup is case-insensitive.
     ///
     Optional<EnhancedEntityType> findEnhancedEntityType(CharSequence name);
 
@@ -95,6 +96,7 @@ public interface IWebApi {
 
     /// Removes an enhanced entity type with the specified name if it exists.
     ///
+    /// @param name  name of the enhanced entity type to remove (case-insensitive)
     /// @return  true iff the type was removed
     /// @throws WebApiException  if the specified type cannot be removed, or if an error occurred during its removal
     ///
