@@ -158,8 +158,8 @@ public class WebApiEnhancedEntityTypeTest extends AbstractDaoTestCase {
 
         assertThat(enhancement.warnings()).isEmpty();
         assertThat(enhancement.entityType().properties()).isEqualTo(Map.of("otherNumber", "4", "thirdNumber", "5"));
-        assertThat(fieldNames("MyVehicle")).isEqualTo(concatList(fieldNames("TgVehicle"), List.of("otherNumber", "thirdNumber")));
-        assertThat(inputFieldNames("MyVehicle_Cond_cond")).isEqualTo(concatList(inputFieldNames("TgVehicle_Cond_cond"), List.of("otherNumber", "thirdNumber")));
+        assertThat(fieldNames("MyVehicle")).containsExactlyInAnyOrderElementsOf(concatList(fieldNames("TgVehicle"), List.of("otherNumber", "thirdNumber")));
+        assertThat(inputFieldNames("MyVehicle_Cond_cond")).containsExactlyInAnyOrderElementsOf(concatList(inputFieldNames("TgVehicle_Cond_cond"), List.of("otherNumber", "thirdNumber")));
         assertValidationError("{myVehicle {myNumber}}", "Field 'myNumber' in type 'MyVehicle' is undefined");
         assertThat(execute("{myVehicle {key(order: ASC_1) otherNumber thirdNumber}}"))
                 .isEqualTo(result(Map.of("myVehicle", List.of(

@@ -32,22 +32,22 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static java.util.Comparator.*;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.modifiedClass;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.*;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.generateTypeName;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-import static ua.com.fielden.platform.utils.CollectionUtil.mapValues;
+import static ua.com.fielden.platform.utils.CollectionUtil.*;
+import static ua.com.fielden.platform.utils.EntityUtils.splitPropPath;
+import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /// A domain manager implementation with all sufficient logic for domain modification / loading.
 ///
@@ -64,15 +64,6 @@ import static ua.com.fielden.platform.utils.CollectionUtil.mapValues;
 public final class DomainTreeEnhancer extends AbstractDomainTree implements IDomainTreeEnhancer {
 
     private static final Logger LOGGER = getLogger(DomainTreeEnhancer.class);
-    private static final String ERR_TYPE_COULD_NOT_BE_GENERATED = "Type for [%s] could not be generated.";
-    private static final String ERR_COULD_NOT_PROPAGATE_ENHANCED_TYPE_TO_ROOT = "Enhanced type [%s] could not be propagated to [%s] root along path [%s].";
-    private static final String ERR_COULD_NOT_MODIFY_ROOT_TYPE_NAME = "Root type [%s] name could not be modified to [%s].";
-
-    /// Type diff object's key for calculated properties, used in generated type naming.
-    private static final String CALCULATED_PROPERTIES = "calculatedProperties";
-
-    /// Type diff object's key for custom properties, used in generated type naming.
-    private static final String CUSTOM_PROPERTIES = "customProperties";
 
     /// Comparator for [CalculatedPropertyInfo] instances to impose order in type diff object during SHA-256 calculation.
     private static final Comparator<CalculatedPropertyInfo> CALCULATED_PROPERTY_INFO_COMPARATOR =
@@ -248,52 +239,6 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         return originalAndEnhancedRootTypes;
     }
 
-    /// Groups properties by their domain paths.
-    /// In the returned map, a type may be mapped to `null` if it's not associated with any of the given properties.
-    ///
-    /// @param calculatedProperties  a map of the form `{ type : calculatedProperties }`
-    /// @param customProperties  a map of the form `{ type : custom properties }`
-    /// @param rootTypes  types owning the given properties (may also include types that aren't present in any properties map)
-    ///
-    /// @return a map of the form `{ type : { propertyPath : { propertyName : property } } }`
-    ///
-    private static Map<Class<?>, Map<String, Map<String, IProperty>>> groupByPaths(
-            final Map<Class<?>, List<CalculatedProperty>> calculatedProperties,
-            final Map<Class<?>, List<CustomProperty>> customProperties,
-            final Set<Class<?>> rootTypes)
-    {
-        final Map<Class<?>, Map<String, Map<String, IProperty>>> grouped = new LinkedHashMap<>();
-        calculatedProperties.forEach((root, props) -> {
-            if (props != null && !props.isEmpty()) {
-                final var paths = grouped.computeIfAbsent(root, $ -> new LinkedHashMap<>());
-                for (final CalculatedProperty prop : props) {
-                    final var names = paths.computeIfAbsent(prop.path(), $ -> new LinkedHashMap<>());
-                    names.put(prop.name(), prop);
-                }
-            } else {
-                grouped.put(root, null);
-            }
-        });
-        customProperties.forEach((root, props) -> {
-            if (props != null && !props.isEmpty()) {
-                final var paths = grouped.computeIfAbsent(root, $ -> new LinkedHashMap<>());
-                for (final CustomProperty prop : props) {
-                    final var names = paths.computeIfAbsent(prop.path(), $ -> new LinkedHashMap<>());
-                    names.put(prop.name(), prop);
-                }
-            } else if (!grouped.containsKey(root)) {
-                grouped.put(root, null);
-            }
-        });
-        // add the types, not enhanced with any calc prop
-        for (final Class<?> originalRoot : rootTypes) {
-            if (!grouped.containsKey(originalRoot)) {
-                grouped.put(originalRoot, null);
-            }
-        }
-        return grouped;
-    }
-
     @Override
     public Class<?> getManagedType(final Class<?> type) {
         CalculatedProperty.validateRootWithoutRootTypeEnforcement(this, type);
@@ -303,121 +248,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     @Override
     public void apply() {
         //////////// Performs migration [calculatedProperties => originalAndEnhancedRootTypes] ////////////
-        final Map<Class<?>, Class<?>> freshOriginalAndEnhancedRootTypes = generateHierarchy(originalAndEnhancedRootTypes.keySet(), calculatedProperties, customProperties);
+        final Map<Class<?>, Class<?>> freshOriginalAndEnhancedRootTypes = EnhancedTypeGenerator.generateHierarchy(originalAndEnhancedRootTypes.keySet(), calculatedProperties, customProperties);
         originalAndEnhancedRootTypes.clear();
         originalAndEnhancedRootTypes.putAll(freshOriginalAndEnhancedRootTypes);
-    }
-
-    /// Fully generates a new hierarchy of "originalAndEnhancedRootTypes" according to `calculatedProperties`.
-    ///
-    /// Root types for which no calculated properties were specified will have a marker calculated property added.
-    ///
-    private static Map<Class<?>, Class<?>> generateHierarchy(
-            final Set<Class<?>> rootTypes,
-            final Map<Class<?>, List<CalculatedProperty>> calculatedProperties,
-            final Map<Class<?>, List<CustomProperty>> customProperties)
-    {
-        // single classLoader instance is needed for single "apply" transaction
-        final Map<Class<?>, Class<?>> originalAndEnhancedRootTypes = createOriginalAndEnhancedRootTypes(rootTypes);
-        final Map<Class<?>, Map<String, Map<String, IProperty>>> groupedCalculatedProperties = groupByPaths(calculatedProperties, customProperties, rootTypes);
-
-        // iterate through calculated property places (e.g. Vehicle.class+"" or WorkOrder.class+"veh.status") with no care about order
-        for (final Entry<Class<?>, Map<String, Map<String, IProperty>>> entry : groupedCalculatedProperties.entrySet()) {
-            final Class<?> originalRoot = entry.getKey();
-            // generate predefined root type name for all calculated properties
-            final String predefinedRootTypeName = generateTypeName(originalRoot, linkedMapOf(t2(CALCULATED_PROPERTIES, calculatedPropertiesInfo(calculatedProperties, rootTypes)), t2(CUSTOM_PROPERTIES, customPropertiesInfo(customProperties))));
-            final boolean calcOrCustomPropsOnlyInRoot = entry.getValue() != null && entry.getValue().size() == 1 && StringUtils.isEmpty(entry.getValue().entrySet().iterator().next().getKey());
-            if (entry.getValue() == null) {
-                originalAndEnhancedRootTypes.put(originalRoot, originalRoot);
-            } else {
-                for (final Entry<String, Map<String, IProperty>> placeAndProps : entry.getValue().entrySet()) {
-                    final Map<String, IProperty> props = placeAndProps.getValue();
-                    if (props != null && !props.isEmpty()) {
-                        final Supplier<Set<NewProperty>> createNewProperties = () -> {
-                            return props.entrySet().stream().map(nameWithProp -> {
-                                final IProperty iProp = nameWithProp.getValue();
-                                if (iProp instanceof final CalculatedProperty prop) {
-                                    final String originationProperty = prop.getOriginationProperty() == null ? "" : prop.getOriginationProperty();
-                                    final Annotation calcAnnotation = new CalculatedAnnotation().contextualExpression(prop.getContextualExpression()).rootTypeName(predefinedRootTypeName).contextPath(prop.getContextPath()).origination(originationProperty).attribute(prop.getAttribute()).category(prop.category()).newInstance();
-                                    final IsProperty isPropAnnot = prop.getPrecision() != null && prop.getScale() != null ? new IsPropertyAnnotation(prop.getPrecision(), prop.getScale()).newInstance() : NewProperty.DEFAULT_IS_PROPERTY_ANNOTATION;
-                                    return new NewProperty(nameWithProp.getKey(), prop.resultType(), prop.getTitle(), prop.getDesc(), isPropAnnot, calcAnnotation);
-                                } else { // this should be CustomProperty!
-                                    final CustomProperty prop = (CustomProperty) iProp;
-                                    return new NewProperty(nameWithProp.getKey(), prop.resultType(), prop.getTitle(), prop.getDesc(), new CustomPropAnnotation().newInstance());
-                                }
-                            }).collect(toCollection(LinkedHashSet::new));
-                        };
-                        final Class<?> realRoot = originalAndEnhancedRootTypes.get(originalRoot);
-                        // a path to calculated properties
-                        final String path = placeAndProps.getKey();
-
-                        // determine a "real" parent type:
-                        final Class<?> realParentToBeEnhanced = StringUtils.isEmpty(path) ? realRoot : PropertyTypeDeterminator.determinePropertyType(realRoot, path);
-                        final Class<?> realParentEnhanced;
-                        try {
-                            // generate & load new type enhanced by calculated properties
-                            if (calcOrCustomPropsOnlyInRoot) {
-                                realParentEnhanced = modifiedClass(predefinedRootTypeName, realParentToBeEnhanced, typeMaker -> typeMaker.addProperties(createNewProperties.get()));
-                            } else {
-                                realParentEnhanced = modifiedClass(realParentToBeEnhanced, typeMaker -> typeMaker.addProperties(createNewProperties.get()));
-                            }
-                        } catch (final Exception ex) {
-                            final var typeGenEx = new DomainTreeException(ERR_TYPE_COULD_NOT_BE_GENERATED.formatted(realParentToBeEnhanced.getSimpleName()), ex);
-                            LOGGER.error(typeGenEx);
-                            throw typeGenEx;
-                        }
-                        // propagate enhanced type to root
-                        final Class<?> rootAfterPropagation = propagateEnhancedTypeToRoot(realParentEnhanced, realRoot, path);
-                        // replace relevant root type in cache
-                        originalAndEnhancedRootTypes.put(originalRoot, rootAfterPropagation);
-                    }
-                }
-            }
-            if (!calcOrCustomPropsOnlyInRoot) {
-                final Class<?> enhancedRoot = originalAndEnhancedRootTypes.get(originalRoot);
-                // modify root type name with predefinedRootTypeName
-                if (originalRoot != enhancedRoot) { // calculated properties exist -- root type should be enhanced
-                    final Class<?> rootWithPredefinedName;
-                    try {
-                        rootWithPredefinedName = modifiedClass(predefinedRootTypeName, enhancedRoot, identity());
-                    } catch (final Exception ex) {
-                        final var typeGenEx = new DomainTreeException(ERR_COULD_NOT_MODIFY_ROOT_TYPE_NAME.formatted(enhancedRoot.getSimpleName(), predefinedRootTypeName), ex);
-                        LOGGER.error(typeGenEx);
-                        throw typeGenEx;
-                    }
-                    originalAndEnhancedRootTypes.put(originalRoot, rootWithPredefinedName);
-                }
-            }
-        }
-        return originalAndEnhancedRootTypes;
-    }
-    
-    /// Propagates recursively the `enhancedType` from `(root, path)` to `(root, "")`.
-    ///
-    /// @param enhancedType  the type to replace the current type of property `path` in type `root`
-    ///
-    private static Class<?> propagateEnhancedTypeToRoot(final Class<?> enhancedType, final Class<?> root, final String path) {
-        if (StringUtils.isEmpty(path)) { // replace current root type with new one
-            return enhancedType;
-        }
-
-        try {
-            final var owningTypeAndField = Finder.findFieldByNameWithOwningType(root, path);
-            final Class<?> typeToAdapt = owningTypeAndField._1;
-            final Field field = owningTypeAndField._2;
-            // change type if simple field and change signature in case of collectional field
-            final boolean isCollectional = Collection.class.isAssignableFrom(PropertyTypeDeterminator.determineClass(typeToAdapt, field.getName(), true, false));
-            final NewProperty<?> propertyToBeModified = !isCollectional
-                                                        ? NewProperty.fromField(field).changeType(enhancedType)
-                                                        : NewProperty.fromField(field).setTypeArguments(enhancedType);
-            final Class<?> nextEnhancedType = modifiedClass(typeToAdapt, typeMaker -> typeMaker.modifyProperties(propertyToBeModified));
-            final String nextProp = PropertyTypeDeterminator.isDotExpression(path) ? PropertyTypeDeterminator.penultAndLast(path).getKey() : "";
-            return propagateEnhancedTypeToRoot(nextEnhancedType, root, nextProp);
-        } catch (final Exception ex) {
-            final var typeGenEx = new DomainTreeException(ERR_COULD_NOT_PROPAGATE_ENHANCED_TYPE_TO_ROOT.formatted(enhancedType.getSimpleName(), root.getSimpleName(), path), ex);
-            LOGGER.error(typeGenEx);
-            throw typeGenEx;
-        }
     }
 
     @Override
@@ -787,6 +620,219 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         // The lists have to be copied, as operations that mutate them may be called while they are being traversed,
         // which otherwise causes a ConcurrentModificationException.
         return mapValues(customProperties, (_, props) -> List.copyOf(props));
+    }
+
+    /// Generates the enhanced root types of a [DomainTreeEnhancer].
+    ///
+    private static final class EnhancedTypeGenerator {
+
+        private static final String ERR_TYPE_COULD_NOT_BE_GENERATED = "Type for [%s] could not be generated.";
+        /// Type diff object's key for calculated properties, used in generated type naming.
+        private static final String CALCULATED_PROPERTIES = "calculatedProperties";
+        /// Type diff object's key for custom properties, used in generated type naming.
+        private static final String CUSTOM_PROPERTIES = "customProperties";
+
+        /// Generates root types that declare the given calculated and custom properties.
+        ///
+        /// Each root type is generated in two stages:
+        ///
+        /// 1. [#enhancement] describes the types to generate for the properties of the root type, calculated ones before custom ones.
+        /// 2. [#generate] generates them.
+        ///
+        /// A generated root type is named after the original one and the properties of all root types.
+        /// Calculated properties refer to their root type by this name.
+        ///
+        /// A root type without properties is mapped to itself.
+        ///
+        /// @return a map of the form `{ rootType : generatedRootType }`
+        ///
+        static Map<Class<?>, Class<?>> generateHierarchy(
+                final Set<Class<?>> rootTypes,
+                final Map<Class<?>, List<CalculatedProperty>> calculatedProperties,
+                final Map<Class<?>, List<CustomProperty>> customProperties)
+        {
+            final Map<String, Object> typeDiff = linkedMapOf(t2(CALCULATED_PROPERTIES, calculatedPropertiesInfo(calculatedProperties, rootTypes)),
+                                                             t2(CUSTOM_PROPERTIES, customPropertiesInfo(customProperties)));
+            return rootTypes.stream().collect(toMap(Function.identity(), root -> {
+                final var props = concatList(calculatedProperties.getOrDefault(root, List.of()), customProperties.getOrDefault(root, List.of()));
+                return props.isEmpty() ? root : generate(enhancement(root, generateTypeName(root, typeDiff), props));
+            }));
+        }
+
+        /// Represents an enhanced type.
+        ///
+        /// @param type  the base type
+        /// @param name  the name of the enhanced type
+        /// @param addedProperties  properties to be added
+        /// @param retypedProperties  properties of `type` and their enhanced types.
+        ///                           E.g., for `WorkOrder` with added property `veh.note`, this map contains `("veh", Vehicle$...)`.
+        ///
+        private record TypeEnhancement(
+                Class<?> type,
+                String name,
+                Set<NewProperty> addedProperties,
+                io.vavr.collection.HashMap<String, TypeEnhancement> retypedProperties)
+        {
+
+            /// Creates an empty enhancement.
+            ///
+            TypeEnhancement(final Class<?> type, final String name) {
+                this(type, name, Set.of(), io.vavr.collection.HashMap.empty());
+            }
+
+            /// Returns a copy of this enhancement, in which the enhancement of the type at `path` adds `properties` (replacing the previous entry).
+            /// Enhancements missing along `path` are created with unique names.
+            ///
+            /// For example, let `WorkOrder.veh` be of type `Vehicle`, and `Vehicle.status` be of type `VehicleStatus`.
+            /// Starting with the following enhancement state:
+            /// ```
+            /// WorkOrder  (add costPerKm)
+            /// ```
+            ///
+            /// `addProperties([veh, status], {statusAge})` creates the missing enhancements of `Vehicle` and `VehicleStatus`:
+            /// ```
+            /// WorkOrder      (add costPerKm) (retype veh as (enhanced Vehicle))
+            /// Vehicle        (retype status as (enhanced VehicleStatus))
+            /// VehicleStatus  (add statusAge)
+            /// ```
+            ///
+            /// On the result, `addProperties([veh], {costPlusTax, note})` adds properties to the existing enhancement of `Vehicle`:
+            ///
+            /// ```
+            /// WorkOrder      (add costPerKm) (retype veh as (enhanced Vehicle))
+            /// Vehicle        (add costPlusTax) (add note) (retype status as (enhanced VehicleStatus))
+            /// VehicleStatus  (add statusAge)
+            /// ```
+            ///
+            TypeEnhancement addProperties(final List<String> path, final Set<NewProperty> properties) {
+                if (path.isEmpty()) {
+                    return new TypeEnhancement(type, name, properties, retypedProperties);
+                }
+                final var property = path.getFirst();
+                final var propertyEnhancement = retypedProperties.get(property).getOrElse(() -> {
+                    final Class<?> propertyType = determinePropertyType(type, property);
+                    return new TypeEnhancement(propertyType, nextTypeName(propertyType.getName()));
+                });
+                return new TypeEnhancement(type, name, addedProperties,
+                                           retypedProperties.put(property, propertyEnhancement.addProperties(path.subList(1, path.size()), properties)));
+            }
+        }
+
+        /// Describes the types to generate, so that `root` declares `properties`.
+        ///
+        /// The enhancement of `root` includes an enhancement of each type on the path of a property.
+        /// Each enhancement adds the properties declared in its type, and retypes the properties that lead to other enhanced types.
+        /// Enhanced types other than `root` get unique names.
+        ///
+        /// For example, let `WorkOrder.veh` be of type `Vehicle`, and `Vehicle.status` be of type `VehicleStatus`.
+        /// With each property written as `path.name`, properties `[veh.status.statusAge, veh.costPlusTax, costPerKm, veh.note]` of `WorkOrder`
+        /// result in the following enhancement:
+        ///
+        /// ```
+        /// WorkOrder      (add costPerKm) (retype veh as (enhanced Vehicle))
+        /// Vehicle        (add costPlusTax) (add note) (retype status as (enhanced VehicleStatus))
+        /// VehicleStatus  (add statusAge)
+        /// ```
+        ///
+        /// @param name  the name of the enhanced root type
+        /// @param properties  properties of `root`, among which a property replaces an earlier one with the same path and name
+        ///
+        private static TypeEnhancement enhancement(final Class<?> root, final String name, final List<IProperty> properties) {
+            return foldLeft(groupByPaths(properties).entrySet(),
+                            new TypeEnhancement(root, name),
+                            (acc, pathAndProps) -> acc.addProperties(
+                                    pathAndProps.getKey().isEmpty() ? List.of() : splitPropPath(pathAndProps.getKey()),
+                                    pathAndProps.getValue().values().stream().map(prop -> newProperty(prop, name)).collect(toSet())));
+        }
+
+        /// Groups properties by path, then by name.
+        ///
+        /// The path of a property is [IProperty#path()]: the path from the root type to the type that declares the property, excluding the property name.
+        /// A group contains the properties whose path equals its key, i.e., the properties declared directly in the type at that path.
+        /// E.g., group `"veh"` contains `veh.costPlusTax`, but not `veh.status.statusAge`, which belongs to group `"veh.status"`.
+        /// The empty path stands for the root type itself.
+        ///
+        /// A property replaces an earlier one with the same path and name.
+        ///
+        /// For example, let `WorkOrder.veh` be of type `Vehicle`, and `Vehicle.status` be of type `VehicleStatus`.
+        /// With each property written as `path.name`, properties `[veh.status.statusAge, veh.costPlusTax, costPerKm, veh.note]` of `WorkOrder` are grouped into
+        ///
+        /// ```
+        /// { "veh.status" : { statusAge : ... },
+        ///   "veh"        : { costPlusTax : ..., note : ... },
+        ///   ""           : { costPerKm : ... } }
+        /// ```
+        ///
+        /// @param properties  properties of a single root type
+        ///
+        /// @return a map of the form `{ propertyPath : { propertyName : property } }`
+        ///
+        private static Map<String, Map<String, IProperty>> groupByPaths(final List<IProperty> properties) {
+            return properties.stream().collect(groupingBy(IProperty::path, toMap(IProperty::name, Function.identity(), (_, later) -> later)));
+        }
+
+        /// Describes property `prop` to be added.
+        ///
+        /// @param rootTypeName  the name of the enhanced root type that declares `prop`
+        ///
+        private static NewProperty newProperty(final IProperty prop, final String rootTypeName) {
+            if (prop instanceof final CalculatedProperty calcProp) {
+                final String originationProperty = calcProp.getOriginationProperty() == null ? "" : calcProp.getOriginationProperty();
+                final Annotation calcAnnotation = new CalculatedAnnotation().contextualExpression(calcProp.getContextualExpression())
+                        .rootTypeName(rootTypeName)
+                        .contextPath(calcProp.getContextPath())
+                        .origination(originationProperty)
+                        .attribute(calcProp.getAttribute())
+                        .category(calcProp.category())
+                        .newInstance();
+                final IsProperty isPropAnnot = calcProp.getPrecision() != null && calcProp.getScale() != null
+                        ? new IsPropertyAnnotation(calcProp.getPrecision(), calcProp.getScale()).newInstance()
+                        : NewProperty.DEFAULT_IS_PROPERTY_ANNOTATION;
+                return new NewProperty(calcProp.name(), calcProp.resultType(), calcProp.getTitle(), calcProp.getDesc(), isPropAnnot, calcAnnotation);
+            }
+            else {
+                final CustomProperty customProp = (CustomProperty) prop;
+                return new NewProperty(customProp.name(), customProp.resultType(), customProp.getTitle(), customProp.getDesc(), new CustomPropAnnotation().newInstance());
+            }
+        }
+
+        /// Generates the type described by `enhancement`, after the types of its retyped properties.
+        /// If a type with the name of `enhancement` has already been generated, it is returned, and nothing is generated.
+        ///
+        private static Class<?> generate(final TypeEnhancement enhancement) {
+            final Optional<Class<?>> cachedType = getCachedClass(enhancement.name());
+            if (cachedType.isPresent()) {
+                return cachedType.get();
+            }
+
+            final var genPropTypes = enhancement.retypedProperties().mapValues(EnhancedTypeGenerator::generate);
+            try {
+                final var retypedProperties = genPropTypes
+                        .map(propAndType -> retypedProperty(enhancement.type(), propAndType._1, propAndType._2))
+                        .toJavaSet();
+                return modifiedClass(enhancement.name(), enhancement.type(),
+                                     typeMaker -> typeMaker.addProperties(enhancement.addedProperties()).modifyProperties(retypedProperties));
+            } catch (final Exception ex) {
+                final var typeGenEx = new DomainTreeException(ERR_TYPE_COULD_NOT_BE_GENERATED.formatted(enhancement.type().getSimpleName()), ex);
+                LOGGER.error(typeGenEx);
+                throw typeGenEx;
+            }
+        }
+
+        /// Creates a property based on an existing one, but with a different type.
+        /// If the property is collectional, its element type is changed.
+        ///
+        /// @param type  type that declares the existing property
+        /// @param property  name of the existing property
+        /// @param newType  new type for the property
+        ///
+        private static NewProperty<?> retypedProperty(final Class<?> type, final String property, final Class<?> newType) {
+            final NewProperty<?> newProperty = NewProperty.fromField(Finder.findFieldByName(type, property));
+            return Collection.class.isAssignableFrom(determineClass(type, property, true, false))
+                   ? newProperty.setTypeArguments(newType)
+                   : newProperty.changeType(newType);
+        }
+
     }
 
 }
