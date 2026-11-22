@@ -7,14 +7,8 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import static java.util.Objects.requireNonNull;
+import static ua.com.fielden.platform.persistence.types.exceptions.UserTypeException.invalidPersistedRepresentation;
 
-/**
- * This is a user type that should be used to store properties of type {@link Date} in UTC.
- * For this to take effect, a corresponding property needs to be annotated with <code>@PersistentType(userType = IUtcDateTimeType.class)</code>
- *  
- * @author TG Team
- *
- */
 public final class UtcDateTimeType extends OffsetDateTimeType implements IUtcDateTimeType {
 
     private static final TimeZone UTC = requireNonNull(TimeZone.getTimeZone("UTC"), "Could not obtain time zone UTC.");
@@ -26,8 +20,12 @@ public final class UtcDateTimeType extends OffsetDateTimeType implements IUtcDat
     }
 
     @Override
-    public Object instantiate(final Object argument, final EntityFactory factory) {
-        return argument;
+    public Date instantiate(final Object argument, final EntityFactory factory) {
+        return switch (argument) {
+            case Date date -> date;
+            case null -> null;
+            default -> throw invalidPersistedRepresentation("Date", argument);
+        };
     }
 
 }

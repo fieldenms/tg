@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappingsProvider;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
@@ -27,7 +27,7 @@ import static ua.com.fielden.platform.meta.PropertyHibernateTypeTest.Case.noHibT
 public class PropertyHibernateTypeTest {
 
     private static final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
-    private static final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(new DomainMetadataGenerator(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(), dbVersionProvider));
+    private static final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(new DomainMetadataGenerator(new PlatformHibernateTypeMappingsProvider(dbVersionProvider).get(), dbVersionProvider));
 
     @Test
     public void hibernate_type_is_attached() {

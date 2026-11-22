@@ -4,7 +4,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.meta.Assertions.ComponentA;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
-import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappingsProvider;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
 
@@ -20,7 +20,7 @@ public class ComponentTypeMetadataTest {
 
     public ComponentTypeMetadataTest() {
         final var dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
-        generator = new DomainMetadataGenerator(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
+        generator = new DomainMetadataGenerator(new PlatformHibernateTypeMappingsProvider(dbVersionProvider).get(),
                                                 dbVersionProvider);
     }
 
