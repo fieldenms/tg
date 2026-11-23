@@ -14,13 +14,12 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.join;
 
 /// Implementation for functional entity actions (DOM element).
 ///
@@ -325,7 +324,15 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     }
 
     private static String createExcludeInsertionPoints(final EntityActionConfig config) {
-        return "[" + join(config.excludeInsertionPoints.stream().map(insertionPointType -> "'tg-" + insertionPointType.getSimpleName() + "-master'").collect(toList()), ",") + "]";
+        return createExcludeInsertionPoints(config.excludeInsertionPoints);
+    }
+
+    /// Creates a JS array of the element names of `insertionPoints`, which a centre excludes from refreshing.
+    ///
+    public static String createExcludeInsertionPoints(final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> insertionPoints) {
+        return insertionPoints.stream()
+            .map(insertionPointType -> "'tg-" + insertionPointType.getSimpleName() + "-master'")
+            .collect(joining(",", "[", "]"));
     }
 
     /// Creates a non-empty JS function string for `bodyOpt`.

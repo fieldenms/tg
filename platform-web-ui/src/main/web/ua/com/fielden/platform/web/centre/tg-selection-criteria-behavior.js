@@ -859,24 +859,47 @@ const TgSelectionCriteriaBehaviorImpl = {
         return propertyModel;
     },
 
-    /**
-     * Create context holder with custom '@@miType' property.
-     */
-    createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
+    /// Creates a context holder with custom properties of this centre, such as '@@miType'.
+    /// Selected entities are taken from `getSelectedEntities` if it is specified, and from EGI otherwise.
+    ///
+    createContextHolder: function (
+        requireSelectionCriteria,
+        requireSelectedEntities,
+        requireMasterEntity,
+        actionKind,
+        actionNumber,
+        getSelectedEntities
+    ) {
         const self = this;
         const modifHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-        return this._createContextHolder(function () {
-            return self._reset(modifHolder);
-        }, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
+        return this._createContextHolder(
+            function () {
+                return self._reset(modifHolder);
+            },
+            requireSelectionCriteria,
+            requireSelectedEntities,
+            requireMasterEntity,
+            actionKind,
+            actionNumber,
+            getSelectedEntities
+        );
     },
 
-    /**
-     * Create context holder with custom '@@miType' property.
-     */
-    _createContextHolder: function (modifHolderGetter, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
+    /// Creates a context holder with custom properties of this centre, such as '@@miType'.
+    /// Selected entities are taken from `getSelectedEntities` if it is specified, and from EGI otherwise.
+    ///
+    _createContextHolder: function (
+        modifHolderGetter,
+        requireSelectionCriteria,
+        requireSelectedEntities,
+        requireMasterEntity,
+        actionKind,
+        actionNumber,
+        getSelectedEntities = this.getSelectedEntities
+    ) {
         const contextHolder = this._reflector().createContextHolder(
             requireSelectionCriteria, requireSelectedEntities, requireMasterEntity,
-            modifHolderGetter, this.getSelectedEntities, this.getMasterEntity
+            modifHolderGetter, getSelectedEntities, this.getMasterEntity
         );
         this._reflector().setCustomProperty(contextHolder, "@@miType", this.miType);
         this._reflector().setCustomProperty(contextHolder, "@@saveAsName", this.saveAsName);

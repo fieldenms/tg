@@ -203,6 +203,17 @@ Compound.openEdit(OpenAction.class, ENTITY_TITLE, "Edit Entity", dims)
 Compound.openNew(OpenAction.class, "add-circle-outline", ENTITY_TITLE, "Add new Entity", dims)
 ```
 
+`CUSTOMISE_COLUMNS_ACTION.mkAction(excludeInsertionPoints, postRequery)` is for a centre with insertion points that do not depend on sorting and page capacity.
+After a change of sorting or page capacity, it queries the results again without refreshing `excludeInsertionPoints`.
+Then it runs `postRequery`, with `self` referencing the centre:
+
+```java
+CUSTOMISE_COLUMNS_ACTION.mkAction(
+    Set.of(SchedulingProfileInsertionPoint.class, OpenSchedulingWorkOrderInsertionPointAction.class),
+    new JsCode("self._getInsertionPoint('top')._element.$.scheduling.updateSchedProfileColours(self);\n")
+)
+```
+
 **Custom actions:**
 ```java
 action(CopyWorkOrderAction.class)
@@ -534,6 +545,20 @@ new MasterWithCentreBuilder<OpenAction>()
 
 Use sparingly — prefer declarative configuration.
 Typical uses: coordinating refresh between insertion points and parent centres, custom DOM manipulation.
+
+**Entities selected outside of EGI** — an action on entities selected elsewhere, such as on a map in an alternative view, needs its own context holder creator.
+The centre function `createContextHolderWithSelectedEntities(getSelectedEntities)` creates it.
+Its context holders carry everything that the standard ones do, including the criteria of the last run, with selected entities from `getSelectedEntities`.
+Assign it to a centre property in `injectCustomCode`, and bind the `create-context-holder` attribute of the action to that property:
+
+```java
+entityCentre.injectCustomCode(jsCode("""
+    self.createContextHolderForAction = self.createContextHolderWithSelectedEntities(() => self._getSelectedEntitiesForAction());
+    """));
+// The action element (e.g. in a custom toolbar) binds `t2("create-context-holder", "[[createContextHolderForAction]]")`.
+```
+
+Copying the context creation of the centre into an application instead would miss later additions to the context.
 
 ## Query Enhancer Pattern
 

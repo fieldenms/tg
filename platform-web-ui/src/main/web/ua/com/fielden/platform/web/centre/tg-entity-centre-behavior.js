@@ -780,6 +780,32 @@ const TgEntityCentreBehaviorImpl = {
         }
     },
 
+    /// Creates a function that creates context holders as `_createContextHolder` does.
+    /// Their selected entities are taken from `getSelectedEntities`.
+    /// It is for actions on entities that are selected outside of EGI, such as on a map in an alternative view.
+    /// Assign it to a property of this centre, and bind the `create-context-holder` attribute of such actions to it.
+    ///
+    createContextHolderWithSelectedEntities: function (getSelectedEntities) {
+        return (
+            requireSelectionCriteria,
+            requireSelectedEntities,
+            requireMasterEntity,
+            actionKind,
+            actionNumber,
+            relatedContexts,
+            parentCentreContext
+        ) => this._createContextHolder(
+            requireSelectionCriteria,
+            requireSelectedEntities,
+            requireMasterEntity,
+            actionKind,
+            actionNumber,
+            relatedContexts,
+            parentCentreContext,
+            getSelectedEntities
+        );
+    },
+
     _allRetrievedEntitiesChanged: function () {
         const entities = [];
         const renderingHints = [];
@@ -1024,8 +1050,24 @@ const TgEntityCentreBehaviorImpl = {
             }
         }).bind(self);
 
-        self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts, parentCentreContext) {
-            const context = this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
+        self._createContextHolder = (function (
+            requireSelectionCriteria,
+            requireSelectedEntities,
+            requireMasterEntity,
+            actionKind,
+            actionNumber,
+            relatedContexts,
+            parentCentreContext,
+            getSelectedEntities
+        ) {
+            const context = this.$.selection_criteria.createContextHolder(
+                requireSelectionCriteria,
+                requireSelectedEntities,
+                requireMasterEntity,
+                actionKind,
+                actionNumber,
+                getSelectedEntities
+            );
             this._reflector.setCustomProperty(context, "@@resultSetHidden", this.$.egi.hasAttribute("hidden"));
             
             if (relatedContexts) {
