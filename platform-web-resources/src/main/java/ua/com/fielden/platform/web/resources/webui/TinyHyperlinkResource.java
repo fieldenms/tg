@@ -26,7 +26,6 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils.PropertyAssignmentErrorHandler;
@@ -113,7 +112,7 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                 return restUtil.resultJSONRepresentation(successful().extendResultWithCustomObject(customObject));
             }
             // Otherwise, it represents a shared entity.
-            return restoreSharedEntity(tinyHyperlink, factory, critGenerator, companionFinder, serialiser, webUiConfig, userProvider, device(), sharingModel)
+            return restoreSharedEntity(tinyHyperlink, factory, critGenerator, companionFinder, serialiser, webUiConfig, userProvider, sharingModel)
                     .map((savingInfoHolder, entity) -> {
                         final Map<String, Object> customObject = linkedMapOf(createPropertyActionIndicesForMaster(entity, webUiConfig));
                         customObject.put(CUSTOM_OBJECT_ACTION_IDENTIFIER, tinyHyperlink.getActionIdentifier());
@@ -135,7 +134,6 @@ public class TinyHyperlinkResource extends AbstractWebResource {
             final ISerialiser serialiser,
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
-            final DeviceProfile deviceProfile,
             final ICentreConfigSharingModel sharingModel)
     {
         final PropertyDeserialisationErrorHandler propDeserialisationErrorHandler = (entity, property, inputValueSupplier, error) -> {
@@ -182,7 +180,6 @@ public class TinyHyperlinkResource extends AbstractWebResource {
                                              userProvider.getUser(),
                                              critGenerator,
                                              0,
-                                             deviceProfile,
                                              sharingModel);
         return t2(savingInfoHolder, entity);
     }

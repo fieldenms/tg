@@ -96,6 +96,7 @@ public class MappingGenerationTest {
 \t<many-to-one name="menuItem" class="ua.com.fielden.platform.ui.config.MainMenuItem" column="ID_MAIN_MENU"/>
 \t<many-to-one name="owner" class="ua.com.fielden.platform.security.user.User" column="ID_CRAFT"/>
 \t<property name="preferred" column="PREFERRED_" type="org.hibernate.type.YesNoType"/>
+\t<property name="preferredOnMobile" column="PREFERREDONMOBILE_" type="org.hibernate.type.YesNoType"/>
 \t<property name="principal" column="IS_PRINCIPAL" type="org.hibernate.type.YesNoType"/>
 \t<property name="runAutomatically" column="RUNAUTOMATICALLY_" type="org.hibernate.type.YesNoType"/>
 \t<property name="title" column="TITLE" type="org.hibernate.type.StringType"/>

@@ -1,3 +1,5 @@
+'use strict';
+
 window.TG_APP = {
     "siteAllowlist": [],
     "daysUntilSitePermissionExpires": 183,

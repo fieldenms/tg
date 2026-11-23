@@ -37,6 +37,7 @@ import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNullElseGet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -679,7 +680,7 @@ final class DomainMetadataGenerator {
             final EntityMetadataBuilder<?, ?> entityBuilder,
             final SubPropertyNaming naming)
     {
-        final List<Field> unionMembers = unionProperties(unionType);
+        final List<Field> unionMembers = unionProperties(unionType).stream().sorted(comparing(Field::getName)).toList();
         if (unionMembers.isEmpty()) {
             throw new EntityDefinitionException(ERR_UNION_ENTITY_HAS_NO_UNION_MEMBERS.formatted(unionType.getTypeName()));
         }
