@@ -44,7 +44,7 @@ public class WebApiLongFieldIDAndVersionTest extends AbstractDaoTestCase {
     public void id_prop_returns() {
         final List<Long> ids = createIdAndVersionEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Long){tgWebApiEntity{key id(from:$val)}}", linkedMapOf(t2("val", 0L))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Long){tgWebApiEntity(where: {cond: {id: {ge: $val}}}){key id}}", linkedMapOf(t2("val", 0L))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -60,7 +60,7 @@ public class WebApiLongFieldIDAndVersionTest extends AbstractDaoTestCase {
     public void version_prop_returns() {
         createIdAndVersionEntities();
         
-        final Map<String, Object> result = webApi.execute(input("query($val:Long){tgWebApiEntity{key version(to:$val)}}", linkedMapOf(t2("val", 1L))));
+        final Map<String, Object> result = webApi.execute(input("query($val:Long){tgWebApiEntity(where: {cond: {version: {le: $val}}}){key version}}", linkedMapOf(t2("val", 1L))));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(

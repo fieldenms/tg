@@ -6,31 +6,53 @@ import org.restlet.Restlet;
 import org.restlet.data.Parameter;
 import org.restlet.data.Protocol;
 import org.restlet.util.Series;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 
-/**
- * Restlet application that can be used in tests.
- * <p>
- * This class can be used statically for attaching/detaching restlets from the running server via:
- * <ul>
- *   <li>{@link #attachWebApplication(String, Restlet)}
- *   <li>{@link #detachWebApplication(Restlet)}
- * </ul>
- * <p>
- * <code>WebAppliction</code> in the name of these method refers to a test web application, which should incorporate the routing for all its web resources.
- * <p>
- *
- * @author TG Team
- */
+/// Restlet application that can be used in tests.
+///
+/// The intended usage is illustrated with the following example.
+///
+/// ```java
+/// static final TestWebApplication webApplication = new TestWebApplication();
+///
+/// @BeforeClass
+/// public static void beforeClass() {
+///     webApplication.start(PORT);
+/// }
+///
+/// @AfterClass
+/// public static void afterClass() {
+///     webApplication.stop();
+/// }
+///
+/// @Before
+/// public void startUp() {
+///     webApplication.attachWebApplication("/path", myWebApp);
+/// }
+///
+/// @After
+/// public void tearDown() {
+///     webApplication.detachWebApplication(myWebApp);
+/// }
+/// ```
+///
+/// It is recommended to use a different `PORT` in each test class that uses [TestWebApplication] to avoid starting two servers
+/// on the same port, which may occur when tests are distributed between multiple JVM forks.
+///
 public final class TestWebApplication {
 
     private static final Logger LOGGER = getLogger(TestWebApplication.class);
-    public static final int PORT = 9042;
-    static final Component component = new Component();
 
-    static {
-        component.getServers().add(Protocol.HTTP, PORT);
+    private Component component;
+
+    public void start(final int port) {
+        if (component != null) {
+            throw new InvalidStateException("Server already started");
+        }
+        component = new Component();
+        component.getServers().add(Protocol.HTTP, port);
         // Jetty needs additional settings to react to a shutdown signal, sent to JVM.
         final var server = component.getServers().getFirst();
         final Series<Parameter> parameters = server.getContext().getParameters();
@@ -43,34 +65,42 @@ public final class TestWebApplication {
             component.start();
         } catch (final Exception e) {
             LOGGER.error("Failed to start the test web component.", e);
+            component = null;
         }
     }
 
-    /**
-     * Attaches the provided restlet to the running server at the specified path prefix.
-     */
-    public static void attachWebApplication(final String pathPrefix, final Restlet restlet) {
+    public void stop() {
+        if (component == null) {
+            throw new InvalidStateException("Server not started");
+        }
         try {
-            component.getDefaultHost().attach(pathPrefix, restlet);
+            component.stop();
         } catch (final Exception e) {
-            LOGGER.fatal("Failed to attach web application.", e);
-            System.exit(100);
+            LOGGER.error("Failed to stop the test web component.", e);
         }
-
+        component = null;
     }
 
-    /**
-     * Removes web application with all its routes from the test web server.
-     */
-    public static void detachWebApplication(final Restlet restlet) {
+    public void attachWebApplication(final String prefix, final Restlet restlet) {
+        if (component == null) {
+            throw new InvalidStateException("Server not started");
+        }
+        try {
+            component.getDefaultHost().attach(prefix, restlet);
+        } catch (final Exception e) {
+            LOGGER.error("Failed to attach web application.", e);
+        }
+    }
+
+    public void detachWebApplication(final Restlet restlet) {
+        if (component == null) {
+            throw new InvalidStateException("Server not started");
+        }
         try {
             component.getDefaultHost().detach(restlet);
         } catch (final Exception e) {
-            LOGGER.fatal("Failed to detach web application.", e);
-            System.exit(100);
+            LOGGER.error("Failed to detach web application.", e);
         }
     }
-
-    private TestWebApplication() {}
 
 }

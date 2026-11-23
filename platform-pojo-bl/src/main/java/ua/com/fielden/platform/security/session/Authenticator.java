@@ -1,20 +1,18 @@
 package ua.com.fielden.platform.security.session;
 
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+
 import java.util.Date;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
-import org.joda.time.DateTime;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
-import ua.com.fielden.platform.utils.EntityUtils;
-
-/**
- * This is a convenient abstraction for representing a user session authenticator.
- *
- * @author TG Team
- *
- */
+/// Represents a user session authenticator.
+///
 public final class Authenticator {
+
     public static final String AUTHENTICATOR_SEPARATOR = "::";
 
     public final String username;
@@ -26,16 +24,11 @@ public final class Authenticator {
     public final String token;
     private final String value;
 
-    public Authenticator(
-            final String token,
-            final String hash) {
+    public Authenticator(final String token, final String hash) {
         this(Optional.empty(), token, hash);
     }
 
-    public Authenticator(
-            final Optional<Date> expiryTime,
-            final String token,
-            final String hash) {
+    public Authenticator(final Optional<Date> expiryTime, final String token, final String hash) {
         if (StringUtils.isEmpty(token) || StringUtils.isEmpty(hash)) {
             throw new IllegalArgumentException("Authenticator argumens are invalid.");
         }
@@ -50,74 +43,41 @@ public final class Authenticator {
         this.version = Long.parseLong(tokenParts[2]);
         this.hash = hash;
         this.expiryTime = expiryTime;
-
         this.token = token;
-
-        this.value = new StringBuilder()
-            .append(token).append(AUTHENTICATOR_SEPARATOR)
-            .append(hash).toString();
- 
+        this.value = token + AUTHENTICATOR_SEPARATOR + hash;
     }
 
-    
-    /**
-     * Constructs a token from the provided parts.
-     *
-     * @param username
-     * @param seriesId
-     * @param expiryTime
-     * @return
-     */
-    public static String mkToken(
-            final String username,
-            final String seriesId,
-            final long version) {
-        if (StringUtils.isEmpty(username) ||
-            StringUtils.isEmpty(seriesId) ||
-            version < 0) {
-                throw new IllegalArgumentException("Token argumens are invalid.");
-            }
-
-        return new StringBuilder()
-            .append(username).append(AUTHENTICATOR_SEPARATOR)
-            .append(seriesId).append(AUTHENTICATOR_SEPARATOR)
-            .append(version).toString();
-
+    public static String mkToken(final String username, final String seriesId, final long version) {
+        if (StringUtils.isEmpty(username) || StringUtils.isEmpty(seriesId) || version < 0) {
+            throw new InvalidArgumentException("Token argumens are invalid.");
+        }
+        return username + AUTHENTICATOR_SEPARATOR + seriesId + AUTHENTICATOR_SEPARATOR + version;
     }
 
-    /**
-     * Reconstructs an authenticator from its string representation.
-     *
-     * @param authenticator
-     * @return
-     */
+    /// Reconstructs an authenticator from its string representation.
+    ///
     public static Authenticator fromString(final String authenticator) {
         if (StringUtils.isEmpty(authenticator)) {
-            throw new IllegalArgumentException("Cannot construct an authenticator from an empty string.");
+            throw new InvalidArgumentException("Cannot construct an authenticator from an empty string.");
         }
 
         final String[] parts = authenticator.split(AUTHENTICATOR_SEPARATOR);
         if (parts.length != 4) {
-            throw new IllegalArgumentException("The provided string does not represent a valid authenticator.");
+            throw new InvalidArgumentException("The provided string does not represent a valid authenticator.");
         }
 
         final long version;
         try {
             version = Long.parseLong(parts[2]);
-        } catch (final NumberFormatException e) {
-            throw new IllegalArgumentException("The provided string does not represent a valid authenticator");
+        } catch (final NumberFormatException _) {
+            throw new InvalidArgumentException("The provided string does not represent a valid authenticator");
         }
 
-        final String token = mkToken(parts[0], parts[1], version);
-
-        return new Authenticator(token, parts[3]);
+        return new Authenticator(mkToken(parts[0], parts[1], version), parts[3]);
     }
 
-    /**
-     * A convenient method for obtaining authenticator's expiry time as an instance of date rather than long.
-     *
-     * @return
-     */
+    /// The authenticator's expiry time.
+    ///
     public Optional<DateTime> getExpiryTime() {
         return expiryTime.map(DateTime::new);
     }
@@ -129,15 +89,9 @@ public final class Authenticator {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!(obj instanceof Authenticator)) {
-            return false;
-        }
+        return this == obj
+               || obj instanceof Authenticator that && equalsEx(this.value, that.value);
 
-        final Authenticator that = (Authenticator) obj;
-        return EntityUtils.equalsEx(this.value, that.value);
     }
 
     @Override

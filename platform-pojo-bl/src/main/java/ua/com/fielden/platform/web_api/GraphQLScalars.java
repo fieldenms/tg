@@ -194,11 +194,14 @@ public class GraphQLScalars {
 
         @Override
         public Either<String, BigDecimal> convertDataFetcherResult(final Object dataFetcherResult) {
-            if (dataFetcherResult instanceof Money) {
-                return right(((Money) dataFetcherResult).getAmount());
-            } else {
-                return error(title(), dataFetcherResult);
-            }
+            return switch (dataFetcherResult) {
+                case Money money -> right(money.getAmount());
+                // Support for BigDecimal enables aggregation queries to specify Money-typed properties.
+                // An aggregation query returns EntityAggregates instances, which never contain Money-typed values,
+                // but the BigDecimal amount directly.
+                case BigDecimal bigDecimal -> right(bigDecimal);
+                case null, default -> error(title(), dataFetcherResult);
+            };
         }
 
         //////////////////////////////////////////////// PARSE ARGUMENT VARIABLES ////////////////////////////////////////////////
@@ -353,7 +356,11 @@ public class GraphQLScalars {
     ///
     public static final GraphQLScalarType GraphQLDate = newScalar().name("Date")
             .description("Date type.\n\nInput formats:  \n20221002  \n\"2022\"  \n\"2022-10\"  \n\"2022-10-02\"  \n\"2022-10-02 14\"  \n\"2022-10-02 14:07\"  \n\"2022-10-02 14:07:19\"  \n\"2022-10-02 14:07:19.999\"")
-            .coercing(new TgCoercing<Date, Map<String, Object>>() {
+            .coercing(new DateCoercing())
+            .build();
+
+    private static class DateCoercing implements TgCoercing<Date, Map<String, Object>> {
+
         private final DateTimeFormatter basicDateParser = basicDate();
         private final DateTimeFormatter dateTimeParser = new DateTimeFormatterBuilder()
             .append(dateElementParser())
@@ -424,6 +431,6 @@ public class GraphQLScalars {
             }
         }
 
-    }).build();
+    }
 
 }

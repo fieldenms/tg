@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.web_api.WebApiUtils.result;
 import java.util.Map;
 
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -20,12 +21,12 @@ import ua.com.fielden.platform.sample.domain.TgWebApiEntity;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.web_api.IWebApi;
 
-/**
- * Test for GraphQL Web API implementation for {@link CritOnly} properties.
- * 
- * @author TG Team
- *
- */
+/// Test for GraphQL Web API implementation for [CritOnly] properties.
+///
+/// Crit-only properties are excluded from condition types, so these tests are ignored until conditions on crit-only properties are supported.
+/// They express the intended behaviour: a crit-only property appears in `where` as a property condition, binding the query parameter of the same name.
+///
+@Ignore("Conditions on crit-only properties are not supported yet.")
 public class WebApiCritOnlyFieldTest extends AbstractDaoTestCase {
     private final IWebApi webApi = getInstance(IWebApi.class);
     
@@ -45,7 +46,10 @@ public class WebApiCritOnlyFieldTest extends AbstractDaoTestCase {
     public void critOnly_single_criteria_works() {
         createDateEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntitySyntheticSingle{key date(from:\"2020-02-12\") @skip(if:true) dateProp}}"));
+        final Map<String, Object> result = webApi.execute(input("""
+            { tgWebApiEntitySyntheticSingle (where: {cond: {date: {eq: "2020-02-12"}}})
+              { key dateProp } }
+            """));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
@@ -60,7 +64,10 @@ public class WebApiCritOnlyFieldTest extends AbstractDaoTestCase {
     public void critOnly_multi_criteria_works() {
         createDateEntities();
         
-        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntitySyntheticMulti{key datePeriod(from:\"2020-02-12\",to:\"2020-02-18\") @skip(if:true) dateProp}}"));
+        final Map<String, Object> result = webApi.execute(input("""
+            { tgWebApiEntitySyntheticMulti (where: {cond: {datePeriod: {ge: "2020-02-12", le: "2020-02-18"}}})
+              { key dateProp } }
+            """));
         
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(

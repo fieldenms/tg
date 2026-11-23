@@ -49,14 +49,9 @@ public class DynamicParamBuilder {
         return params;
     }
 
-    /**
-     * Returns the map between enhanced property names and it's values.
-     *
-     * @param qp
-     * @param propValEntry
-     * @return
-     */
-    public static Map<String, Object> getPropertyValues(final QueryProperty qp, final Entry<String, Pair<Object, Object>> propValEntry) {
+    /// Returns a map between enhanced property names and their values.
+    ///
+    private static Map<String, Object> getPropertyValues(final QueryProperty qp, final Entry<String, Pair<Object, Object>> propValEntry) {
         final Map<String, Object> pairVals = new HashMap<>();
         if (qp.isSingle()) {
             pairVals.put(propValEntry.getKey(), propValEntry.getValue().getKey());
