@@ -44,7 +44,7 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     private final List<String> sortingVals = new ArrayList<>(); // this list should not contain duplicates, please ensure that when setSortingVals invocation is performing
 
     @IsProperty
-    @Title(value = "Trigger Re-run", desc = "Indicates whether successful saving of this entity should trigger re-run.")
+    @Title(value = "Trigger Re-run", desc = "Indicates whether successful saving of this entity requires the results to be queried again.")
     private boolean triggerRerun;
 
     @IsProperty
@@ -52,7 +52,7 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     private CentreContextHolder masterEntityHolder;
 
     @IsProperty
-    @Title(value = "Centre Dirty", desc = "Indicates whether successful saving of this entity actually changed centre configuration or it is New (aka default, link or inherited). Only populated when centre sorting wasn't changed.")
+    @Title(value = "Centre Dirty", desc = "Indicates whether successful saving of this entity actually changed centre configuration or it is New (aka default, link or inherited).")
     private boolean centreDirty;
 
     @IsProperty

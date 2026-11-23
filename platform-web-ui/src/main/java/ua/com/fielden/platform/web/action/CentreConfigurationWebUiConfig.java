@@ -133,23 +133,25 @@ public class CentreConfigurationWebUiConfig {
                 final var excludeInsertionPointsJs = createExcludeInsertionPoints(excludeInsertionPoints);
                 return action(CentreConfigUpdater.class)
                         .withContext(context().withSelectionCrit().build())
-                        .postActionSuccess(() ->// self.run should be invoked with isSortingAction=true parameter (and isAutoRunning=undefined). See tg-entity-centre-behavior 'run' property for more details.
+                        .postActionSuccess(() ->
                                 new JsCode(""
-                                    // if pageCapacity has been changed then self.$.selection_criteria.pageCapacity will be updated after re-running in tg-entity-centre-behavior._postRun; otherwise -- no need to update it
                                     + "    self.$.egi.visibleRowsCount = functionalEntity.get('visibleRowsCount');\n"
                                     + "    self.$.egi.numberOfHeaderLines = functionalEntity.get('numberOfHeaderLines');\n"
+                                    + "    self.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');\n"
                                     // Keep the PREVIOUSLY_RUN diff string with the applied changes.
-                                    // Re-running replaces it anyway.
                                     + "    self._keepPreviouslyRunDiffString(functionalEntity);\n"
+                                    // A change of sorting or page capacity requires the results to be queried again.
+                                    // The last run of this client is refreshed from its first page.
+                                    // It gets the new sorting and page capacity, and keeps the criteria of the run.
+                                    // The response applies them (see `tg-entity-centre-behavior._postRun`).
+                                    // Unlike navigation, refresh also retrieves all entities if needed, and totals.
                                     + "    if (functionalEntity.get('triggerRerun') === true) {\n"
-                                    + "        return self.retrieve().then(function () {\n"
-                                    + "            self.run(undefined, true, undefined, " + excludeInsertionPointsJs + ").then(function () {\n"
+                                    + "        self.$.selection_criteria.pageNumber = 0;\n"
+                                    + "        return self.currentPage(" + excludeInsertionPointsJs + ").then(() => {\n"
                                     + postRequery
-                                    + "            });\n"
                                     + "        });\n"
                                     + "    } else {\n"
                                     + "        self.$.egi.adjustColumnsVisibility(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
-                                    + "        self.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');\n"
                                     + "    }\n"
                                     + ""))
                         .icon("av:sort-by-alpha")
