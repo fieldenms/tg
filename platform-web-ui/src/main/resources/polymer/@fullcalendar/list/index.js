@@ -1,6 +1,6 @@
 import { createPlugin } from '../core/index.js';
 import { ListView } from './internal.js';
-import { n as identity, x as createFormatter } from '../core/internal-common.js';
+import { n as identity, y as createFormatter } from '../core/internal-common.js';
 
 const OPTION_REFINERS = {
     listDayFormat: createFalsableFormatter,

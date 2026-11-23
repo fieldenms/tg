@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.utils;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
@@ -37,7 +35,6 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
-import java.time.Duration;
 import java.util.*;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -67,9 +64,27 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 public class EntityUtils {
     private static final Logger logger = getLogger();
 
-    private static final Cache<Class<?>, Boolean> persistentTypes = CacheBuilder.newBuilder().expireAfterAccess(Duration.ofSeconds(10)).initialCapacity(512).build();
-    private static final Cache<Class<?>, Boolean> syntheticTypes = CacheBuilder.newBuilder().expireAfterAccess(Duration.ofSeconds(10)).initialCapacity(512).build();
-    private static final Cache<Class<?>, Boolean> entityCriteriaTypes = CacheBuilder.newBuilder().expireAfterAccess(Duration.ofSeconds(10)).initialCapacity(512).build();
+    /// Whether types are persistent entity types, and whether they are synthetic entity types.
+    /// Both are determined by the definition of a type, and thus are computed once per type and cached for as long as the type exists.
+    ///
+    /// These checks run for every entity container during retrieval (e.g., by `EntityContainer.isEmpty()`), and [ClassValue] makes a cached lookup nearly free.
+    ///
+    private static final ClassValue<Boolean>
+            PERSISTENT_TYPES = new ClassValue<>() {
+                @Override
+                protected Boolean computeValue(final Class<?> type) {
+                    return isEntityType(type)
+                           && !isUnionEntityType(type)
+                           && !isSyntheticEntityType(type)
+                           && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null;
+                }
+            },
+            SYNTHETIC_TYPES = new ClassValue<>() {
+                @Override
+                protected Boolean computeValue(final Class<?> type) {
+                    return findSyntheticModelFieldFor(type.asSubclass(AbstractEntity.class)) != null;
+                }
+            };
 
     public static final String ERR_PERSISTENT_NATURE_OF_ENTITY_TYPE = "Could not determine persistent nature of entity type [%s].";
 
@@ -620,11 +635,7 @@ public class EntityUtils {
             return false;
         } else {
             try {
-                return persistentTypes.get(type, () ->
-                        isEntityType(type)
-                        && !isUnionEntityType(type)
-                        && !isSyntheticEntityType(type)
-                        && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null);
+                return PERSISTENT_TYPES.get(type);
             } catch (final Exception ex) {
                 final String msg = ERR_PERSISTENT_NATURE_OF_ENTITY_TYPE.formatted(type.getSimpleName());
                 logger.error(msg, ex);
@@ -695,7 +706,7 @@ public class EntityUtils {
             return false;
         } else {
             try {
-                return syntheticTypes.get(type, () -> findSyntheticModelFieldFor(type.asSubclass(AbstractEntity.class)) != null);
+                return SYNTHETIC_TYPES.get(type);
             } catch (final Exception ex) {
                 final String msg = format("Could not determine synthetic nature of entity type [%s].", type.getSimpleName());
                 logger.error(msg, ex);
@@ -769,23 +780,10 @@ public class EntityUtils {
         return type != null && AbstractUnionEntity.class.isAssignableFrom(type);
     }
 
-    /**
-     * Determines whether {@code type} represents entity query criteria.
-     * It uses temporal caching to speedup successive calls.
-     *
-     * @param type
-     * @return
-     */
+    /// Determines whether `type` represents entity query criteria.
+    ///
     public static boolean isCriteriaEntityType(final Class<? extends AbstractEntity<?>> type) {
-        try {
-            return entityCriteriaTypes.get(type, () -> {
-                return EntityQueryCriteria.class.isAssignableFrom(type);
-            });
-        } catch (final Exception ex) {
-            final String msg = format("Could not determine criteria nature of entity type [%s].", type.getSimpleName());
-            logger.error(msg, ex);
-            throw new ReflectionException(msg, ex);
-        }
+        return EntityQueryCriteria.class.isAssignableFrom(type);
     }
 
     public static boolean isGeneratedMultiInheritanceEntityType(final Class<?> type) {

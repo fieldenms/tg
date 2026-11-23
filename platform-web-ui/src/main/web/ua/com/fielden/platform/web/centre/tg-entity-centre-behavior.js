@@ -974,20 +974,21 @@ const TgEntityCentreBehaviorImpl = {
             }
         };
 
+        const discardFailed = function (errorResult) {
+            // This function will be invoked after a server-side error or a response without content.
+            self.$.selection_criteria._postRetrievedDefaultError(errorResult);
+        };
+
         self._processDiscarderResponse = function (e) {
             self.$.selection_criteria._processResponse(e, "discard", function (entityAndCustomObject, exceptionOccurred) {
                 console.log("CENTRE DISCARDED", entityAndCustomObject);
                 self.$.selection_criteria._provideExceptionOccurred(entityAndCustomObject[0], exceptionOccurred);
                 self.$.selection_criteria._postRetrievedDefault(entityAndCustomObject);
                 self._resetAutocompleterState();
-            });
+            }, discardFailed);
         };
         self._processDiscarderError = function (e) {
-            self.$.selection_criteria._processError(e, "discard", function (errorResult) {
-                // This function will be invoked after server-side error appear.
-                console.warn("SERVER ERROR: ", errorResult);
-                self.$.selection_criteria._postRetrievedDefaultError(errorResult);
-            });
+            self.$.selection_criteria._processError(e, "discard", discardFailed);
         };
 
         self._activateInsertionPoint = (function (insertionPointId, action) {

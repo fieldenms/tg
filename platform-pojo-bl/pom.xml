@@ -18,7 +18,7 @@
     <properties>
         <jackson.version>2.22.3</jackson.version>
         <jackson.annotations.version>2.22</jackson.annotations.version>
-        <guava.version>33.6.0-jre</guava.version>
+        <guava.version>33.7.2-jre</guava.version>
         <poi.verstion>5.5.1</poi.verstion>
         <xalan.version>2.7.3</xalan.version>
         <guice.version>7.0.0</guice.version>
