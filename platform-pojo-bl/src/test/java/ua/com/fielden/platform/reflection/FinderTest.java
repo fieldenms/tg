@@ -24,6 +24,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.reflection.Finder.streamUnionMembersWithSubProperty;
@@ -342,6 +343,45 @@ public class FinderTest {
         final Optional<Field> unionEntityField = Finder.getFieldByNameOptionally(UnionEntityForReflector.class, "commonProperty");
         assertTrue("Failed to locate field in the UnionEntity class", unionEntityField.isPresent());
         assertTrue("Incorrect commonProperty type.", unionEntityField.filter(f -> f.getType() == String.class).isPresent());
+    }
+
+    @Test
+    public void non_existing_properties_are_not_found_with_getFieldByNameOptionally() {
+        final var name = "nonExistingProperty";
+        assertThat(Finder.getFieldByNameOptionally(SecondLevelEntity.class, name)).isEmpty();
+        assertThat(Finder.getFieldByNameOptionally(UnionEntityForReflector.class, name)).isEmpty();
+    }
+
+    @Test
+    public void getFieldByName_returns_a_new_instance_on_every_call_so_that_changing_its_accessibility_does_not_affect_other_callers() {
+        final SecondLevelEntity entity = factory.newByKey(SecondLevelEntity.class, "property", "propertyTwo", 1L);
+
+        final Field field = Finder.getFieldByName(SecondLevelEntity.class, "property");
+        final Field sameField = Finder.getFieldByName(SecondLevelEntity.class, "property");
+        assertThat(sameField).isEqualTo(field).isNotSameAs(field);
+
+        field.setAccessible(true);
+
+        assertThat(field.canAccess(entity)).isTrue();
+        assertThat(sameField.canAccess(entity)).isFalse();
+    }
+
+    /// The names being looked up may originate from requests, and thus a cache of missing fields would have no bound.
+    /// The cache is private, and reading it reflectively is the only way to observe what is retained.
+    ///
+    @Test
+    @SuppressWarnings("unchecked")
+    public void getFieldByName_caches_only_existing_fields() throws Exception {
+        final var cacheField = Finder.class.getDeclaredField("DECLARING_TYPES");
+        cacheField.setAccessible(true);
+        final var cache = (ClassValue<Map<String, Class<?>>>) cacheField.get(null);
+        final var missingName = "nonExistingPropertyThatMustNotBeRetained";
+
+        assertThat(Finder.getFieldByNameOptionally(SecondLevelEntity.class, missingName)).isEmpty();
+        assertThatThrownBy(() -> Finder.getFieldByName(SecondLevelEntity.class, missingName)).isInstanceOf(ReflectionException.class);
+        assertThat(Finder.getFieldByNameOptionally(SecondLevelEntity.class, "property")).isPresent();
+
+        assertThat(cache.get(SecondLevelEntity.class)).doesNotContainKey(missingName).containsKey("property");
     }
 
     @Test

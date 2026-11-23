@@ -107,6 +107,13 @@
             '<meta charset="utf-8"><p data-pm-slice="1 1 [&quot;orderedList&quot;,{&quot;start&quot;:1,&quot;type&quot;:null},' +
             '&quot;listItem&quot;,null]">Item text from another editor</p>';
 
+        /// A line with a diagram, as a web page puts it into the clipboard.
+        /// The diagram is an inline SVG image with a link in it.
+        ///
+        const WEB_PAGE_LINE_WITH_LINK_IN_SVG_IMAGE =
+            '<meta charset="utf-8"><p>Diagram: <svg width="120" height="20"><a href="https://www.fielden.com.au/">' +
+            '<text x="0" y="15">Fielden website</text></a></svg> and text after it</p>';
+
         /// Content that would run code, if it was not removed: a script, a `javascript:` link and an image `onerror` handler.
         /// It also contains a form with an input field, which RichText does not support.
         /// Every piece of code sets `window.richTextUnsafeCodeRan`.
@@ -117,6 +124,18 @@
             '<p><a href="javascript:window.richTextUnsafeCodeRan = true">Unsafe link</a></p>' +
             '<script>window.richTextUnsafeCodeRan = true;<\/script>' +
             '<form action="https://example.com/collect"><input name="secret" value="secret"><button>Send</button></form>';
+
+        /// A link, formatted text and a list item, which ask to be shown as scripts through `data-raw-html`.
+        /// The editor uses `data-raw-html` to keep the tag name of an element that was written as HTML in Markdown.
+        /// Every script would set `window.richTextUnsafeCodeRan`.
+        ///
+        const CONTENT_ASKING_TO_BE_SHOWN_AS_SCRIPTS =
+            '<p><a href="https://www.fielden.com.au/" data-raw-html="script">window.richTextUnsafeCodeRan = true</a></p>' +
+            '<p><strong data-raw-html="script">window.richTextUnsafeCodeRan = true</strong></p>' +
+            '<p><em data-raw-html="script">window.richTextUnsafeCodeRan = true</em></p>' +
+            '<p><del data-raw-html="script">window.richTextUnsafeCodeRan = true</del></p>' +
+            '<p><code data-raw-html="script">window.richTextUnsafeCodeRan = true</code></p>' +
+            '<ol><li data-raw-html="script"><p>window.richTextUnsafeCodeRan = true</p></li></ol>';
 
         const wait = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
@@ -173,10 +192,30 @@
             return textsOf(savedValue(input), 'span[style*="color"]');
         }
 
+        /// Returns every coloured text in the saved value of `input` with its colour, e.g. `word: rgb(229, 57, 53)`.
+        ///
+        function textColours(input) {
+            return [...savedValue(input).querySelectorAll('span[style*="color"]')]
+                .map(span => `${span.textContent.trim()}: ${span.style.color}`);
+        }
+
         /// Returns the web addresses of all links in the saved value of `input`.
         ///
         function linkAddresses(input) {
             return [...savedValue(input).querySelectorAll('a')].map(link => link.getAttribute('href'));
+        }
+
+        /// Checks that `CONTENT_ASKING_TO_BE_SHOWN_AS_SCRIPTS` is shown in `input` as it is, not as scripts.
+        /// So, it should stay a link, formatted text and a list item, and no code should run.
+        ///
+        function checkNotShownAsScripts(input) {
+            assert.isNull(editorView(input).dom.querySelector('script'), 'Nothing should be shown as a script in the editor.');
+            assert.isUndefined(window.richTextUnsafeCodeRan, 'No code should run.');
+            const value = savedValue(input);
+            assert.isNull(value.querySelector('script'), 'The saved value should contain no scripts.');
+            assert.deepEqual(linkAddresses(input), ['https://www.fielden.com.au/'], 'The link should be kept.');
+            ['strong', 'em', 'del', 'code', 'ol > li']
+                .forEach(selector => assert.ok(value.querySelector(selector), `The [${selector}] element should be kept.`));
         }
 
         /// Returns the plain text of the whole editor content.
@@ -233,6 +272,13 @@
         ///
         function select(input, from, to = from) {
             input._editor.setSelection(from, to);
+        }
+
+        /// Puts the browser's cursor at `offset` in the DOM `node`, the same way a click or an on-screen keyboard does.
+        /// The editor reads the cursor from the browser asynchronously.
+        ///
+        function placeBrowserCursor(input, node, offset) {
+            editorView(input).domSelection().collapse(node, offset);
         }
 
         /// Pastes `html` at the cursor, through the editor's handling of pasted HTML.
@@ -344,6 +390,13 @@
                     assert.include(value.textContent, 'Unsafe link', 'The text of the link should be kept.');
                     assert.isNull(value.querySelector('a[href^="javascript:" i]'), 'The code of the link should be removed.');
                 });
+
+                test('links and formatted text that ask to be shown as scripts are not shown as scripts and run no code', function () {
+                    // Fixed in #2881 -- before it, the editor showed them as scripts.
+                    loadValue(input, CONTENT_ASKING_TO_BE_SHOWN_AS_SCRIPTS);
+
+                    checkNotShownAsScripts(input);
+                });
             });
 
             suite('pasting content copied from a web page, Google Docs or Microsoft Word', function () {
@@ -371,6 +424,17 @@
                     assert.strictEqual(image.getAttribute('alt'), 'Company logo', 'The alternative text should be kept.');
                 });
 
+                test('an image keeps its address, but loses alternative text that hides markup after a comment end', function () {
+                    // DOMPurify removes an attribute value that could close a comment.
+                    // Inside a comment, such a value would end the comment and turn the rest into markup.
+                    paste(input, `<meta charset="utf-8"><img src="${IMAGE_URL}" alt="--><img src=x onerror=alert(1)>">`);
+
+                    const image = savedValue(input).querySelector('img');
+                    assert.ok(image, 'The image should be kept.');
+                    assert.strictEqual(image.getAttribute('src'), IMAGE_URL, 'The address of the image should be kept.');
+                    assert.isFalse(image.hasAttribute('alt'), 'The alternative text, which hides markup, should be removed.');
+                });
+
                 test('scripts, javascript: links, onerror handlers, forms and input fields are removed and never run', async function () {
                     paste(input, UNSAFE_CONTENT);
                     // Give the image time to fail loading, which would trigger its `onerror` handler, if it was kept.
@@ -384,6 +448,29 @@
                     assert.isNull(value.querySelector('a[href^="javascript:" i]'), 'The code of the javascript: link should be removed.');
                     assert.isNull(value.querySelector('[onerror]'), 'The onerror handler should be removed.');
                     assert.isNull(value.querySelector('form, input, button'), 'Forms and input fields should be removed.');
+                });
+
+                test('links and formatted text that ask to be shown as scripts are not shown as scripts and run no code', function () {
+                    // Fixed in #2881 -- before it, the editor showed them as scripts, which ran right away.
+                    paste(input, `<meta charset="utf-8">${CONTENT_ASKING_TO_BE_SHOWN_AS_SCRIPTS}`);
+
+                    checkNotShownAsScripts(input);
+                });
+
+                test('highlighted text from a web page loses an onmouseover handler, so that hovering over it runs no code', function () {
+                    // The editor keeps the attributes of pasted highlighted text.
+                    // Only DOMPurify removes the unsafe ones.
+                    paste(input, '<meta charset="utf-8"><mark onmouseover="window.richTextUnsafeCodeRan = true">Overdue</mark>');
+
+                    const value = savedValue(input);
+                    assert.include(value.textContent, 'Overdue', 'The highlighted text should be kept.');
+                    assert.isNull(value.querySelector('[onmouseover]'), 'The onmouseover handler should be removed from the saved value.');
+
+                    const markInEditor = editorView(input).dom.querySelector('mark');
+                    assert.ok(markInEditor, 'The highlighted text should stay highlighted in the editor.');
+                    assert.isFalse(markInEditor.hasAttribute('onmouseover'), 'The onmouseover handler should be removed from the editor.');
+                    markInEditor.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+                    assert.isUndefined(window.richTextUnsafeCodeRan, 'Hovering over the highlighted text should run no code.');
                 });
 
                 test('a nested bulleted list from Google Docs keeps all its items, with the nested item still nested', function () {
@@ -482,6 +569,14 @@
                     const numberedItems = textsOf(savedValue(input), 'ol > li');
                     assert.deepEqual(numberedItems, ['Item text from another editor'], 'The text should stay a numbered list item.');
                 });
+
+                test('a line with a link inside an inline SVG image from a web page keeps all its text', function () {
+                    // Fixed in #2881 -- before it, such a link stopped the whole paste with an error, and nothing was pasted.
+                    paste(input, WEB_PAGE_LINE_WITH_LINK_IN_SVG_IMAGE);
+
+                    checkEditorContentIsValid(input);
+                    assert.strictEqual(editorText(input), 'Diagram: Fielden website and text after it', 'All text should be kept.');
+                });
             });
 
             suite('undo and redo (toolbar buttons, or Ctrl+Z and Ctrl+Y)', function () {
@@ -534,6 +629,39 @@
                     input._redo({});
                     assert.deepEqual(linkAddresses(input), ['https://www.fielden.com.au/'], 'Redo should bring the link back.');
                 });
+
+                test('re-colouring partly coloured text: undo brings the previous colours back, redo the new colour', function () {
+                    // The ProseMirror update in #2881 changed how colouring and its undo are recorded.
+                    loadValue(input, '<p>Paint <span style="color: #1e88e5">this</span> word red</p>');
+                    select(input, positionBefore(input, 'this'), positionAfter(input, 'word'));
+                    input._editor.exec('color', { selectedColor: '#e53935' });
+                    assert.deepEqual(textColours(input), ['this word: rgb(229, 57, 53)'], 'The selected text should get the new colour.');
+
+                    input._undo({});
+                    assert.deepEqual(textColours(input), ['this: rgb(30, 136, 229)'], 'Undo should bring the previous colours back.');
+                    assert.strictEqual(editorText(input), 'Paint this word red', 'Undo should keep the text.');
+
+                    input._redo({});
+                    assert.deepEqual(textColours(input), ['this word: rgb(229, 57, 53)'], 'Redo should bring the new colour back.');
+                });
+
+                test('removing the colour of text in two colours: undo brings both colours back, redo removes them again', function () {
+                    // The ProseMirror update in #2881 changed how removing a colour and its undo are recorded.
+                    loadValue(input, '<p><span style="color: #e53935">Red</span> and <span style="color: #1e88e5">blue</span> text</p>');
+                    select(input, positionBefore(input, 'Red'), positionAfter(input, 'blue'));
+                    input._editor.exec('clearColor');
+                    assert.deepEqual(textColours(input), [], 'The colours should be removed.');
+
+                    input._undo({});
+                    assert.deepEqual(
+                        textColours(input),
+                        ['Red: rgb(229, 57, 53)', 'blue: rgb(30, 136, 229)'],
+                        'Undo should bring both colours back.'
+                    );
+
+                    input._redo({});
+                    assert.deepEqual(textColours(input), [], 'Redo should remove the colours again.');
+                });
             });
 
             suite('typing over selected text', function () {
@@ -582,6 +710,28 @@
 
                     assert.deepEqual(textsOf(savedValue(input), 'p'), ['First lineSecond line'], 'The paragraphs should be joined.');
                 });
+
+                test('a letter deleted by an Android on-screen keyboard is deleted, and the cursor stays in its place', async function () {
+                    // On Android, the on-screen keyboard deletes the letter itself.
+                    // The editor recognises such a deletion from the changed text.
+                    // The ProseMirror update in #2881 changed how it tells such a deletion from a Backspace press.
+                    loadValue(input, '<p>Order a coffee now</p>');
+                    input.focusInput();
+                    select(input, positionAfter(input, 'coffee'));
+
+                    // Imitate the on-screen keyboard, which deletes the letter before the cursor.
+                    const textNode = findTextNode(editorView(input).dom, 'coffee');
+                    textNode.data = textNode.data.replace('coffee', 'coffe');
+                    placeBrowserCursor(input, textNode, textNode.data.indexOf('coffe') + 'coffe'.length);
+                    await waitUntil(() => editorText(input) === 'Order a coffe now');
+
+                    assert.strictEqual(editorText(input), 'Order a coffe now', 'The letter should be deleted.');
+                    assert.strictEqual(
+                        cursorPosition(input),
+                        positionAfter(input, 'coffe'),
+                        'The cursor should stay after the remaining letters.'
+                    );
+                });
             });
 
             suite('moving the cursor around images with the arrow keys', function () {
@@ -611,6 +761,23 @@
                     pressKey(input, 'ArrowRight', 39);
 
                     assert.strictEqual(cursorPosition(input), secondImagePosition + 1, 'The cursor should be just after the second image.');
+                });
+            });
+
+            suite('code blocks', function () {
+
+                test('a browser position just before the code of a code block is read as the start of the code block', function () {
+                    // Fixed in #2881 by the ProseMirror update -- before it, it was read as the end of the code block.
+                    // ProseMirror reads every position that the browser reports (the cursor, a click) this way.
+                    // Chrome moves its cursor into the code text first, so this test reads the position directly.
+                    loadValue(input, '<p>Text above</p><pre><code>first line\nsecond line</code></pre><p>Text below</p>');
+                    const codeBlock = editorView(input).dom.querySelector('pre');
+
+                    assert.strictEqual(
+                        editorView(input).posAtDOM(codeBlock, 0),
+                        positionBefore(input, 'first line'),
+                        'The position should be the start of the code block.'
+                    );
                 });
             });
         });

@@ -46,6 +46,20 @@ Asserting over the whole result is appropriate when the dataset is designed as a
 An unordered `containsExactly` is flaky either way; an unscoped `allSatisfy` with a conditional on the key neither pins the rows nor fails clearly.
 See `reference.md`, Assertions, for the worked example.
 
+## Asserting Fixture Assumptions
+
+Assert each assumption that a test's scenario depends on, after building the fixture and before exercising the code under test.
+A fixture that fails to set up its premise turns the test into one about another case, which may well pass.
+Typical assumptions:
+- a type has, or does not have, a property: `Finder.isPropertyPresent(TgVehicle.class, "price")`;
+- a type is, or is not, a domain entity type: `IApplicationDomainProvider.entityTypes()`;
+- a time relationship, such as an expiry being in the past: compare with the time that the code under test reads (e.g., `IDates.serverNow()`), not with a literal;
+- a setter assigned its value: a setter whose validator rejects the value, or whose value equals the current one, leaves the property unchanged.
+
+Take an assumption from the same source as the code under test, and describe it with `.as(...)` so that its failure reads as a broken fixture rather than as broken code.
+Mutation-check an assumption by breaking the fixture rather than the code: the test must fail at the assumption, with its description.
+See `reference.md`, Assertions, for a worked example.
+
 ## Current Time in Tests
 
 Take the current time from `UniversalConstantsForTesting` (the test binding of `IUniversalConstants`), fixed with `setNow(...)` in a `@Before` method, rather than from `new Date()` or `System.currentTimeMillis()`.

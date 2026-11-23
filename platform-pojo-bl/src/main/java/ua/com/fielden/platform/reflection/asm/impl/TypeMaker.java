@@ -1,41 +1,5 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.stream.Collectors.toCollection;
-import static ua.com.fielden.platform.cypher.Checksum.sha256;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getCachedClass;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
-
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.ParameterManifestation;
@@ -46,14 +10,13 @@ import net.bytebuddy.dynamic.DynamicType.Builder.MethodDefinition.ReceiverTypeDe
 import net.bytebuddy.dynamic.TargetType;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
-import net.bytebuddy.implementation.FieldAccessor;
-import net.bytebuddy.implementation.FixedValue;
-import net.bytebuddy.implementation.Implementation;
-import net.bytebuddy.implementation.MethodDelegation;
-import net.bytebuddy.implementation.SuperMethodCall;
+import net.bytebuddy.implementation.*;
 import net.bytebuddy.implementation.bind.annotation.Argument;
 import net.bytebuddy.implementation.bind.annotation.This;
 import net.bytebuddy.pool.TypePool;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.Generated;
@@ -66,6 +29,23 @@ import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.exceptions.CollectionalPropertyInitializationException;
 import ua.com.fielden.platform.reflection.asm.exceptions.TypeMakerException;
 import ua.com.fielden.platform.types.tuples.T2;
+
+import java.lang.annotation.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.cypher.Checksum.sha256;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 
 /**
  * This class provides an API for modifying types at runtime by means of bytecode manipulation.
@@ -386,7 +366,7 @@ public class TypeMaker<T> {
      * @param propertyReplacements
      * @return this instance to continue building
      */
-    public TypeMaker<T> modifyProperties(final Set<NewProperty<?>> propertyReplacements) throws IllegalArgumentException {
+    public TypeMaker<T> modifyProperties(final Set<? extends NewProperty<?>> propertyReplacements) throws IllegalArgumentException {
         if (builder == null) {
             throw new TypeMakerException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
@@ -396,7 +376,7 @@ public class TypeMaker<T> {
         }
 
         // modifying a property that doesn't exist in the original type's hierarchy is illegal
-        final Optional<NewProperty<?>> nonExistentNp = propertyReplacements.stream()
+        final var nonExistentNp = propertyReplacements.stream()
                 .filter(prop -> !origTypeProperties.contains(prop.getName()))
                 .findAny();
         if (nonExistentNp.isPresent()) {

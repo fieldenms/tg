@@ -6,9 +6,6 @@ import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
-import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.domaintree.IDomainManager;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.NoKey;
@@ -17,11 +14,11 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -114,6 +111,7 @@ public class EntityTypeIntrospection {
     ///
     /// @param name          GraphQL type name.
     /// @param rootField     GraphQL root field name, or `null` if this type is not queryable, which is the case for a union.
+    /// @param baseType      Name of the entity type that an enhanced entity type extends, or `null` for a domain type.
     /// @param title         Human-readable entity title
     /// @param desc          Entity description
     /// @param keyType       Shape of the key, or `null` where not applicable.
@@ -121,12 +119,12 @@ public class EntityTypeIntrospection {
     /// @param keySeparator  Separator used to concatenate composite key members, or `null` for other key shapes.
     /// @param hasDesc       Whether `desc` may be selected on this type.
     /// @param type          Invisible to GraphQL, exists to provide information to properties fetcher.
-    ///                      This is a canonical entity type, so callers should obtain a corresponding managed type from
-    ///                      [IDomainTreeEnhancer] where necessary.
+    ///                      This is the Java type that the GraphQL type represents.
     ///
     public record EntityType (
             String name,
             @Nullable String rootField,
+            @Nullable String baseType,
             String title,
             String desc,
             @Nullable EntityKind kind,
@@ -157,34 +155,27 @@ public class EntityTypeIntrospection {
             boolean filterable
     ) {}
 
-    private final IApplicationDomainProvider appDomainProvider;
     private final IDomainMetadata domainMetadata;
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
     private final GraphQLCommon common;
-    private final IDomainManager domainManager;
-    private final IUserProvider userProvider;
 
     @Inject
     protected EntityTypeIntrospection(
-            final IApplicationDomainProvider appDomainProvider,
             final IDomainMetadata domainMetadata,
             final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider,
-            final GraphQLCommon common,
-            final IDomainManager domainManager,
-            final IUserProvider userProvider)
+            final GraphQLCommon common)
     {
-        this.appDomainProvider = appDomainProvider;
         this.domainMetadata = domainMetadata;
         this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
         this.common = common;
-        this.domainManager = domainManager;
-        this.userProvider = userProvider;
     }
 
-    public GraphQLSchema enhanceSchema(final GraphQLSchema schema) {
+    /// Enhances `schema` with the domain meta-schema, which describes those of `entityTypes` that have object types in `schema`.
+    ///
+    public GraphQLSchema enhanceSchema(final GraphQLSchema schema, final Collection<WebApiEntityType> entityTypes) {
         final var queryType = schema.getQueryType();
         final var codeRegistry = schema.getCodeRegistry();
         return schema.transform(builder -> builder
@@ -193,15 +184,16 @@ public class EntityTypeIntrospection {
                                         graphQlTypeEntityKindType(),
                                         graphQlTypeKeyType(),
                                         graphQlTypeTypeKind()))
-                .codeRegistry(enhanceCodeRegistry(codeRegistry))
+                .codeRegistry(enhanceCodeRegistry(codeRegistry, List.copyOf(entityTypes)))
                 .query(enhanceQueryType(queryType)));
     }
 
     private GraphQLCodeRegistry enhanceCodeRegistry(
-            final GraphQLCodeRegistry codeReg)
+            final GraphQLCodeRegistry codeReg,
+            final List<WebApiEntityType> entityTypes)
     {
         return codeReg.transform(builder -> builder
-                .dataFetcher(coordinates(QUERY_TYPE_NAME, ENTITY_TYPE_ROOT_FIELD_NAME), entityTypeFetcher())
+                .dataFetcher(coordinates(QUERY_TYPE_NAME, ENTITY_TYPE_ROOT_FIELD_NAME), entityTypeFetcher(entityTypes))
                 .dataFetcher(coordinates(ENTITY_TYPE_GRAPHQL_TYPE_NAME, "properties"), propertiesFetcher()));
     }
 
@@ -215,7 +207,7 @@ public class EntityTypeIntrospection {
                                          .name(EQ)
                                          .description(
                                           """
-                                          Include entity types whose simple name (`name`) is exactly equal to the specified value.
+                                          Include entity types whose name (`name`) is exactly equal to the specified value.
                                           Matching is case-sensitive.
                                           Does not support comma separated values.
                                           Does not permit wildcard `*`.
@@ -226,7 +218,7 @@ public class EntityTypeIntrospection {
                                          .name(LIKE)
                                          .description(
                                           """
-                                          Include entity types whose simple name matches the specified value.
+                                          Include entity types whose name (`name`) matches the specified value.
                                           Supports wildcard `*`, without which the match is exact.
                                           Supports multiple selection through comma-separated values.
                                           Matching is case-sensitive, and `*` is the only character with a special meaning.
@@ -241,7 +233,7 @@ public class EntityTypeIntrospection {
                 newFieldDefinition()
                         .name("name")
                         .description("""
-                                     GraphQL type name, equal to the entity type's simple name.
+                                     GraphQL type name: the simple name of a domain entity type, or the name given to an enhanced entity type.
                                      This is the name that a property's `type` refers to.""")
                         .type(Scalars.GraphQLString)
                         .build(),
@@ -250,6 +242,13 @@ public class EntityTypeIntrospection {
                         .description("""
                                      GraphQL root field name used to query this type, or `null` if it is not queryable.
                                      A type that is visible but has no root field, a union for instance, is reachable only as a property type.""")
+                        .type(Scalars.GraphQLString)
+                        .build(),
+                newFieldDefinition()
+                        .name("baseType")
+                        .description("""
+                                     For an enhanced entity type, the name of the entity type that it extends; `null` otherwise.
+                                     An enhanced entity type has all properties of its base type, and the calculated properties added to it.""")
                         .type(Scalars.GraphQLString)
                         .build(),
                 newFieldDefinition()
@@ -400,13 +399,15 @@ public class EntityTypeIntrospection {
     /// A union is reached through its members and exposes neither `key` nor `desc`, so a key shape would be meaningless for it.
     ///
     @SuppressWarnings("unchecked")
-    private EntityType mkEntityType(final Class<? extends AbstractEntity<?>> entityType, final @Nullable String rootField) {
+    private EntityType mkEntityType(final WebApiEntityType webApiEntityType, final @Nullable String rootField) {
+        final var entityType = webApiEntityType.type();
         final var titleAndDesc = getEntityTitleAndDesc(entityType);
         final var queryable = rootField != null;
         final var keyKind = queryable ? keyKindOf(entityType) : null;
         return new EntityType(
-                entityType.getSimpleName(),
+                webApiEntityType.name(),
                 rootField,
+                webApiEntityType.baseType() == null ? null : webApiEntityType.baseType().getSimpleName(),
                 titleAndDesc.getKey(),
                 titleAndDesc.getValue(),
                 entityKindOf(entityType),
@@ -490,17 +491,18 @@ public class EntityTypeIntrospection {
     /// A type that fails this check is omitted, whereas the schema keeps it with `id` as its only field, as a GraphQL type cannot be fieldless.
     /// Because this check precedes [#propertiesFetcher], the `id`-only branch of [FieldVisibility#visibilityPredicate] is unreachable from here.
     ///
-    private DataFetcher<List<EntityType>> entityTypeFetcher() {
+    private DataFetcher<List<EntityType>> entityTypeFetcher(final List<WebApiEntityType> entityTypes) {
         return new DataFetcher<>() {
             @Override
             public List<EntityType> get(final DataFetchingEnvironment environment) {
                 final var schema = environment.getGraphQLSchema();
                 final var rootFields = rootFieldsByTypeName(schema);
-                return common.streamVisibleTypes(appDomainProvider)
-                        .filter(namePredicate(environment.getArgument(EQ), environment.getArgument(LIKE)))
-                        .filter(ty -> schema.getType(ty.getSimpleName()) instanceof GraphQLObjectType)
-                        .filter(ty -> isModelReadable(ty, authorisationModel, securityTokenProvider))
-                        .map(ty -> mkEntityType(ty, rootFields.get(ty.getSimpleName())))
+                final var namePredicate = namePredicate(environment.getArgument(EQ), environment.getArgument(LIKE));
+                return entityTypes.stream()
+                        .filter(ty -> namePredicate.test(ty.name()))
+                        .filter(ty -> schema.getType(ty.name()) instanceof GraphQLObjectType)
+                        .filter(ty -> isModelReadable(ty.type(), authorisationModel, securityTokenProvider))
+                        .map(ty -> mkEntityType(ty, rootFields.get(ty.name())))
                         .toList();
             }
         };
@@ -517,13 +519,13 @@ public class EntityTypeIntrospection {
                                (a, _) -> a));
     }
 
-    /// A predicate on an entity type's simple name, as specified by arguments `eq` and `like` of [#ENTITY_TYPE_ROOT_FIELD_NAME].
+    /// A predicate on an entity type's name, as specified by arguments `eq` and `like` of [#ENTITY_TYPE_ROOT_FIELD_NAME].
     /// An argument that was not specified, or was specified as `null`, imposes no restriction.
     ///
     /// Matching happens against Java objects rather than in the database.
     /// It is case-sensitive, values are taken as given without trimming, and `*` is the only character with any special meaning.
     ///
-    private static Predicate<Class<?>> namePredicate(final @Nullable String eq, final @Nullable String like) {
+    private static Predicate<String> namePredicate(final @Nullable String eq, final @Nullable String like) {
         if (eq != null && like != null) {
             throw new WebApiException(ERR_EQ_AND_LIKE_ARE_MUTUALLY_EXCLUSIVE);
         }
@@ -531,13 +533,13 @@ public class EntityTypeIntrospection {
             if (eq.contains(WILDCARD)) {
                 throw new WebApiException(ERR_EQ_DOES_NOT_PERMIT_WILDCARDS);
             }
-            return type -> eq.equals(type.getSimpleName());
+            return eq::equals;
         }
         else if (like != null) {
             final var patterns = Arrays.stream(StringUtils.split(like, ','))
                     .map(EntityTypeIntrospection::likePattern)
                     .toList();
-            return type -> patterns.stream().anyMatch(pattern -> pattern.matcher(type.getSimpleName()).matches());
+            return name -> patterns.stream().anyMatch(pattern -> pattern.matcher(name).matches());
         }
         else {
             return _ -> true;
@@ -564,11 +566,9 @@ public class EntityTypeIntrospection {
                 if (environment.getSource() instanceof EntityType entityType) {
                     final var schema = environment.getGraphQLSchema();
                     if (schema.getType(entityType.name()) instanceof GraphQLObjectType objectType) {
-                        @SuppressWarnings("unchecked") // This typecast is safe in practice as all enhanced types extend their originals.
-                        final var managedEntityType = (Class<? extends AbstractEntity<?>>) domainManager.domainTreeEnhancer(userProvider.getUser()).getManagedType(entityType.type());
                         return schema.getCodeRegistry().getFieldVisibility().getFieldDefinitions(objectType)
                                 .stream()
-                                .map(field -> mkProperty(managedEntityType, field))
+                                .map(field -> mkProperty(entityType.type(), field))
                                 .toList();
                     }
                 }

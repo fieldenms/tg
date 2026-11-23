@@ -340,9 +340,9 @@ public class SessionInterceptorStackOverflowTest {
         final DatabaseProbe probe = injector.getInstance(DatabaseProbe.class);
         final Connection before = probe.physicalConnection();
 
-        final var exception = new IllegalStateException("Purposeful exception.");
+        final var exception = new NonReconstructibleException("Purposeful exception.");
         final var closed = new AtomicBoolean(false);
-        assertSame(exception, assertThrows(IllegalStateException.class, () -> probe.selectOneAndReturnParallelStreamThatFailsToBuffer(exception, () -> closed.set(true))));
+        assertSame(exception, assertThrows(NonReconstructibleException.class, () -> probe.selectOneAndReturnParallelStreamThatFailsToBuffer(exception, () -> closed.set(true))));
 
         assertTrue("The close handler of the stream should have run.", closed.get());
         assertFalse(probe.getSession().isOpen());
@@ -638,6 +638,17 @@ public class SessionInterceptorStackOverflowTest {
         @SessionRequired
         public Connection physicalConnection() {
             return getSession().doReturningWork(connection -> connection.unwrap(Connection.class));
+        }
+    }
+
+    /// An exception that a parallel stream rethrows as it is, whichever thread threw it.
+    /// When a fork/join task reports an exception thrown by a thread other than the one that joins it, [java.util.concurrent.ForkJoinTask] instantiates a new exception of the same type,
+    /// with the original as its cause, by a public constructor that takes a [Throwable] or a public no-arg constructor.
+    /// This exception has no public constructors, so the original is reported regardless of which thread processes the failing element.
+    ///
+    private static final class NonReconstructibleException extends RuntimeException {
+        private NonReconstructibleException(final String message) {
+            super(message);
         }
     }
 

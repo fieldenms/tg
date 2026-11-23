@@ -31,6 +31,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -530,6 +531,57 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
         calcFieldExistsInSinglePlaceAndItWORKS(dm.getManagedType(EnhancingMasterEntity.class), "slaveEntityProp.sextuple", ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "6 * integerProp", "Sextuple", "Desc");
         fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "septuple");
         fieldDoesNotExistInAnyPlace(dm.getManagedType(EnhancingMasterEntity.class), "octuple");
+    }
+
+    private static void addCalculatedProperty(final IDomainTreeEnhancer dm, final Class<?> root, final String contextPath, final String expression, final String title) {
+        dm.addCalculatedProperty(root, contextPath, expression, title, "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+    }
+
+    @Test
+    public void types_on_paths_of_added_properties_are_generated_as_direct_subtypes_of_original_types() {
+        final IDomainTreeEnhancer dm = new DomainTreeEnhancer(factory(), Set.of(EnhancingMasterEntity.class));
+        addCalculatedProperty(dm, EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp", "1 * integerProp", "Single");
+        addCalculatedProperty(dm, EnhancingMasterEntity.class, "slaveEntityProp", "2 * integerProp", "Double_");
+        addCalculatedProperty(dm, EnhancingMasterEntity.class, "", "3 * integerProp", "Triple");
+        dm.apply();
+
+        final Class<?> root = dm.getManagedType(EnhancingMasterEntity.class);
+        assertEquals(EnhancingMasterEntity.class, root.getSuperclass());
+        assertEquals(EnhancingSlaveEntity.class, Finder.findFieldByName(root, "slaveEntityProp").getType().getSuperclass());
+        assertEquals(EnhancingSlaveEntity.class, Finder.findFieldByName(root, "slaveEntityProp.slaveEntityProp").getType().getSuperclass());
+
+        calcFieldExistsInSinglePlaceAndItWORKS(root, "slaveEntityProp.slaveEntityProp.single", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "1 * integerProp", "Single", "Desc");
+        calcFieldExistsInSinglePlaceAndItWORKS(root, "slaveEntityProp.double_", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "2 * integerProp", "Double_", "Desc");
+        calcFieldExistsInSinglePlaceAndItWORKS(root, "triple", CalculatedPropertyCategory.EXPRESSION, "integerProp", Integer.class, "3 * integerProp", "Triple", "Desc");
+    }
+
+    @Test
+    public void property_added_in_the_context_of_a_collectional_property_is_declared_in_its_element_type() {
+        final IDomainTreeEnhancer dm = new DomainTreeEnhancer(factory(), Set.of(EnhancingMasterEntity.class));
+        addCalculatedProperty(dm, EnhancingMasterEntity.class, "slaveEntityCollProp", "1 * integerProp", "Single");
+        dm.apply();
+
+        final Class<?> root = dm.getManagedType(EnhancingMasterEntity.class);
+        assertEquals(Set.class, Finder.findFieldByName(root, "slaveEntityCollProp").getType());
+        calcFieldExistsInSinglePlaceAndItWORKS(root, "slaveEntityCollProp.single", CalculatedPropertyCategory.COLLECTIONAL_EXPRESSION, "integerProp", Integer.class, "1 * integerProp", "Single", "Desc");
+    }
+
+    @Test
+    public void enhancing_a_root_type_with_the_same_properties_again_reuses_its_generated_type_without_generating_any_types() {
+        final IDomainTreeEnhancer dm1 = new DomainTreeEnhancer(factory(), Set.of(EnhancingMasterEntity.class));
+        addCalculatedProperty(dm1, EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp", "1 * integerProp", "Single");
+        addCalculatedProperty(dm1, EnhancingMasterEntity.class, "", "3 * integerProp", "Triple");
+        dm1.apply();
+        assertTrue(DynamicEntityClassLoader.isGenerated(dm1.getManagedType(EnhancingMasterEntity.class)));
+
+        final IDomainTreeEnhancer dm2 = new DomainTreeEnhancer(factory(), Set.of(EnhancingMasterEntity.class));
+        addCalculatedProperty(dm2, EnhancingMasterEntity.class, "slaveEntityProp.slaveEntityProp", "1 * integerProp", "Single");
+        addCalculatedProperty(dm2, EnhancingMasterEntity.class, "", "3 * integerProp", "Triple");
+        final long generatedTypeCount = DynamicEntityClassLoader.size();
+        dm2.apply();
+
+        assertEquals(dm1.getManagedType(EnhancingMasterEntity.class), dm2.getManagedType(EnhancingMasterEntity.class));
+        assertEquals(generatedTypeCount, DynamicEntityClassLoader.size());
     }
 
     private void failAddition(final IDomainTreeEnhancer dm, final Class<?> rootType, final String contextPath, final String title) {

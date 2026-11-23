@@ -24,5 +24,11 @@ public class ThreadLocalDeviceProvider implements IDeviceProvider {
     public void setDeviceProfile(final DeviceProfile deviceProfile) {
         this.deviceProfile.set(deviceProfile);
     }
-    
+
+    @Override
+    public void clearDeviceProfile() {
+        // `remove()` (rather than `set(null)`) ensures the thread-local entry does not stay on a pooled worker thread.
+        deviceProfile.remove();
+    }
+
 }

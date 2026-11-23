@@ -7,21 +7,15 @@ import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTranspor
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.junit.*;
-import ua.com.fielden.platform.domaintree.IDomainManager;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.mcp.test_config.AbstractTgMcpServerTestCase;
 import ua.com.fielden.platform.mcp.test_config.McpTestWebApp;
 import ua.com.fielden.platform.mcp.test_config.TgMcpServerTestCaseConfiguration;
-import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.tokens.persistent.TgVehicle_CanRead_model_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgVehicle_CanRead_price_Token;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.test.TestWebApplication;
 import ua.com.fielden.platform.web_api.IWebApi;
 
@@ -29,13 +23,13 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.mcp.TgMcpServer.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertInstanceOf;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.web_api.EntityTypeEnhancer.*;
 
 public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
 
@@ -56,10 +50,7 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
     }
 
     private final McpTestWebApp webApp = getInstance(McpTestWebApp.class);
-
-    private final IDomainMetadata domainMetadata = getInstance(IDomainMetadata.class);
     private final IWebApi webApi = getInstance(IWebApi.class);
-    private final IDomainManager domainManager = getInstance(IDomainManager.class);
 
     @Before
     public void startWebApp() {
@@ -71,14 +62,11 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
         webApplication.detachWebApplication(webApp);
     }
 
+    /// MCP requests run as `mcp.user`, which is the current user of tests, so the enhanced entity types that they define are those of the current user.
+    ///
     @After
-    public void restoreDomain() {
-        final var domainTreeEnhancer = domainManager.domainTreeEnhancer(getUser());
-        domainTreeEnhancer.calculatedProperties().forEach((type, props) -> {
-            webApi.propertiesRemoved((Class<? extends AbstractEntity<?>>) type, props.stream().map(CalculatedProperty::pathAndName).collect(toSet()));
-        });
-        domainTreeEnhancer.restoreAll();
-        domainTreeEnhancer.apply();
+    public void evictUserEnhancedEntityTypes() {
+        webApi.evictUserEnhancedEntityTypes();
     }
 
     @Test
@@ -173,280 +161,141 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
         }
     }
 
-    @Test
-    public void tool_add_calculated_property_adds_a_calculated_property_that_can_be_read_with_execute_query__top_level_access() {
-        addCalculatedProperty(TgVehicle.class, "myNumber", "2*3");
-
-        final var result = executeQuery("{tgVehicle {myNumber} }");
-        final Map<String, Object> structuredContent = assertInstanceOf(Map.class, result.structuredContent());
-        assertThat(structuredContent).containsOnlyKeys("data");
-        final Map<String, Object> data = assertInstanceOf(Map.class, structuredContent.get("data"));
-        assertThat(data).containsOnlyKeys("tgVehicle");
-        final List<Object> vehicles = assertInstanceOf(List.class, data.get("tgVehicle"));
-        assertThat(vehicles).allSatisfy(vehicle -> assertEquals(Map.of("myNumber", 6), vehicle));
-    }
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Tool enhance_entity_type
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     @Test
-    public void tool_add_calculated_property_adds_a_calculated_property_that_can_be_used_in_conditions_with_execute_query__top_level_access() {
-        addCalculatedProperty(TgVehicle.class, "myNumber", "2*3");
-
-        assertThat(executeQuery("{tgVehicle(order: ASC_1, where: {cond: {myNumber: {eq: 6}}}) {key} }").structuredContent())
-                .isEqualTo(Map.of("data", Map.of("tgVehicle", List.of(Map.of("key", "CAR1"), Map.of("key", "CAR2")))));
-        assertThat(executeQuery("{tgVehicle(where: {cond: {myNumber: {ne: 6}}}) {key} }").structuredContent())
-                .isEqualTo(Map.of("data", Map.of("tgVehicle", List.of())));
-        assertThat(executeQuery("{tgVehicle_agg(where: {cond: {myNumber: {eq: 6}}}) {count} }").structuredContent())
-                .isEqualTo(Map.of("data", Map.of("tgVehicle_agg", List.of(Map.of("count", 2)))));
-        assertThat(executeQuery("{tgVehicle_agg(where: {cond: {myNumber: {ne: 6}}}) {count} }").structuredContent())
-                .isEqualTo(Map.of("data", Map.of("tgVehicle_agg", List.of(Map.of("count", 0)))));
-    }
-
-    @Test
-    public void tool_add_calculated_property_adds_a_calculated_property_that_can_be_aggregated_with_execute_query__top_level_access() {
-        addCalculatedProperty(TgVehicle.class, "myNumber", "2*3");
-
-        final var result = executeQuery("{tgVehicle_agg {groupBy {myNumber} count sum {myNumber} avg {myNumber} max {myNumber} min {myNumber}} }");
-        assertThat(result.structuredContent()).isEqualTo(Map.of("data", Map.of("tgVehicle_agg", List.of(
-                Map.of("groupBy", Map.of("myNumber", 6),
-                       "count", 2,
-                       "sum", Map.of("myNumber", 12),
-                       "avg", Map.of("myNumber", 6),
-                       "max", Map.of("myNumber", 6),
-                       "min", Map.of("myNumber", 6))))));
-    }
-
-    @Test
-    public void calculated_properties_added_via_MCP_cannot_be_read_via_nested_access__result_fields_of_data_queries() {
-        addCalculatedProperty(TgVehicle.class, "myNumber", "2*3");
-
-        assertExecutionError("{tgVehicle {replacedBy {myNumber}} }", "tgVehicle",
-                             "The property [replacedBy.myNumber] does not exist in entity type [TgVehicle$$TgEntity_");
-    }
-
-    @Test
-    public void calculated_properties_added_via_MCP_cannot_be_read_via_nested_access__conditions_of_data_queries() {
-        addCalculatedProperty(TgVehicle.class, "myNumber", "2*3");
-
-        assertExecutionError("{tgVehicle(where: {cond: {replacedBy: {cond: {myNumber: {eq: 6}}}}}) {key} }", "tgVehicle",
-                             "Error during entity retrieval.");
-    }
-
-    @Test
-    public void calculated_properties_added_via_MCP_cannot_be_read_via_nested_access__result_fields_of_aggregation_queries() {
-        addCalculatedProperty(TgVehicle.class, "myNumber", "2*3");
-
-        List.of("groupBy", "sum", "avg", "max", "min").forEach(field -> assertExecutionError(
-                "{tgVehicle_agg {%s {replacedBy {myNumber}}} }".formatted(field), "tgVehicle_agg",
-                "Error during entity retrieval."));
-    }
-
-    @Test
-    public void calculated_properties_added_via_MCP_cannot_be_read_via_nested_access__conditions_of_aggregation_queries() {
-        addCalculatedProperty(TgVehicle.class, "myNumber", "2*3");
-
-        assertExecutionError("{tgVehicle_agg(where: {cond: {replacedBy: {cond: {myNumber: {eq: 6}}}}}) {count} }", "tgVehicle_agg",
-                             "Error during entity retrieval.");
-    }
-
-    @Test
-    public void tool_add_calculated_property_returns_an_error_if_the_property_being_added_has_the_same_name_as_the_one_added_previously() {
-        addCalculatedProperty(TgVehicle.class, "myNumber", "2*3");
-
-        try (final var client = client()) {
-            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_ADD_CALCULATED_PROPERTY)
-                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
-                                                                         "name", "myNumber",
-                                                                         "expression", "5*4"))
-                                                       .build());
-            assertTrue(result.isError());
-            assertThat(result.content()).hasSize(1);
-            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("""
-                Error adding calculated property [TgVehicle.myNumber] with expression:
-                5*4
-
-                Calculated property [TgVehicle.myNumber] already exists.""");
-        }
-    }
-
-    @Test
-    public void tool_add_calculated_property_returns_an_error_if_the_property_being_added_has_the_same_name_as_an_existing_one() {
-        assertThat(domainMetadata.forPropertyOpt(TgVehicle.class, "model")).isPresent();
-        try (final var client = client()) {
-            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_ADD_CALCULATED_PROPERTY)
-                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
-                                                                         "name", "model",
-                                                                         "expression", "2*3"))
-                                                       .build());
-            assertTrue(result.isError());
-            assertThat(result.content()).hasSize(1);
-            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("""
-                Error adding calculated property [TgVehicle.model] with expression:
-                2*3
-                
-                Property [TgVehicle.model] already exists in the original domain. Please try another name.""");
-        }
-    }
-
-    @Test
-    public void tool_remove_calculated_property_removes_a_previously_added_calculated_property_which_then_cannot_be_read_with_execute_query() {
-        addCalculatedProperty(TgVehicle.class, "myNumber", "2*3");
-
-        try (final var client = client()) {
-            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_REMOVE_CALCULATED_PROPERTY)
-                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
-                                                                         "name", "myNumber"))
-                                                       .build());
-            assertFalse(result.isError());
-        }
-
-        final var result = executeQuery("{tgVehicle {myNumber} }");
+    public void tool_enhance_entity_type_creates_an_entity_type_that_can_be_queried_with_execute_query() {
+        final var result = enhanceEntityType(Map.of("name", "MyVehicle",
+                                                    "baseType", "TgVehicle",
+                                                    "addProperties", List.of(Map.of("name", "myNumber", "expression", "2 * 3"))));
         assertFalse(result.isError());
-        final Map<String, Object> structuredContent = assertInstanceOf(Map.class, result.structuredContent());
-        final List<Map<String, Object>> errors = assertInstanceOf(List.class, structuredContent.get("errors"));
-        assertThat(errors).anySatisfy(err -> assertThat(err).extractingByKey("message", STRING).contains("Field 'myNumber' in type 'TgVehicle' is undefined"));
+        assertThat(text(result)).isEqualTo(
+                "Created entity type [MyVehicle], which extends [TgVehicle] with properties [myNumber]. Query it with root fields [myVehicle] and [myVehicle_agg].");
+
+        assertThat(executeQuery("{myVehicle {key(order: ASC_1) myNumber}}").structuredContent())
+                .isEqualTo(Map.of("data", Map.of("myVehicle", List.of(Map.of("key", "CAR1", "myNumber", 6), Map.of("key", "CAR2", "myNumber", 6)))));
+        assertThat(executeQuery("{myVehicle_agg(where: {cond: {myNumber: {eq: 6}}}) {count}}").structuredContent())
+                .isEqualTo(Map.of("data", Map.of("myVehicle_agg", List.of(Map.of("count", 2)))));
     }
 
     @Test
-    public void tool_remove_calculated_property_returns_an_error_if_the_property_being_removed_does_not_exist() {
-        assertThat(domainMetadata.forPropertyOpt(TgVehicle.class, "myNumber")).isEmpty();
-        try (final var client = client()) {
-            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_REMOVE_CALCULATED_PROPERTY)
-                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
-                                                                         "name", "myNumber"))
-                                                       .build());
+    public void tool_enhance_entity_type_changes_an_existing_entity_type() {
+        enhanceEntityType(Map.of("name", "MyVehicle",
+                                 "baseType", "TgVehicle",
+                                 "addProperties", List.of(Map.of("name", "myNumber", "expression", "2 * 3"))));
+        final var result = enhanceEntityType(Map.of("name", "MyVehicle",
+                                                    "addProperties", List.of(Map.of("name", "otherNumber", "expression", "myNumber + 1")),
+                                                    "removeProperties", List.of("noSuchProp")));
+        assertFalse(result.isError());
+        assertThat(text(result)).isEqualTo("""
+                Changed entity type [MyVehicle], which extends [TgVehicle] with properties [myNumber, otherNumber]. Query it with root fields [myVehicle] and [myVehicle_agg].
+                Warning: Entity type [MyVehicle] has no properties [noSuchProp], so they were not removed.""");
+
+        assertThat(executeQuery("{myVehicle {key(order: ASC_1) myNumber otherNumber}}").structuredContent())
+                .isEqualTo(Map.of("data", Map.of("myVehicle", List.of(Map.of("key", "CAR1", "myNumber", 6, "otherNumber", 7),
+                                                                       Map.of("key", "CAR2", "myNumber", 6, "otherNumber", 7)))));
+    }
+
+    @Test
+    public void tool_enhance_entity_type_returns_an_error_if_the_request_is_rejected() {
+        final var result = enhanceEntityType(Map.of("name", "MyVehicle",
+                                                    "addProperties", List.of(Map.of("name", "myNumber", "expression", "2 * 3"))));
+        assertTrue(result.isError());
+        assertThat(text(result)).isEqualTo(errEnhancementFailed("MyVehicle", "myNumber", "", ERR_BASE_TYPE_REQUIRED.formatted("MyVehicle")));
+        assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
+    }
+
+    @Test
+    public void tool_enhance_entity_type_returns_an_error_if_an_expression_is_invalid() {
+        final var result = enhanceEntityType(Map.of("name", "MyVehicle",
+                                                    "baseType", "TgVehicle",
+                                                    "addProperties", List.of(Map.of("name", "myNumber", "expression", "2 * noSuchProp"))));
+        assertTrue(result.isError());
+        assertThat(text(result)).isEqualTo(errEnhancementFailed("MyVehicle", "myNumber", "", ERR_PROPERTY_CANNOT_BE_ADDED.formatted("myNumber")));
+        assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
+    }
+
+    @Test
+    public void tool_enhance_entity_type_returns_an_error_if_an_expression_refers_to_properties_that_cannot_be_read() {
+        final Map<String, Object> arguments = Map.of("name", "MyVehicle",
+                                                     "baseType", "TgVehicle",
+                                                     "addProperties", List.of(Map.of("name", "myPrice", "expression", "2 * price")));
+        runWithoutToken(TgVehicle_CanRead_price_Token.class, () -> {
+            final var result = enhanceEntityType(arguments);
             assertTrue(result.isError());
-            assertThat(result.content()).hasSize(1);
-            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
-                    "Error removing calculated property [TgVehicle.myNumber]. Calculated property [TgVehicle.myNumber] does not exist.");
-        }
+            assertThat(text(result)).isEqualTo(errEnhancementFailed("MyVehicle", "myPrice", "", ERR_UNAUTHORISED_ACCESS.formatted("myPrice", "price")));
+            assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
+        });
+        // A positive control: the same request succeeds when the token is held.
+        assertFalse(enhanceEntityType(arguments).isError());
     }
 
     @Test
-    public void tool_remove_calculated_property_returns_an_error_if_the_property_being_removed_is_an_original_persistent_property() {
-        assertThat(domainMetadata.forPropertyOpt(TgVehicle.class, "model")).isPresent();
-        try (final var client = client()) {
-            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_REMOVE_CALCULATED_PROPERTY)
-                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
-                                                                         "name", "model"))
-                                                       .build());
-            assertTrue(result.isError());
-            assertThat(result.content()).hasSize(1);
-            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
-                    "Error removing calculated property [TgVehicle.model]. Property [TgVehicle.model] is part of the original domain and cannot be modified.");
-        }
-    }
-
-    @Test
-    public void tool_remove_calculated_property_returns_an_error_if_the_property_being_removed_is_an_original_calculated_property() {
-        assertThat(domainMetadata.forPropertyOpt(TgVehicle.class, "lastFuelUsage")).isPresent();
-        try (final var client = client()) {
-            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_REMOVE_CALCULATED_PROPERTY)
-                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
-                                                                         "name", "lastFuelUsage"))
-                                                       .build());
-            assertTrue(result.isError());
-            assertThat(result.content()).hasSize(1);
-            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
-                    "Error removing calculated property [TgVehicle.lastFuelUsage]. Property [TgVehicle.lastFuelUsage] is part of the original domain and cannot be modified.");
-        }
-    }
-
-    @Test
-    public void tool_add_calculated_property_returns_an_error_if_the_specified_type_does_not_exist() {
-        try (final var client = client()) {
-            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_ADD_CALCULATED_PROPERTY)
-                                                       .arguments(Map.of("type", "Nothing",
-                                                                         "name", "property",
-                                                                         "expression", "2*3"))
-                                                       .build());
-            assertTrue(result.isError());
-            assertThat(result.content()).hasSize(1);
-            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
-                    "Invalid argument [type]. No such type: Nothing.");
-        }
-    }
-
-    @Test
-    public void tool_remove_calculated_property_returns_an_error_if_the_specified_type_does_not_exist() {
-        try (final var client = client()) {
-            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_REMOVE_CALCULATED_PROPERTY)
-                                                       .arguments(Map.of("type", "Nothing",
-                                                                         "name", "property"))
-                                                       .build());
-            assertTrue(result.isError());
-            assertThat(result.content()).hasSize(1);
-            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains(
-                    "Invalid argument [type]. No such type: Nothing.");
-        }
-    }
-
-    @Test
-    public void tool_add_calculated_property_returns_an_error_if_the_specified_expression_is_invalid() {
-        try (final var client = client()) {
-            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_ADD_CALCULATED_PROPERTY)
-                                                       .arguments(Map.of("type", TgVehicle.class.getSimpleName(),
-                                                                         "name", "myNumber",
-                                                                         "expression", "2*a"))
-                                                       .build());
-            assertTrue(result.isError());
-            assertThat(result.content()).hasSize(1);
-            assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("""
-               Error adding calculated property [TgVehicle.myNumber] with expression:
-               2*a
-
-               Invalid expression for calculated property [TgVehicle.myNumber]: 2*a""");
-        }
-    }
-
-    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    // : Authorisation of property access in expressions of calculated properties
-    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    @Test
-    public void tool_add_calculated_property_returns_an_error_if_the_expression_performs_unathorised_access() {
-        interface Test {
-            void run(final Class<?> type,
-                     final String propName,
-                     final String expression,
-                     final Iterable<? extends Class<? extends ISecurityToken>> restrictedTokens,
-                     final List<? extends CharSequence> unathorisedProps);
-        }
-        final Test test = (type, propName, expression, restrictedTokens, unathorisedProps) -> {
-            runWithoutTokens(restrictedTokens, () -> {
-                try (final var client = client()) {
-                    final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_ADD_CALCULATED_PROPERTY)
-                                                               .arguments(Map.of("type", type.getSimpleName(),
-                                                                                 "name", propName,
-                                                                                 "expression", expression))
-                                                               .build());
-                    assertTrue(result.isError());
-                    assertThat(result.content()).hasSize(1);
-                    assertThat(assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text()).contains("""
-               Error adding calculated property [%s.%s] with expression:
-               %s
-               Reason: Unauthorised access to the following properties: [%s]."""
-               .formatted(type.getSimpleName(), propName, expression, CollectionUtil.toString(unathorisedProps, ", ")));
-                }
+    public void tool_enhance_entity_type_returns_an_error_if_arguments_are_malformed() {
+        final var invalidAddProperties = "Argument [addProperties] must be an array of objects, each with string properties [name] and [expression].";
+        final var invalidRemoveProperties = "Argument [removeProperties] must be an array of strings.";
+        final List<T2<Map<String, Object>, String>> cases = List.of(
+                t2(Map.of("baseType", "TgVehicle"), "Argument [name] is required and must be a string."),
+                t2(Map.of("name", 1), "Argument [name] is required and must be a string."),
+                t2(Map.of("name", "MyVehicle", "baseType", 1), "Argument [baseType] must be a string."),
+                t2(Map.of("name", "MyVehicle", "addProperties", "myNumber"), invalidAddProperties),
+                t2(Map.of("name", "MyVehicle", "addProperties", List.of("myNumber")), invalidAddProperties),
+                t2(Map.of("name", "MyVehicle", "addProperties", List.of(Map.of("name", "myNumber"))), invalidAddProperties),
+                t2(Map.of("name", "MyVehicle", "addProperties", List.of(Map.of("name", "myNumber", "expression", 6))), invalidAddProperties),
+                t2(Map.of("name", "MyVehicle", "removeProperties", "myNumber"), invalidRemoveProperties),
+                t2(Map.of("name", "MyVehicle", "removeProperties", List.of(1)), invalidRemoveProperties));
+        for (final var testCase : cases) {
+            testCase.run((args, error) -> {
+                final var result = enhanceEntityType(args);
+                assertTrue(result.isError());
+                assertThat(text(result)).as("Arguments %s", args).isEqualTo(error);
             });
+        }
+        assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
+    }
 
-            assertThat(domainManager.domainTreeEnhancer(getUser()).findCalculatedProperty(type, propName)).isEmpty();
-            assertGraphQlTypeHasNoField(webApi, type.getSimpleName(), propName);
-        };
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Tool remove_enhanced_entity_type
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-        test.run(TgVehicle.class, "myProp", "2 * price", List.of(TgVehicle_CanRead_price_Token.class), List.of("price"));
-        test.run(TgVehicle.class, "myProp", "2 * replacedBy.price",
-                 List.of(TgVehicle_CanRead_price_Token.class),
-                 List.of("replacedBy.price"));
-        test.run(TgVehicle.class, "myProp", "2 * replacedBy.price + price",
-                 List.of(TgVehicle_CanRead_price_Token.class),
-                 List.of("price", "replacedBy.price"));
-        test.run(TgVehicle.class, "myProp", "model", List.of(TgVehicle_CanRead_model_Token.class), List.of("model"));
-        test.run(TgVehicle.class, "myProp", "model.make", List.of(TgVehicle_CanRead_model_Token.class), List.of("model"));
-        test.run(TgVehicle.class, "myProp", "replacedBy.model.make",
-                 List.of(TgVehicle_CanRead_model_Token.class),
-                 List.of("replacedBy.model"));
-        test.run(TgVehicle.class, "myProp", "model.makeModelsCount + price",
-                 List.of(TgVehicle_CanRead_model_Token.class, TgVehicle_CanRead_price_Token.class),
-                 List.of("model", "price"));
+    @Test
+    public void tool_remove_enhanced_entity_type_removes_an_entity_type_so_that_execute_query_no_longer_reaches_it() {
+        enhanceEntityType(Map.of("name", "MyVehicle",
+                                 "baseType", "TgVehicle",
+                                 "addProperties", List.of(Map.of("name", "myNumber", "expression", "2 * 3"))));
+        final var query = "{myVehicle {key(order: ASC_1) myNumber}}";
+        assertThat(executeQuery(query).structuredContent())
+                .as("MyVehicle can be queried.")
+                .isEqualTo(Map.of("data", Map.of("myVehicle", List.of(Map.of("key", "CAR1", "myNumber", 6), Map.of("key", "CAR2", "myNumber", 6)))));
+
+        final var result = removeEnhancedEntityType(Map.of("name", "MyVehicle"));
+        assertFalse(result.isError());
+        assertThat(text(result)).isEqualTo("The specified type was removed successfully.");
+
+        assertThat(webApi.findEnhancedEntityType("MyVehicle")).isEmpty();
+        final Map<String, Object> structuredContent = assertInstanceOf(Map.class, executeQuery(query).structuredContent());
+        assertThat(assertInstanceOf(List.class, structuredContent.get("errors"))).isNotEmpty();
+        assertThat(structuredContent).doesNotContainKey("data");
+    }
+
+    @Test
+    public void tool_remove_enhanced_entity_type_does_nothing_if_the_entity_type_does_not_exist() {
+        assertThat(webApi.findEnhancedEntityType("MyVehicle")).as("MyVehicle does not exist.").isEmpty();
+
+        final var result = removeEnhancedEntityType(Map.of("name", "MyVehicle"));
+        assertFalse(result.isError());
+        assertThat(text(result)).isEqualTo("The specified type could not be removed.");
+    }
+
+    @Test
+    public void tool_remove_enhanced_entity_type_returns_an_error_if_arguments_are_malformed() {
+        for (final Map<String, Object> args : List.<Map<String, Object>>of(Map.of(), Map.of("name", 1))) {
+            final var result = removeEnhancedEntityType(args);
+            assertTrue(result.isError());
+            assertThat(text(result)).as("Arguments %s", args).isEqualTo("Argument [name] is required and must be a string.");
+        }
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -519,53 +368,23 @@ public class TgMcpServerTest extends AbstractTgMcpServerTestCase {
         return executeQuery(query, Map.of());
     }
 
-    private void addCalculatedProperty(final Class<? extends AbstractEntity<?>> type, final String name, final String expression) {
+    private McpSchema.CallToolResult enhanceEntityType(final Map<String, Object> arguments) {
         try (final var client = client()) {
-            final var result = client.callTool(McpSchema.CallToolRequest.builder(TOOL_ADD_CALCULATED_PROPERTY)
-                                                       .arguments(Map.of("type", type.getSimpleName(),
-                                                                         "name", name,
-                                                                         "expression", expression))
-                                                       .build());
-            assertFalse(result.isError());
+            return client.callTool(McpSchema.CallToolRequest.builder(TOOL_ENHANCE_ENTITY_TYPE).arguments(arguments).build());
         }
     }
 
-    /// Asserts that `query` results in a single GraphQL error, raised while fetching data for root field `rootField`, with a message that contains `message`.
+    private McpSchema.CallToolResult removeEnhancedEntityType(final Map<String, Object> arguments) {
+        try (final var client = client()) {
+            return client.callTool(McpSchema.CallToolRequest.builder(TOOL_REMOVE_ENHANCED_ENTITY_TYPE).arguments(arguments).build());
+        }
+    }
+
+    /// The text of a tool result that consists of a single text content.
     ///
-    private void assertExecutionError(final String query, final String rootField, final String message) {
-        final var result = executeQuery(query);
-        assertFalse(result.isError()); // Not an MCP tool error, but a GraphQL error.
-        final Map<String, Object> structuredContent = assertInstanceOf(Map.class, result.structuredContent());
-        assertThat(structuredContent).containsKey("errors");
-        final List<Map<String, Object>> errors = assertInstanceOf(List.class, structuredContent.get("errors"));
-        assertThat(errors).hasSize(1);
-        assertThat(errors.getFirst()).extractingByKey("message", STRING).contains(
-                "Exception while fetching data (/%s) : %s".formatted(rootField, message));
-    }
-
-    private void assertGraphQlTypeHasField(final IWebApi webApi, final CharSequence typeName, final CharSequence fieldName) {
-        assertThat(graphQlTypeFields(webApi, typeName)).contains(fieldName.toString());
-    }
-
-    private void assertGraphQlTypeHasNoField(final IWebApi webApi, final CharSequence typeName, final CharSequence fieldName) {
-        assertThat(graphQlTypeFields(webApi, typeName)).doesNotContain(fieldName.toString());
-    }
-
-    private List<String> graphQlTypeFields(final IWebApi webApi, final CharSequence typeName) {
-        final var query = """
-                          query {
-                              __type(name: "%s") { fields { name } }
-                          }
-                          """.formatted(typeName);
-        final var result = webApi.execute(Map.of("query", query));
-        assertThat(result).doesNotContainKey("error");
-        assertThat(result).containsKey("data");
-        final Map<String, Object> data = assertInstanceOf(Map.class, result.get("data"));
-        assertThat(data).containsKey("__type");
-        final Map<String, Object> __type = assertInstanceOf(Map.class, data.get("__type"));
-        assertThat(__type).containsKey("fields");
-        final List<Map<String, Object>> fields = assertInstanceOf(List.class, __type.get("fields"));
-        return fields.stream().map(fld -> (String) fld.get("name")).toList();
+    private static String text(final McpSchema.CallToolResult result) {
+        assertThat(result.content()).hasSize(1);
+        return assertInstanceOf(McpSchema.TextContent.class, result.content().getFirst()).text();
     }
 
     private McpSyncClient client() {

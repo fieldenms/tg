@@ -71,6 +71,13 @@ public class RichTextHtmlSanitisationTest {
     }
 
     @Test
+    public void toast_ui_attribute_data_raw_html_is_prohibited() {
+        assertSanitizationFailure("<a href='https://example.org' data-raw-html='script'>alert(1)</a>");
+        assertSanitizationFailure("<strong data-raw-html='script'>alert(1)</strong>");
+        assertSanitizationFailure("<b data-raw-html='b'>bold</b>");
+    }
+
+    @Test
     public void attribute_class_is_allowed_globally() {
         assertSanitizationSuccess("<p class='abc'> text </p>");
         assertSanitizationSuccess("<img class='abc' />");

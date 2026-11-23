@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -218,7 +219,7 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 
         assertNull("The default LifecycleProperty should be Null.", dtm.getLifecycleProperty());
         // assertFalse("At the first time, the included properties should not contain any category.", lastN(dtm, 5).contains("available"));
-        assertEquals("Only date properties are included.", List.of("__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), lastN(dtm, 5));
+        assertThat(lastN(dtm, 5)).as("Only date properties are included.").containsExactlyInAnyOrder("__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY");
         assertEquals("At the first time, the checked properties should be empty.", Arrays.asList(), dtm.getSecondTick().checkedProperties(MasterEntity.class));
         assertEquals("At the first time, the used properties should be empty as well as 'checked' properties.", Arrays.asList(), dtm.getSecondTick().usedProperties(MasterEntity.class));
         assertEquals("At the first time, no categories exist in the domain (no lifecycle property has been selected).", Arrays.asList(), dtm.getSecondTick().allCategories(MasterEntity.class));
@@ -228,7 +229,7 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
         dtm.getSecondTick().check(MasterEntity.class, "simpleEntityProp", true);
         assertEquals("The LifecycleProperty should be 'simpleEntityProp' from 'MasterEntity' class.", new Pair<Class<?>, String>(MasterEntity.class, "simpleEntityProp"), dtm.getLifecycleProperty());
         // assertTrue("The included properties should contain categories.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("available"));
-        assertEquals("Date properties are included. The included properties should contain categories.", Arrays.asList("__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY", "available", "broken", "unoperational"), lastN(dtm, 8));
+        assertThat(lastN(dtm, 8)).as("Date properties are included. The included properties should contain categories.").containsExactlyInAnyOrder("__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY", "available", "broken", "unoperational");
         assertEquals("The checked properties consist of ONE lifecycle property and several 'all category' properties.", Arrays.asList("simpleEntityProp", "available", "broken", "unoperational"), dtm.getSecondTick().checkedProperties(MasterEntity.class));
         assertEquals("The used properties consist of several 'main category' properties.", Arrays.asList("available", "broken"), dtm.getSecondTick().usedProperties(MasterEntity.class));
         assertEquals("'simpleEntityProp' lifecycle property has been selected -- its categories should be returned.", Arrays.asList(MasterEntitySimpleEntityPropCategory.AVAILABLE, MasterEntitySimpleEntityPropCategory.BROKEN, MasterEntitySimpleEntityPropCategory.UNOPERATIONAL), dtm.getSecondTick().allCategories(MasterEntity.class));
@@ -238,7 +239,7 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
         dtm.getSecondTick().check(MasterEntity.class, "simpleEntityProp", false);
         assertNull("LifecycleProperty has become Null.", dtm.getLifecycleProperty());
         // assertFalse("The included properties should not contain any category.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("available"));
-        assertEquals("Only date properties are included.", Arrays.asList("__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), lastN(dtm, 5));
+        assertThat(lastN(dtm, 5)).as("Only date properties are included.").containsExactlyInAnyOrder("__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY");
         assertEquals("The 'checked' properties became empty.", Arrays.asList(), dtm.getSecondTick().checkedProperties(MasterEntity.class));
         assertEquals("The 'used' properties became empty.", Arrays.asList(), dtm.getSecondTick().usedProperties(MasterEntity.class));
         assertEquals("No categories exist in the domain (no lifecycle property has been selected).", Arrays.asList(), dtm.getSecondTick().allCategories(MasterEntity.class));
@@ -250,7 +251,7 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 
         assertEquals("The LifecycleProperty should be 'dateProp' from 'MasterEntity' class.", new Pair<Class<?>, String>(MasterEntity.class, "dateProp"), dtm.getLifecycleProperty());
         // assertTrue("The included properties should contain categories.", dtm.getRepresentation().includedProperties(MasterEntity.class).contains("future"));
-        assertEquals("Date properties are included. The included properties should contain categories.", Arrays.asList("__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY", "future", "now", "past"), lastN(dtm, 8));
+        assertThat(lastN(dtm, 8)).as("Date properties are included. The included properties should contain categories.").containsExactlyInAnyOrder("__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY", "future", "now", "past");
         assertEquals("The checked properties consist of ONE lifecycle property and several 'all category' properties.", Arrays.asList("dateProp", "future", "now", "past"), dtm.getSecondTick().checkedProperties(MasterEntity.class));
         assertEquals("The used properties consist of several 'main category' properties.", Arrays.asList("future", "past"), dtm.getSecondTick().usedProperties(MasterEntity.class));
         assertEquals("'dateProp' lifecycle property has been selected -- its categories should be returned.", Arrays.asList(MasterEntityDatePropCategory.FUTURE, MasterEntityDatePropCategory.NOW, MasterEntityDatePropCategory.PAST), dtm.getSecondTick().allCategories(MasterEntity.class));
@@ -261,7 +262,7 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 
         assertNull("The default LifecycleProperty should be Null.", dtm2.getLifecycleProperty());
         // assertFalse("At the first time, the included properties should not contain any category.", lastN(dtm, 5).contains("available"));
-        assertEquals("Date properties are included. The included properties should contain categories from previous analysis!.", Arrays.asList("__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY", "future", "now", "past"), lastN(dtm2, 8));
+        assertThat(lastN(dtm2, 8)).as("Date properties are included. The included properties should contain categories from previous analysis!.").containsExactlyInAnyOrder("__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY", "future", "now", "past");
     }
 
     //////////////////////////// TODO ////////////////////////////

@@ -197,6 +197,12 @@ Cross-links from a quick-reference should prefer another quick-reference; from a
 | `auditing/` | @Audited basics, generated types, test config | `reference.md` — full type hierarchy, versioning, runtime plumbing, GenAudit, Web UI |
 | `conventions/` | Code structure conventions: closed sets of names as enums | — |
 
+## Specifications
+
+`platform-doc/spec/` holds high-level specifications of TG's internals, for TG developers.
+Each feature has a directory of its own, grouped by area, e.g., `mcp/custom-calculated-properties`.
+A specification is the reference for the behaviour that it describes: read it before changing or reviewing that behaviour, and change it first when the behaviour changes.
+
 ## Development Guidelines
 
 ### Keep Documentation up-to-date

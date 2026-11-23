@@ -28,7 +28,7 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
     /// The placeholder takes the arguments of `_entityType`, if any.
     ///
     private static final String ALL_FIELDS_TEMPLATE =
-            "{_entityType%s{name rootField title kind keyType keyMembers keySeparator hasDesc " +
+            "{_entityType%s{name rootField baseType title kind keyType keyMembers keySeparator hasDesc " +
             "properties{name type typeKind collectional arguments required filterable}}}";
 
     private static final String ALL_FIELDS = ALL_FIELDS_TEMPLATE.formatted("");
@@ -43,6 +43,11 @@ public class WebApiEntityTypeIntrospectionTest extends AbstractDaoTestCase {
         assertEquals("PERSISTENT", entityType.get("kind"));
         assertEquals("SIMPLE", entityType.get("keyType"));
         assertEquals(List.of("key"), entityType.get("keyMembers"));
+    }
+
+    @Test
+    public void a_domain_type_has_no_base_type() {
+        assertThat(queryAllTypes()).isNotEmpty().allSatisfy(entityType -> assertThat(entityType).containsEntry("baseType", null));
     }
 
     @Test

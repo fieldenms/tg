@@ -850,7 +850,13 @@ class ViewDesc {
             atEnd = offset > domIndex(this.contentDOM);
         }
         else if (this.contentDOM && this.contentDOM != this.dom && this.dom.contains(this.contentDOM)) {
-            atEnd = !!(dom.compareDocumentPosition(this.contentDOM) & 4);
+            let rel = dom.compareDocumentPosition(this.contentDOM);
+            if (rel & 16) { // this.contentDOM is inside dom
+                atEnd = offset > Array.from(dom.childNodes).findIndex(n => n.contains(this.contentDOM));
+            }
+            else { // Check if after or before
+                atEnd = !(rel & 4);
+            }
         }
         else if (this.dom.firstChild) {
             if (offset == 0)
@@ -1173,8 +1179,10 @@ class WidgetViewDesc extends ViewDesc {
             });
         if (!widget.type.spec.raw) {
             let elt = isElt(dom) ? dom : document.createElement("span");
-            if (elt != dom)
+            if (elt != dom) {
                 elt.appendChild(dom);
+                dom = elt;
+            }
             if (!elt.hasAttribute("contenteditable"))
                 elt.contentEditable = "false";
             elt.classList.add("ProseMirror-widget");
@@ -2483,7 +2491,7 @@ function selectHorizontally(view, dir, mods) {
                 return apply(view, next);
             return false;
         }
-        else if (!(mac && mods.indexOf("m") > -1)) {
+        else if (!mac || mods.indexOf("m") < 0) {
             let $head = sel.$head, node = $head.textOffset ? null : dir < 0 ? $head.nodeBefore : $head.nodeAfter, desc;
             if (!node || node.isText)
                 return false;
@@ -2672,17 +2680,14 @@ function setSelFocus(view, node, offset) {
             offset = before.nodeValue.length;
         }
     }
-    let sel = view.domSelection();
+    let sel = view.domSelection(), range = view.domSelectionRange();
     if (!sel)
         return;
-    if (selectionCollapsed(sel)) {
-        let range = document.createRange();
-        range.setEnd(node, offset);
-        range.setStart(node, offset);
-        sel.removeAllRanges();
-        sel.addRange(range);
+    if (selectionCollapsed(range)) {
+        sel.collapse(node, offset);
     }
     else if (sel.extend) {
+        sel.collapse(range.anchorNode, range.anchorOffset);
         sel.extend(node, offset);
     }
     view.domObserver.setCurSelection();
@@ -2710,7 +2715,13 @@ function findDirection(view, pos) {
                 return after.left > coords.left ? "ltr" : "rtl";
         }
     }
-    let computed = getComputedStyle(view.dom).direction;
+    let block = view.dom;
+    for (let d = $pos.depth; d > 0; d--)
+        if ($pos.node(d).isBlock) {
+            block = view.nodeDOM($pos.before(d)) || block;
+            break;
+        }
+    let computed = getComputedStyle(block).direction;
     return computed == "rtl" ? "rtl" : "ltr";
 }
 // Check whether vertical selection motion would involve node
@@ -3983,6 +3994,23 @@ function compareObjs(a, b) {
             return false;
     return true;
 }
+class FragmentCursor {
+    constructor(frag) {
+        this.frag = frag;
+        this.index = 0;
+        this.off = 0;
+    }
+    nodeAt(off) {
+        while (this.off <= off && this.index < this.frag.childCount) {
+            let next = this.frag.child(this.index);
+            if (this.off == off)
+                return next;
+            this.off += next.nodeSize;
+            this.index++;
+        }
+        return null;
+    }
+}
 class WidgetType {
     constructor(toDOM, spec) {
         this.toDOM = toDOM;
@@ -4038,9 +4066,9 @@ class NodeType {
             return null;
         return new Decoration(from.pos - offset, to.pos - offset, this);
     }
-    valid(node, span) {
-        let { index, offset } = node.content.findIndex(span.from), child;
-        return offset == span.from && !(child = node.child(index)).isText && offset + child.nodeSize == span.to;
+    valid(node, span, cursor) {
+        let found = cursor.nodeAt(span.from);
+        return !!found && !found.isText && span.from + found.nodeSize == span.to;
     }
     eq(other) {
         return this == other ||
@@ -4197,12 +4225,15 @@ class DecorationSet {
     */
     mapInner(mapping, node, offset, oldOffset, options) {
         let newLocal;
-        for (let i = 0; i < this.local.length; i++) {
-            let mapped = this.local[i].map(mapping, offset, oldOffset);
-            if (mapped && mapped.type.valid(node, mapped))
-                (newLocal || (newLocal = [])).push(mapped);
-            else if (options.onRemove)
-                options.onRemove(this.local[i].spec);
+        if (this.local.length) {
+            let cur = new FragmentCursor(node.content);
+            for (let i = 0; i < this.local.length; i++) {
+                let mapped = this.local[i].map(mapping, offset, oldOffset);
+                if (mapped && mapped.type.valid(node, mapped, cur))
+                    (newLocal || (newLocal = [])).push(mapped);
+                else if (options.onRemove)
+                    options.onRemove(this.local[i].spec);
+            }
         }
         if (this.children.length)
             return mapChildren(this.children, newLocal || [], mapping, node, offset, oldOffset, options);
@@ -4239,9 +4270,12 @@ class DecorationSet {
             childIndex += 3;
         });
         let local = moveSpans(childIndex ? withoutNulls(decorations) : decorations, -offset);
-        for (let i = 0; i < local.length; i++)
-            if (!local[i].type.valid(doc, local[i]))
-                local.splice(i--, 1);
+        if (local.length) {
+            let cur = new FragmentCursor(doc.content);
+            for (let i = 0; i < local.length; i++)
+                if (!local[i].type.valid(doc, local[i], cur))
+                    local.splice(i--, 1);
+        }
         return new DecorationSet(local.length ? this.local.concat(local).sort(byPos) : this.local, children || this.children);
     }
     /**
@@ -4584,12 +4618,15 @@ function buildTree(spans, node, offset, options) {
         }
     });
     let locals = moveSpans(hasNulls ? withoutNulls(spans) : spans, -offset).sort(byPos);
-    for (let i = 0; i < locals.length; i++)
-        if (!locals[i].type.valid(node, locals[i])) {
-            if (options.onRemove)
-                options.onRemove(locals[i].spec);
-            locals.splice(i--, 1);
-        }
+    if (locals.length) {
+        let cur = new FragmentCursor(node.content);
+        for (let i = 0; i < locals.length; i++)
+            if (!locals[i].type.valid(node, locals[i], cur)) {
+                if (options.onRemove)
+                    options.onRemove(locals[i].spec);
+                locals.splice(i--, 1);
+            }
+    }
     return locals.length || children.length ? new DecorationSet(locals, children) : empty;
 }
 // Used to sort decorations so that ones with a low start position
@@ -4822,8 +4859,11 @@ class DOMObserver {
         let mutations = this.pendingRecords();
         if (mutations.length)
             this.queue = [];
-        let sel = view.domSelectionRange();
-        let newSel = !this.suppressingSelectionUpdates && !this.currentSelection.eq(sel) && hasFocusAndSelection(view) && !this.ignoreSelectionChange(sel);
+        let selRange, newSel = false;
+        if (!this.suppressingSelectionUpdates && hasFocusAndSelection(view)) {
+            selRange = view.domSelectionRange();
+            newSel = !this.currentSelection.eq(selRange) && !this.ignoreSelectionChange(selRange);
+        }
         let from = -1, to = -1, typeOver = false, added = [];
         if (view.editable) {
             for (let i = 0; i < mutations.length; i++) {
@@ -4878,11 +4918,11 @@ class DOMObserver {
         // the state
         if (from < 0 && newSel && view.input.lastFocus > Date.now() - 200 &&
             Math.max(view.input.lastTouch, view.input.lastClick.time) < Date.now() - 300 &&
-            selectionCollapsed(sel) && (readSel = selectionFromDOM(view)) &&
+            selectionCollapsed(selRange) && (readSel = selectionFromDOM(view)) &&
             readSel.eq(Selection.near(view.state.doc.resolve(0), 1))) {
             view.input.lastFocus = 0;
             selectionToDOM(view);
-            this.currentSelection.set(sel);
+            this.currentSelection.set(selRange);
             view.scrollToSelection();
         }
         else if (from > -1 || newSel) {
@@ -4897,9 +4937,10 @@ class DOMObserver {
             this.handleDOMChange(from, to, typeOver, added);
             if (view.docView && view.docView.dirty)
                 view.updateState(view.state);
-            else if (!this.currentSelection.eq(sel))
+            else if (selRange && !this.currentSelection.eq(selRange))
                 selectionToDOM(view);
-            this.currentSelection.set(sel);
+            if (selRange)
+                this.currentSelection.set(selRange);
         }
     }
     registerMutation(mut, added) {
@@ -5231,7 +5272,8 @@ function readDOMChange(view, from, to, typeOver, addedNodes) {
     }
     // Same for backspace
     if (view.state.selection.anchor > change.start &&
-        looksLikeBackspace(doc, change.start, change.endA, $from, $to) &&
+        (inlineChange ? change.endA > change.start && change.endB == change.start
+            : looksLikeBlockJoin(doc, change.start, change.endA, $from, $to)) &&
         view.someProp("handleKeyDown", f => f(view, keyEvent(8, "Backspace")))) {
         if (android && chrome)
             view.domObserver.suppressSelectionUpdates(); // #820
@@ -5352,7 +5394,7 @@ function isMarkChange(cur, prev) {
     if (Fragment.from(updated).eq(cur))
         return { mark, type };
 }
-function looksLikeBackspace(old, start, end, $newStart, $newEnd) {
+function looksLikeBlockJoin(old, start, end, $newStart, $newEnd) {
     if ( // The content must have shrunk
     end - start <= $newEnd.pos - $newStart.pos ||
         // newEnd must point directly at or after the end of the block that newStart points into
@@ -5360,7 +5402,7 @@ function looksLikeBackspace(old, start, end, $newStart, $newEnd) {
         return false;
     let $start = old.resolve(start);
     // Handle the case where, rather than joining blocks, the change just removed an entire block
-    if (!$newStart.parent.isTextblock) {
+    if (!$newStart.parent.inlineContent) {
         let after = $start.nodeAfter;
         return after != null && end == start + after.nodeSize;
     }

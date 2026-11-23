@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -160,10 +160,9 @@ public class LifecycleDomainTreeRepresentationTest extends AbstractAnalysisDomai
     public void test_that_order_of_included_properties_is_correct_and_circular_references_manage_Dummy_property() {
         // , "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"
         assertEquals("Not root type -- should return empty list of included properties.", Collections.emptyList(), dtm().includedProperties(EntityWithoutKeyType.class));
-        assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "bigDecimalProp", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), dtm().includedProperties(EntityWithStringKeyType.class));
-        assertEquals("Incorrect included properties.", Arrays.asList("", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), dtm().includedProperties(EntityWithNormalNature.class));
-        assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
-
+        assertThat(dtm().includedProperties(EntityWithStringKeyType.class)).as("Incorrect included properties.").containsExactlyInAnyOrder("", "desc", "integerProp", "bigDecimalProp", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY");
+        assertThat(dtm().includedProperties(EntityWithNormalNature.class)).as("Incorrect included properties.").containsExactlyInAnyOrder("", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY");
+        assertThat(dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class)).as("Incorrect included properties.").containsExactlyInAnyOrder("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY");
         // test that heavy-weight entities will be processed correctly
         dtm().includedProperties(MasterEntity.class);
         dtm().includedProperties(SlaveEntity.class);
@@ -173,33 +172,31 @@ public class LifecycleDomainTreeRepresentationTest extends AbstractAnalysisDomai
     @Override
     @Test
     public void test_that_warming_up_of_included_properties_works_correctly() {
-        assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+        assertThat(dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class)).as("Incorrect included properties.").containsExactlyInAnyOrder("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY");
         // warm up first-level circular property
         dtm().warmUp(MasterEntityForIncludedPropertiesLogic.class, "entityPropOfSelfType");
-        assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.desc", "entityPropOfSelfType.integerProp", "entityPropOfSelfType.entityPropOfSelfType", "entityPropOfSelfType.entityPropOfSelfType.dummy-property", "entityPropOfSelfType.entityProp", "entityPropOfSelfType.entityProp.dummy-property", "entityPropOfSelfType.entityPropCollection", "entityPropOfSelfType.entityPropCollection.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
-
+        assertThat(dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class)).as("Incorrect included properties.").containsExactlyInAnyOrder("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.desc", "entityPropOfSelfType.integerProp", "entityPropOfSelfType.entityPropOfSelfType", "entityPropOfSelfType.entityPropOfSelfType.dummy-property", "entityPropOfSelfType.entityProp", "entityPropOfSelfType.entityProp.dummy-property", "entityPropOfSelfType.entityPropCollection", "entityPropOfSelfType.entityPropCollection.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY");
         // warm up n-th-level circular property (for example third)
         dtm().warmUp(MasterEntityForIncludedPropertiesLogic.class, "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType");
-        assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.desc", "entityPropOfSelfType.integerProp", "entityPropOfSelfType.entityPropOfSelfType", "entityPropOfSelfType.entityPropOfSelfType.desc", "entityPropOfSelfType.entityPropOfSelfType.integerProp", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.desc", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.integerProp", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.dummy-property", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.entityProp", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.entityProp.dummy-property", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.entityPropCollection", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.entityPropCollection.dummy-property", "entityPropOfSelfType.entityPropOfSelfType.entityProp", "entityPropOfSelfType.entityPropOfSelfType.entityProp.dummy-property", "entityPropOfSelfType.entityPropOfSelfType.entityPropCollection", "entityPropOfSelfType.entityPropOfSelfType.entityPropCollection.dummy-property", "entityPropOfSelfType.entityProp", "entityPropOfSelfType.entityProp.dummy-property", "entityPropOfSelfType.entityPropCollection", "entityPropOfSelfType.entityPropCollection.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+        assertThat(dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class)).as("Incorrect included properties.").containsExactlyInAnyOrder("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.desc", "entityPropOfSelfType.integerProp", "entityPropOfSelfType.entityPropOfSelfType", "entityPropOfSelfType.entityPropOfSelfType.desc", "entityPropOfSelfType.entityPropOfSelfType.integerProp", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.desc", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.integerProp", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.dummy-property", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.entityProp", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.entityProp.dummy-property", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.entityPropCollection", "entityPropOfSelfType.entityPropOfSelfType.entityPropOfSelfType.entityPropCollection.dummy-property", "entityPropOfSelfType.entityPropOfSelfType.entityProp", "entityPropOfSelfType.entityPropOfSelfType.entityProp.dummy-property", "entityPropOfSelfType.entityPropOfSelfType.entityPropCollection", "entityPropOfSelfType.entityPropOfSelfType.entityPropCollection.dummy-property", "entityPropOfSelfType.entityProp", "entityPropOfSelfType.entityProp.dummy-property", "entityPropOfSelfType.entityPropCollection", "entityPropOfSelfType.entityPropCollection.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY");
     }
 
     @Override
     @Test
     @Ignore
     public void test_that_included_properties_for_union_entities_hierarchy_are_correct_and_manage_Common_and_Union_properties() {
-        assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "unionEntityProp", "unionEntityProp.common-properties", "unionEntityProp.common-properties.desc", "unionEntityProp.common-properties.commonProp", "unionEntityProp.unionProp1", "unionEntityProp.unionProp1.dummy-property", "unionEntityProp.unionProp2", "unionEntityProp.unionProp2.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), dtm().includedProperties(MasterEntityWithUnionForIncludedPropertiesLogic.class));
+        assertThat(dtm().includedProperties(MasterEntityWithUnionForIncludedPropertiesLogic.class)).as("Incorrect included properties.").containsExactlyInAnyOrder("", "desc", "unionEntityProp", "unionEntityProp.common-properties", "unionEntityProp.common-properties.desc", "unionEntityProp.common-properties.commonProp", "unionEntityProp.unionProp1", "unionEntityProp.unionProp1.dummy-property", "unionEntityProp.unionProp2", "unionEntityProp.unionProp2.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY");
     }
     
     @Ignore
     @Override
     @Test
     public void test_that_manual_exclusion_is_correctly_reflected_in_Included_properties() {
-        assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+        assertThat(dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class)).as("Incorrect included properties.").containsExactlyInAnyOrder("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY");
         dtm().excludeImmutably(MasterEntityForIncludedPropertiesLogic.class, "entityPropCollection.integerProp");
-        assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
-
+        assertThat(dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class)).as("Incorrect included properties.").containsExactlyInAnyOrder("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.dummy-property", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY");
         dtm().warmUp(MasterEntityForIncludedPropertiesLogic.class, "entityPropCollection");
-        assertEquals("Incorrect included properties.", Arrays.asList("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.moneyProp", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class));
+        assertThat(dtm().includedProperties(MasterEntityForIncludedPropertiesLogic.class)).as("Incorrect included properties.").containsExactlyInAnyOrder("", "desc", "integerProp", "entityPropOfSelfType", "entityPropOfSelfType.dummy-property", "entityProp", "entityProp.dummy-property", "entityPropCollection", "entityPropCollection.moneyProp", "__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY");
     }
 
     @Override
