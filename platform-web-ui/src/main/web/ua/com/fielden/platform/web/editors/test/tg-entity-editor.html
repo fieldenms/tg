@@ -547,6 +547,14 @@
                 assert.strictEqual(layerText(editor._createTitleObject(bogieAt(wagonSlotLocation()))), '5 WAGON1');
             });
 
+            test('displays composite active entity as its toString representation, the same as the union value, if the template of the active union property is z', function () {
+                wagonSlotProp._displayAs = 'z';
+                const location = wagonSlotLocation();
+                const text = layerText(editor._createTitleObject(bogieAt(location)));
+                assert.strictEqual(text, 'WAGON1 5');
+                assert.strictEqual(text, location.toString());
+            });
+
             test('displays composite active entity as title-value pairs and logs the error if the template of the active union property is invalid', function () {
                 wagonSlotProp._displayAs = '#3v';
                 const errors = [];
