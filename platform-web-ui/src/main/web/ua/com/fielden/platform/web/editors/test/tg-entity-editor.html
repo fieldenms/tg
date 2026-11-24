@@ -483,12 +483,14 @@
 
         });
 
-        /// The input layer of an editor of a union-typed property, which displays the active entity according to the template of the active union property.
-        /// `TgBogie.location` is of union type `TgBogieLocation`,
-        /// with union property `wagonSlot` of composite type `TgWagonSlot` (key members `wagon` and `position`),
-        /// and union property `workshop` of non-composite type `TgWorkshop`.
-        ///
-        suite('entity editor layer formatted text for union-typed property', function () {
+        /**
+         * The input layer of an editor of a union-typed property, which displays the active entity according to the template of the active union property,
+         * and the tooltip of the editor, which displays the active entity.
+         * `TgBogie.location` is of union type `TgBogieLocation`,
+         * with union property `wagonSlot` of composite type `TgWagonSlot` (key members `wagon` and `position`),
+         * and union property `workshop` of non-composite type `TgWorkshop`.
+         */
+        suite('entity editor layer formatted text and tooltip for union-typed property', function () {
             const PACKAGE = 'ua.com.fielden.platform.sample.domain';
             const BOGIE = `${PACKAGE}.TgBogie`, BOGIE_LOCATION = `${PACKAGE}.TgBogieLocation`,
                   WAGON_SLOT = `${PACKAGE}.TgWagonSlot`, WAGON = `${PACKAGE}.TgWagon`, WORKSHOP = `${PACKAGE}.TgWorkshop`;
@@ -512,8 +514,9 @@
 
             const newEntity = (typeName, props) => Object.assign(reflector.newEntity(typeName), props);
 
-            /// A binding entity for a bogie at `location`, which is the editor's input.
-            ///
+            /**
+             * A binding entity for a bogie at `location`, which is the editor's input.
+             */
             const bogieAt = location => ({ '@@origin': newEntity(BOGIE, { key: 'BOGIE1', location }) });
 
             const wagonSlotLocation = () => newEntity(BOGIE_LOCATION, {
@@ -528,8 +531,9 @@
 
             const emptyLocation = () => newEntity(BOGIE_LOCATION, { wagonSlot: null, workshop: null });
 
-            /// The text of the input layer for `titleObject`, as rendered by the editor's `inputLayerTemplate`.
-            ///
+            /**
+             * The text of the input layer for `titleObject`, as rendered by the editor's `inputLayerTemplate`.
+             */
             const layerText = titleObject => titleObject
                 .map(({ separator, title, value }) => (separator || '') + (title ? `${title}: ` : '') + value)
                 .join('');
@@ -581,6 +585,29 @@
 
             test('displays nothing if there is no value', function () {
                 assert.strictEqual(layerText(editor._createTitleObject(bogieAt(null))), '');
+            });
+
+            test('tooltip displays composite active entity as title-value pairs, the same as for a value of the active union property type', function () {
+                const location = wagonSlotLocation();
+                const tooltip = editor._createEntityTooltip(location);
+                assert.strictEqual(tooltip, editor._createEntityTooltip(location.get('wagonSlot')));
+                assert.include(tooltip, '<table');
+                assert.include(tooltip, 'Wagon: ');
+                assert.include(tooltip, 'Position: ');
+            });
+
+            test('tooltip displays non-composite active entity as its key', function () {
+                assert.strictEqual(editor._createEntityTooltip(workshopLocation()), '<b>WORKSHOP1</b>');
+            });
+
+            test('tooltip displays the description of the active entity', function () {
+                const location = workshopLocation();
+                location.get('workshop').desc = 'Main workshop';
+                assert.strictEqual(editor._createEntityTooltip(location), '<b>WORKSHOP1</b><br>Main workshop');
+            });
+
+            test('tooltip displays union value without active entity as its toString representation', function () {
+                assert.strictEqual(editor._createEntityTooltip(emptyLocation()), `<b>${reflector.KEY_NOT_ASSIGNED}</b>`);
             });
 
         });
