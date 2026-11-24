@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
@@ -13,15 +14,20 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.Arrays.stream;
@@ -29,6 +35,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.critName;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -371,13 +378,116 @@ public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestC
         assertEquals("No indication if the centre has not been run in the client.", NONE, indicationFor(null, freshCentre));
     }
 
+    //////////////////////////////////// Customise Columns ////////////////////////////////////
+
+    @Test
+    public void customise_columns_returns_the_diff_string_of_the_last_run_with_the_new_sorting_and_page_capacity_for_refresh() {
+        editDescCriterion("*run*");
+        final var previouslyRunDiffString = run();
+        editDescCriterion("*edited after the run*");
+
+        final var customised = customiseColumns(
+            previouslyRunDiffString,
+            empty(),
+            withSorting("this:desc").andThen(action -> action.setPageCapacity(44))
+        );
+
+        assertTrue("The results must be queried again.", customised.isTriggerRerun());
+        final var customisedDiffString = customised.getPreviouslyRunDiffString();
+        final var refreshed = criteriaEntityRestoredOnRefresh(customisedDiffString);
+        assertTrue(validateCriteriaBeforeRunning(refreshed, PERMITTING_AUTHORISATION, securityTokenProvider).isSuccessful());
+        final var refreshedCentre = refreshed.getCentreDomainTreeMangerAndEnhancer();
+        assertEquals("Criteria of the last run must be kept.", "*run*", descCriterionOf(refreshedCentre));
+        assertEquals(DESCENDING, firstOrderingOf(refreshedCentre));
+        assertEquals(44, pageCapacityOf(refreshedCentre));
+        final var freshCentre = freshCentre();
+        assertEquals("Edited criteria must be kept.", "*edited after the run*", descCriterionOf(freshCentre));
+        assertEquals(DESCENDING, firstOrderingOf(freshCentre));
+        assertEquals(44, pageCapacityOf(freshCentre));
+        assertEquals("Criteria edited after the run must stay stale.", STALE, indicationFor(customisedDiffString, freshCentre));
+        assertNoPreviouslyRunCentreIsPersisted();
+    }
+
+    @Test
+    public void customise_columns_in_a_client_keeps_its_last_run_whatever_another_client_runs() {
+        editDescCriterion("*first*");
+        final var firstClientDiffString = run();
+        editDescCriterion("*second*");
+        // The second client runs the centre with its criteria, which are also in FRESH centre now.
+        run();
+
+        final var customised = customiseColumns(firstClientDiffString, empty(), withSorting("this:desc"));
+
+        final var refreshed = criteriaEntityRestoredOnRefresh(customised.getPreviouslyRunDiffString());
+        final var refreshedCentre = refreshed.getCentreDomainTreeMangerAndEnhancer();
+        assertEquals("Criteria of the last run of the first client must be kept.", "*first*", descCriterionOf(refreshedCentre));
+        assertEquals(DESCENDING, firstOrderingOf(refreshedCentre));
+    }
+
+    @Test
+    public void customise_columns_reports_whether_the_configuration_has_unsaved_changes_also_when_the_results_are_queried_again() {
+        final var saveAsName = of("NAMED");
+        saveAs(open(user, empty()), saveAsName.get());
+        final var previouslyRunDiffString = run(saveAsName);
+
+        final var resorted = customiseColumns(previouslyRunDiffString, saveAsName, withSorting("this:desc"));
+
+        assertTrue("The results must be queried again.", resorted.isTriggerRerun());
+        assertTrue("SAVE must be enabled after the sorting is changed.", resorted.isCentreDirty());
+
+        final var sortedBack = customiseColumns(resorted.getPreviouslyRunDiffString(), saveAsName, withSorting("this:asc"));
+
+        assertTrue("The results must be queried again.", sortedBack.isTriggerRerun());
+        assertFalse("SAVE must be disabled after the sorting is changed back.", sortedBack.isCentreDirty());
+    }
+
     //////////////////////////////////// Utilities ////////////////////////////////////
 
     /// Runs the default configuration in a client with the criteria and settings of FRESH centre.
     /// Returns the diff string that the client receives and keeps.
     ///
     private String run() {
-        return createPreviouslyRunDiffString(freshCentre(), MI_TYPE, webUiConfig);
+        return run(empty());
+    }
+
+    /// Runs the configuration with `saveAsName` in a client with the criteria and settings of its FRESH centre.
+    /// Returns the diff string that the client receives and keeps.
+    ///
+    private String run(final Optional<String> saveAsName) {
+        final var freshCentre = updateCentre(user, MI_TYPE, FRESH_CENTRE_NAME, saveAsName, webUiConfig, coFinder);
+        return createPreviouslyRunDiffString(freshCentre, MI_TYPE, webUiConfig);
+    }
+
+    /// Applies `customisation` in Customise Columns of the configuration with `saveAsName`.
+    /// It is applied in a client that keeps `previouslyRunDiffString`.
+    /// This is what APPLY does.
+    /// The action is produced for the context of the client, customised, and saved by its companion.
+    /// Returns the saved action, which the client receives.
+    ///
+    private CentreConfigUpdater customiseColumns(
+        final String previouslyRunDiffString,
+        final Optional<String> saveAsName,
+        final Consumer<CentreConfigUpdater> customisation
+    ) {
+        final var userProvider = getInstance(IUserProvider.class);
+        final var currentUser = userProvider.getUser();
+        // The companion restores the criteria entity for the current user.
+        userProvider.setUser(user);
+        try {
+            final var producer = getInstance(CentreConfigUpdaterProducer.class);
+            producer.setContext(new CentreContext<AbstractEntity<?>, AbstractEntity<?>>().setSelectionCrit(
+                criteriaEntityForContext(user, TOP_LEVEL, saveAsName, of(previouslyRunDiffString), empty())
+            ));
+            final var action = producer.newEntity();
+            customisation.accept(action);
+            return co$(CentreConfigUpdater.class).save(action);
+        } finally {
+            userProvider.setUser(currentUser);
+        }
+    }
+
+    private static Consumer<CentreConfigUpdater> withSorting(final String sortingVal) {
+        return action -> action.setSortingVals(List.of(sortingVal));
     }
 
     /// Creates the criteria entity of the default configuration, as it is restored for a centre context sent by a client.
@@ -484,6 +594,10 @@ public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestC
 
     private static int pageCapacityOf(final ICentreDomainTreeManagerAndEnhancer centre) {
         return centre.getSecondTick().getPageCapacity();
+    }
+
+    private static Ordering firstOrderingOf(final ICentreDomainTreeManagerAndEnhancer centre) {
+        return centre.getSecondTick().orderedProperties(UserRole.class).getFirst().getValue();
     }
 
     /// An authorisation model that authorises every security token with `authorise`.
