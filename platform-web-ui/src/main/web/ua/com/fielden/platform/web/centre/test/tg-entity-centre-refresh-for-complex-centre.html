@@ -26,6 +26,7 @@
         import '/app/tg-reflector.js';
         import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties';
         import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
+        import { RunActions } from '/resources/centre/tg-selection-criteria-behavior.js';
 
         suite('entity centre', function () {
             let centre, reflector;
@@ -133,6 +134,94 @@
                     assert.strictEqual(centre.$.selection_criteria.pageNumberUpdated, 0);
                     assert.strictEqual(centre.$.egi.entities.length, 20);
                     done();
+                });
+            });
+
+            /// Edits the key criterion to `keyValue` without running the centre.
+            /// Returns a promise that resolves after the edit has been validated, which changes FRESH centre.
+            ///
+            const _editKeyCriterionWithoutRunning = function (centre, keyValue) {
+                return new Promise(function (resolve, reject) {
+                    const selectionCriteria = centre.$.selection_criteria;
+                    const old_postValidated = selectionCriteria.postValidated;
+                    selectionCriteria.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                        old_postValidated(validatedEntity, bindingEntity, customObject);
+                        selectionCriteria.postValidated = old_postValidated;
+                        resolve('ok');
+                    };
+                    const keyEditor = selectionCriteria.$.editor_4_tgPersistentEntityWithProperties_;
+                    keyEditor._editingValue = keyValue;
+                    keyEditor.commit();
+                });
+            };
+
+            /// Opens Customise Columns, changes the page capacity to `pageCapacity`, and applies it, as APPLY does.
+            /// Returns a promise that resolves after the results have been queried again.
+            ///
+            const _customiseColumnsWithPageCapacity = function (centre, pageCapacity) {
+                return new Promise(function (resolve, reject) {
+                    const customiseColumnsAction = centre.$.egi.querySelector('tg-ui-action[element-name="tg-CentreConfigUpdater-master"]');
+
+                    const old_postRun = centre._postRun;
+                    centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                        old_postRun(criteriaEntity, newBindingEntity, result);
+                        centre._postRun = old_postRun;
+                        resolve('ok');
+                    };
+
+                    // The action replaces master callbacks, such as `postRetrieved`, after setting this reference.
+                    // So the page capacity is changed once the retrieval of the master completes.
+                    customiseColumnsAction._masterReferenceForTestingChanged = function (master) {
+                        customiseColumnsAction._masterReferenceForTestingChanged = function () {};
+                        const old_retrieve = master.retrieve;
+                        master.retrieve = function (context) {
+                            master.retrieve = old_retrieve;
+                            return old_retrieve(context).then(function (ironRequest) {
+                                const pageCapacityEditor = master.$.editor_4_pageCapacity;
+                                pageCapacityEditor._editingValue = '' + pageCapacity;
+                                pageCapacityEditor.commit();
+                                master.shadowRoot.querySelector("tg-action[role='save']")._asyncRun();
+                                return ironRequest;
+                            });
+                        };
+                    };
+
+                    customiseColumnsAction._run();
+                });
+            };
+
+            /// Closes the dialog of Customise Columns, which stays open after its changes are applied.
+            /// Then discards the changes of FRESH centre.
+            /// Other tests rely on the page capacity of the default configuration.
+            ///
+            const _closeDialogAndDiscard = function (centre) {
+                return Promise.resolve(centre.actionDialog && centre.actionDialog.closeDialog(true)).then(function () {
+                    return centre.discard();
+                });
+            };
+
+            test('refreshes the last run from the first page after the page capacity is changed in Customise Columns', function (done) {
+                let failure;
+                _retrieveTwentyEntitiesPlusOne(centre).then(function () {
+                    // Go to the second page with the single 'DEMO20' entity.
+                    return centre.nextPage();
+                }).then(function () {
+                    // The edited criterion goes to FRESH centre, but not to the last run.
+                    return _editKeyCriterionWithoutRunning(centre, 'DEMO20');
+                }).then(function () {
+                    return _customiseColumnsWithPageCapacity(centre, 10);
+                }).then(function () {
+                    const selectionCriteria = centre.$.selection_criteria;
+                    assert.strictEqual(selectionCriteria.dataChangeReason, RunActions.refresh, 'The last run should be refreshed.');
+                    assert.strictEqual(selectionCriteria.pageNumberUpdated, 0, 'The first page should be shown.');
+                    assert.strictEqual(selectionCriteria.pageCountUpdated, 3, 'All 21 entities of the last run should be paged by 10.');
+                    assert.strictEqual(centre.$.egi.entities.length, 10);
+                }).catch(function (error) {
+                    failure = error;
+                }).then(function () {
+                    return _closeDialogAndDiscard(centre);
+                }).then(function () {
+                    done(failure);
                 });
             });
         });
