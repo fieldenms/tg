@@ -830,7 +830,6 @@ public class CriteriaResource extends AbstractWebResource {
                 final Map<String, Object> customObject = new LinkedHashMap<>(centreContextHolder.getCustomObject());
 
                 final boolean isRunning = isRunning(customObject);
-                final boolean isSorting = isSorting(customObject);
 
                 final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre;
                 final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity;
@@ -936,10 +935,9 @@ public class CriteriaResource extends AbstractWebResource {
                     freshCentreAppliedCriteriaEntity = null;
                 }
 
-                // if the run() invocation warrants data generation (e.g. it has nothing to do with sorting)
-                // then for an entity centre configuration check if a generator was provided
+                // A run generates data, if the centre has a generator.
                 final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
-                final boolean generationShouldOccur = isRunning && !isSorting && createdByConstraintShouldOccur;
+                final boolean generationShouldOccur = isRunning && createdByConstraintShouldOccur;
                 if (generationShouldOccur) {
                     // obtain the type for entities to be generated
                     final Class<? extends AbstractEntity<?>> generatorEntityType = (Class<? extends AbstractEntity<?>>) centre.getGeneratorTypes().get().getKey();

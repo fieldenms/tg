@@ -600,13 +600,13 @@ const TgEntityCentreBehaviorImpl = {
             type: Function
         },
 
-        /**
-         * Starts the process of centre run.
-         *
-         * isAutoRunning -- returns true if this running action represents autoRun event action invocation rather than simple running, undefined or false otherwise; not to be confused with 'link' centre auto-running capability
-         * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
-         * forceRegeneration -- returns true if this running action represents special 're-generation of modified data' action invocation rather than simple running, undefined otherwise
-         */
+        /// Starts the process of centre run.
+        ///
+        /// `isAutoRunning` is `true` if this run is the auto-run of the centre, and `undefined` or `false` otherwise.
+        /// It is not to be confused with the auto-running capability of a 'link' centre.
+        /// `forceRegeneration` is `true` if this run re-generates modified data, and `undefined` otherwise.
+        /// `excludeInsertionPoints` are the element names of insertion points that are not refreshed after this run.
+        ///
         run: {
             type: Function
         },
@@ -1137,7 +1137,7 @@ const TgEntityCentreBehaviorImpl = {
         /**
          * A function to run the entity centre.
          */
-        self.run = (function (isAutoRunning, isSortingAction, forceRegeneration, excludeInsertionPoints) {
+        self.run = (function (isAutoRunning, forceRegeneration, excludeInsertionPoints) {
             if (this._criteriaLoaded === false) {
                 throw new Error(`Cannot run ${this.is} centre (not initialised criteria).`);
             }
@@ -1167,7 +1167,7 @@ const TgEntityCentreBehaviorImpl = {
                 }
             }, 2000);
 
-            return self.$.selection_criteria.run(isAutoRunning, isSortingAction, forceRegeneration).then(
+            return self.$.selection_criteria.run(isAutoRunning, forceRegeneration).then(
                 function (detail) {
                     const sc = self.$.selection_criteria;
                     const deserialisedResult = sc._serialiser().deserialise(detail.response);

@@ -723,44 +723,40 @@ const TgSelectionCriteriaBehaviorImpl = {
         this.persistActiveElement();
     },
 
-    /**
-     * Starts the process of centre run.
-     *
-     * isAutoRunning -- returns true if this running action represents autoRun event action invocation rather than simple running, undefined or false otherwise; not to be confused with 'link' centre auto-running capability
-     * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
-     * forceRegeneration -- returns true if this running action represents special 're-generation of modified data' action invocation rather than simple running, undefined otherwise
-     */
-    run: function (isAutoRunning, isSortingAction, forceRegeneration) {
+    /// Starts the process of centre run.
+    ///
+    /// `isAutoRunning` is `true` if this run is the auto-run of the centre, and `undefined` or `false` otherwise.
+    /// It is not to be confused with the auto-running capability of a 'link' centre.
+    /// `forceRegeneration` is `true` if this run re-generates modified data, and `undefined` otherwise.
+    ///
+    run: function (isAutoRunning, forceRegeneration) {
         this._openToast(null, "Loading data", false, "", true);
-        return this._execute(RunActions.run, isAutoRunning, isSortingAction, forceRegeneration);
+        return this._execute(RunActions.run, isAutoRunning, forceRegeneration);
     },
 
-    /**
-     * Starts the process of centre execution.
-     *
-     * isAutoRunning -- returns true if this running action represents autoRun event action invocation rather than simple running, undefined or false otherwise; not to be confused with 'link' centre auto-running capability
-     * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
-     * forceRegeneration -- returns true if this running action represents special 're-generation of modified data' action invocation rather than simple running, undefined otherwise
-     */
-    _execute: function (action, isAutoRunning, isSortingAction, forceRegeneration) {
+    /// Starts the process of centre execution.
+    ///
+    /// `isAutoRunning` and `forceRegeneration` apply to `RunActions.run` only (see `run`).
+    ///
+    _execute: function (action, isAutoRunning, forceRegeneration) {
         const self = this;
 
         if (self.isRunning) {
             console.warn("Refresh is already in progress...");
             self._refreshPromiseInProgress = self._refreshPromiseInProgress
                 .finally(function () {
-                    return self._createPromise(action, isAutoRunning, isSortingAction, forceRegeneration);
+                    return self._createPromise(action, isAutoRunning, forceRegeneration);
                 });
             return self._refreshPromiseInProgress;
         }
 
         // let's capture the promise being created at the instance level so that it could be referenced later...
-        self._refreshPromiseInProgress = self._createPromise(action, isAutoRunning, isSortingAction, forceRegeneration);
+        self._refreshPromiseInProgress = self._createPromise(action, isAutoRunning, forceRegeneration);
         // ... and return it
         return self._refreshPromiseInProgress;
     },
 
-    _createPromise: function (action, isAutoRunning, isSortingAction, forceRegeneration) {
+    _createPromise: function (action, isAutoRunning, forceRegeneration) {
         const self = this;
 
         return new Promise(function (resolve, reject) {
@@ -781,7 +777,6 @@ const TgSelectionCriteriaBehaviorImpl = {
                         },
                         action,
                         isAutoRunning,
-                        isSortingAction,
                         forceRegeneration,
                         self.requireSelectedEntities,
                         self.requireMasterEntity
@@ -924,15 +919,19 @@ const TgSelectionCriteriaBehaviorImpl = {
      * In this method selection criteria modifHolder should be sent every time -- it is required to actually 'run' the query.
      * However, if the query enhancing process requires the selectionCrit entity too -- it will be used without any problem.
      */
-    _createContextHolderForRunning: function (modifHolderGetter, action, isAutoRunning, isSortingAction, forceRegeneration, requireSelectedEntities, requireMasterEntity) {
+    _createContextHolderForRunning: function (
+        modifHolderGetter,
+        action,
+        isAutoRunning,
+        forceRegeneration,
+        requireSelectedEntities,
+        requireMasterEntity
+    ) {
         const self = this;
         const contextHolder = self._createContextHolder(modifHolderGetter, "true", requireSelectedEntities, requireMasterEntity);
 
         if (isAutoRunning) {
             self._reflector().setCustomProperty(contextHolder, "@@autoRunning", true);
-        }
-        if (isSortingAction) {
-            self._reflector().setCustomProperty(contextHolder, "@@sortingAction", true);
         }
         if (forceRegeneration) {
             self._reflector().setCustomProperty(contextHolder, "@@forceRegeneration", true);

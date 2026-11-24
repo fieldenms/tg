@@ -244,11 +244,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return RunActions.REFRESH.toString().equals(customObject.get("@@action"));
     }
 
-    /// Returns `true` if `Sorting` action is performed, otherwise `false`.
-    public static boolean isSorting(final Map<String, Object> customObject) {
-        return customObject.containsKey("@@sortingAction");
-    }
-
     /// Returns `true` if `autoRunning` action is performed, otherwise `false`.
     public static boolean isAutoRunning(final Map<String, Object> customObject) {
         return customObject.containsKey("@@autoRunning");
