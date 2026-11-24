@@ -36,6 +36,7 @@ import java.util.*;
 
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.types.RichText.fromHtml;
 import static ua.com.fielden.platform.web.test.server.TgTestApplicationProperties.load;
 
@@ -306,6 +307,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         // Population for the entity that redeclares `id` with `@IsProperty` (issue #2726).
         save(new_(TgEntityWithIsPropertyOverriddenId.class, "OID_KEY1"));
 
+        LOGGER.info("\tPopulating bogies with union-typed locations...");
+        populateBogies();
+
         try {
             final ISecurityTokenProvider provider = config.getInstance(ISecurityTokenProvider.class); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
@@ -319,6 +323,27 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    /// Populates bogies for the centre and master of [TgBogie], which demonstrate how an entity editor displays a value of union type [TgBogieLocation].
+    /// The bogies cover a composite active entity ([TgWagonSlot]) and a non-composite active entity ([TgWorkshop]), each with and without a description, and no location.
+    ///
+    private void populateBogies() {
+        final TgWorkshop workshop1 = save(new_(TgWorkshop.class, "WSHOP1", "Main workshop"));
+        final TgWorkshop workshop2 = save(new_(TgWorkshop.class, "WSHOP2"));
+
+        final TgWagon wagon1 = save(new_(TgWagon.class, "WAGON1", "Wagon 1"));
+        final TgWagon wagon2 = save(new_(TgWagon.class, "WAGON2", "Wagon 2"));
+        final TgWagonSlot newWagon1Slot1 = new_composite(TgWagonSlot.class, wagon1, 1);
+        newWagon1Slot1.set(DESC, "Front slot of wagon 1");
+        final TgWagonSlot wagon1Slot1 = save(newWagon1Slot1);
+        final TgWagonSlot wagon2Slot2 = save(new_composite(TgWagonSlot.class, wagon2, 2));
+
+        save(new_(TgBogie.class, "BOGIE1", "Bogie at a wagon slot with description").setLocation(co$(TgBogieLocation.class).new_().setWagonSlot(wagon1Slot1)));
+        save(new_(TgBogie.class, "BOGIE2", "Bogie at a wagon slot without description").setLocation(co$(TgBogieLocation.class).new_().setWagonSlot(wagon2Slot2)));
+        save(new_(TgBogie.class, "BOGIE3", "Bogie at a workshop with description").setLocation(co$(TgBogieLocation.class).new_().setWorkshop(workshop1)));
+        save(new_(TgBogie.class, "BOGIE4", "Bogie at a workshop without description").setLocation(co$(TgBogieLocation.class).new_().setWorkshop(workshop2)));
+        save(new_(TgBogie.class, "BOGIE5", "Bogie without location"));
     }
 
     private void populateGraphQlData() {
