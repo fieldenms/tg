@@ -1383,14 +1383,26 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTapHandlerBehaviour], 
             </div>`
     }
 
+    /**
+     * Creates the tooltip text for `entity`, the value of this editor.
+     * A composite entity is displayed as a table of title-value pairs for its key members that have values, or as the value alone if there is only one such key member.
+     * Any other entity is displayed as its `toString` representation.
+     * The description of the entity, if any, follows.
+     *
+     * A union entity is displayed as its active entity, the same way as an entity of the active union property type.
+     * A union entity without an active entity is displayed as its `toString` representation.
+     */
     _createEntityTooltip (entity) {
-        const titles = this._createEntityTitleObject(entity);
+        const activeEntity = entity.type().isUnionEntity() ? entity._activeEntity() : null;
+        const entityToDisplay = activeEntity !== null ? activeEntity : entity;
+        const titles = this._createEntityTitleObject(entityToDisplay);
+        const desc = entityToDisplay.get('desc');
         if (titles.length === 1) {
-            return "<b>" + titles[0].value + "</b>" + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
+            return "<b>" + titles[0].value + "</b>" + (desc ? "<br>" + desc : "");
         } else {
             return "<table style='border-collapse: collapse;'>" +
                 titles.map(entry => "<tr><td valign='top' style='padding-left:0'>" + entry.title + ": </td><td valign='top' style='padding-right:0'><b>" + entry.value + "</b></td></tr>").join("") +
-            "</table>"  + (entity.get('desc') ? entity.get('desc') : "");
+            "</table>"  + (desc ? desc : "");
         }
     }
 
@@ -1468,17 +1480,30 @@ export class TgEntityEditor extends mixinBehaviors([TgLongTapHandlerBehaviour], 
         return "";
     }
 
+    /**
+     * Creates an array of `{ separator?, title?, value }` objects that represent the value of the entity-typed property of `entity` in the input layer.
+     * The value is displayed according to the `displayAs` template of the property.
+     * A template error is logged to the console, and the value is then displayed according to the default template `''`.
+     * If there is no value, or the type of the value does not display description, the result is `[{value: ''}]`.
+     *
+     * A union value is displayed as its active entity, according to the `displayAs` template of the active union property.
+     * The `displayAs` template of the union-typed property itself is not applied, so that each union member type is displayed with a template for its own key members.
+     * A union value without an active entity is displayed as its `toString` representation.
+     */
     _createTitleObject (entity) {
         if (entity !== null) {
             const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
-            const metaProp = this.reflector().getEntityTypeProp(this.reflector().tg_getFullEntity(entity), this.propertyName);
-            if (entityValue !== null && !Array.isArray(entityValue) 
+            if (entityValue !== null && !Array.isArray(entityValue)
                     && this.reflector().isEntity(entityValue) && entityValue.type().shouldDisplayDescription()) {
+                const activeProperty = entityValue.type().isUnionEntity() ? entityValue._activeProperty() : null;
+                const [valueToDisplay, template] = activeProperty !== null
+                    ? [entityValue.get(activeProperty), entityValue.type().prop(activeProperty).displayAs()]
+                    : [entityValue, this.reflector().getEntityTypeProp(this.reflector().tg_getFullEntity(entity), this.propertyName).displayAs()];
                 try {
-                    return composeEntityValue(entityValue, metaProp.displayAs());
+                    return composeEntityValue(valueToDisplay, template);
                 } catch (e) {
                     console.error(e.msg);
-                    return composeEntityValue(entityValue, '');
+                    return composeEntityValue(valueToDisplay, '');
                 }
             }
         }

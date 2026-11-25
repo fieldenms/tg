@@ -218,7 +218,8 @@
                     <!--suppress UnresolvedMavenProperty -->
                     <forkCount>${fork.count}</forkCount>
                     <reuseForks>true</reuseForks>
-                    <argLine>-server -Xms256m -Xmx1024m</argLine>
+                    <!-- The default locale must have a country: 'Money' derives its default currency from it. -->
+                    <argLine>-server -Xms256m -Xmx1024m -Duser.language=en -Duser.country=AU</argLine>
                     <systemPropertyVariables>
                         <!--suppress UnresolvedMavenProperty -->
                         <databaseUri>${databaseUri.prefix}${surefire.forkNumber}</databaseUri>
