@@ -146,9 +146,14 @@ public class CentreConfigurationWebUiConfig {
                                     // The response applies them (see `tg-entity-centre-behavior._postRun`).
                                     // Unlike navigation, refresh also retrieves all entities if needed, and totals.
                                     + "    if (functionalEntity.get('triggerRerun') === true) {\n"
+                                    + "        const pageNumber = self.$.selection_criteria.pageNumber;\n"
                                     + "        self.$.selection_criteria.pageNumber = 0;\n"
                                     + "        return self.currentPage(" + excludeInsertionPointsJs + ").then(() => {\n"
                                     + postRequery
+                                    + "        }, error => {\n"
+                                    // A failed refresh leaves the shown page, so its number is restored for paging.
+                                    + "            self.$.selection_criteria.pageNumber = pageNumber;\n"
+                                    + "            throw error;\n"
                                     + "        });\n"
                                     + "    } else {\n"
                                     + "        self.$.egi.adjustColumnsVisibility(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
