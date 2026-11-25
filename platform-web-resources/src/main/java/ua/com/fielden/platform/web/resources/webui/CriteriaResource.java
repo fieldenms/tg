@@ -911,7 +911,11 @@ public class CriteriaResource extends AbstractWebResource {
                         return restUtil.rawListJsonRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(freshCentreAppliedCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, updatedFreshCentre, new LinkedHashMap<>(), of(criteriaIndication)));
                     }
 
-                    final Result authorisationResult = authoriseCriteriaEntity(freshCentreAppliedCriteriaEntity, authorisationModel, securityTokenProvider);
+                    final var authorisationResult = authoriseCriteriaEntity(
+                        freshCentreAppliedCriteriaEntity,
+                        authorisationModel,
+                        securityTokenProvider
+                    );
                     if (!authorisationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: run failed (authorisation validation failed).");
                         final var criteriaIndication = createCriteriaIndication(
@@ -995,7 +999,11 @@ public class CriteriaResource extends AbstractWebResource {
                 // Validation is needed because the criteria come from the client.
                 // Authorisation is needed if the user changed token role association between run and refresh actions.
                 if (!isRunning) {
-                    final var validationAndAuthorisationResult = validateCriteriaBeforeRunning(previouslyRunCriteriaEntity, authorisationModel, securityTokenProvider);
+                    final var validationAndAuthorisationResult = validateCriteriaBeforeRunning(
+                        previouslyRunCriteriaEntity,
+                        authorisationModel,
+                        securityTokenProvider
+                    );
                     if (!validationAndAuthorisationResult.isSuccessful()) {
                         LOGGER.debug("CRITERIA_RESOURCE: refresh failed (validation or authorisation failed).");
                         return restUtil.resultJSONRepresentation(
