@@ -1147,7 +1147,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     /// Creates selection criteria entity from [CentreContextHolder] entity (which contains modifPropsHolder).
     ///
     /// The criteria entity represents the last run in the client.
-    /// It is created from the PREVIOUSLY_RUN diff string in the custom object of `centreContextHolder`, and validated.
+    /// It is created from the PREVIOUSLY_RUN diff string in the custom object of `centreContextHolder`.
+    /// It must be valid to be queried.
     /// Actions on the results view always have the diff string, because the client shows this view only after a run.
     ///
     /// Front actions (`FunctionalActionKind.FRONT`) are on the selection criteria view.
@@ -1359,8 +1360,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     /// Creates selection criteria entity of the last run in the client, from `previouslyRunDiffString` that the client keeps.
     /// The criteria entity keeps `previouslyRunDiffString`, so that adjusting the centre also adjusts the diff string.
     ///
-    /// The diff string comes from the client, so the restored criteria entity is validated, as on refresh and navigate.
-    /// An invalid one fails with its validation result.
+    /// The diff string comes from the client, so the restored criteria entity must be valid to be queried.
+    /// This is as on refresh and navigate.
+    /// Creating a query from invalid criteria fails with their validation result.
+    /// See `EntityQueryCriteria.setMustBeValidForQuerying`.
+    /// Actions that do not query them work even if they became invalid after the run.
+    /// Such actions are configuration actions and Customise Columns.
     /// Authorisation of the criteria is performed when a query is created from them.
     /// See `EntityQueryCriteriaUtils.createCompletedQuery`.
     ///
@@ -1395,12 +1400,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             sharingModel
         );
         previouslyRunCriteriaEntity.setPreviouslyRunDiffString(previouslyRunDiffString);
-        if (previouslyRunDiffString != null) {
-            final var validationResult = previouslyRunCriteriaEntity.isValid();
-            if (!validationResult.isSuccessful()) {
-                throw validationResult;
-            }
-        }
+        previouslyRunCriteriaEntity.setMustBeValidForQuerying(previouslyRunDiffString != null);
         return previouslyRunCriteriaEntity;
     }
 
@@ -1411,7 +1411,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     ///
     /// Applying `modifiedPropertiesHolder` validates the criteria.
     /// An invalid criterion keeps its error in the criteria entity.
-    /// Unlike a restored last run, an invalid criteria entity does not fail.
+    /// Unlike a restored last run, an invalid criteria entity does not fail when it is queried.
     /// The criteria on screen may be incomplete, for example with required criteria not yet filled.
     /// Most front actions do not use them.
     /// A producer or companion that reads criteria values should check `isValid()` first.

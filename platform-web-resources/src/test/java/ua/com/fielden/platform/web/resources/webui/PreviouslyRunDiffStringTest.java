@@ -260,17 +260,23 @@ public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestC
     }
 
     @Test
-    public void context_with_a_diff_string_of_invalid_criteria_fails_with_their_validation_result() {
-        final var editedFreshCentre = freshCentre();
-        editedFreshCentre.getFirstTick().setValue(UserRole.class, DESC, UNSAFE_DESC);
-        final var editedDiffString = createPreviouslyRunDiffString(editedFreshCentre, MI_TYPE, webUiConfig);
+    public void context_with_a_diff_string_of_invalid_criteria_is_created_but_querying_them_fails_with_their_validation_result() {
+        final var criteriaEntity = criteriaEntityForContext(user, TOP_LEVEL, empty(), of(diffStringOfInvalidCriteria()), empty());
 
-        final var failure = assertThrows(
-            Result.class,
-            () -> criteriaEntityForContext(user, TOP_LEVEL, empty(), of(editedDiffString), empty())
-        );
+        final var validationResult = criteriaEntity.isValid();
+        assertFalse(validationResult.isSuccessful());
+        assertEquals(validationResult.getMessage(), assertThrows(Result.class, criteriaEntity::createQuery).getMessage());
+        assertEquals(validationResult.getMessage(), assertThrows(Result.class, criteriaEntity::getAllEntities).getMessage());
+    }
 
-        assertFalse(failure.isSuccessful());
+    @Test
+    public void context_without_a_diff_string_is_not_validated_when_queried() {
+        editDescCriterion(UNSAFE_DESC);
+        final var criteriaEntity = criteriaEntityForContext(user, TOP_LEVEL, empty(), empty(), empty());
+
+        assertFalse("Invalid FRESH centre is expected.", criteriaEntity.isValid().isSuccessful());
+        criteriaEntity.createQuery();
+        criteriaEntity.getAllEntities();
     }
 
     @Test
@@ -425,6 +431,16 @@ public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestC
     }
 
     @Test
+    public void adjusting_the_centre_works_in_a_context_whose_criteria_became_invalid_after_the_run() {
+        final var criteriaEntity = criteriaEntityForContext(user, TOP_LEVEL, empty(), of(diffStringOfInvalidCriteria()), empty());
+
+        criteriaEntity.adjustCentre(withPageCapacity(44));
+
+        assertEquals(44, pageCapacityOf(restore(criteriaEntity.previouslyRunDiffString())));
+        assertEquals(44, pageCapacityOf(freshCentre()));
+    }
+
+    @Test
     public void customise_columns_reports_whether_the_configuration_has_unsaved_changes_also_when_the_results_are_queried_again() {
         final var saveAsName = of("NAMED");
         saveAs(open(user, empty()), saveAsName.get());
@@ -456,6 +472,15 @@ public class PreviouslyRunDiffStringTest extends AbstractEntityCentreConfigTestC
     private String run(final Optional<String> saveAsName) {
         final var freshCentre = updateCentre(user, MI_TYPE, FRESH_CENTRE_NAME, saveAsName, webUiConfig, coFinder);
         return createPreviouslyRunDiffString(freshCentre, MI_TYPE, webUiConfig);
+    }
+
+    /// Runs the default configuration with unsafe HTML in its `desc` criterion, which makes the criteria invalid.
+    /// Returns the diff string that the client keeps, as if the criteria became invalid after the run.
+    ///
+    private String diffStringOfInvalidCriteria() {
+        final var editedFreshCentre = freshCentre();
+        editedFreshCentre.getFirstTick().setValue(UserRole.class, DESC, UNSAFE_DESC);
+        return createPreviouslyRunDiffString(editedFreshCentre, MI_TYPE, webUiConfig);
     }
 
     /// Applies `customisation` in Customise Columns of the configuration with `saveAsName`.
