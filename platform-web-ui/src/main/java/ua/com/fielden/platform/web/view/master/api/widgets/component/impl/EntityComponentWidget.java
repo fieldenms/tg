@@ -1,0 +1,42 @@
+package ua.com.fielden.platform.web.view.master.api.widgets.component.impl;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
+
+import static ua.com.fielden.platform.utils.Pair.pair;
+
+/// A widget that represents an application-provided web component bound to the entity of a master rather than to any of its properties.
+/// The component is placed in the master layout next to the editors.
+///
+/// The component is read-only.
+/// It receives the fully-fledged entity of the master in `entity`, rather than the binding entity of editors.
+/// It also receives the title and description declared for it, if any, the index of the action to show,
+/// the context of the master, and its height and minimum height, if declared.
+/// Any other data it needs is declared as attributes, with either static values or pass-through binding expressions, such as `[[centreUuid]]`.
+/// By default, the component is blocked while the entity is unsaved, as rendered by [AbstractComponentWidget].
+///
+/// The component is identified in the master by [#componentKey()], which is the element id, and the key of its action index and of its refresh condition.
+///
+/// The widget has no property name, so its actions have no chosen property.
+/// Its action is declared as for property widgets: a single action, or a multi-action whose selector chooses the action to show for the entity.
+///
+public class EntityComponentWidget extends AbstractComponentWidget {
+
+    private final String componentKey;
+
+    /// Creates a widget for the component at `importPath`, which is resolved as `/resources/<importPath>.js`, in a master for `entityType`.
+    ///
+    public EntityComponentWidget(final String importPath, final Class<? extends AbstractEntity<?>> entityType, final String componentKey) {
+        super(importPath, pair(null, null), entityType, null);
+        this.componentKey = componentKey;
+    }
+
+    /// The key that identifies the component in the master, which distinguishes the components of a master from one another, from its editors and from its properties.
+    /// It is the id of the component element, and the key under which the index of the action to show is calculated for the entity, among the property action indices of the master,
+    /// and under which the master collects the refresh condition of the component.
+    ///
+    @Override
+    public String componentKey() {
+        return componentKey;
+    }
+
+}

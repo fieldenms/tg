@@ -13,6 +13,7 @@ import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { openShareAction } from '/resources/reflection/tg-share-utils.js';
 import { LeaveReason } from '/resources/master/tg-entity-master-behavior.js';
 import { UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
+import { isInMasterComponent } from '/resources/master/tg-master-component-behavior.js';
 
 /**
  * A local insertion point manager for the entity centre to manage detached or maximized insertion points.
@@ -381,6 +382,16 @@ const TgEntityCentreBehaviorImpl = {
          * Indicates whether this entity centre is embedded into some entity master.
          */
         embedded: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
+         * Indicates whether this entity centre is a master component, embedded by 'tg-centre-component', which sets it through the attributes of its loader.
+         * The centre passes it to its selection view and its grid, so that its selection view fills the component, and its grid fills the component if the centre declares 'fitToHeight()',
+         * as described in 'isComponent' of 'tg-entity-centre' and 'tg-entity-grid-inspector'.
+         */
+        isComponent: {
             type: Boolean,
             value: false
         },
@@ -945,8 +956,13 @@ const TgEntityCentreBehaviorImpl = {
 
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
+                        // in the content of a master component, '_pageSelectionChanged' does not focus the view that the centre selects, so the result view that the user selects by pressing Run is focused here
+                        const focusesResultView = this._triggerRunByUser && isInMasterComponent(this);
                         this.async(function () {
                             this._selectedView = this.preferredView;
+                            if (focusesResultView) {
+                                this.focusView();
+                            }
                         }, 100);
                     }
                     this._triggerRun = false;
@@ -1094,6 +1110,7 @@ const TgEntityCentreBehaviorImpl = {
             self._actionInProgress = true;
             self.$.egi.clearSelection();
             self._triggerRun = true;
+            self._triggerRunByUser = !isAutoRunning;
             self.dynamicColumns = {};
 
             // let's register a timer to kickoff a spinner if the run action is taking too long...
@@ -1389,6 +1406,10 @@ const TgEntityCentreBehaviorImpl = {
                     this.allViews[this._selectedView].leave();
                     this._previousView = this._selectedView;
                     this._selectedView = index;
+                    // in the content of a master component, '_pageSelectionChanged' does not focus the view that the centre selects, so the view that the user selects is focused here
+                    if (isInMasterComponent(this)) {
+                        this.focusView();
+                    }
                     if (this._selectedView !== 0 && this.preferredView !== this._selectedView) {
                         this.preferredView = this._selectedView;
                         this._preferredViewUpdaterAction._run();

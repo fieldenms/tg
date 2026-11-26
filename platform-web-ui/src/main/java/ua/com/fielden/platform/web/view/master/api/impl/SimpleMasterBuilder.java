@@ -28,9 +28,15 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEn
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.helpers.*;
 import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
+import ua.com.fielden.platform.web.view.master.api.widgets.IComponentConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentRefreshCondition;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.AbstractComponentWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.EntityComponentWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.ComponentConfig;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
 import java.util.*;
@@ -174,7 +180,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IWidgetSelector<T> addProp(final CharSequence propName) {
-        widgets.stream().filter(widget -> widget.propertyName.contentEquals(propName)).findFirst().ifPresent(widget -> {
+        widgets.stream().filter(widget -> widget.propertyName != null && widget.propertyName.contentEquals(propName)).findFirst().ifPresent(widget -> {
             throw new EntityMasterConfigurationException(format(ERR_WIDGET_IS_ALREADY_PRESENT, propName, this.entityType.getSimpleName()));
         });
         final WidgetSelector<T> widget = new WidgetSelector<>(this, propName.toString(), new WithMatcherCallback());
@@ -198,6 +204,15 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     @Override
     public IHtmlTextConfig<T> addHtmlLabel(final String htmlText) {
         throw new UnsupportedOperationException("HTML label is not yet supported.");
+    }
+
+    @Override
+    public IComponentConfig<T> addComponent(final CharSequence importPath) {
+        // a dash cannot occur in a property name, so the key of a component never clashes with a property name or with the id of an editor or a property component
+        final long ordinal = widgets.stream().filter(widget -> widget.widget() instanceof EntityComponentWidget).count();
+        final EntityComponentWidget component = new EntityComponentWidget(Objects.toString(importPath, null), entityType, "component-" + ordinal);
+        widgets.add(new WidgetSelector<>(this, component));
+        return new ComponentConfig<>(component, this);
     }
 
     @Override
@@ -435,9 +450,27 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
         @Override
         public Map<String, Class<? extends IEntityMultiActionSelector>> propertyActionSelectors() {
-            return widgets.stream().filter(widget -> widget.widget().action().isPresent()).map(widget -> {
-                return t2(widget.widget().propertyName(), widget.widget().action().get().actionSelectorClass());
-            }).collect(toMap(tt -> tt._1, tt -> tt._2));
+            return widgets.stream().filter(widget -> widget.widget().action().isPresent())
+                    .map(widget -> t2(keyOf(widget.widget()), widget.widget().action().get().actionSelectorClass()))
+                    .collect(toMap(tt -> tt._1, tt -> tt._2));
+        }
+
+        /// The conditions are declared typed by the entity type of the master, which the widgets do not know.
+        ///
+        @Override
+        @SuppressWarnings("unchecked")
+        public Map<String, Class<? extends IComponentRefreshCondition<T>>> componentRefreshConditions() {
+            return widgets.stream()
+                    .map(WidgetSelector::widget)
+                    .<AbstractComponentWidget>mapMulti(typeFilter(AbstractComponentWidget.class))
+                    .flatMap(component -> component.refreshCondition().map(condition -> t2(component.componentKey(), (Class<? extends IComponentRefreshCondition<T>>) condition)).stream())
+                    .collect(toMap(tt -> tt._1, tt -> tt._2));
+        }
+
+        /// The key of `widget` in the master, which is the key of a component, or otherwise the property name of the widget.
+        ///
+        private static String keyOf(final AbstractWidget widget) {
+            return widget instanceof AbstractComponentWidget component ? component.componentKey() : widget.propertyName();
         }
     }
 

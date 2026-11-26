@@ -1,0 +1,108 @@
+package ua.com.fielden.platform.web.view.master.api.widgets.impl;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
+import ua.com.fielden.platform.web.view.master.api.helpers.IAlso;
+import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
+import ua.com.fielden.platform.web.view.master.api.widgets.IComponentConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig0;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig1;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig2;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig3;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig4;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig5;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentConfig6;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.IComponentRefreshCondition;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.AbstractComponentWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.ComponentWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.component.impl.EntityComponentWidget;
+
+import java.util.Objects;
+
+/// The configuration of a component, which records all declarations in its widget:
+/// a [ComponentWidget] for a component that represents a property in place of an editor,
+/// or an [EntityComponentWidget] for a component bound to the entity rather than to any of its properties.
+///
+public class ComponentConfig<T extends AbstractEntity<?>> implements IComponentConfig<T> {
+
+    private final AbstractComponentWidget widget;
+    private final IPropertySelector<T> propSelector;
+
+    public ComponentConfig(final AbstractComponentWidget widget, final IPropertySelector<T> propSelector) {
+        this.widget = widget;
+        this.propSelector = propSelector;
+    }
+
+    @Override
+    public IComponentConfig0<T> withTitle(final String title) {
+        widget.withTitle(title);
+        return this;
+    }
+
+    @Override
+    public IComponentConfig1<T> withDesc(final String desc) {
+        widget.withDesc(desc);
+        return this;
+    }
+
+    @Override
+    public IComponentConfig2<T> withElementName(final String elementName) {
+        widget.withElementName(elementName);
+        return this;
+    }
+
+    @Override
+    public IComponentConfig3<T> withHeight(final int height) {
+        widget.withHeight(height);
+        return this;
+    }
+
+    @Override
+    public IComponentConfig4<T> withMinHeight(final int minHeight) {
+        widget.withMinHeight(minHeight);
+        return this;
+    }
+
+    @Override
+    public IComponentConfig4<T> withAttr(final String name, final CharSequence value) {
+        widget.withAttr(name, Objects.toString(value, null));
+        return this;
+    }
+
+    @Override
+    public IComponentConfig4<T> withPropAttr(final String name, final CharSequence propPath) {
+        widget.withPropAttr(name, Objects.toString(propPath, null));
+        return this;
+    }
+
+    @Override
+    public IComponentConfig5<T> skipBlockingWhenUnsaved() {
+        widget.skipBlockingWhenUnsaved();
+        return this;
+    }
+
+    @Override
+    public IComponentConfig6<T> refreshWhen(final Class<? extends IComponentRefreshCondition<T>> condition) {
+        widget.refreshWhen(condition);
+        return this;
+    }
+
+    @Override
+    public IAlso<T> withAction(final EntityActionConfig action) {
+        widget.withAction(action);
+        return this;
+    }
+
+    @Override
+    public IAlso<T> withMultiAction(final EntityMultiActionConfig action) {
+        widget.withMultiAction(action);
+        return this;
+    }
+
+    @Override
+    public IPropertySelector<T> also() {
+        return propSelector;
+    }
+
+}

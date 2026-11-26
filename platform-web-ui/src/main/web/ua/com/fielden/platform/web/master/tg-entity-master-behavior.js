@@ -1,7 +1,7 @@
 import '/resources/egi/tg-custom-action-dialog.js';
 import '/resources/components/postal-lib.js';
 
-import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isTouchEnabled, getParentAnd, isIPhoneOs, isIPadOs, isMacSafari } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isTouchEnabled, getParentAnd, getFlattenedParentAnd, isInert, isIPhoneOs, isIPadOs, isMacSafari } from '/resources/reflection/tg-polymer-utils.js';
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
@@ -11,6 +11,7 @@ import { queryElements } from '/resources/components/tg-element-selector-behavio
 import { enhanceStateRestoration, UnexpectedCustomError } from '/resources/components/tg-global-error-handler.js';
 import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
+import { isInMasterComponent } from '/resources/master/tg-master-component-behavior.js';
 
 export const LeaveReason = {
     CLOSED: "CLOSED",
@@ -28,11 +29,17 @@ const CanLeaveOptions  = {
  * Otherwise returns first enabled input if there is one.
  * Otherwise returns null.
  * 
+ * The editors include the master components, as returned by `getEditors()`.
+ * A master component takes part with the element at which it is focused as a whole, if it can be focused, as returned by `_componentToFocus()`, unless it is blocked, as its elements are then inert, much as a disabled editor does not take part:
+ * it is the first input if it comes first, and the preferred one if it represents the preferred property, but it is never invalid, as it is read-only.
+ *
  * If returned input is present, returns whether it is 'preferred'.
  *
  * @param preferredOnly -- consider only preferred inputs (independent from invalid)
+ * @param editors -- the editors to choose from, including the master components, in the order of the layout
+ * @param preferredProperty -- the preferred property of the entity of the master, if any
  */
-const findFirstInputToFocus = (preferredOnly, editors) => {
+const findFirstInputToFocus = (preferredOnly, editors, preferredProperty) => {
     const selectEnabledEditor = editor => {
         const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
         if (selectedElement && selectedElement.shadowRoot) {
@@ -43,20 +50,22 @@ const findFirstInputToFocus = (preferredOnly, editors) => {
         }
         return selectedElement;
     };
+    const selectEnabledComponent = component => component.blocked ? null : component._componentToFocus();
     
     let firstInput, firstPreferredInput, firstInvalidInput;
     for (let editorIndex = 0; editorIndex < editors.length; editorIndex++) {
         const currentEditor = editors[editorIndex];
         if (currentEditor.offsetParent !== null) {
-            const selectedElement = selectEnabledEditor(currentEditor);
+            const isComponent = _isComponent(currentEditor);
+            const selectedElement = isComponent ? selectEnabledComponent(currentEditor) : selectEnabledEditor(currentEditor);
             if (selectedElement) {
                 if (!firstInput) {
                     firstInput = selectedElement;
                 }
-                if (!firstPreferredInput && currentEditor.propertyName && currentEditor.propertyName === currentEditor.entity['@@origin'].preferredProperty()) {
+                if (!firstPreferredInput && currentEditor.propertyName && currentEditor.propertyName === preferredProperty) {
                     firstPreferredInput = selectedElement;
                 }
-                if (!firstInvalidInput && currentEditor._error && !currentEditor.isInWarning() && !currentEditor.isWithInformative()) {
+                if (!firstInvalidInput && !isComponent && currentEditor._error && !currentEditor.isInWarning() && !currentEditor.isWithInformative()) {
                     firstInvalidInput = selectedElement;
                 }
             }
@@ -90,11 +99,9 @@ const findFirstViewWithNewAction = function (dialog, viewWithAction) {
  * @see https://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
  */
 const _isElementInViewport = function (el) {
-    let parent = el;
-    while (parent && parent.tagName !== 'TG-SCROLLABLE-COMPONENT') {
-        // go through parent elements (including going out from shadow DOM)
-        parent = parent.assignedSlot || parent.parentElement || parent.getRootNode().host; // tg-flex-layout should be distributed into slot with tg-scrollable-component ancestor; fallback to standard lookup in case if not [yet] distributed
-    }
+    // go through parent elements in the flattened tree, including going out from shadow DOM;
+    // tg-flex-layout should be distributed into slot with tg-scrollable-component ancestor; fallback to standard lookup in case if not [yet] distributed
+    const parent = getFlattenedParentAnd(el, current => current.tagName === 'TG-SCROLLABLE-COMPONENT');
     const root = parent ? parent.$.scrollablePanel : null;
     if (!root) {
         return true;
@@ -105,6 +112,40 @@ const _isElementInViewport = function (el) {
         && rect.left >= rootRect.left
         && rect.bottom <= rootRect.bottom
         && rect.right <= rootRect.right;
+};
+
+/**
+ * Determines whether 'element' is a master component, which is marked with attribute 'tg-master-component'.
+ */
+const _isComponent = function (element) {
+    return !!element && element.hasAttribute('tg-master-component');
+};
+
+/**
+ * Determines whether 'element' is the element at which a master component is focused as a whole, as returned by 'component()' of the component, which is the component itself or an element of its shadow tree.
+ */
+const _isComponentToFocus = function (element) {
+    const component = _isComponent(element) ? element : element.getRootNode().host;
+    return _isComponent(component) && component._componentToFocus() === element;
+};
+
+/**
+ * Determines whether 'element' of 'container' is in the content of a master component focused as a whole, which is within the element at which the component is focused, as described in 'TgMasterComponentBehavior':
+ * whether any of the ancestors of 'element' up to 'container', from its parent element or the host of its shadow root on in the flattened tree, including the hosts of shadow roots and the slots of slotted elements, is such an element,
+ * as it is for a property action that the component slots into that element, such as into the toolbar of a map.
+ */
+const _isInComponentContent = function (element, container) {
+    const componentToFocusOrContainer = getFlattenedParentAnd(element.parentElement || element.getRootNode().host, current => current === container || _isComponentToFocus(current));
+    return !!componentToFocusOrContainer && componentToFocusOrContainer !== container;
+};
+
+/**
+ * Determines whether 'element' of 'container' belongs to a master component, as the component itself and its elements do:
+ * whether 'element' or any of its ancestors up to 'container' in the flattened tree, including the hosts of shadow roots and the slots of slotted elements, is a master component.
+ */
+const _belongsToComponent = function (element, container) {
+    const componentOrContainer = getFlattenedParentAnd(element, current => current === container || _isComponent(current));
+    return !!componentOrContainer && componentOrContainer !== container;
 };
 
 /**
@@ -130,6 +171,10 @@ const focusInput = function (inputToFocus) {
  * 
  * If preferred input is getting focus, the contents of the input gets selected.
  * 
+ * The inputs include those of the master components, which `getEditors()` returns together with the editors, as described in `findFirstInputToFocus`.
+ * A master component is focused as a whole as an editor is: for a persisted entity, a component that is the first input is not focused, but the element before it is, as before the first editor.
+ * A blocked component is passed over, both as the first or preferred input and as the previously focused input, as its elements are inert.
+ *
  * @param preferredOnly -- consider only preferred inputs (independent from invalid)
  * @param manuallyFocusedInput -- previous manually focused input to be focused only in the absence of invalid / preferred one
  * @param orElseFocus -- function for focusing in case if there is no enabled input to focus
@@ -138,7 +183,7 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
     const editors = this.getEditors();
 
     if (_updateManuallyFocusedInputWith) {
-        // Provide editors with ability to update `manuallyFocusedInput` of the master.
+        // Provide editors, including master components, with ability to update `manuallyFocusedInput` of the master.
         for (const editor of editors) {
             if (!editor._updateManuallyFocusedInputWith) {
                 editor._updateManuallyFocusedInputWith = _updateManuallyFocusedInputWith;
@@ -157,7 +202,8 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
         }
     }
 
-    const inputToFocus = findFirstInputToFocus(preferredOnly, editors);
+    const preferredProperty = this._currBindingEntity && this._currBindingEntity['@@origin'].preferredProperty();
+    const inputToFocus = findFirstInputToFocus(preferredOnly, editors, preferredProperty);
     if (inputToFocus) {
         // Enforce focusing of invalid / preferred input regardless of any conditions.
         // If found input is not invalid / preferred, skip focusing for new entities.
@@ -185,8 +231,8 @@ export const focusEnabledInputIfAny = function (preferredOnly, manuallyFocusedIn
             }
         } else {
             // If manuallyFocusedInput is present, focus it.
-            // If it is disabled (<input> / <textarea>), fallback to focus element before first enabled input ('else' branch).
-            if (_updateManuallyFocusedInputWith && manuallyFocusedInput && !manuallyFocusedInput.disabled) {
+            // If it is disabled (<input> / <textarea>), or inert, as the element of a blocked master component is, fallback to focus element before first enabled input ('else' branch).
+            if (_updateManuallyFocusedInputWith && manuallyFocusedInput && !manuallyFocusedInput.disabled && !isInert(manuallyFocusedInput, this)) {
                 focusInput(manuallyFocusedInput);
             }
             // Otherwise, take the first significant parent node, namely `tg-custom-action-dialog`, if it is present.
@@ -681,6 +727,7 @@ const TgEntityMasterBehaviorImpl = {
                 } else { // non-persistent entity has been saved -- _originallyProducedEntity should be updated by newly returned instance
                     this._originallyProducedEntity = potentiallySavedOrNewEntity;
                 }
+                this._refreshAllComponents();
             }
 
             // custom external action
@@ -1134,8 +1181,14 @@ const TgEntityMasterBehaviorImpl = {
         embeddedMaster.postSavedError = this.postSavedError;
     },
 
+    /**
+     * Returns the elements that can be focused, in the order of focus traversal, including those of the editors, the actions and the components of the master.
+     * The content of a component focused as a whole is skipped, as the focus moves to the element at which the component is focused, as to a rich text editor,
+     * and into its content only from that element, as described in `TgMasterComponentBehavior`.
+     * The elements of inert subtrees, such as a blocked master component and its elements, are skipped, as they cannot be focused.
+     */
     _getCurrentFocusableElements: function () {
-        return queryElements(this, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
+        return queryElements(this, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null && !isInert(element, this) && !_isInComponentContent(element, this));
     },
 
     wasLoaded: function () {
@@ -1164,6 +1217,12 @@ const TgEntityMasterBehaviorImpl = {
         this._focusView(e, false);
     },
 
+    /**
+     * Moves the focus on Tab (`forward`) and Shift+Tab, as asked for by the dialog of the master with `focusNextView` and `focusPreviousView` for every such key press within the master.
+     * From the last focusable element in that direction, the master asks with `tg-last-item-focused` for the focus to move on out of it, such as by the dialog to its title bar.
+     * From or to an element of a master component, the focus moves here to the adjacent focusable element, where the browser would move it into the content of a component focused as a whole instead,
+     * which the focus enters only with Enter, as described in `TgMasterComponentBehavior`; otherwise, the browser moves the focus.
+     */
     _focusView: function (e, forward) {
         if (this._hasEmbededView()) {
             const callback = forward ? this._focusNextEmbededView : this._focusPreviousEmbededView;
@@ -1178,8 +1237,15 @@ const TgEntityMasterBehaviorImpl = {
                 } else {
                     const lastIndex = forward ? focusedElements.length - 1 : 0;
                     const activeElement = deepestActiveElement();
-                    if (activeElement === focusedElements[lastIndex]) {
+                    const index = focusedElements.indexOf(activeElement);
+                    if (index === lastIndex) {
                         this.fire("tg-last-item-focused", { forward: forward, event: e });
+                    } else if (index >= 0) {
+                        const adjacentElement = focusedElements[forward ? index + 1 : index - 1];
+                        if (_belongsToComponent(activeElement, this) || _belongsToComponent(adjacentElement, this)) {
+                            adjacentElement.focus();
+                            tearDownEvent(e);
+                        }
                     }
                 }
             } else {
@@ -1190,7 +1256,8 @@ const TgEntityMasterBehaviorImpl = {
 
     /**
      * Updates `manuallyFocusedInput` based on next manually focused `elementToFocus`.
-     * We only consider real editor internal inputs and skip property actions or other elements.
+     * We only consider real editor internal inputs, and the elements at which master components are focused as a whole, which the components report while the focus is at them or in their content,
+     * and skip property actions or other elements.
      * Skipped elements would trigger `manuallyFocusedInput` clearing and would cause focusing of first element before first input.
      */
     _updateManuallyFocusedInputWith: function (elementToFocus) {
@@ -1203,7 +1270,7 @@ const TgEntityMasterBehaviorImpl = {
         if (!isTouchEnabled() && this.currentState === 'EDIT') {
             // Please note, that tg-multiline-text-editor is special and its <text-area> does not have 'custom-input' class.
             // Only, <iron-autogrow-text-area> above has it.
-            this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host)) ? elementToFocus : null;
+            this.manuallyFocusedInput = elementToFocus && (this._isEditorElement(elementToFocus) || this._isEditorElement(elementToFocus.getRootNode().host) || _isComponentToFocus(elementToFocus)) ? elementToFocus : null;
         }
     },
 
@@ -1273,8 +1340,11 @@ const TgEntityMasterBehaviorImpl = {
         });
     },
 
+    /**
+     * Returns the editors of the master together with its master components, in the order of the layout, from which the input to focus is chosen, as described in `focusEnabledInputIfAny`.
+     */
     getEditors: function () {
-        return this.shadowRoot.querySelectorAll('[tg-editor]');
+        return this.shadowRoot.querySelectorAll('[tg-editor], [tg-master-component]');
     },
 
     /**
@@ -1292,11 +1362,15 @@ const TgEntityMasterBehaviorImpl = {
      * Mobile: triggers focusing of preferred enabled input, if there is any.
      * 
      * In case of preferred input focusing, the contents of the input gets selected.
+     *
+     * A master in the content of a master component, such as the master of an alternative view of a centre embedded by 'tg-centre-component', is not focused,
+     * so that it does not take the focus from the master of the component when its entity appears, as described in `isInMasterComponent`.
+     * The inline master of a grid overrides this method, so it is focused also there, as it is opened by the user.
      */
     focusView: function () {
         this.async(() => {
             const insertionPoint = getParentAnd(this, parent => parent.matches('tg-entity-centre-insertion-point'));
-            if (!insertionPoint || (insertionPoint.offsetParent !== null && insertionPoint.alternativeView)) { 
+            if (!isInMasterComponent(this) && (!insertionPoint || (insertionPoint.offsetParent !== null && insertionPoint.alternativeView))) {
                 if (this._hasEmbededView()) {
                     this._focusEmbededView()
                 } else {
@@ -1473,14 +1547,56 @@ const TgEntityMasterBehaviorImpl = {
 
     //////////////////////////////////////// VALIDATION ////////////////////////////////////////
     /**
-     * Overridden in tg-entity-master to use originallyProducedEntity which is not applicable in centre's selection criteria.
+     * Overridden in tg-entity-master to use originallyProducedEntity which is not applicable in centre's selection criteria,
+     * and to provide the properties changed by the user as '@@changedProps', for the refresh conditions of components.
      */
     _validateForDescendants: function (preparedModifHolder) {
+        preparedModifHolder['@@changedProps'] = this._changedProps(preparedModifHolder);
         return this._validator().validate(this._originallyProducedEntity, preparedModifHolder);
     },
 
     /**
-     * Overridden to populate '_originallyProducedEntity' in case where 'new' entity arrives.
+     * Returns the names of the properties whose values in 'modifHolder' differ from those of the entity as it was last received, which are the properties changed by the user since then.
+     * The server evaluates the refresh conditions of components with them, as it does not keep the state of the entity between validations.
+     */
+    _changedProps: function (modifHolder) {
+        const received = this._receivedModifiedPropertiesHolder;
+        const differ = (curr, prev) => ['val', 'valId', 'activeProperty'].some(key => !this._reflector().equalsEx(curr[key], prev[key]));
+        return Object.keys(modifHolder).filter(name => !name.startsWith('@') && name !== 'id' && name !== 'version' && differ(modifHolder[name], received[name] || {}));
+    },
+
+    /**
+     * Overridden to refresh the components whose refresh conditions held for the validated entity, whose keys the server returns as 'refreshedComponents'.
+     */
+    _postValidatedDefaultForDescendants: function (entity, bindingEntity, customObject) {
+        TgEntityBinderBehavior._postValidatedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
+        this._refreshComponents(customObject.refreshedComponents || []);
+    },
+
+    /**
+     * Asks all components to refresh, as when the entity is retrieved or saved.
+     */
+    _refreshAllComponents: function () {
+        this._getComponents().forEach(component => component.requestRefresh());
+    },
+
+    /**
+     * Asks the components with 'keys' to refresh, which are keyed as the property action indices are:
+     * by the property name of a component in place of an editor, and by the id of a component bound to the entity, which has no property name.
+     */
+    _refreshComponents: function (keys) {
+        this._getComponents().filter(component => keys.includes(component.propertyName || component.id)).forEach(component => component.requestRefresh());
+    },
+
+    /**
+     * Returns the components of the master, which are marked with attribute 'tg-master-component', as editors are with 'tg-editor'.
+     */
+    _getComponents: function () {
+        return [...this.shadowRoot.querySelectorAll('[tg-master-component]')];
+    },
+
+    /**
+     * Overridden to populate '_originallyProducedEntity' in case where 'new' entity arrives, and to refresh all components.
      */
     _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
         TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
@@ -1490,6 +1606,7 @@ const TgEntityMasterBehaviorImpl = {
         } else {
             this._originallyProducedEntity = null;
         }
+        this._refreshAllComponents();
     },
 
     //////////////////////////////////////// SAVING ////////////////////////////////////////

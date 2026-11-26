@@ -1,0 +1,190 @@
+import '/resources/element_loader/tg-element-loader.js';
+import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
+import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
+import { TgMasterComponentBehavior } from '/resources/master/tg-master-component-behavior.js';
+import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
+
+const template = html`
+    <style>
+        :host {
+            display: flex;
+            flex-direction: column;
+        }
+        .caption {
+            display: flex;
+            align-items: center;
+            min-height: 24px;
+            font-size: 12px;
+            color: var(--paper-input-container-color, var(--secondary-text-color));
+        }
+        .caption[hidden] {
+            display: none;
+        }
+        .caption-title {
+            flex: 1;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            cursor: default;
+        }
+        #loader {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            /* the containing block of the views of the embedded centre, which are positioned absolutely to fill the nearest positioned ancestor, so that they stay below the caption */
+            position: relative;
+        }
+        /* the embedded centre, which the loader inserts as its child */
+        #loader > * {
+            flex: 1;
+            min-height: 0;
+        }
+    </style>
+    <div class="caption" hidden$="[[!_hasCaption(propTitle, _hasPropertyActions)]]">
+        <span class="caption-title tg-component-title" tooltip-text$="[[propDesc]]">[[propTitle]]</span>
+        <slot name="property-action"></slot>
+    </div>
+    <tg-element-loader id="loader" tabindex="0" import="[[_importUri(miType)]]" element-name="[[_elementName(miType)]]" attrs="[[_centreAttrs]]" context="[[_getMasterEntity]]" context-property="getMasterEntity"></tg-element-loader>
+`;
+
+/**
+ * A component for entity masters that embeds an entity centre, whose query depends on the master entity, as the embedded centres of compound masters do.
+ * It is declared in the Entity Master DSL, usually bound to the entity:
+ *
+ *     .addComponent("centre/tg-centre-component")
+ *         .withTitle("Active Work Orders by Status")
+ *         .withAttr("mi-type", MiLocationMaster_ActiveWorkOrders.class.getName())
+ *
+ * The centre is that of menu item type 'mi-type', registered in the application, which is loaded from '/centre_ui/<mi-type>' as element 'tg-<simple name of mi-type>-centre'.
+ * Its context includes the master entity, with the changes that are not yet saved, so that its query enhancer with 'context().withMasterEntity()' can restrict the query by the master entity.
+ * The centre runs whenever the component is refreshed, as described in 'TgMasterComponentBehavior':
+ * when the master retrieves the entity, as when it is opened or its changes are cancelled, when it saves the entity,
+ * and after each validation for which the refresh condition declared with 'refreshWhen' in the Entity Master DSL holds,
+ * or, for a component in place of an editor without a declared condition, whenever the value of its property changes.
+ * It does not run while the component is blocked.
+ *
+ * The centre has its own uuid, so that its actions do not refresh the master.
+ * The component fills the height of its layout cell, so that it grows with the master in a flexible row of the master layout, such as 'FLEXIBLE_ROW' of 'LayoutComposer'.
+ * Its height is not less than 'min-height', which is also its height in a row laid out to the heights of its content.
+ * With a height declared with 'withHeight' in the Entity Master DSL, the component is resizable by the user, and keeps that height, or the height set by the user, at least, as described in 'TgMasterComponentBehavior'.
+ * The embedded centre follows every change of size of the component, including one by the user: the component notifies it with 'IronResizableBehavior',
+ * so that its views, such as a chart in an alternative view, fit the new size.
+ * Its selection view fills the component, with the selection criteria growing to the height that is left by the toolbar and the buttons of the view,
+ * so that the buttons are always at the bottom of the component.
+ * Its grid has the height that the centre declares in the Entity Centre DSL: with 'fitToHeight()', it fills the component, stretched to its full height with its rows scrolled within it,
+ * and otherwise it has the height of its rows, or of the number of visible rows that the centre declares or the user configures, which leaves room for insertion points of the centre.
+ * This applies to the embedded centre only, which the component marks with 'isComponent' through the attributes of its loader, as described in 'TgEntityCentreBehavior':
+ * the centres in its insertion points, with their selection views and grids, are laid out as anywhere else.
+ * The centre focuses its views only when the user selects them, such as by running it or by going back to its selection criteria, and not when it selects them by itself, as when it loads or the component refreshes it,
+ * and the masters of its views, such as a chart in an alternative view, do not focus themselves when their entities appear,
+ * so that they do not take the focus from the master, which focuses its editors and components when it shows the entity, as described in 'TgEntityMasterBehavior'.
+ * The focusing of the views follows from the centre being in the content of the component, as described in 'isInMasterComponent' of 'TgMasterComponentBehavior'.
+ */
+class TgCentreComponent extends mixinBehaviors([TgMasterComponentBehavior, IronResizableBehavior], PolymerElement) {
+
+    static get template() {
+        return template;
+    }
+
+    static get properties() {
+        return {
+
+            /**
+             * The fully-qualified name of the menu item type of the embedded centre.
+             */
+            miType: {
+                type: String
+            },
+
+            /**
+             * The least height of the component, as a CSS length, which is applied by 'TgMasterComponentBehavior'.
+             */
+            minHeight: {
+                type: String,
+                value: '250px'
+            },
+
+            /**
+             * The function that provides the master entity as the context of the embedded centre, which the centre calls when it runs.
+             * A new function is assigned for every refresh, which loads the centre the first time and runs it again afterwards.
+             */
+            _getMasterEntity: {
+                type: Function
+            },
+
+            _centreAttrs: {
+                type: Object,
+                value: function () {
+                    return {
+                        embedded: true,
+                        isComponent: true,
+                        uuid: generateUUID()
+                    };
+                }
+            },
+
+            _hasPropertyActions: {
+                type: Boolean,
+                value: false
+            }
+        };
+    }
+
+    ready() {
+        super.ready();
+        this._hasPropertyActions = this._propertyActions.length > 0;
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+        this._resizeObserver = new ResizeObserver(() => this._sizeChangedAsync());
+        this._resizeObserver.observe(this.$.loader);
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        this._resizeObserver.disconnect();
+        this._resizeObserver = null;
+        cancelAnimationFrame(this._sizeChangedFrame);
+    }
+
+    /**
+     * Returns the loader of the embedded centre, at which the component is focused as a whole, as described in 'TgMasterComponentBehavior', with the elements of the centre as its content.
+     * The loader declares 'tabindex' '0', so that it can be focused.
+     */
+    component() {
+        return this.$.loader;
+    }
+
+    /**
+     * Notifies the embedded centre of a change of size of the area under the caption in the next animation frame, as the centre and its views change the DOM to fit the new size,
+     * which must not happen in a 'ResizeObserver' callback to avoid error 'ResizeObserver loop completed with undelivered notifications'.
+     */
+    _sizeChangedAsync() {
+        cancelAnimationFrame(this._sizeChangedFrame);
+        this._sizeChangedFrame = requestAnimationFrame(() => this.notifyResize());
+    }
+
+    _hasCaption(propTitle, _hasPropertyActions) {
+        return !!propTitle || _hasPropertyActions;
+    }
+
+    _importUri(miType) {
+        return `/centre_ui/${miType}`;
+    }
+
+    _elementName(miType) {
+        return `tg-${miType.substring(miType.lastIndexOf('.') + 1)}-centre`;
+    }
+
+    /**
+     * Provides the current master entity as the context of the centre, which loads the centre the first time and runs it again afterwards.
+     */
+    refresh() {
+        this._getMasterEntity = () => this.masterEntityContext();
+    }
+}
+
+customElements.define('tg-centre-component', TgCentreComponent);

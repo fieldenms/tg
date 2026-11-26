@@ -1,4 +1,7 @@
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
+
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 
 import '/resources/actions/tg-ui-action.js';
 
@@ -54,7 +57,12 @@ const template = html`
         </tg-ui-action>
     </template>`;
 
-export class TgEgiMultiAction extends PolymerElement {
+/**
+ * The action of a row of the grid that is chosen among several, such as the primary action or a secondary action.
+ * It exposes the elements of its shadow tree to the selection of elements of `TgElementSelectorBehavior`,
+ * so that the focus traversals that select the focusable elements with it, such as that of the content of a master component, include the button of the shown action.
+ */
+export class TgEgiMultiAction extends mixinBehaviors([TgElementSelectorBehavior], PolymerElement) {
 
     static get template() { 
         return template;

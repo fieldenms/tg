@@ -42,6 +42,7 @@ export const fitToBounds = function (map, markerClusterGroup) {
  *
  * @param element -- web component with already initialised Shadow DOM, where styles will be inserted
  * @param styleModuleNames -- name[s] of style module[s] to be inserted to the 'element'; need[s] to be imported prior to the usage
+ * @returns the appended 'custom-style' element, so that the styles can be removed
  */
 export const appendStylesTo = function (element, ...styleModuleNames) {
     const styleWrapper = document.createElement('custom-style');
@@ -49,4 +50,5 @@ export const appendStylesTo = function (element, ...styleModuleNames) {
     style.setAttribute('include', styleModuleNames.join(' '));
     styleWrapper.appendChild(style);
     element.shadowRoot.appendChild(styleWrapper);
+    return styleWrapper;
 };

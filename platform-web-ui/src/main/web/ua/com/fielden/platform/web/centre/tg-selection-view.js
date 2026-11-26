@@ -40,6 +40,11 @@ const template = html`
                 flex: 1;
             };
         }
+        /* with attribute 'fill-height', the selection criteria grow to the height of the view that is left by the toolbar and the buttons, so that the buttons are at the bottom of the view;
+           otherwise, the selection criteria have the height of their content, and are scrolled once the view cannot grow any more */
+        :host([fill-height]) tg-scrollable-component {
+            flex: 1;
+        }
         tg-responsive-toolbar {
             margin-top: 8px;
             padding: 0 12px;

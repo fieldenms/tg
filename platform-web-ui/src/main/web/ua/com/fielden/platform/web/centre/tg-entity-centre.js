@@ -18,6 +18,7 @@ import { TgElementSelectorBehavior, queryElements} from '/resources/components/t
 import { _requestHeaders } from '/resources/reflection/tg-request-headers.js';
 import { resetCustomSettings } from '/resources/centre/tg-entity-centre-insertion-point.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
+import { isInMasterComponent } from '/resources/master/tg-master-component-behavior.js';
 
 import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
@@ -161,6 +162,11 @@ const template = html`
             max-height: 100%;
             overflow: hidden;
         }
+        /* the selection view and its card fill the height of the centre embedded by 'tg-centre-component', so that the buttons of the view are at the bottom of the component */
+        :host([is-component]) .selection-material,
+        :host([is-component]) tg-selection-view {
+            flex: 1;
+        }
         paper-spinner {
             position: absolute;
             top: 0px;
@@ -245,7 +251,7 @@ const template = html`
     <iron-pages id="views" selected="[[_selectedView]]">
         <div class="fit layout vertical">
             <div class="paper-material selection-material layout vertical" elevation="1">
-                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _reset-autocompleter-state="[[_resetAutocompleterState]]" _show-dialog="[[_showDialog]]" _long-help-tap-handler="[[_longHelpTapHandler]]" _short-help-tap-handler="[[_shortHelpTapHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]">
+                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _reset-autocompleter-state="[[_resetAutocompleterState]]" _show-dialog="[[_showDialog]]" _long-help-tap-handler="[[_longHelpTapHandler]]" _short-help-tap-handler="[[_shortHelpTapHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]" fill-height$="[[isComponent]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
                     <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
@@ -353,6 +359,16 @@ Polymer({
         _centreDirtyOrEdited: Boolean,
         _viewerDisabled: Boolean,
         embedded: Boolean,
+        /**
+         * Indicates whether this centre is a master component, embedded by 'tg-centre-component', as passed by the centre element that contains it, as described in 'isComponent' of 'TgEntityCentreBehavior'.
+         * The selection view of such a centre fills its height, with the selection criteria growing to the height that is left by the toolbar and the buttons of the view, so that the buttons are at the bottom of the component.
+         * Otherwise, the selection view has the height of its content, up to the height of this centre, as in the centres of the insertion points of such a centre.
+         */
+        isComponent: {
+            type: Boolean,
+            value: false,
+            reflectToAttribute: true
+        },
         discard: Function,
         run: Function,
         leftSplitterPosition: String,
@@ -762,14 +778,18 @@ Polymer({
     },
 
     /**
-     * Configures current view binding; removes view binding for previous view; focuses first focusable element in current view.
+     * Configures current view binding; removes view binding for previous view; focuses first focusable element in current view,
+     * unless this centre is in the content of a master component, such as a centre embedded by 'tg-centre-component', as described in `isInMasterComponent`.
+     * Such a centre focuses only the views that the user selects, as described in `_activateView` and `_postRun` of `TgEntityCentreBehavior`.
      */
     _pageSelectionChanged: function (event) {
         if (event.target === this.$.views) {
             const prevView = this._allViews[this._previousView];
             const currentView = this._allViews[this._selectedView];
             this._configViewBindings(prevView, currentView);
-            this.focusSelectedView();
+            if (!isInMasterComponent(this)) {
+                this.focusSelectedView();
+            }
             tearDownEvent(event);
             (this._selectedView === 1 ? this.$.centreResultContainer : this._allViews[this._selectedView]).fire("tg-centre-page-was-selected");
         }
