@@ -28,6 +28,8 @@ import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointCon
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder5aTitleBar;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder5bTitleBarStyle;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
@@ -74,6 +76,17 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final String egiHeight;
     private final boolean fitToHeight;
     private final String rowHeight;
+
+    /// Determines whether the EGI is shown with a title bar (see [IResultSetBuilder5aTitleBar]).
+    ///
+    private final boolean egiTitleBar;
+    /// The title displayed in the EGI title bar.
+    /// If it is `null`, the title bar displays the same title as the entity centre has.
+    ///
+    private final String egiTitle;
+    /// The styles (CSS declarations) to be applied to the EGI title bar (see [IResultSetBuilder5bTitleBarStyle]).
+    ///
+    private final String egiTitleBarStyle;
 
     /////////////////////////////////////////////
     ///////////// TOP LEVEL ACTIONS /////////////
@@ -505,7 +518,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final Pair<Class<?>, Class<?>> generatorTypes,
             final IFetchProvider<T> fetchProvider,
-            final boolean insertionPointCustomLayoutEnabled)
+            final boolean insertionPointCustomLayoutEnabled,
+            final boolean egiTitleBar,
+            final String egiTitle,
+            final String egiTitleBarStyle)
     {
         this.egiHidden = egiHidden;
         this.gridViewIcon = gridViewIcon;
@@ -587,6 +603,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.generatorTypes = generatorTypes;
         this.fetchProvider = fetchProvider;
         this.insertionPointCustomLayoutEnabled = insertionPointCustomLayoutEnabled;
+        this.egiTitleBar = egiTitleBar;
+        this.egiTitle = egiTitle;
+        this.egiTitleBarStyle = egiTitleBarStyle;
     }
 
     ///////////////////////////////////////////
@@ -1028,6 +1047,25 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public String getRowHeight() {
         return rowHeight;
+    }
+
+    /// Indicates whether the EGI is shown with a title bar, specified with one of the `withTitleBar` methods of [IResultSetBuilder5aTitleBar].
+    ///
+    public boolean hasEgiTitleBar() {
+        return egiTitleBar;
+    }
+
+    /// Returns the title specified for the EGI title bar with [IResultSetBuilder5aTitleBar#withTitleBar(String)].
+    /// It is empty if the title bar was specified with [IResultSetBuilder5aTitleBar#withTitleBar()], which displays the same title as the entity centre has, or if there is no title bar.
+    ///
+    public Optional<String> getEgiTitle() {
+        return ofNullable(egiTitle);
+    }
+
+    /// Returns the styles specified with [IResultSetBuilder5bTitleBarStyle#andStyle(String)] for the EGI title bar.
+    ///
+    public Optional<String> getEgiTitleBarStyle() {
+        return ofNullable(egiTitleBarStyle);
     }
 
     /// Indicates whether 'active only' action was deliberately hidden by specifying [MatcherOptions#HIDE_ACTIVE_ONLY_ACTION] option in following methods:\

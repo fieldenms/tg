@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfigBuilder.multiAction;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -411,6 +412,126 @@ public class EntityCentreBuilderResultSetTest {
         assertNotNull(config.getResultsetExpansionCardLayout());
         assertFalse(config.getResultsetExpansionCardLayout().hasLayoutFor(DESKTOP, null));
         assertTrue(config.getResultsetExpansionCardLayout().hasLayoutFor(TABLET, LANDSCAPE));
+    }
+
+    @Test
+    public void EGI_has_no_title_bar_by_default() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("desc")
+                .build();
+
+        assertFalse(config.hasEgiTitleBar());
+        assertFalse(config.getEgiTitle().isPresent());
+        assertFalse(config.getEgiTitleBarStyle().isPresent());
+    }
+
+    @Test
+    public void EGI_title_bar_with_a_title_can_be_specified_right_after_all_properties() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("key")
+                .also()
+                .addProp("desc")
+                .withTitleBar("Work Orders")
+                .build();
+
+        assertTrue(config.hasEgiTitleBar());
+        assertEquals(Optional.of("Work Orders"), config.getEgiTitle());
+        assertFalse(config.getEgiTitleBarStyle().isPresent());
+        assertEquals("The last property should be completed before the title bar.", 2, config.getResultSetProperties().get().size());
+        assertEquals("desc", config.getResultSetProperties().get().get(1).propName.get());
+    }
+
+    @Test
+    public void EGI_title_bar_without_a_title_displays_the_title_of_the_centre() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("desc")
+                .withTitleBar()
+                .build();
+
+        assertTrue(config.hasEgiTitleBar());
+        assertFalse(config.getEgiTitle().isPresent());
+        assertFalse(config.getEgiTitleBarStyle().isPresent());
+    }
+
+    @Test
+    public void style_can_be_specified_for_EGI_title_bar() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("desc")
+                .withTitleBar()
+                .andStyle("background-color: var(--paper-grey-700)")
+                .build();
+
+        assertTrue(config.hasEgiTitleBar());
+        assertEquals(Optional.of("background-color: var(--paper-grey-700)"), config.getEgiTitleBarStyle());
+    }
+
+    @Test
+    public void EGI_title_bar_can_be_followed_by_the_rest_of_result_set_configuration() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addProp("desc")
+                .withTitleBar("Work Orders")
+                .andStyle("background-color: var(--paper-grey-700)")
+                .addPrimaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
+                .setRenderingCustomiser(ResultSetRenderingCustomiser.class)
+                .build();
+
+        assertTrue(config.hasEgiTitleBar());
+        assertTrue(config.getResultSetPrimaryEntityAction().isPresent());
+        assertTrue(config.getResultSetRenderingCustomiserType().isPresent());
+    }
+
+    @Test
+    public void EGI_title_bar_can_be_specified_after_an_editable_property() {
+        final EntityCentreConfig<TgWorkOrder> config = centreFor(TgWorkOrder.class)
+                .addEditableProp("desc")
+                .withTitleBar("Work Orders")
+                .build();
+
+        assertTrue(config.hasEgiTitleBar());
+        assertEquals(Optional.of("Work Orders"), config.getEgiTitle());
+        assertEquals(1, config.getResultSetProperties().get().size());
+    }
+
+    @Test
+    public void EGI_title_bar_can_be_specified_after_dynamic_properties() {
+        final EntityCentreConfig<TgVehicle> config = centreFor(TgVehicle.class)
+                .addProps("fuelUsages", DynamicColumnBuilderForTest.class, (entity, ctx) -> {}, context().withCurrentEntity().build())
+                .withTitleBar()
+                .build();
+
+        assertTrue(config.hasEgiTitleBar());
+        assertFalse(config.getEgiTitle().isPresent());
+        assertEquals(1, config.getResultSetProperties().get().size());
+    }
+
+    @Test
+    public void EGI_title_bar_with_a_blank_title_is_not_permitted() {
+        try {
+            centreFor(TgWorkOrder.class).addProp("desc").withTitleBar(" ");
+            fail();
+        } catch (final EntityCentreConfigurationException ex) {
+            assertEquals(ResultSetBuilder.ERR_EGI_TITLE_BLANK, ex.getMessage());
+        }
+    }
+
+    @Test
+    public void blank_style_for_EGI_title_bar_is_not_permitted() {
+        try {
+            centreFor(TgWorkOrder.class).addProp("desc").withTitleBar().andStyle("");
+            fail();
+        } catch (final EntityCentreConfigurationException ex) {
+            assertEquals(ResultSetBuilder.ERR_EGI_TITLE_BAR_STYLE_BLANK, ex.getMessage());
+        }
+    }
+
+    @Test
+    public void EGI_title_bar_cannot_be_specified_for_a_hidden_EGI() {
+        try {
+            centreFor(TgWorkOrder.class).hideEgi().addProp("desc").withTitleBar();
+            fail();
+        } catch (final EntityCentreConfigurationException ex) {
+            assertEquals(ResultSetBuilder.ERR_EGI_TITLE_BAR_FOR_HIDDEN_EGI, ex.getMessage());
+        }
     }
 
 }

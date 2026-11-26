@@ -77,11 +77,15 @@ import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSe
 
 /// A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
 ///
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointWithConfig<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder5bTitleBarStyle<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointWithConfig<T> {
 
     private static final String ERR_SPLITTER_OVERLAPPING = "The left and right splitters are overlapping (i.e., left splitter position + right splitter position > 100).";
     private static final String ERR_SPLITTER_POSITION_OUT_OF_BOUNDS = "The splitter position should be greater than 0 and less than 100.";
     private static final String ERR_EDITABLE_SUB_PROP_DISALLOWED = "Dot-notated property [%s] cannot be added as editable. Only first-level properties are supported.";
+    static final String
+        ERR_EGI_TITLE_BAR_FOR_HIDDEN_EGI = "A title bar cannot be specified for a hidden EGI.",
+        ERR_EGI_TITLE_BLANK = "The title of the EGI title bar must not be blank.",
+        ERR_EGI_TITLE_BAR_STYLE_BLANK = "The style of the EGI title bar must not be blank.";
 
     protected final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
@@ -311,6 +315,40 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         this.entityActionsConfig.add(new EntityMultiActionConfig(SingleActionSelector.class, asList(actionConfigSupplier)));
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder5bTitleBarStyle<T> withTitleBar(final String title) {
+        if (StringUtils.isBlank(title)) {
+            throw new EntityCentreConfigurationException(ERR_EGI_TITLE_BLANK);
+        }
+        return setTitleBar(title);
+    }
+
+    @Override
+    public IResultSetBuilder5bTitleBarStyle<T> withTitleBar() {
+        return setTitleBar(null);
+    }
+
+    /// Specifies that the EGI is shown with a title bar, which displays `title`, or the same title as the entity centre has if `title` is `null`.
+    ///
+    private IResultSetBuilder5bTitleBarStyle<T> setTitleBar(final String title) {
+        if (builder.egiHidden) {
+            throw new EntityCentreConfigurationException(ERR_EGI_TITLE_BAR_FOR_HIDDEN_EGI);
+        }
+        completePropIfNeeded();
+        builder.egiTitleBar = true;
+        builder.egiTitle = title;
+        return this;
+    }
+
+    @Override
+    public ICollapsedCardLayoutConfig<T> andStyle(final String style) {
+        if (StringUtils.isBlank(style)) {
+            throw new EntityCentreConfigurationException(ERR_EGI_TITLE_BAR_STYLE_BLANK);
+        }
+        builder.egiTitleBarStyle = style;
         return this;
     }
 

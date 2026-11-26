@@ -71,6 +71,10 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected String egiHeight = "";
     protected boolean fitToHeight = false;
     protected String rowHeight = "1.5rem";
+    //EGI title bar related properties
+    protected boolean egiTitleBar = false;
+    protected String egiTitle = null;
+    protected String egiTitleBarStyle = null;
 
     ////////////////////////////////////////////////
     //////////////// SELECTION CRITERIA ////////////
@@ -260,7 +264,10 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 queryEnhancerConfig,
                 generatorTypes,
                 customFetchProvider,
-                insertionPointCustomLayoutEnabled);
+                insertionPointCustomLayoutEnabled,
+                egiTitleBar,
+                egiTitle,
+                egiTitleBarStyle);
     }
 
     public Class<T> getEntityType() {

@@ -82,6 +82,16 @@ public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> impl
     }
 
     @Override
+    public IResultSetBuilder5bTitleBarStyle<T> withTitleBar(final String title) {
+        return builder.withTitleBar(title);
+    }
+
+    @Override
+    public IResultSetBuilder5bTitleBarStyle<T> withTitleBar() {
+        return builder.withTitleBar();
+    }
+
+    @Override
     public IExpandedCardLayoutConfig<T> setCollapsedCardLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
         return builder.setCollapsedCardLayoutFor(device, orientation, flexString);
     }

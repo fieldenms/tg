@@ -29,6 +29,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder5WithPropAction;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder5bTitleBarStyle;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderDynamicProps;
@@ -52,6 +53,16 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
     public ResultSetDynamicPropertyBuilder(final ResultSetBuilder<T> builder, final ResultSetProp<T> resultSetProp) {
         this.builder = builder;
         this.resultSetProp = resultSetProp;
+    }
+
+    @Override
+    public IResultSetBuilder5bTitleBarStyle<T> withTitleBar(final String title) {
+        return builder.withTitleBar(title);
+    }
+
+    @Override
+    public IResultSetBuilder5bTitleBarStyle<T> withTitleBar() {
+        return builder.withTitleBar();
     }
 
     @Override
