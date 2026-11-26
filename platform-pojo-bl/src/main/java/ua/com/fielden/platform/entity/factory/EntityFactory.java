@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.DynamicPropertyAccess;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.reflection.Finder;
 
 import java.lang.reflect.Constructor;
@@ -38,10 +39,7 @@ public class EntityFactory {
     @Deprecated(forRemoval = true)
     public static <T extends AbstractEntity<?>> T newPlainEntity(final Class<T> entityClass, final Long id) {
         try {
-            final Constructor<T> constructor = entityClass.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            final T entity = constructor.newInstance();
-            constructor.setAccessible(false);
+            final var entity = (T) CLASS_NOARG_CONSTRUCTOR.get(entityClass).newInstance();
             setId(entityClass, id, entity);
             return entity;
         } catch (final RuntimeException ex) {
@@ -175,5 +173,19 @@ public class EntityFactory {
     private static <T> void setId(final Class<T> entityClass, final Long id, final T entity) throws IllegalAccessException {
         ID_FIELDS.get(entityClass).set(entity, id);
     }
+
+    private static final ClassValue<Constructor<?>> CLASS_NOARG_CONSTRUCTOR = new ClassValue<>() {
+        @Override
+        protected Constructor<?> computeValue(final Class<?> type) {
+            final Constructor<?> ctor;
+            try {
+                ctor = type.getDeclaredConstructor();
+            } catch (final NoSuchMethodException e) {
+                throw new EntityDefinitionException("Class [%s] is missing a no-arg constructor.".formatted(type.getName()));
+            }
+            ctor.setAccessible(true);
+            return ctor;
+        }
+    };
 
 }
