@@ -208,6 +208,11 @@ import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
  * </ul>
  * <p>
  * Please note that mutators for the same collectional property may have different validation annotations.
+ * <h3>Entity instantiation</h3>
+ * Entities should be instantiated only through {@link EntityFactory}, which provides methods for creating both instrumented and
+ * uninstrumented instances.
+ * While the use of `new` for entity instantiation is allowed, it should not be practiced as the resulting instances will
+ * be only partly initialised, which may lead to degraded performance and runtime errors.
  * <p>
  * ==================================================================<br/>
  * <p>
