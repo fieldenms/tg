@@ -31,7 +31,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                           "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
                         + "    import=" + getImportUri(embededMasterType)
                         + "    element-name=" + getElementName(embededMasterType)
-                        + "    attrs='[[_calcAttrs(_currBindingEntity)]]'"
+                        + "    attrs='[[_calcAttrs(_currBindingEntity, menuItemTitle)]]'"
                         + "    >"
                         + "</tg-element-loader>")
                 .replace("//@ready-callback",
@@ -60,9 +60,11 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         "        this.$.loader.loadedElement.focusPreviousView(e);\n" +
                         "    }\n" +
                         "}.bind(this);\n" +
-                        "this._calcAttrs = (function(_currBindingEntity){\n" +
+                        "this._calcAttrs = (function(_currBindingEntity, menuItemTitle){\n" +
                         "   if (_currBindingEntity !== null) {\n" +
-                        "       return " + getAttributes(embededMasterType, "_currBindingEntity", shouldRefreshParentCentreAfterSave) +
+                        "       const attrs = " + getAttributes(embededMasterType, "_currBindingEntity", shouldRefreshParentCentreAfterSave) + "\n" +
+                        "       attrs.menuItemTitle = menuItemTitle;\n" +
+                        "       return attrs;\n" +
                         "   };\n" +
                         "}).bind(this);\n" +
                         getAdditionalReadyCallbackCode())
@@ -114,6 +116,12 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
         return "this._assignPostSavedHandlersForEmbeddedMaster.bind(this)";
     }
 
+    /// Returns JS code of an object literal with the attributes of the embedded master.
+    ///
+    /// The title of this master (`menuItemTitle`) is added to these attributes, so that the embedded master gets it.
+    /// The attributes are recalculated when the title changes, so that an embedded master that is loaded afterwards gets the changed title
+    /// (e.g., when a dynamic action changes the title of the dialog because the type of the embedded master changes, see `tg-custom-action-dialog._handleMasterBeforeChange`).
+    ///
     protected abstract String getAttributes(final Class<? extends AbstractEntity<?>> entityType, String bindingEntityName, final boolean shouldRefreshParentCentreAfterSave);
 
     protected abstract String getElementName(final Class<? extends AbstractEntity<?>> entityType);

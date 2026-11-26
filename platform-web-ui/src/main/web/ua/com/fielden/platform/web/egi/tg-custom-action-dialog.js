@@ -1421,6 +1421,8 @@ Polymer({
                 const masterInfo = this._reflector.getType(e.detail.currType).entityMaster();
                 if (masterInfo && this._lastAction.dynamicAction) {
                     this.staticTitle = this._lastAction._originalShortDesc || masterInfo.shortDesc;
+                    // The shown master (e.g., `EntityManipulationMaster`) gets the changed title and passes it on to the embedded master of the new type (see `menuItemTitle` of the centre).
+                    this._lastElement.menuItemTitle = this.staticTitle;
                 }
             }
             //First animate the blocking pane.

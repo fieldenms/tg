@@ -27,6 +27,7 @@ public class EntityManipulationMaster<T extends AbstractEntityManipulationAction
     /**
      * Announces an imminent change of the embedded master's type by firing `tg-master-type-before-change`.
      * The enclosing dialog reacts to this event (see `tg-custom-action-dialog._handleMasterBeforeChange`) to update its title and to start the resize animation before the new master is rendered.
+     * The updated title is assigned to this master as `menuItemTitle`, which it passes on to the new master (see `AbstractMasterWithMaster.getAttributes`).
      *
      * This applies to every manipulation master, as `entityType` is a property of {@link AbstractEntityManipulationAction}.
      * The event is fired only when the type actually changes, so masters bound to a single entity type never fire it.

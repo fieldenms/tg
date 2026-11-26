@@ -392,8 +392,8 @@ const TgEntityCentreBehaviorImpl = {
          *   - by `tg-master-menu-item-section`, as the title of the compound master menu item;
          *   - by `tg-custom-action-dialog`, as the title of the dialog, which is the short description of the action that opened it (a dynamic action without one takes it from the master it opens);
          *   - by `tg-entity-centre-insertion-point`, as the title of the insertion point, which is the short description of its action.
-         * A master with an embedded centre passes the title it receives on to that centre, also when the title changes after the centre was loaded
-         * (e.g., when a dialog shows a cached master again, but with a different title).
+         * A master with an embedded centre or master (e.g., the master of standard actions to edit or create an entity) passes the title it receives on to that centre or master,
+         * also when the title changes after the centre or master was loaded (e.g., when a dialog shows a cached master again, but with a different title).
          *
          * It is empty if there is no such menu item, dialog or insertion point.
          */
