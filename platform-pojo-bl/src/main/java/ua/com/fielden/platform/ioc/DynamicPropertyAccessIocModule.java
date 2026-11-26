@@ -6,7 +6,6 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provides;
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicPropertyAccess;
 import ua.com.fielden.platform.entity.indexer.CacheConfig;
 import ua.com.fielden.platform.entity.indexer.CachingPropertyIndexerImpl;
@@ -150,11 +149,6 @@ public final class DynamicPropertyAccessIocModule extends AbstractPlatformIocMod
         } else {
             return options();
         }
-    }
-
-    @Override
-    protected void configure() {
-        requestStaticInjection(AbstractEntity.class);
     }
 
     @Provides

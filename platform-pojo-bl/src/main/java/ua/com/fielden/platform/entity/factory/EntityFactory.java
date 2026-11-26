@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.DynamicPropertyAccess;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 
@@ -23,14 +24,21 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 public class EntityFactory {
 
     private final Injector injector;
+    private final DynamicPropertyAccess dynamicPropertyAccess;
 
     @Inject
-    EntityFactory(final Injector injector) {
+    EntityFactory(final Injector injector, final DynamicPropertyAccess dynamicPropertyAccess) {
         this.injector = injector;
+        this.dynamicPropertyAccess = dynamicPropertyAccess;
     }
 
-    /// This factory method should be used for lightweight entity instantiation (not via injector).
+    /// Instantiates an uninstrumented entity by calling its no-arg constructor.
+    /// The entity is only partly initialised: copying methods, such as [AbstractEntity#copy], create similarly partly initialised instances, and [AbstractEntity#get] and [AbstractEntity#set] use a less efficient fallback.
     ///
+    /// @deprecated Use the instance method [#newEntityLightweight] instead.
+    ///
+    @SuppressWarnings("unchecked")
+    @Deprecated(forRemoval = true)
     public static <T extends AbstractEntity<?>> T newPlainEntity(final Class<T> entityClass, final Long id) {
         try {
             final Constructor<T> constructor = entityClass.getDeclaredConstructor();
@@ -46,12 +54,26 @@ public class EntityFactory {
         }
     }
 
+    /// Instantiates an uninstrumented entity by calling its no-arg constructor and then initialises it.
+    ///
+    public <T extends AbstractEntity<?>> T newEntityLightweight(final Class<T> entityClass, final Long id) {
+        return initPlainEntity(newPlainEntity(entityClass, id));
+    }
+
+    /// Initialises an uninstrumented entity instance by injecting essential dependencies.
+    ///
+    public <T extends AbstractEntity<?>> T initPlainEntity(final T entity) {
+        entity.setEntityFactory(this);
+        entity.setDynamicPropertyAccess(dynamicPropertyAccess);
+        return entity;
+    }
+
     /// This factory method should be used strictly for Hibernate interceptor during entity instantiation.
     ///
     public <T extends AbstractEntity<?>> T newEntity(final Class<T> entityClass, final Long id) {
         try {
             final T entity = injector.getInstance(entityClass);
-            setReferenceToThis(entity, this);
+            entity.setEntityFactory(this);
             setId(entityClass, id, entity);
             return entity;
         } catch (final RuntimeException ex) {
@@ -67,19 +89,6 @@ public class EntityFactory {
         return newEntity(entityClass, null);
     }
 
-    /// Invokes protected [AbstractEntity#setEntityFactory(EntityFactory)] method to reference this [EntityFactory] instance.
-    ///
-    private static void setReferenceToThis(final AbstractEntity<?> entity, final EntityFactory factory) {
-        try {
-            final Method method = Reflector.getMethod(entity.getType(), "setEntityFactory", EntityFactory.class);
-            method.setAccessible(true);
-            method.invoke(entity, factory);
-            method.setAccessible(false);
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
     /// Instantiates an entity of the specified type with the passed parameters.
     ///
     /// @param <T> entity type
@@ -93,7 +102,7 @@ public class EntityFactory {
     public <T extends AbstractEntity<K>, K extends Comparable> T newEntity(final Class<T> entityClass, final Long id, final K key, final String desc) {
         try {
             final T entity = injector.getInstance(entityClass);
-            setReferenceToThis(entity, this);
+            entity.setEntityFactory(this);
             setId(entityClass, id, entity);
             setKey(entityClass, key, entity);
             entity.set(DESC, desc);
@@ -126,7 +135,7 @@ public class EntityFactory {
     public <T extends AbstractEntity<DynamicEntityKey>> T newByKey(final Class<T> entityClass, final Object... keys) {
         try {
             final T entity = injector.getInstance(entityClass); // DynamicEntityKey should be set in default constructor of entity
-            setReferenceToThis(entity, this);
+            entity.setEntityFactory(this);
             // setting composite key fields
             final List<Field> fieldList = Finder.getKeyMembers(entityClass);
             if (fieldList.size() != keys.length) {
@@ -170,6 +179,7 @@ public class EntityFactory {
         ID_FIELDS.get(entityClass).set(entity, id);
     }
 
+    // TODO AbstractEntity.setKey is public.
     /// Convenience method for setting entity key value.
     ///
     private <T, K> void setKey(final Class<T> entityClass, final K key, final T entity) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
