@@ -224,6 +224,95 @@
                     done(failure);
                 });
             });
+
+            /// Captures the context holders that the selection criteria send with run, refresh and navigation.
+            ///
+            const _captureRunningContextHolders = function (centre) {
+                const selectionCriteria = centre.$.selection_criteria;
+                const contextHolders = [];
+                const old_runModifiedProperties = selectionCriteria._runModifiedProperties;
+                selectionCriteria._runModifiedProperties = function (contextHolder) {
+                    contextHolders.push(contextHolder);
+                    return old_runModifiedProperties.call(this, contextHolder);
+                };
+                return contextHolders;
+            };
+
+            test('sends the diff string with validation, so that edited criteria are indicated as not applied', function (done) {
+                let failure, validationHolder;
+                _retrieveTwentyEntitiesPlusOne(centre).then(function () {
+                    const validator = centre.$.selection_criteria._validator();
+                    const old_validate = validator.validate;
+                    validator.validate = function (modifHolder) {
+                        validator.validate = old_validate;
+                        validationHolder = modifHolder;
+                        return old_validate.call(validator, modifHolder);
+                    };
+                    return _editKeyCriterionWithoutRunning(centre, 'DEMO20');
+                }).then(function () {
+                    const selectionCriteria = centre.$.selection_criteria;
+                    assert.isOk(selectionCriteria._previouslyRunDiffString, 'The centre has been run.');
+                    assert.strictEqual(validationHolder['@@previouslyRunDiffString'], selectionCriteria._previouslyRunDiffString);
+                    assert.include(selectionCriteria.criteriaIndication.message, 'not applied');
+                }).catch(function (error) {
+                    failure = error;
+                }).then(function () {
+                    return centre.discard();
+                }).then(function () {
+                    done(failure);
+                });
+            });
+
+            test('sends the diff string with run and refresh, outside of the criteria form data', function (done) {
+                const contextHolders = _captureRunningContextHolders(centre);
+                let diffStringOfFirstRun;
+                _retrieveTwentyEntitiesPlusOne(centre).then(function () {
+                    diffStringOfFirstRun = centre.$.selection_criteria._previouslyRunDiffString;
+                    assert.isOk(diffStringOfFirstRun, 'The centre has been run.');
+                    return centre.run();
+                }).then(function () {
+                    const runContextHolder = contextHolders[contextHolders.length - 1];
+                    assert.strictEqual(runContextHolder.customObject['@@previouslyRunDiffString'], diffStringOfFirstRun);
+                    assert.notProperty(runContextHolder.modifHolder, '@@previouslyRunDiffString');
+                    const diffStringOfSecondRun = centre.$.selection_criteria._previouslyRunDiffString;
+                    return centre.currentPage().then(function () {
+                        const refreshContextHolder = contextHolders[contextHolders.length - 1];
+                        assert.strictEqual(refreshContextHolder.customObject['@@previouslyRunDiffString'], diffStringOfSecondRun);
+                    });
+                }).then(function () {
+                    done();
+                }).catch(done);
+            });
+
+            test('sends the diff string only in action contexts with selection criteria, not in the form data', function (done) {
+                _retrieveTwentyEntitiesPlusOne(centre).then(function () {
+                    const diffString = centre.$.selection_criteria._previouslyRunDiffString;
+                    assert.isOk(diffString, 'The centre has been run.');
+
+                    const customiseColumns = centre.$.egi.querySelector('tg-ui-action[element-name="tg-CentreConfigUpdater-master"]');
+                    const contextWithCriteria = customiseColumns._createContextHolderForAction();
+                    assert.strictEqual(contextWithCriteria.customObject['@@previouslyRunDiffString'], diffString);
+                    assert.notProperty(contextWithCriteria.modifHolder, '@@previouslyRunDiffString');
+
+                    const deleteAction = centre.$.egi.querySelector('tg-ui-action[short-desc="Delete selected"]');
+                    assert.strictEqual(deleteAction.requireSelectionCriteria, 'false', 'Delete selected requires no selection criteria.');
+                    const contextWithoutCriteria = deleteAction._createContextHolderForAction();
+                    assert.notProperty(contextWithoutCriteria.customObject, '@@previouslyRunDiffString');
+                    done();
+                }).catch(done);
+            });
+
+            test('sends no diff string in contexts of front actions, which take the criteria on screen', function (done) {
+                _retrieveTwentyEntitiesPlusOne(centre).then(function () {
+                    assert.isOk(centre.$.selection_criteria._previouslyRunDiffString, 'The centre has been run.');
+                    const frontAction = centre.shadowRoot.querySelector('tg-ui-action[action-kind="FRONT"]');
+                    assert.strictEqual(frontAction.requireSelectionCriteria, 'true', 'The front action requires selection criteria.');
+                    const context = frontAction._createContextHolderForAction();
+                    assert.isOk(context.modifHolder, 'The context carries the selection criteria.');
+                    assert.notProperty(context.customObject, '@@previouslyRunDiffString');
+                    done();
+                }).catch(done);
+            });
         });
     </script>
 

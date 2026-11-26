@@ -517,11 +517,18 @@ const TgSelectionCriteriaBehaviorImpl = {
         this.fire('tg-save-as-desc-changed', newSaveAsDesc);
     },
 
+    /// Validates the criteria, and sends the diff string of the last run in this client with them.
+    /// The server compares the criteria with that last run for the STALE indication.
+    ///
+    _validateForDescendants: function (preparedModifHolder) {
+        preparedModifHolder["@@previouslyRunDiffString"] = this._previouslyRunDiffString;
+        return TgEntityBinderBehavior._validateForDescendants.call(this, preparedModifHolder);
+    },
+
     _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
         const modPropHolder = TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _originalBindingEntity);
         if (this._reflector().isEntity(bindingEntity)) {
             modPropHolder["@@metaValues"] = {};
-            modPropHolder["@@previouslyRunDiffString"] = this._previouslyRunDiffString;
             // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
             for (let property in this.propertyModel) {
                 if (this.propertyModel.hasOwnProperty(property)) {
@@ -901,7 +908,11 @@ const TgSelectionCriteriaBehaviorImpl = {
         this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
         this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
         // The server takes the criteria of the last run in this client from this diff string.
-        this._reflector().setCustomProperty(contextHolder, "@@previouslyRunDiffString", this._previouslyRunDiffString);
+        // So it is sent only together with the selection criteria.
+        // Front actions take the criteria on screen instead, so they do not send it.
+        if (requireSelectionCriteria === "true" && actionKind !== "FRONT") {
+            this._reflector().setCustomProperty(contextHolder, "@@previouslyRunDiffString", this._previouslyRunDiffString);
+        }
         return contextHolder;
     },
 
