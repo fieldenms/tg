@@ -386,6 +386,23 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
+         * The title of the nearest menu item, dialog or insertion point that contains this entity centre, without the name of the centre configuration.
+         * It is passed in the attributes of the loaded view (`attrs` of `tg-element-loader`):
+         *   - by `tg-menu-item-view`, as the title of the main menu item;
+         *   - by `tg-master-menu-item-section`, as the title of the compound master menu item;
+         *   - by `tg-custom-action-dialog`, as the title of the dialog, which is the short description of the action that opened it (a dynamic action without one takes it from the master it opens);
+         *   - by `tg-entity-centre-insertion-point`, as the title of the insertion point, which is the short description of its action.
+         * A master with an embedded centre passes the title it receives on to that centre, also when the title changes after the centre was loaded
+         * (e.g., when a dialog shows a cached master again, but with a different title).
+         *
+         * It is empty if there is no such menu item, dialog or insertion point.
+         */
+        menuItemTitle: {
+            type: String,
+            value: ''
+        },
+
+        /**
          * Indicates whether this entity centre is runAutomatically and allows customisation.
          *
          * For standalone centre it means that no criteria clearing will be performed during auto-run for default configurations.

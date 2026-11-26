@@ -110,6 +110,8 @@ Polymer({
             if (isPropertyDefined(self, "menuItem.view.attrs")) {
                 self.menuItem.view.attrs.uuid = self.moduleId + (self.submoduleId ? '/' + self.submoduleId : '');
                 self.menuItem.view.attrs.moduleId = self.moduleId;
+                // The title of this menu item for the loaded centre, or for a centre embedded into the loaded master (see `menuItemTitle` of the centre).
+                self.menuItem.view.attrs.menuItemTitle = self.menuItem.key;
             }
         }, 1);
     },

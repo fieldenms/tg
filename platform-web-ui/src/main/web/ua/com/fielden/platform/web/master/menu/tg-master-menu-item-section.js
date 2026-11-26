@@ -114,7 +114,8 @@ Polymer({
         } else {
             self.$.elementLoader.import = customAction.componentUri;
             self.$.elementLoader.elementName = customAction.elementName;
-            self.$.elementLoader.attrs = customAction.attrs;
+            // The title of this compound master menu item, so that a centre embedded into the loaded master gets it (see `menuItemTitle` of the centre).
+            self.$.elementLoader.attrs = Object.assign({}, customAction.attrs, { menuItemTitle: self.sectionTitle });
             return self.$.elementLoader.reload();
         }
     },

@@ -33,7 +33,8 @@ public class MasterWithCentre<T extends AbstractEntity<?>> extends AbstractMaste
                     embedded: true,
                     enforcePostSaveRefresh: %s,
                     eventSourceClass: '%s',
-                    uuid: this.uuid
+                    uuid: this.uuid,
+                    menuItemTitle: this.menuItemTitle
                }
                """.formatted(embeddedCentre.shouldEnforcePostSaveRefresh(), embeddedCentre.eventSourceClass().map(Class::getName).orElse(""));
     }

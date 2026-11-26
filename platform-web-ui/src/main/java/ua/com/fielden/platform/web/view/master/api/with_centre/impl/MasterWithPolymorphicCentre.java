@@ -20,7 +20,8 @@ public class MasterWithPolymorphicCentre<T extends AbstractEntity<?>> extends Ab
                     embedded: true,
                     uuid: this.uuid,
                     enforcePostSaveRefresh: _currBindingEntity.shouldEnforcePostSaveRefresh,
-                    eventSourceClass: _currBindingEntity.eventSourceClass
+                    eventSourceClass: _currBindingEntity.eventSourceClass,
+                    menuItemTitle: this.menuItemTitle
                 }""";
     }
 

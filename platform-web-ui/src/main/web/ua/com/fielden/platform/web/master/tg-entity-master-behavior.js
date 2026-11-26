@@ -259,6 +259,16 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
+         * The title of the nearest menu item, dialog or insertion point that contains this master, passed in the attributes of the loaded view (`attrs` of `tg-element-loader`).
+         * A dialog also assigns it when it shows this master again from its cache, as the title of the dialog may have changed.
+         * A master with an embedded centre passes it on to that centre (see `menuItemTitle` of the centre).
+         */
+        menuItemTitle: {
+            type: String,
+            observer: '_menuItemTitleChanged'
+        },
+
+        /**
          * The function to return 'master' entity (in case of this master being embedded into some other master).
          *
          * This 'master' entity is mainly used as a carrier of an entity id to be loaded by this master (this happens on observer).
@@ -1603,6 +1613,16 @@ const TgEntityMasterBehaviorImpl = {
         console.log("_saverLoadingChanged:", newValue, oldValue);
         if (oldValue === true && newValue === false) {
             this._postSaverLoadingFinished();
+        }
+    },
+
+    /**
+     * Passes the changed title on to the embedded centre, if this master has one and it has already been loaded.
+     * Before it gets loaded, the embedded centre receives the title in its attributes (see `getAttributes` of `MasterWithCentre` and `MasterWithPolymorphicCentre`).
+     */
+    _menuItemTitleChanged: function (newValue) {
+        if (this.masterWithCentre && this.$.loader.loadedElement) {
+            this.$.loader.loadedElement.menuItemTitle = newValue;
         }
     },
 

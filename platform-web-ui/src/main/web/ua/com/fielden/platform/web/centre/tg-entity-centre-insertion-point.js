@@ -536,7 +536,8 @@ Polymer({
         } else {
             self.$.elementLoader.import = customAction.componentUri;
             self.$.elementLoader.elementName = customAction.elementName;
-            self.$.elementLoader.attrs = customAction.attrs;
+            // The title of this insertion point (its short description) is passed to the loaded master, so that a centre embedded into it gets it (see `menuItemTitle` of the centre).
+            self.$.elementLoader.attrs = Object.assign({}, customAction.attrs, { menuItemTitle: self.shortDesc });
             return self.$.elementLoader.reload();
         }
     },

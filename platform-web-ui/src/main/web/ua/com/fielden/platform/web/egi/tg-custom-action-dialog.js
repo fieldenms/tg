@@ -1107,12 +1107,16 @@ Polymer({
          if (self._cachedElements.hasOwnProperty(key)) {
             console.log("Reusing cached element:", key);
             const element = self._cachedElements[key];
+            // A cached element may have been shown with a different title of this dialog (e.g., opened by another action, or by a dynamic action for an entity of another type).
+            // Therefore, it gets the current title of this dialog (see `menuItemTitle` of the centre).
+            element.menuItemTitle = self.staticTitle;
             self.$.elementLoader.insert(element);
             return Promise.resolve(element);
-        } else { 
+        } else {
             self.$.elementLoader.import = customAction.componentUri;
             self.$.elementLoader.elementName = customAction.elementName;
-            self.$.elementLoader.attrs = customAction.attrs;
+            // The title of this dialog is passed to the loaded master, so that a centre embedded into it gets it (see `menuItemTitle` of the centre).
+            self.$.elementLoader.attrs = Object.assign({}, customAction.attrs, { menuItemTitle: self.staticTitle });
             return self.$.elementLoader.reload();
         }
     },
