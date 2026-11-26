@@ -7,12 +7,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.DynamicPropertyAccess;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.Reflector;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.List;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
@@ -104,7 +101,7 @@ public class EntityFactory {
             final T entity = injector.getInstance(entityClass);
             entity.setEntityFactory(this);
             setId(entityClass, id, entity);
-            setKey(entityClass, key, entity);
+            entity.setKey(key);
             entity.set(DESC, desc);
             return entity;
         } catch (final RuntimeException ex) {
@@ -177,15 +174,6 @@ public class EntityFactory {
     ///
     private static <T> void setId(final Class<T> entityClass, final Long id, final T entity) throws IllegalAccessException {
         ID_FIELDS.get(entityClass).set(entity, id);
-    }
-
-    // TODO AbstractEntity.setKey is public.
-    /// Convenience method for setting entity key value.
-    ///
-    private <T, K> void setKey(final Class<T> entityClass, final K key, final T entity) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        final Method setKey = Reflector.getMethod(entityClass, "setKey", Comparable.class);
-        setKey.setAccessible(true);
-        setKey.invoke(entity, key);
     }
 
 }
