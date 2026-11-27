@@ -92,37 +92,6 @@
                 centre.retrieve();
             });
             
-            test('generation does not occur during sorting run', function (done) {
-                const old_postRun = centre._postRun;
-                
-                centre._postRun = function (criteriaEntity, newBindingEntity, result) {
-                    old_postRun(criteriaEntity, newBindingEntity, result);
-                    
-                    assert.strictEqual(result.resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (empty criteria). Page capacity is 30 for this centre.');
-                    
-                    centre._postRun = function (criteriaEntity, newBindingEntity, result) {
-                        old_postRun(criteriaEntity, newBindingEntity, result);
-                        
-                        assert.strictEqual(result.resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (DEMO single criterion) after sorting. Page capacity is 30 for this centre.');
-                        
-                        centre._postRun = old_postRun;
-                        done();
-                    }
-                    
-                    _changeCentreCriteriaWithAction(centre, '', '', 'DEMO', '', function () {
-                        centre.run(undefined, true); // isSortingAction = true, isAutoRunning = undefined
-                    });
-                };
-                
-                centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                    _changeCentreCriteriaWithAction(centre, '', '', '', '', function () {
-                        centre.run();
-                    });
-                };
-
-                centre.retrieve();
-            });
-            
             test('generation does not occur during page refresh', function (done) {
                 const old_postRun = centre._postRun;
                 

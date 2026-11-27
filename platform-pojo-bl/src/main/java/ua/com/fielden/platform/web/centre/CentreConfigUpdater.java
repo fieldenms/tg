@@ -44,7 +44,7 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     private final List<String> sortingVals = new ArrayList<>(); // this list should not contain duplicates, please ensure that when setSortingVals invocation is performing
 
     @IsProperty
-    @Title(value = "Trigger Re-run", desc = "Indicates whether successful saving of this entity should trigger re-run.")
+    @Title(value = "Trigger Re-run", desc = "Indicates whether successful saving of this entity requires the results to be queried again.")
     private boolean triggerRerun;
 
     @IsProperty
@@ -52,8 +52,12 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     private CentreContextHolder masterEntityHolder;
 
     @IsProperty
-    @Title(value = "Centre Dirty", desc = "Indicates whether successful saving of this entity actually changed centre configuration or it is New (aka default, link or inherited). Only populated when centre sorting wasn't changed.")
+    @Title(value = "Centre Dirty", desc = "Indicates whether successful saving of this entity actually changed centre configuration or it is New (aka default, link or inherited).")
     private boolean centreDirty;
+
+    @IsProperty
+    @Title(value = "Previously Run Diff String", desc = "The PREVIOUSLY_RUN diff string that the client keeps, with the applied changes.")
+    private String previouslyRunDiffString;
 
     @IsProperty
     @Title(value = "Page Capacity", desc = "The maximum number of entities retrieved.")
@@ -131,6 +135,16 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
 
     public boolean isCentreDirty() {
         return centreDirty;
+    }
+
+    @Observable
+    public CentreConfigUpdater setPreviouslyRunDiffString(final String previouslyRunDiffString) {
+        this.previouslyRunDiffString = previouslyRunDiffString;
+        return this;
+    }
+
+    public String getPreviouslyRunDiffString() {
+        return previouslyRunDiffString;
     }
 
     @Observable

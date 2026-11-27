@@ -19,12 +19,12 @@ import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
-import java.util.Map;
 import java.util.Optional;
 
 import static java.util.Optional.*;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.*;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.PREVIOUSLY_RUN_DIFF_STRING_KEY;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.updateInheritedFromShared;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createCriteriaDiscardEnvelope;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createCriteriaIndication;
@@ -87,12 +87,12 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
     public Representation discard(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
             final User user = userProvider.getUser();
-            final Map<String, Object> wasRunHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-            final String wasRun = (String) wasRunHolder.get("@@wasRun");
+            final var previouslyRunDiffStringHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+            final var previouslyRunDiffString = (String) previouslyRunDiffStringHolder.get(PREVIOUSLY_RUN_DIFF_STRING_KEY);
             final var discarded = discardCentre(saveAsName, user, miType, webUiConfig, companionFinder, sharingModel);
             
             final var criteriaIndication = createCriteriaIndication(
-                wasRun,
+                previouslyRunDiffString,
                 discarded.freshCentre(),
                 miType,
                 discarded.saveAsName(),

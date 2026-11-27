@@ -24,6 +24,10 @@ public class CentreColumnWidthConfigUpdater extends AbstractFunctionalEntityWith
     @Title(value = "Centre Dirty", desc = "Indicates whether successful saving of this entity actually changed centre configuration or it is New (aka default, link or inherited).")
     private boolean centreDirty;
     
+    @IsProperty
+    @Title(value = "Previously Run Diff String", desc = "The PREVIOUSLY_RUN diff string that the client keeps, with the new widths.")
+    private String previouslyRunDiffString;
+    
     public CentreColumnWidthConfigUpdater() {
         setKey(NO_KEY);
     }
@@ -36,6 +40,16 @@ public class CentreColumnWidthConfigUpdater extends AbstractFunctionalEntityWith
     
     public boolean isCentreDirty() {
         return centreDirty;
+    }
+    
+    @Observable
+    public CentreColumnWidthConfigUpdater setPreviouslyRunDiffString(final String previouslyRunDiffString) {
+        this.previouslyRunDiffString = previouslyRunDiffString;
+        return this;
+    }
+    
+    public String getPreviouslyRunDiffString() {
+        return previouslyRunDiffString;
     }
     
 }

@@ -151,6 +151,7 @@ const createColumnAction = function (entityCentre) {
     actionModel.postActionSuccess = function (functionalEntity) {
         // update disablement of save button after changing column widths
         entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
+        entityCentre._keepPreviouslyRunDiffString(functionalEntity);
     };
     actionModel.postActionError = function (functionalEntity) { };
     actionModel.attrs = {
@@ -179,6 +180,7 @@ const createPreferredViewUpdaterAction = function (entityCentre) {
     actionModel.postActionSuccess = function (functionalEntity) {
         // update disablement of save button after changing column widths
         entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
+        entityCentre._keepPreviouslyRunDiffString(functionalEntity);
         if (functionalEntity.get('preferredView') !== entityCentre.preferredView) {
             entityCentre.async(actionModel._run, 100);
         }
@@ -598,13 +600,13 @@ const TgEntityCentreBehaviorImpl = {
             type: Function
         },
 
-        /**
-         * Starts the process of centre run.
-         *
-         * isAutoRunning -- returns true if this running action represents autoRun event action invocation rather than simple running, undefined or false otherwise; not to be confused with 'link' centre auto-running capability
-         * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
-         * forceRegeneration -- returns true if this running action represents special 're-generation of modified data' action invocation rather than simple running, undefined otherwise
-         */
+        /// Starts the process of centre run.
+        ///
+        /// `isAutoRunning` is `true` if this run is the auto-run of the centre, and `undefined` or `false` otherwise.
+        /// It is not to be confused with the auto-running capability of a 'link' centre.
+        /// `forceRegeneration` is `true` if this run re-generates modified data, and `undefined` otherwise.
+        /// `excludeInsertionPoints` are the element names of insertion points that are not refreshed after this run.
+        ///
         run: {
             type: Function
         },
@@ -765,6 +767,43 @@ const TgEntityCentreBehaviorImpl = {
 
     _computeViewerDisabled: function (_buttonDisabled, _wasRun) {
         return _buttonDisabled || _wasRun !== "yes";
+    },
+
+    /// Keeps the diff string of the PREVIOUSLY_RUN centre, which `functionalEntity` returns.
+    /// It is returned by the actions that change columns, their widths or the preferred view.
+    /// The diff string is absent if the centre has not been run in this client.
+    ///
+    _keepPreviouslyRunDiffString: function (functionalEntity) {
+        const previouslyRunDiffString = functionalEntity.get('previouslyRunDiffString');
+        if (previouslyRunDiffString) {
+            this.$.selection_criteria._previouslyRunDiffString = previouslyRunDiffString;
+        }
+    },
+
+    /// Creates a function that creates context holders as `_createContextHolder` does.
+    /// Their selected entities are taken from `getSelectedEntities`.
+    /// It is for actions on entities that are selected outside of EGI, such as on a map in an alternative view.
+    /// Assign it to a property of this centre, and bind the `create-context-holder` attribute of such actions to it.
+    ///
+    createContextHolderWithSelectedEntities: function (getSelectedEntities) {
+        return (
+            requireSelectionCriteria,
+            requireSelectedEntities,
+            requireMasterEntity,
+            actionKind,
+            actionNumber,
+            relatedContexts,
+            parentCentreContext
+        ) => this._createContextHolder(
+            requireSelectionCriteria,
+            requireSelectedEntities,
+            requireMasterEntity,
+            actionKind,
+            actionNumber,
+            relatedContexts,
+            parentCentreContext,
+            getSelectedEntities
+        );
     },
 
     _allRetrievedEntitiesChanged: function () {
@@ -1011,8 +1050,24 @@ const TgEntityCentreBehaviorImpl = {
             }
         }).bind(self);
 
-        self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts, parentCentreContext) {
-            const context = this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
+        self._createContextHolder = (function (
+            requireSelectionCriteria,
+            requireSelectedEntities,
+            requireMasterEntity,
+            actionKind,
+            actionNumber,
+            relatedContexts,
+            parentCentreContext,
+            getSelectedEntities
+        ) {
+            const context = this.$.selection_criteria.createContextHolder(
+                requireSelectionCriteria,
+                requireSelectedEntities,
+                requireMasterEntity,
+                actionKind,
+                actionNumber,
+                getSelectedEntities
+            );
             this._reflector.setCustomProperty(context, "@@resultSetHidden", this.$.egi.hasAttribute("hidden"));
             
             if (relatedContexts) {
@@ -1066,7 +1121,7 @@ const TgEntityCentreBehaviorImpl = {
                     // otherwise -- discard process will simply start immediately
                     const lastValidationPromise = sc._validator().abortValidationExceptLastOne();
                     const customObject = {};
-                    customObject['@@wasRun'] = sc._wasRun;
+                    customObject['@@previouslyRunDiffString'] = sc._previouslyRunDiffString;
                     if (lastValidationPromise !== null) {
                         console.warn("Discard is chained to the last validation promise...");
                         return resolve(lastValidationPromise
@@ -1082,7 +1137,7 @@ const TgEntityCentreBehaviorImpl = {
         /**
          * A function to run the entity centre.
          */
-        self.run = (function (isAutoRunning, isSortingAction, forceRegeneration, excludeInsertionPoints) {
+        self.run = (function (isAutoRunning, forceRegeneration, excludeInsertionPoints) {
             if (this._criteriaLoaded === false) {
                 throw new Error(`Cannot run ${this.is} centre (not initialised criteria).`);
             }
@@ -1112,7 +1167,7 @@ const TgEntityCentreBehaviorImpl = {
                 }
             }, 2000);
 
-            return self.$.selection_criteria.run(isAutoRunning, isSortingAction, forceRegeneration).then(
+            return self.$.selection_criteria.run(isAutoRunning, forceRegeneration).then(
                 function (detail) {
                     const sc = self.$.selection_criteria;
                     const deserialisedResult = sc._serialiser().deserialise(detail.response);

@@ -29,7 +29,8 @@ public class CentreColumnWidthConfigUpdaterProducer extends DefaultEntityProduce
             // retrieve criteria entity
             final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntityBeingUpdated = selectionCrit();
             final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
-            // use centreColumnWidthsAdjuster to update column widths in PREVIOUSLY_RUN and FRESH centre managers; commit them to the database
+            // Use centreColumnWidthsAdjuster to update column widths in the PREVIOUSLY_RUN diff string and in the FRESH centre.
+            // FRESH is committed to the database, and the new diff string is returned to the client, which keeps it.
             criteriaEntityBeingUpdated.adjustColumnWidths(centreManager -> {
                 final Map<String, Map<String, Integer>> columnParameters = (Map<String, Map<String, Integer>>) getContext().getCustomObject().get("columnParameters");
                 final long nowMillis = currentTimeMillis();
@@ -61,6 +62,7 @@ public class CentreColumnWidthConfigUpdaterProducer extends DefaultEntityProduce
             });
             // centre will be changed after this action; changes can be discarded using DISCARD button on selection criteria
             action.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty());
+            action.setPreviouslyRunDiffString(criteriaEntityBeingUpdated.previouslyRunDiffString());
         }
         return action;
     }

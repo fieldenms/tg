@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement.createExcludeInsertionPoints;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
@@ -17,8 +18,11 @@ import static ua.com.fielden.platform.web.view.master.EntityMaster.noUiFunctiona
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.REFRESH;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.SAVE;
 
+import java.util.Set;
+
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.AbstractCentreConfigCommitAction;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterProducer;
@@ -118,18 +122,41 @@ public class CentreConfigurationWebUiConfig {
         CUSTOMISE_COLUMNS_ACTION {
             @Override
             public EntityActionConfig mkAction() {
+                return mkAction(Set.of(), new JsCode(""));
+            }
+
+            @Override
+            public EntityActionConfig mkAction(
+                final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints,
+                final JsCode postRequery
+            ) {
+                final var excludeInsertionPointsJs = createExcludeInsertionPoints(excludeInsertionPoints);
                 return action(CentreConfigUpdater.class)
                         .withContext(context().withSelectionCrit().build())
-                        .postActionSuccess(() ->// self.run should be invoked with isSortingAction=true parameter (and isAutoRunning=undefined). See tg-entity-centre-behavior 'run' property for more details.
+                        .postActionSuccess(() ->
                                 new JsCode(""
-                                    // if pageCapacity has been changed then self.$.selection_criteria.pageCapacity will be updated after re-running in tg-entity-centre-behavior._postRun; otherwise -- no need to update it
                                     + "    self.$.egi.visibleRowsCount = functionalEntity.get('visibleRowsCount');\n"
                                     + "    self.$.egi.numberOfHeaderLines = functionalEntity.get('numberOfHeaderLines');\n"
+                                    + "    self.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');\n"
+                                    // Keep the PREVIOUSLY_RUN diff string with the applied changes.
+                                    + "    self._keepPreviouslyRunDiffString(functionalEntity);\n"
+                                    // A change of sorting or page capacity requires the results to be queried again.
+                                    // The last run of this client is refreshed from its first page.
+                                    // It gets the new sorting and page capacity, and keeps the criteria of the run.
+                                    // The response applies them (see `tg-entity-centre-behavior._postRun`).
+                                    // Unlike navigation, refresh also retrieves all entities if needed, and totals.
                                     + "    if (functionalEntity.get('triggerRerun') === true) {\n"
-                                    + "        return self.retrieve().then(function () { self.run(undefined, true); });\n"
+                                    + "        const pageNumber = self.$.selection_criteria.pageNumber;\n"
+                                    + "        self.$.selection_criteria.pageNumber = 0;\n"
+                                    + "        return self.currentPage(" + excludeInsertionPointsJs + ").then(() => {\n"
+                                    + postRequery
+                                    + "        }, error => {\n"
+                                    // A failed refresh leaves the shown page, so its number is restored for paging.
+                                    + "            self.$.selection_criteria.pageNumber = pageNumber;\n"
+                                    + "            throw error;\n"
+                                    + "        });\n"
                                     + "    } else {\n"
                                     + "        self.$.egi.adjustColumnsVisibility(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
-                                    + "        self.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');\n"
                                     + "    }\n"
                                     + ""))
                         .icon("av:sort-by-alpha")
@@ -141,6 +168,16 @@ public class CentreConfigurationWebUiConfig {
         };
 
         public abstract EntityActionConfig mkAction();
+
+        /// Makes the action for a centre whose insertion points do not depend on sorting and page capacity.
+        /// After a change of sorting or page capacity, the results are queried again.
+        /// Insertion points in `excludeInsertionPoints` are not refreshed then.
+        /// After that, `postRequery` runs, with `self` referencing the centre.
+        ///
+        public abstract EntityActionConfig mkAction(
+            Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints,
+            JsCode postRequery
+        );
     }
 
     /**

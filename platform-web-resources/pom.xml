@@ -279,7 +279,7 @@
             <testResource>
                 <directory>../platform-db-evolution/src/main/resources</directory>
                 <includes>
-                    <include>sql/*-#2795-*.sql</include>
+                    <include>sql/*.sql</include>
                 </includes>
             </testResource>
         </testResources>

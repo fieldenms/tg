@@ -198,6 +198,9 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 final Optional<Boolean> activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY)); // non-empty only for 'active only' button tap (always with 'true' value inside)
 
                 // based on whether 'active only' arrived from client, apply it or not, and calculate centre dirtiness
+                // 'Active only' is applied to FRESH centre only.
+                // The criteria entity of an autocompleter has no PREVIOUSLY_RUN diff string.
+                // See the centre adjuster in `CentreResourceUtils.createCriteriaValidationPrototype`.
                 final Optional<Boolean> centreDirtyOpt = activeOnlyFromClientOpt.map(activeOnlyFromClient -> {
                     final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = enhancedCentreEntityQueryCriteria.adjustCentre(centreManager -> { // always apply 'activeOnly' that arrived from client; i.e. override saved value with client-side one -- no interference with possibly opened same centre configuration in other browser's tab
                         centreManager.getFirstTick().setAutocompleteActiveOnly(centre.getEntityType(), origPropName, activeOnlyFromClient);

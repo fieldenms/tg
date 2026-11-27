@@ -204,6 +204,10 @@ This includes comments and documentation within the code, and external documenta
 This rule should be followed when reviewing changes.
 Perform documentation lookup efficiently: external documentation is more likely to cover high-level architectural decisions and conventions rather than low-level implementation details.
 
+### Check End-App Copies of Client Code
+
+When changing platform client code, including JS generated from Java, search end-apps for copies of the changed functions by their unchanged lines, not only by changed or removed names, because a copy that lacks a newly added line breaks silently.
+
 ### Document What Exists
 
 Documentation states what the code does and why it is as it is.

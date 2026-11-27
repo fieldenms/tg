@@ -88,7 +88,7 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
             // saveWithRetry (EntityCentreConfigDao)
             //   updateDifferences (CentreUpdater)
             //     updateCentre (CentreUpdater)
-            //       createCriteriaEntityForPaginating (CentreResourceUtils)
+            //       createPreviouslyRunCriteriaEntity (CentreResourceUtils)
             //         createCriteriaEntityForContext (CentreResourceUtils)
             //           restoreCriteriaEntity (CriteriaEntityRestorer)
             // 2. somehow FRESH centre configuration was not persisted earlier (extremely unlikely, because action would not be possible to open -- need loaded entity centre configuration on the client);

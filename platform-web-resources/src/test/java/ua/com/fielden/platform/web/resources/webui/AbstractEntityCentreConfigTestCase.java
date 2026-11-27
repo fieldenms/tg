@@ -100,7 +100,7 @@ public abstract class AbstractEntityCentreConfigTestCase extends AbstractWebReso
     }
 
     /// Opens the `saveAsName`d configuration of `owner`, as loading the centre in the application does.
-    /// This initialises its FRESH, SAVED and PREVIOUSLY_RUN centres, where they are missing.
+    /// This initialises its FRESH and SAVED centres, where they are missing.
     ///
     protected EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> open(
         final User owner,
@@ -108,7 +108,6 @@ public abstract class AbstractEntityCentreConfigTestCase extends AbstractWebReso
     ) {
         final var freshCentre = updateCentre(owner, MI_TYPE, FRESH_CENTRE_NAME, saveAsName, webUiConfig, coFinder);
         updateCentre(owner, MI_TYPE, SAVED_CENTRE_NAME, saveAsName, webUiConfig, coFinder);
-        updateCentre(owner, MI_TYPE, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, webUiConfig, coFinder);
         return createCriteriaValidationPrototype(
             MI_TYPE,
             saveAsName,

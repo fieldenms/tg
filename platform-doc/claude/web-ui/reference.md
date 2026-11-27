@@ -203,6 +203,17 @@ Compound.openEdit(OpenAction.class, ENTITY_TITLE, "Edit Entity", dims)
 Compound.openNew(OpenAction.class, "add-circle-outline", ENTITY_TITLE, "Add new Entity", dims)
 ```
 
+`CUSTOMISE_COLUMNS_ACTION.mkAction(excludeInsertionPoints, postRequery)` is for a centre with insertion points that do not depend on sorting and page capacity.
+After a change of sorting or page capacity, it queries the results again without refreshing `excludeInsertionPoints`.
+Then it runs `postRequery`, with `self` referencing the centre:
+
+```java
+CUSTOMISE_COLUMNS_ACTION.mkAction(
+    Set.of(SchedulingProfileInsertionPoint.class, OpenSchedulingWorkOrderInsertionPointAction.class),
+    new JsCode("self._getInsertionPoint('top')._element.$.scheduling.updateSchedProfileColours(self);\n")
+)
+```
+
 **Custom actions:**
 ```java
 action(CopyWorkOrderAction.class)
@@ -215,6 +226,14 @@ action(CopyWorkOrderAction.class)
 ```
 
 **Context options:** `.withCurrentEntity()`, `.withSelectedEntities()`, `.withSelectionCrit()`, `.withMasterEntity()`, `.withComputation((entity, context) -> value)`
+
+**Selection criteria in a context** — what `selectionCrit()` holds in a producer or companion depends on where the action is:
+- Actions on the results view (top-level, row, property and insertion point actions) get the criteria of the last run in that browser tab or device, which produced the visible results.
+  If those criteria became invalid after the run, creating a query from them fails with their validation result, while actions that do not query them work.
+- Front actions (`addFrontAction`) get the criteria that the user sees: FRESH centre with the edits not yet validated applied.
+  Such edits may be invalid, so a producer that reads criteria values should check `selectionCrit().isValid()` first.
+- When a front action is opened from a tiny hyperlink, it gets FRESH centre of the user who opens the link, if that user has the configuration, and the default centre otherwise.
+  The edits stored in the link are applied to it.
 
 **Post-actions** — execute JS after action completes:
 ```java
@@ -527,6 +546,20 @@ new MasterWithCentreBuilder<OpenAction>()
 
 Use sparingly — prefer declarative configuration.
 Typical uses: coordinating refresh between insertion points and parent centres, custom DOM manipulation.
+
+**Entities selected outside of EGI** — an action on entities selected elsewhere, such as on a map in an alternative view, needs its own context holder creator.
+The centre function `createContextHolderWithSelectedEntities(getSelectedEntities)` creates it.
+Its context holders carry everything that the standard ones do, including the criteria of the last run, with selected entities from `getSelectedEntities`.
+Assign it to a centre property in `injectCustomCode`, and bind the `create-context-holder` attribute of the action to that property:
+
+```java
+entityCentre.injectCustomCode(jsCode("""
+    self.createContextHolderForAction = self.createContextHolderWithSelectedEntities(() => self._getSelectedEntitiesForAction());
+    """));
+// The action element (e.g. in a custom toolbar) binds `t2("create-context-holder", "[[createContextHolderForAction]]")`.
+```
+
+Copying the context creation of the centre into an application instead would miss later additions to the context.
 
 ## Query Enhancer Pattern
 

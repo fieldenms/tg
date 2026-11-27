@@ -76,6 +76,12 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private Optional<User> createdByUserConstraint = Optional.empty();
     private final List<List<DynamicColumnForExport>> dynamicProperties = new ArrayList<>();
     private AbstractEntity<?> critOnlySinglePrototype;
+    /// Whether these criteria must be valid to create a query from them.
+    /// Criteria restored from the diff string that a client keeps for its last run must be (see `CentreResourceUtils`).
+    /// They are validated only when a query is created.
+    /// So actions that do not query them work, even if the criteria became invalid after the run.
+    ///
+    private boolean mustBeValidForQuerying;
     private final IDates dates;
     public final Supplier<List<QueryProperty>> queryProperties;
 
@@ -147,6 +153,23 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         this.createdByUserConstraint = Optional.of(user);
     }
 
+    /// Makes these criteria be validated whenever a query is created from them (see [#mustBeValidForQuerying]).
+    ///
+    public void setMustBeValidForQuerying(final boolean mustBeValidForQuerying) {
+        this.mustBeValidForQuerying = mustBeValidForQuerying;
+    }
+
+    /// Throws the validation result of these criteria, if they must be valid for querying, but are invalid.
+    ///
+    private void validateForQuerying() {
+        if (mustBeValidForQuerying) {
+            final var validationResult = isValid();
+            if (!validationResult.isSuccessful()) {
+                throw validationResult;
+            }
+        }
+    }
+
     /// Enhances this criteria entity with a custom query enhancer and its optional centre context,
     /// which extends the query based on the selected criteria conditions.
     ///
@@ -168,6 +191,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     /// which can then be conveniently extended with custom yield instructions.
     ///
     public ICompleted<T> createQuery() {
+        validateForQuerying();
         return createCompletedQuery(getEntityClass(), getManagedType(), queryProperties.get(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint, dates);
     }
 
@@ -282,6 +306,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     /// Generates a query and a corresponding summary query for this entity query criteria.
     ///
     private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> generateQueryWithSummaries() {
+        validateForQuerying();
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
@@ -425,6 +450,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     private QueryExecutionModel<T, EntityResultQueryModel<T>> generateQuery() {
+        validateForQuerying();
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();

@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
@@ -34,6 +35,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.*;
@@ -50,6 +52,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -57,13 +60,14 @@ import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isLink;
+import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.*;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.*;
 
-/// Represents a set of utility methods for updating / committing of surrogate centres, for e.g. 'fresh', 'previouslyRun' etc.
+/// Represents a set of utility methods for updating / committing of surrogate centres, 'fresh' and 'saved'.
 ///
 /// Every surrogate centre has its own diff centre.
 /// It is saved into the database by `commitCentreWithoutConflicts` or `commitCentreDiffWithoutConflicts`.
@@ -79,8 +83,12 @@ public class CentreUpdater {
     private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
     
     public static final String FRESH_CENTRE_NAME = "__________FRESH";
-    public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN";
     public static final String SAVED_CENTRE_NAME = "__________SAVED";
+    
+    /// The message of the failure to restore a PREVIOUSLY_RUN centre from the diff string that the client keeps.
+    /// It is used when the client sent no diff string, or a string that is not a centre diff.
+    ///
+    public static final String ERR_PREVIOUSLY_RUN_NOT_AVAILABLE = "Reload app. Last run unavailable.";
     
     /**
      * A type of meta values.
@@ -101,28 +109,28 @@ public class CentreUpdater {
     /**
      * Key of diff pertaining to result-set column visibility and order. Contains all snapshot and exists only if visibility / order is changed.
      */
-    private static final String VISIBILITY_AND_ORDER = "VISIBILITY_AND_ORDER";
+    static final String VISIBILITY_AND_ORDER = "VISIBILITY_AND_ORDER";
     /**
      * Key of diff pertaining to result-set sorting. Result-set can be sorted by 'invisible' columns. Contains all snapshot and exists only if sorting is changed.
      */
-    private static final String SORTING = "SORTING";
+    static final String SORTING = "SORTING";
     /**
      * Key of diff pertaining to result-set page capacity.
      */
-    private static final String PAGE_CAPACITY = "PAGE_CAPACITY";
+    static final String PAGE_CAPACITY = "PAGE_CAPACITY";
     /**
      * Key of diff pertaining to result-set visible rows count.
      */
-    private static final String VISIBLE_ROWS_COUNT = "VISIBLE_ROWS_COUNT";
+    static final String VISIBLE_ROWS_COUNT = "VISIBLE_ROWS_COUNT";
     /**
      * Key of diff pertaining to result-set number of header lines.
      */
-    private static final String NUMBER_OF_HEADER_LINES = "NUMBER_OF_HEADER_LINES";
+    static final String NUMBER_OF_HEADER_LINES = "NUMBER_OF_HEADER_LINES";
     
     /**
      * Key of diff pertaining to entity centre's preferred view.
      */
-    private static final String PREFERRED_VIEW = "PREFERRED_VIEW";
+    static final String PREFERRED_VIEW = "PREFERRED_VIEW";
     
     /* Following functions are used for conversion of criteria values to / from strings. Some implementations could have been used directly but left here for clarity and consistency. */
     static final String ID_PREFIX = "__________ID__________";
@@ -190,7 +198,7 @@ public class CentreUpdater {
     ///
     /// Centre on its own is never saved, but it is used to create 'differences' (when committing is performed).
     ///
-    /// @param name  surrogate name of the centre (fresh, previouslyRun etc.);
+    /// @param name  surrogate name of the centre (fresh or saved);
     /// @param saveAsName  user-defined title of 'saveAs' centre configuration or empty [Optional] for unnamed centre
     ///
     public static ICentreDomainTreeManagerAndEnhancer updateCentre(
@@ -203,6 +211,104 @@ public class CentreUpdater {
         final var saveAsSpecificName = saveAsSpecific(name, saveAsName);
         final var updatedDiff = updateDifferences(miType, user, saveAsSpecificName, name, saveAsName, webUiConfig, companionFinder);
         return loadCentreFromDefaultAndDiff(miType, updatedDiff, webUiConfig, companionFinder);
+    }
+
+    /// Returns the FRESH centre of `user` for the configuration with `saveAsName`, if it exists.
+    /// Otherwise, returns the default centre.
+    /// Unlike [#updateCentre(User, Class, String, Optional, IWebUiConfig, ICompanionObjectFinder)], nothing is saved.
+    ///
+    /// It is used for centre contexts that may come from a tiny hyperlink created by another user.
+    /// Saving would add a configuration with the title used by that user to the configurations of `user`.
+    ///
+    /// @param saveAsName  user-defined title of 'saveAs' centre configuration or empty [Optional] for unnamed centre
+    ///
+    public static ICentreDomainTreeManagerAndEnhancer findFreshCentreOrDefault(
+            final User user,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final Optional<String> saveAsName,
+            final IWebUiConfig webUiConfig,
+            final ICompanionObjectFinder companionFinder) {
+        return retrieveDiff(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName), companionFinder)
+            .map(freshDiff -> loadCentreFromDefaultAndDiff(miType, freshDiff, webUiConfig, companionFinder))
+            .orElseGet(() -> getDefaultCentre(miType, webUiConfig));
+    }
+    
+    /// Creates the diff string of a PREVIOUSLY_RUN centre, which the client keeps.
+    ///
+    /// The diff string is the diff of `previouslyRunCentre` against the default centre, serialised to JSON.
+    /// It is the same JSON that is persisted as the body of a surrogate centre, but as a [String] instead of bytes.
+    /// The client keeps the diff string as is, without reading it, and sends it back.
+    /// The centre is then restored with [#restorePreviouslyRunCentre(String, Class, IWebUiConfig, ICompanionObjectFinder)].
+    ///
+    public static String createPreviouslyRunDiffString(
+        final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IWebUiConfig webUiConfig
+    ) {
+        return createPreviouslyRunDiffString(previouslyRunCentre, getDefaultCentre(miType, webUiConfig), getEntityType(miType));
+    }
+    
+    /// Creates the diff string of a PREVIOUSLY_RUN centre against `defaultCentre` of `root` type.
+    ///
+    static String createPreviouslyRunDiffString(
+        final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre,
+        final ICentreDomainTreeManagerAndEnhancer defaultCentre,
+        final Class<AbstractEntity<?>> root
+    ) {
+        final var previouslyRunDiff = createDifferences(previouslyRunCentre, defaultCentre, root);
+        final var previouslyRunDiffBytes = CENTRE_DIFF_SERIALISER.serialise(previouslyRunDiff);
+        return new String(previouslyRunDiffBytes, UTF_8);
+    }
+    
+    /// Restores a PREVIOUSLY_RUN centre from the diff string that the client keeps.
+    /// The diff string is created by [#createPreviouslyRunDiffString(ICentreDomainTreeManagerAndEnhancer, Class, IWebUiConfig)].
+    ///
+    /// The centre is the default centre with the diff applied, in the same way as a persisted surrogate centre is loaded.
+    /// Fails with [#ERR_PREVIOUSLY_RUN_NOT_AVAILABLE] if the diff string is missing or is not a centre diff.
+    ///
+    public static ICentreDomainTreeManagerAndEnhancer restorePreviouslyRunCentre(
+        final String previouslyRunDiffString,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder
+    ) {
+        final var previouslyRunDiff = deserialisePreviouslyRunDiff(previouslyRunDiffString);
+        return loadCentreFromDefaultAndDiff(miType, previouslyRunDiff, webUiConfig, companionFinder);
+    }
+    
+    /// Restores a PREVIOUSLY_RUN centre from the diff string that the client keeps.
+    /// The diff is applied to `defaultCentre` of `root` type.
+    ///
+    static ICentreDomainTreeManagerAndEnhancer restorePreviouslyRunCentre(
+        final String previouslyRunDiffString,
+        final ICentreDomainTreeManagerAndEnhancer defaultCentre,
+        final Class<AbstractEntity<?>> root,
+        final ICompanionObjectFinder companionFinder
+    ) {
+        final var previouslyRunDiff = deserialisePreviouslyRunDiff(previouslyRunDiffString);
+        return applyDifferences(defaultCentre, previouslyRunDiff, root, companionFinder);
+    }
+    
+    /// Deserialises the diff of a PREVIOUSLY_RUN centre from the diff string that the client keeps.
+    /// Fails with [#ERR_PREVIOUSLY_RUN_NOT_AVAILABLE] if the diff string is missing or is not a centre diff.
+    ///
+    private static Map<String, Object> deserialisePreviouslyRunDiff(final String previouslyRunDiffString) {
+        if (isEmpty(previouslyRunDiffString)) {
+            logger.warn("The client has not sent the diff string of its PREVIOUSLY_RUN centre.");
+            throw failure(ERR_PREVIOUSLY_RUN_NOT_AVAILABLE);
+        }
+        try {
+            final var previouslyRunDiffBytes = previouslyRunDiffString.getBytes(UTF_8);
+            final var previouslyRunDiff = CENTRE_DIFF_SERIALISER.deserialise(previouslyRunDiffBytes);
+            if (previouslyRunDiff == null || !(previouslyRunDiff.get(PROPERTIES) instanceof Map)) {
+                logger.warn("The diff string of the PREVIOUSLY_RUN centre sent by the client is not a centre diff.");
+                throw failure(ERR_PREVIOUSLY_RUN_NOT_AVAILABLE);
+            }
+            return previouslyRunDiff;
+        } catch (final SerialisationException ex) {
+            logger.warn("The diff string of the PREVIOUSLY_RUN centre sent by the client could not be deserialised.", ex);
+            throw failure(ERR_PREVIOUSLY_RUN_NOT_AVAILABLE);
+        }
     }
     
     /// Updates (retrieves) current version of centre description.
@@ -325,10 +431,8 @@ public class CentreUpdater {
             final ICompanionObjectFinder companionFinder) {
         final var currentNameFresh = NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName);
         final var currentNameSaved = NAME_OF.apply(SAVED_CENTRE_NAME).apply(saveAsName);
-        final var currentNamePreviouslyRun = NAME_OF.apply(PREVIOUSLY_RUN_CENTRE_NAME).apply(saveAsName);
         final EntityCentreConfig freshConfig = findConfig(miType, user, currentNameFresh, companionFinder);
         final EntityCentreConfig savedConfig = findConfig(miType, user, currentNameSaved, companionFinder);
-        final EntityCentreConfig previouslyRunConfig = findConfig(miType, user, currentNamePreviouslyRun, companionFinder);
         if (freshConfig == null || savedConfig == null) {
             throw failuref("Fresh or saved configuration for configuration [%s] does not exist.", saveAsName);
         }
@@ -337,10 +441,6 @@ public class CentreUpdater {
         final var newSaveAsName = of(newTitle);
         freshConfig.setTitle(NAME_OF.apply(FRESH_CENTRE_NAME).apply(newSaveAsName));
         savedConfig.setTitle(NAME_OF.apply(SAVED_CENTRE_NAME).apply(newSaveAsName));
-        final var previouslyRunNewTitle = NAME_OF.apply(PREVIOUSLY_RUN_CENTRE_NAME).apply(newSaveAsName);
-        if (previouslyRunConfig != null) { // previouslyRun centre may not exist
-            previouslyRunConfig.setTitle(previouslyRunNewTitle);
-        }
         // newDesc / newDashboardable / newDashboardRefreshFrequency
         freshConfig.setDesc(newDesc);
         freshConfig.setDashboardable(newDashboardable);
@@ -348,16 +448,13 @@ public class CentreUpdater {
         
         // clear all centres with the same name in the case where title has been changed -- new title potentially can be in conflict with another configuration and that another configuration should be deleted
         if (!equalsEx(saveAsName, of(newTitle))) {
-            CentreUpdaterUtils.removeCentres(user, miType, companionFinder, freshConfig.getTitle(), savedConfig.getTitle(), previouslyRunNewTitle);
+            CentreUpdaterUtils.removeCentres(user, miType, companionFinder, freshConfig.getTitle(), savedConfig.getTitle());
         }
 
         final EntityCentreConfigCo co$EntityCentreConfig = companionFinder.find(EntityCentreConfig.class);
         // save
         co$EntityCentreConfig.saveWithRetry(freshConfig); // editCentreTitleAndDesc is not used inside other transaction scopes (i.e. CentreConfigEditActionDao.performSave and AbstractCentreConfigCommitActionDao.save do not have @SessionRequired) -- saveWithRetry can be used
         co$EntityCentreConfig.saveWithRetry(savedConfig);
-        if (previouslyRunConfig != null) { // previouslyRun centre may not exist
-            co$EntityCentreConfig.saveWithRetry(previouslyRunConfig);
-        }
     }
     
     /// Changes configuration's runAutomatically and saves these changes to persistent storage.
@@ -386,7 +483,7 @@ public class CentreUpdater {
     /// Preferred state and custom description need to be maintained properly.
     ///
     /// @param saveAsName  user-defined title of 'saveAs' centre configuration or empty [Optional] for unnamed centre
-    /// @param names  surrogate names of the centres (fresh, previouslyRun etc.).
+    /// @param names  surrogate names of the centres (fresh or saved).
     ///
     public static void removeCentres(
         final User user,
@@ -408,7 +505,7 @@ public class CentreUpdater {
     /// IMPORTANT WARNING: avoids centre config self-conflict checks.
     /// ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
     ///
-    /// @param name  surrogate name of the centre (fresh, previouslyRun etc.).
+    /// @param name  surrogate name of the centre (fresh or saved).
     /// @param saveAsName  user-defined title of 'saveAs' centre configuration or empty [Optional] for unnamed centre
     /// @param centre  the centre manager to commit
     /// @param newDesc  new description to be saved into persistent storage
@@ -443,7 +540,7 @@ public class CentreUpdater {
     /// IMPORTANT WARNING: avoids centre config self-conflict checks.
     /// ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
     ///
-    /// @param name  surrogate name of the centre (fresh, previouslyRun etc.).
+    /// @param name  surrogate name of the centre (fresh or saved).
     /// @param saveAsName  user-defined title of 'saveAs' centre configuration or empty [Optional] for unnamed centre
     /// @param defaultCentre  centre instance to be used for constructing desired centre manager from `diff` object
     /// @param diff  differences object being committed (diffs comparing to default centre)
@@ -828,7 +925,7 @@ public class CentreUpdater {
     /// Looks only for named / link configurations, default configurations are avoided.
     ///
     /// @param miType  menu item type to which the centre configurations belong
-    /// @param surrogateName  surrogate name of the centre, for example fresh or previouslyRun
+    /// @param surrogateName  surrogate name of the centre, fresh or saved
     ///
     static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(
         final Class<? extends MiWithConfigurationSupport<?>> miType,
@@ -843,7 +940,7 @@ public class CentreUpdater {
     ///
     /// Looks only for named / link configurations, default configurations are avoided.
     ///
-    /// @param surrogateName  surrogate name of the centre (fresh, previouslyRun etc.)
+    /// @param surrogateName  surrogate name of the centre (fresh or saved)
     ///
     static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(
         final User user,
@@ -875,19 +972,17 @@ public class CentreUpdater {
         return applyDifferences(defaultCentre, updatedDiff, getEntityType(miType), companionFinder);
     }
     
-    /**
-     * Creates user-specific (!) default centre manager from Centre DSL configuration.
-     * <p>
-     * IMPORTANT: this 'default centre' is used for constructing 'fresh centre', 'previouslyRun centre' and their 'diff centres', that is why it is very important to make it suitable for Web UI default values.
-     * All other centres will reuse such Web UI specific default values.
-     * <p>
-     * Please note that 'default' centre is specific to the user on current thread ({@link IUserProvider}). All injector-based default values will be user-specific
-     * if they are defined as user-specific in domain logic.
-     *
-     * @param gdtm
-     * @param miType
-     * @return
-     */
+    /// Creates user-specific (!) default centre manager from Centre DSL configuration.
+    ///
+    /// IMPORTANT: this 'default centre' is the base of every centre.
+    /// 'Fresh' and 'saved' centres are constructed from it and their diffs.
+    /// 'PreviouslyRun' centres are constructed from it and the diff strings that clients keep.
+    /// That is why it is very important to make it suitable for Web UI default values.
+    /// All other centres will reuse such Web UI specific default values.
+    ///
+    /// Please note that 'default' centre is specific to the user on current thread ([IUserProvider]).
+    /// All injector-based default values will be user-specific if they are defined as user-specific in domain logic.
+    ///
     public static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
         return applyWebUIDefaultValues(createDefaultCentre(miType, webUiConfig), getEntityType(miType));
     }
@@ -917,7 +1012,7 @@ public class CentreUpdater {
     /// In case of non-base user the diff is initialised from base user's corresponding SAVED_CENTRE_NAMEd diff centre.
     ///
     /// @param saveAsSpecificName  surrogate name combined with save-as name, see [#saveAsSpecific(String, Optional)]
-    /// @param name  surrogate name of the centre (fresh, previouslyRun etc.);
+    /// @param name  surrogate name of the centre (fresh or saved);
     /// @param saveAsName  user-defined title of 'saveAs' centre configuration or empty [Optional] for unnamed centre
     ///
     private static Map<String, Object> updateDifferences(

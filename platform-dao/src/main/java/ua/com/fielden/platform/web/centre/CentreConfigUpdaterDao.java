@@ -40,20 +40,23 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntityBeingUpdated = actionAndCriteriaBeingUpdated._2;
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
 
-        // use centreAdjuster to update centre managers ('fresh' and 'previously_run') with columns visibility / order / sorting / pageCapacity / visibleRowsCount / numberOfHeaderLines information; also commit them to the database
+        // Use centreAdjuster to apply columns visibility, order and sorting.
+        // It also applies pageCapacity, visibleRowsCount and numberOfHeaderLines.
+        // They are applied to the FRESH centre, which is committed to the database, and to the PREVIOUSLY_RUN diff string.
+        // The new diff string is returned to the client, which keeps it.
         criteriaEntityBeingUpdated.adjustCentre(centreManager -> {
             applyNewOrderVisibilityAndSorting(centreManager.getSecondTick(), root, actionToSave.getChosenIds(), actionToSave.getSortingVals());
             centreManager.getSecondTick().setPageCapacity(actionToSave.getPageCapacity());
             centreManager.getSecondTick().setVisibleRowsCount(actionToSave.getVisibleRowsCount());
             centreManager.getSecondTick().setNumberOfHeaderLines(actionToSave.getNumberOfHeaderLines());
         });
+        actionToSave.setPreviouslyRunDiffString(criteriaEntityBeingUpdated.previouslyRunDiffString());
 
-        // in case where sorting or pageCapacity has been changed from previous value, we need to trigger running from client-side using 'triggerRerun' property
+        // A change of sorting or page capacity requires the results to be queried again.
+        // The client then refreshes its last run from the first page (see `CentreConfigurationWebUiConfig`).
         actionToSave.setTriggerRerun(actionToSave.getProperty("pageCapacity").isChangedFromOriginal() || actionToSave.getProperty("sortingVals").isChangedFromOriginal());
-        if (!actionToSave.isTriggerRerun()) {
-            // in case where neither sorting nor pageCapacity has changed from previous value (and re-running will not occur), we need to send 'centreDirty' parameter and bind it to SAVE button disablement
-            actionToSave.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty());
-        }
+        // The refresh does not update the disablement of SAVE button, so `centreDirty` is always sent.
+        actionToSave.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty());
 
         // we need to be able to continue 'change pageCapacity/sort/order/visibility' activities after successful save -- all essential properties should be reset to reflect 'newly applied' 'pageCapacity/sort/order/visibility' inside original values
         actionToSave.getProperty("pageCapacity").resetState();

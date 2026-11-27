@@ -38,6 +38,14 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> savedCentreSupplier;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier;
+    /// The diff string of the PREVIOUSLY_RUN centre, which the client keeps for its last run.
+    /// It is `null` if the centre has not been run in the client.
+    /// It is also `null` for the criteria entity of a criteria autocompleter.
+    /// So *active only* is applied to FRESH centre only.
+    /// [#adjustCentre(Consumer)] and [#adjustColumnWidths(Consumer)] replace it with the diff string of the adjusted centre.
+    /// See `CentreUpdater.createPreviouslyRunDiffString` for its format.
+    ///
+    private String previouslyRunDiffString;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
     private Function<String, Function<String, Function<Boolean, Function<DashboardRefreshFrequency, Map<String, Object>>>>> centreEditor;
@@ -74,7 +82,8 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster;
     /// Applies the supplied mutation to the `SAVED` surrogate centre.
     /// Used by [#adjustCentreSilently(Consumer)] alongside [#adjustCentre(Consumer)].
-    /// [#adjustCentre(Consumer)] covers `FRESH` and `PREVIOUSLY_RUN`; together they mutate all three surrogates identically.
+    /// [#adjustCentre(Consumer)] covers `FRESH` and the `PREVIOUSLY_RUN` diff string.
+    /// Together they mutate all three centres identically.
     /// That combination keeps the change invisible to dirty-state tracking.
     /// The indicator stays black and SAVE stays disabled (if it was).
     /// Used for housekeeping mutations that should not be perceived as user edits.
@@ -125,7 +134,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         this.centreSilentAdjuster = centreSilentAdjuster;
     }
 
-    /// Applies `consumer` silently to all three surrogate centres.
+    /// Applies `consumer` silently to `FRESH`, `SAVED` and the `PREVIOUSLY_RUN` diff string.
     /// Neither indicator nor the SAVE button picks it up.
     /// See the [#centreSilentAdjuster] field doc for the intended use.
     ///
@@ -157,8 +166,23 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         this.previouslyRunCentreSupplier = previouslyRunCentreSupplier;
     }
 
+    /// The PREVIOUSLY_RUN centre restored from [#previouslyRunDiffString()].
+    /// It is used by actions on the results view, which the client shows only after a run.
+    /// Fails if the client has not sent the diff string.
+    ///
     public ICentreDomainTreeManagerAndEnhancer previouslyRunCentre() {
         return previouslyRunCentreSupplier.get();
+    }
+
+    /// The diff string of the PREVIOUSLY_RUN centre, which the client keeps for its last run.
+    /// It is `null` if the centre has not been run in the client.
+    ///
+    public String previouslyRunDiffString() {
+        return previouslyRunDiffString;
+    }
+
+    public void setPreviouslyRunDiffString(final String previouslyRunDiffString) {
+        this.previouslyRunDiffString = previouslyRunDiffString;
     }
     
     /**

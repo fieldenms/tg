@@ -117,11 +117,12 @@ const TgSelectionCriteriaBehaviorImpl = {
             type: Function
         },
 
-        /**
-         * Page capacity taken from PREVIOUSLY_RUN surrogate centre after run / refresh / navigate action (see tg-entity-centre-behavior._postRun).
-         * 
-         * This is used for single purpose: update information on EDIT/NAVIGATE action dialogs (see EntityNavigationPreAction).
-         */
+        /// Page capacity of the PREVIOUSLY_RUN centre of this client.
+        /// It is taken after run, refresh and navigate actions (see `tg-entity-centre-behavior._postRun`).
+        ///
+        /// It is used for a single purpose: updating information on EDIT / NAVIGATE action dialogs.
+        /// See `EntityNavigationPreAction`.
+        ///
         pageCapacity: {
             type: Number
         },
@@ -172,6 +173,19 @@ const TgSelectionCriteriaBehaviorImpl = {
             type: String,
             value: null,
             notify: true
+        },
+
+        /// The diff string of the PREVIOUSLY_RUN centre of the last run in this client.
+        /// It is `null` if the centre has not been run here.
+        /// It arrives with run, refresh and navigate.
+        /// It also arrives with the actions that change columns, their widths or the preferred view.
+        /// It is kept as is, without reading it.
+        /// It is sent back with every centre context, validation and discard.
+        /// This way the server uses the last run of this client, whatever is run in other tabs or devices.
+        ///
+        _previouslyRunDiffString: {
+            type: String,
+            value: null
         },
 
         ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
@@ -324,6 +338,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                     dynamicColumns: customObject.dynamicColumns || {},
                     summary: customObject.summary,
                     criteriaIndication: customObject.criteriaIndication,
+                    previouslyRunDiffString: customObject.previouslyRunDiffString,
                     columnWidths: customObject.columnWidths,
                     resultConfig: customObject.resultConfig,
                     primaryActionIndices: customObject.primaryActionIndices,
@@ -345,6 +360,10 @@ const TgSelectionCriteriaBehaviorImpl = {
 
             if (typeof result.criteriaIndication !== 'undefined') { // if criteriaIndication is defined -- then populate it into config button tooltip / colour
                 this.criteriaIndication = result.criteriaIndication;
+            }
+            // The diff string arrives only with successful run, refresh and navigate.
+            if (typeof result.previouslyRunDiffString === 'string') {
+                this._previouslyRunDiffString = result.previouslyRunDiffString;
             }
             if (typeof result.pageCount !== 'undefined') {
                 this.pageCount = result.pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
@@ -487,6 +506,10 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (typeof oldConfigUuid === 'string' && this._wasRun === 'yes') {
             this._wasRun = null; // reset _wasRun if configuration has been changed
         }
+        if (typeof oldConfigUuid === 'string') {
+            // The last run belongs to the previous configuration.
+            this._previouslyRunDiffString = null;
+        }
         this.fire('tg-config-uuid-changed', newConfigUuid);
     },
 
@@ -494,11 +517,18 @@ const TgSelectionCriteriaBehaviorImpl = {
         this.fire('tg-save-as-desc-changed', newSaveAsDesc);
     },
 
+    /// Validates the criteria, and sends the diff string of the last run in this client with them.
+    /// The server compares the criteria with that last run for the STALE indication.
+    ///
+    _validateForDescendants: function (preparedModifHolder) {
+        preparedModifHolder["@@previouslyRunDiffString"] = this._previouslyRunDiffString;
+        return TgEntityBinderBehavior._validateForDescendants.call(this, preparedModifHolder);
+    },
+
     _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
         const modPropHolder = TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _originalBindingEntity);
         if (this._reflector().isEntity(bindingEntity)) {
             modPropHolder["@@metaValues"] = {};
-            modPropHolder["@@wasRun"] = this._wasRun;
             // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
             for (let property in this.propertyModel) {
                 if (this.propertyModel.hasOwnProperty(property)) {
@@ -700,44 +730,40 @@ const TgSelectionCriteriaBehaviorImpl = {
         this.persistActiveElement();
     },
 
-    /**
-     * Starts the process of centre run.
-     *
-     * isAutoRunning -- returns true if this running action represents autoRun event action invocation rather than simple running, undefined or false otherwise; not to be confused with 'link' centre auto-running capability
-     * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
-     * forceRegeneration -- returns true if this running action represents special 're-generation of modified data' action invocation rather than simple running, undefined otherwise
-     */
-    run: function (isAutoRunning, isSortingAction, forceRegeneration) {
+    /// Starts the process of centre run.
+    ///
+    /// `isAutoRunning` is `true` if this run is the auto-run of the centre, and `undefined` or `false` otherwise.
+    /// It is not to be confused with the auto-running capability of a 'link' centre.
+    /// `forceRegeneration` is `true` if this run re-generates modified data, and `undefined` otherwise.
+    ///
+    run: function (isAutoRunning, forceRegeneration) {
         this._openToast(null, "Loading data", false, "", true);
-        return this._execute(RunActions.run, isAutoRunning, isSortingAction, forceRegeneration);
+        return this._execute(RunActions.run, isAutoRunning, forceRegeneration);
     },
 
-    /**
-     * Starts the process of centre execution.
-     *
-     * isAutoRunning -- returns true if this running action represents autoRun event action invocation rather than simple running, undefined or false otherwise; not to be confused with 'link' centre auto-running capability
-     * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
-     * forceRegeneration -- returns true if this running action represents special 're-generation of modified data' action invocation rather than simple running, undefined otherwise
-     */
-    _execute: function (action, isAutoRunning, isSortingAction, forceRegeneration) {
+    /// Starts the process of centre execution.
+    ///
+    /// `isAutoRunning` and `forceRegeneration` apply to `RunActions.run` only (see `run`).
+    ///
+    _execute: function (action, isAutoRunning, forceRegeneration) {
         const self = this;
 
         if (self.isRunning) {
             console.warn("Refresh is already in progress...");
             self._refreshPromiseInProgress = self._refreshPromiseInProgress
                 .finally(function () {
-                    return self._createPromise(action, isAutoRunning, isSortingAction, forceRegeneration);
+                    return self._createPromise(action, isAutoRunning, forceRegeneration);
                 });
             return self._refreshPromiseInProgress;
         }
 
         // let's capture the promise being created at the instance level so that it could be referenced later...
-        self._refreshPromiseInProgress = self._createPromise(action, isAutoRunning, isSortingAction, forceRegeneration);
+        self._refreshPromiseInProgress = self._createPromise(action, isAutoRunning, forceRegeneration);
         // ... and return it
         return self._refreshPromiseInProgress;
     },
 
-    _createPromise: function (action, isAutoRunning, isSortingAction, forceRegeneration) {
+    _createPromise: function (action, isAutoRunning, forceRegeneration) {
         const self = this;
 
         return new Promise(function (resolve, reject) {
@@ -758,7 +784,6 @@ const TgSelectionCriteriaBehaviorImpl = {
                         },
                         action,
                         isAutoRunning,
-                        isSortingAction,
                         forceRegeneration,
                         self.requireSelectedEntities,
                         self.requireMasterEntity
@@ -836,29 +861,58 @@ const TgSelectionCriteriaBehaviorImpl = {
         return propertyModel;
     },
 
-    /**
-     * Create context holder with custom '@@miType' property.
-     */
-    createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
+    /// Creates a context holder with custom properties of this centre, such as '@@miType'.
+    /// Selected entities are taken from `getSelectedEntities` if it is specified, and from EGI otherwise.
+    ///
+    createContextHolder: function (
+        requireSelectionCriteria,
+        requireSelectedEntities,
+        requireMasterEntity,
+        actionKind,
+        actionNumber,
+        getSelectedEntities
+    ) {
         const self = this;
         const modifHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-        return this._createContextHolder(function () {
-            return self._reset(modifHolder);
-        }, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
+        return this._createContextHolder(
+            function () {
+                return self._reset(modifHolder);
+            },
+            requireSelectionCriteria,
+            requireSelectedEntities,
+            requireMasterEntity,
+            actionKind,
+            actionNumber,
+            getSelectedEntities
+        );
     },
 
-    /**
-     * Create context holder with custom '@@miType' property.
-     */
-    _createContextHolder: function (modifHolderGetter, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
+    /// Creates a context holder with custom properties of this centre, such as '@@miType'.
+    /// Selected entities are taken from `getSelectedEntities` if it is specified, and from EGI otherwise.
+    ///
+    _createContextHolder: function (
+        modifHolderGetter,
+        requireSelectionCriteria,
+        requireSelectedEntities,
+        requireMasterEntity,
+        actionKind,
+        actionNumber,
+        getSelectedEntities = this.getSelectedEntities
+    ) {
         const contextHolder = this._reflector().createContextHolder(
             requireSelectionCriteria, requireSelectedEntities, requireMasterEntity,
-            modifHolderGetter, this.getSelectedEntities, this.getMasterEntity
+            modifHolderGetter, getSelectedEntities, this.getMasterEntity
         );
         this._reflector().setCustomProperty(contextHolder, "@@miType", this.miType);
         this._reflector().setCustomProperty(contextHolder, "@@saveAsName", this.saveAsName);
         this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
         this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
+        // The server takes the criteria of the last run in this client from this diff string.
+        // So it is sent only together with the selection criteria.
+        // Front actions take the criteria on screen instead, so they do not send it.
+        if (requireSelectionCriteria === "true" && actionKind !== "FRONT") {
+            this._reflector().setCustomProperty(contextHolder, "@@previouslyRunDiffString", this._previouslyRunDiffString);
+        }
         return contextHolder;
     },
 
@@ -876,15 +930,19 @@ const TgSelectionCriteriaBehaviorImpl = {
      * In this method selection criteria modifHolder should be sent every time -- it is required to actually 'run' the query.
      * However, if the query enhancing process requires the selectionCrit entity too -- it will be used without any problem.
      */
-    _createContextHolderForRunning: function (modifHolderGetter, action, isAutoRunning, isSortingAction, forceRegeneration, requireSelectedEntities, requireMasterEntity) {
+    _createContextHolderForRunning: function (
+        modifHolderGetter,
+        action,
+        isAutoRunning,
+        forceRegeneration,
+        requireSelectedEntities,
+        requireMasterEntity
+    ) {
         const self = this;
         const contextHolder = self._createContextHolder(modifHolderGetter, "true", requireSelectedEntities, requireMasterEntity);
 
         if (isAutoRunning) {
             self._reflector().setCustomProperty(contextHolder, "@@autoRunning", true);
-        }
-        if (isSortingAction) {
-            self._reflector().setCustomProperty(contextHolder, "@@sortingAction", true);
         }
         if (forceRegeneration) {
             self._reflector().setCustomProperty(contextHolder, "@@forceRegeneration", true);
