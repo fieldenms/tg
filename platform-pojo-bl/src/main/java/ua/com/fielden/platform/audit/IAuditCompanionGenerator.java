@@ -1,32 +1,32 @@
 package ua.com.fielden.platform.audit;
 
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
+import ua.com.fielden.platform.dao.IEntityDao;
 
-/// This interface defines the generator of audit-entity companion object types.
+/// This interface defines the generator of audit-entity companion objects.
 ///
 /// Cannot be used if auditing is disabled, all methods will throw [AuditingModeException].
 ///
-/// Each invocation generates a new type.
-/// Companion types for audit entities should be obtained through [ua.com.fielden.platform.companion.ICompanionGenerator], which caches them.
+/// Each invocation creates a new companion object.
 ///
 public interface IAuditCompanionGenerator {
 
-    /// Generates a companion object implementation for the specified audit-entity type.
+    /// Creates a companion object for the specified audit-entity type.
     ///
-    Class<?> generateCompanion(Class<? extends AbstractAuditEntity<?>> type);
+    <E extends AbstractAuditEntity<?>> IEntityDao<E> generateCompanion(Class<E> type);
 
-    /// Generates a companion object implementation for the specified audit-prop entity type.
+    /// Creates a companion object for the specified audit-prop entity type.
     ///
-    Class<?> generateCompanionForAuditProp(Class<? extends AbstractAuditProp<?>> type);
+    <E extends AbstractAuditProp<?>> IEntityDao<E> generateCompanionForAuditProp(Class<E> type);
 
-    /// Generates a companion object implementation for the specified synthetic audit-entity type.
+    /// Creates a companion object for the specified synthetic audit-entity type.
     ///
-    /// The generated type will implement [ISynAuditEntityDao].
+    /// The companion object implements [ISynAuditEntityDao].
     ///
-    Class<?> generateCompanionForSynAuditEntity(Class<? extends AbstractSynAuditEntity<?>> type);
+    <E extends AbstractSynAuditEntity<?>> IEntityDao<E> generateCompanionForSynAuditEntity(Class<E> type);
 
-    /// Generates a companion object implementation for the specified synthetic audit-prop entity type.
+    /// Creates a companion object for the specified synthetic audit-prop entity type.
     ///
-    Class<?> generateCompanionForSynAuditProp(Class<? extends AbstractSynAuditProp<?>> type);
+    <E extends AbstractSynAuditProp<?>> IEntityDao<E> generateCompanionForSynAuditProp(Class<E> type);
 
 }

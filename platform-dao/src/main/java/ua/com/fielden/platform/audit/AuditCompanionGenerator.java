@@ -1,73 +1,80 @@
 package ua.com.fielden.platform.audit;
 
+import com.google.inject.Injector;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.description.annotation.AnnotationDescription;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
-import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.eql.dbschema.PropertyInliner;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 /// A generator responsible for generating companion objects at runtime for audit entities.
-///
-/// Generated companions are always based on the _original_ entity type.
-/// If an _instrumented_ entity type is provided, its _original_ type is used.
 ///
 @Singleton
 final class AuditCompanionGenerator implements IAuditCompanionGenerator {
 
     private final AuditingMode auditingMode;
+    private final Injector injector;
+    private final IAuditTypeFinder a3tFinder;
+    private final IDomainMetadata domainMetadata;
+    private final PropertyInliner propInliner;
 
     @Inject
-    AuditCompanionGenerator(final AuditingMode auditingMode) {
+    AuditCompanionGenerator(
+            final AuditingMode auditingMode,
+            final Injector injector,
+            final IAuditTypeFinder a3tFinder,
+            final IDomainMetadata domainMetadata,
+            final PropertyInliner propInliner)
+    {
         this.auditingMode = auditingMode;
+        this.injector = injector;
+        this.a3tFinder = a3tFinder;
+        this.domainMetadata = domainMetadata;
+        this.propInliner = propInliner;
     }
 
     @Override
-    public Class<?> generateCompanion(final Class<? extends AbstractAuditEntity<?>> type) {
-        return generateCompanionCommon(type, CommonAuditEntityDao.class);
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public <E extends AbstractAuditEntity<?>> IEntityDao<E> generateCompanion(final Class<E> type) {
+        assertAuditingEnabled();
+        final CommonAuditEntityDao dao = injector.getInstance(CommonAuditEntityDao.class);
+        dao.init(type, AnnotationReflector.getKeyType(type), auditingMode, a3tFinder, domainMetadata, propInliner);
+        return dao;
     }
 
     @Override
-    public Class<?> generateCompanionForAuditProp(final Class<? extends AbstractAuditProp<?>> type) {
-        return generateCompanionCommon(type, CommonAuditPropDao.class);
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public <E extends AbstractAuditProp<?>> IEntityDao<E> generateCompanionForAuditProp(final Class<E> type) {
+        assertAuditingEnabled();
+        final CommonAuditPropDao dao = injector.getInstance(CommonAuditPropDao.class);
+        dao.init(type, AnnotationReflector.getKeyType(type), auditingMode, domainMetadata, a3tFinder);
+        return dao;
     }
 
     @Override
-    public Class<?> generateCompanionForSynAuditEntity(final Class<? extends AbstractSynAuditEntity<?>> type) {
-        return generateCompanionCommon(type, CommonSynAuditEntityDao.class);
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public <E extends AbstractSynAuditEntity<?>> IEntityDao<E> generateCompanionForSynAuditEntity(final Class<E> type) {
+        assertAuditingEnabled();
+        final CommonSynAuditEntityDao dao = injector.getInstance(CommonSynAuditEntityDao.class);
+        dao.init(type, AnnotationReflector.getKeyType(type), auditingMode, a3tFinder, domainMetadata);
+        return dao;
     }
 
     @Override
-    public Class<?> generateCompanionForSynAuditProp(final Class<? extends AbstractSynAuditProp<?>> type) {
-        // CommonEntityDao is used correct here,
-        // but it will need to be replaced with a dedicated CommonSynAuditProp, if such companion is ever going to be introduced.
-        return generateCompanionCommon(type, CommonEntityDao.class);
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public <E extends AbstractSynAuditProp<?>> IEntityDao<E> generateCompanionForSynAuditProp(final Class<E> type) {
+        assertAuditingEnabled();
+        final CommonSynAuditPropDao dao = injector.getInstance(CommonSynAuditPropDao.class);
+        dao.init(type, AnnotationReflector.getKeyType(type));
+        return dao;
     }
 
-    /// A helper method for generating a new companion implementation extending `coSuperclass` for entity `type`.
-    ///
-    /// @param type an entity type for which the companion implementation needs to be generated
-    /// @param coSuperclass a base type for the companion implementation.
-    /// 
-    private Class<?> generateCompanionCommon(final Class<? extends AbstractEntity<?>> type, final Class<?> coSuperclass) {
+    private void assertAuditingEnabled() {
         if (auditingMode == AuditingMode.DISABLED) {
             throw AuditingModeException.cannotBeUsed(IAuditCompanionGenerator.class, auditingMode);
         }
-
-        final var baseType = PropertyTypeDeterminator.baseEntityType(type);
-
-        return new ByteBuddy()
-                .subclass(coSuperclass)
-                .name(baseType.getCanonicalName() + "Dao")
-                .annotateType(AnnotationDescription.Builder.ofType(EntityType.class)
-                                      .define("value", baseType)
-                                      .build())
-                .make()
-                .load(baseType.getClassLoader())
-                .getLoaded();
     }
 
 }

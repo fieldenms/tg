@@ -1,13 +1,12 @@
 package ua.com.fielden.platform.audit;
 
 import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
+import ua.com.fielden.platform.dao.AbstractEntityDao;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -24,15 +23,17 @@ import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-/// Base type for implementations of synthetic audit-entity companion objects.
+/// Generic type for synthetic audit-entity companion objects.
+/// This type should be instantiated directly.
+/// Unlike [CommonEntityDao], this type does not have to be subclassed.
 ///
 /// Cannot be used if auditing is disabled.
 /// Will throw [AuditingModeException] upon construction.
 ///
 /// @param <E>  the audited entity type
 ///
-public abstract class CommonSynAuditEntityDao<E extends AbstractEntity<?>>
-        extends CommonEntityDao<AbstractSynAuditEntity<E>>
+public class CommonSynAuditEntityDao<E extends AbstractEntity<?>>
+        extends AbstractEntityDao<AbstractSynAuditEntity<E>>
         implements ISynAuditEntityDao<E>
 {
 
@@ -40,25 +41,39 @@ public abstract class CommonSynAuditEntityDao<E extends AbstractEntity<?>>
 
     // All fields below are effectively final, but cannot be declared so due to late initialisation.
 
+    private Class<AbstractSynAuditEntity<E>> entityType;
+    private Class<? extends Comparable<?>> keyType;
     private IDomainMetadata domainMetadata;
     private IEntityAuditor<E> coAuditEntity;
     private Class<E> auditedType;
 
-    @Inject
     protected void init(
+            final Class<AbstractSynAuditEntity<E>> entityType,
+            final Class<? extends Comparable<?>> keyType,
             final AuditingMode auditingMode,
             final IAuditTypeFinder a3tFinder,
-            final ICompanionObjectFinder coFinder,
             final IDomainMetadata domainMetadata)
     {
         if (auditingMode == AuditingMode.DISABLED) {
             throw AuditingModeException.cannotBeUsed(this.getClass(), auditingMode);
         }
 
+        this.entityType = entityType;
+        this.keyType = keyType;
         this.domainMetadata = domainMetadata;
-        final var navigator = a3tFinder.navigateSynAudit(getEntityType());
-        coAuditEntity = coFinder.find(navigator.auditEntityType());
+        final var navigator = a3tFinder.navigateSynAudit(entityType);
+        coAuditEntity = getCoFinder().find(navigator.auditEntityType());
         auditedType = navigator.auditedType();
+    }
+
+    @Override
+    public Class<AbstractSynAuditEntity<E>> getEntityType() {
+        return entityType;
+    }
+
+    @Override
+    public Class<? extends Comparable<?>> getKeyType() {
+        return keyType;
     }
 
     @Override
