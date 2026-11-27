@@ -84,7 +84,19 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
 
             final User user = userProvider.getUser();
-            final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, PropertyAssignmentErrorHandler.standard, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device(), sharingModel);
+            final T applied = restoreEntityFrom(
+                false,
+                savingInfoHolder,
+                entityType,
+                PropertyAssignmentErrorHandler.standard,
+                entityFactory,
+                webUiConfig,
+                companionFinder,
+                user,
+                critGenerator,
+                0,
+                sharingModel
+            );
 
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
             final Result result = restUtil.singleEntityResult(applied);

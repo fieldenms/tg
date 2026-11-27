@@ -36,6 +36,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
@@ -72,6 +73,7 @@ import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
 import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.FILE_APP_INDEX_HTML;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_OWN_COPY_MSG;
@@ -421,9 +423,19 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         logger.error("Clearing configurations...done");
     }
 
+    /// Takes the device profile from [IDeviceProvider], which every web resource sets for the request it serves.
+    ///
+    @Override
+    public DeviceProfile currentDeviceProfile() {
+        return injector().getInstance(IDeviceProvider.class).getDeviceProfile();
+    }
+
+    /// Returns the mobile menu for [DeviceProfile#MOBILE], and the desktop menu for any other value, including `null`.
+    /// This is the same rule as in `IDeviceProvider.isMobile()`.
+    ///
     @Override
     public Menu getMenuEntity(final DeviceProfile deviceProfile) {
-        return DeviceProfile.DESKTOP.equals(deviceProfile) ? desktopMainMenuConfig.getMenu() : mobileMainMenuConfig.getMenu();
+        return deviceProfile == MOBILE ? mobileMainMenuConfig.getMenu() : desktopMainMenuConfig.getMenu();
     }
 
     @Override
