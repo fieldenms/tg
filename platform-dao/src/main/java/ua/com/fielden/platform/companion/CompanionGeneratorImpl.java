@@ -43,6 +43,11 @@ final class CompanionGeneratorImpl implements ICompanionGenerator {
         return generatedTypes.computeIfAbsent(baseEntityType(type), this::generate);
     }
 
+    @Override
+    public int generatedTypeCount() {
+        return generatedTypes.size();
+    }
+
     private Class<?> generate(final Class<? extends AbstractEntity<?>> type) {
         if (isAuditEntityType(type)) {
             return auditCoGenerator.generateCompanion((Class<? extends AbstractAuditEntity<?>>) type);

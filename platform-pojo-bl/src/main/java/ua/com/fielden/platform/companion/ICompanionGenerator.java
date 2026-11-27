@@ -16,4 +16,12 @@ public interface ICompanionGenerator {
     ///
     Class<?> generateCompanion(Class<? extends AbstractEntity<?>> type);
 
+    /// Returns the number of companion types generated so far, which is the number of base entity types with a generated companion type.
+    ///
+    /// It is intended for application services that periodically report cache sizes, such as the size of [ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader].
+    /// The number levels off at the number of base entity types whose generated companions are requested.
+    /// If Metaspace keeps growing while this number stays the same, the growth is not caused by companion types generated through this generator.
+    ///
+    int generatedTypeCount();
+
 }

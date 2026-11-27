@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.companion;
 
 import org.junit.Test;
+import ua.com.fielden.platform.audit.IAuditCompanionGenerator;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -69,6 +70,25 @@ public class CompanionGenerationTest extends AbstractDaoTestCase {
 
         final var co = (CommonEntityDao<?>) getInstance(coType1);
         assertThat(co.getEntityType()).isEqualTo(TgActivatableVehicleModel.class);
+    }
+
+    /// The injector, and thus the singleton generator, is shared by all tests, so its cache content depends on the order in which they run.
+    /// This test uses its own generator instance, which starts with an empty cache.
+    ///
+    @Test
+    public void generated_type_count_increases_only_when_a_companion_type_is_generated_for_a_new_base_entity_type() {
+        final var generator = new CompanionGeneratorImpl(getInstance(IAuditCompanionGenerator.class));
+        final var auditEntityType = auditTypeFinder.navigate(AuditedEntity.class).auditEntityType();
+        assertThat(generator.generatedTypeCount()).isZero();
+
+        generator.generateCompanion(auditEntityType);
+        assertThat(generator.generatedTypeCount()).isEqualTo(1);
+
+        generator.generateCompanion(auditEntityType);
+        assertThat(generator.generatedTypeCount()).isEqualTo(1);
+
+        generator.generateCompanion(TgActivatableVehicleModel.class);
+        assertThat(generator.generatedTypeCount()).isEqualTo(2);
     }
 
     /// Companions are not singletons, so each lookup returns a new instance.
