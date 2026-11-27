@@ -39,6 +39,7 @@ final class CompanionGeneratorImpl implements ICompanionGenerator {
     public Class<?> generateCompanion(final Class<? extends AbstractEntity<?>> type) {
         // `computeIfAbsent` also prevents concurrent lookups from generating the same type more than once.
         // If generation fails, nothing is cached and the exception propagates to the caller.
+        // Generation must not look up companions: a re-entrant `computeIfAbsent` on this map is not supported, and may fail with `IllegalStateException` (recursive update) or deadlock.
         return generatedTypes.computeIfAbsent(baseEntityType(type), this::generate);
     }
 

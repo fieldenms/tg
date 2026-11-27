@@ -41,6 +41,9 @@ public class CompanionGenerationTest extends AbstractDaoTestCase {
         assertCompanionsFoundAreInstancesOfTheSameClass(auditTypeFinder.navigate(AuditedEntity.class).synAuditPropType());
     }
 
+    /// This test passes with or without caching.
+    /// It guards against a cache key that is too broad, which would make different entity types share a companion type.
+    ///
     @Test
     public void companion_types_for_audit_entity_types_of_different_audited_types_are_different() {
         final var generator = getInstance(ICompanionGenerator.class);
@@ -50,9 +53,11 @@ public class CompanionGenerationTest extends AbstractDaoTestCase {
     }
 
     /// `TgActivatableVehicleModel` has no companion class of its own, which would otherwise clash with the name of the generated type.
+    /// The test domain has no entity type annotated with `@CompanionIsGenerated` that is not an audit type.
+    /// Therefore, this test uses the generator directly and instantiates the cached type through the injector, as the companion finder does.
     ///
     @Test
-    public void companion_type_for_an_entity_type_that_is_not_an_audit_type_is_generated_once() {
+    public void companion_type_for_an_entity_type_that_is_not_an_audit_type_is_generated_once_and_can_be_instantiated() {
         final var generator = getInstance(ICompanionGenerator.class);
 
         final var coType1 = generator.generateCompanion(TgActivatableVehicleModel.class);
@@ -61,6 +66,9 @@ public class CompanionGenerationTest extends AbstractDaoTestCase {
         assertThat(coType1).isSameAs(coType2);
         assertThat(CommonEntityDao.class).isAssignableFrom(coType1);
         assertThat(coType1.getAnnotation(EntityType.class).value()).isEqualTo(TgActivatableVehicleModel.class);
+
+        final var co = (CommonEntityDao<?>) getInstance(coType1);
+        assertThat(co.getEntityType()).isEqualTo(TgActivatableVehicleModel.class);
     }
 
     /// Companions are not singletons, so each lookup returns a new instance.
