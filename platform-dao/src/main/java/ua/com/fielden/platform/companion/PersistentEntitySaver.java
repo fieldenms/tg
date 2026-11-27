@@ -309,7 +309,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final ICompanionObjectFinder coFinder)
     {
         if (audited) {
-            // Performance benefit: the companion is created only once.
+            // Performance benefit: the companion is created only once per saver.
+            // Its type, generated at runtime, is created only once per entity type (see ICompanionGenerator).
             final ISynAuditEntityDao<E> coSynAudit = coFinder.find(auditTypeFinder.navigate(entityType).synAuditEntityType());
             return coSynAudit::audit;
         }

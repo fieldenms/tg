@@ -11,14 +11,24 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import static ua.com.fielden.platform.audit.AuditUtils.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 
+/// Generates companion object types and caches them by base entity type.
+///
+/// Each generated type is a new class, defined in its own class loader.
+/// Once the injector has instantiated it, the type is retained for the lifetime of the injector, so generating a type per lookup would grow Metaspace without bound.
+/// Caching guarantees that a companion type is generated at most once per base entity type for each instance of this singleton.
+///
 @Singleton
 final class CompanionGeneratorImpl implements ICompanionGenerator {
 
     private final IAuditCompanionGenerator auditCoGenerator;
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, Class<?>> generatedTypes = new ConcurrentHashMap<>();
 
     @Inject
     public CompanionGeneratorImpl(final IAuditCompanionGenerator auditCoGenerator) {
@@ -27,6 +37,18 @@ final class CompanionGeneratorImpl implements ICompanionGenerator {
 
     @Override
     public Class<?> generateCompanion(final Class<? extends AbstractEntity<?>> type) {
+        // `computeIfAbsent` also prevents concurrent lookups from generating the same type more than once.
+        // If generation fails, nothing is cached and the exception propagates to the caller.
+        // Generation must not look up companions: a re-entrant `computeIfAbsent` on this map is not supported, and may fail with `IllegalStateException` (recursive update) or deadlock.
+        return generatedTypes.computeIfAbsent(baseEntityType(type), this::generate);
+    }
+
+    @Override
+    public int generatedTypeCount() {
+        return generatedTypes.size();
+    }
+
+    private Class<?> generate(final Class<? extends AbstractEntity<?>> type) {
         if (isAuditEntityType(type)) {
             return auditCoGenerator.generateCompanion((Class<? extends AbstractAuditEntity<?>>) type);
         }
