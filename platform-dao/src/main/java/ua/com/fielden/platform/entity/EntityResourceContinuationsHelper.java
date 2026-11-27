@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.continuation.NeedMoreDataStorage;
-import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.AbstractEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.Required;
@@ -25,7 +25,7 @@ public class EntityResourceContinuationsHelper {
     /// In case where warnings exist, `continuations` should include respective warnings acknowledgement continuation if it was accepted by the user.
     /// Could throw continuations exceptions, a "no changes" exception, or validation exceptions.
     ///
-    private static <T extends AbstractEntity<?>> T saveWithContinuations(final T entity, final Map<String, IContinuationData> continuations, final CommonEntityDao<T> co) {
+    private static <T extends AbstractEntity<?>> T saveWithContinuations(final T entity, final Map<String, IContinuationData> continuations, final AbstractEntityDao<T> co) {
         if (validateWithoutCritOnlyRequired(entity)
             && entity.warnings().stream().anyMatch(EntityResourceUtils::isNonConflicting))
         {
@@ -79,9 +79,9 @@ public class EntityResourceContinuationsHelper {
         T savedEntity;
         try {
             // Try to save the entity with its companion 'save' method.
-            savedEntity = saveWithContinuations(validatedEntity, continuations, (CommonEntityDao<T>) companion);
+            savedEntity = saveWithContinuations(validatedEntity, continuations, (AbstractEntityDao<T>) companion);
         } catch (final Exception exception) {
-            // Some exception can be thrown inside 1) its companion 'save' method OR 2) CommonEntityDao 'save' during its internal validation.
+            // Some exception can be thrown inside 1) its companion 'save' method OR 2) AbstractEntityDao 'save' during its internal validation.
             // Return entity back to the client after its unsuccessful save with the exception that was thrown during saving.
             return pair(validatedEntity, Optional.of(exception));
         }
