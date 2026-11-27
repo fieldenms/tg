@@ -18,4 +18,11 @@ public final class CompanionGeneratorStub implements ICompanionGenerator {
         throw new UnsupportedOperationException();
     }
 
+    /// Returns 0, as this implementation generates no companion types.
+    ///
+    @Override
+    public int generatedTypeCount() {
+        return 0;
+    }
+
 }

@@ -200,7 +200,10 @@ Reverse navigation is also supported via `IAuditTypeFinder.navigateAudit(Class<A
 
 ### Generated companions — never hand-write
 
-Audit-type companions are generated at application startup by `ICompanionGenerator` / `AuditCompanionGenerator` using ByteBuddy.
+Audit-type companions are generated at runtime by `ICompanionGenerator` / `AuditCompanionGenerator` using ByteBuddy, on the first lookup of each audit type.
+`CompanionGeneratorImpl` caches the generated types by base entity type, so each companion type is generated once per injector.
+`ICompanionGenerator.generatedTypeCount()` reports the number of cached types, for application services that periodically report cache sizes.
+Each generated type is a new class that the injector retains once it has instantiated it; obtain audit companions through `ICompanionObjectFinder` (or `co(…)`), which goes through this cache, never by calling `IAuditCompanionGenerator` directly.
 Each generated companion subclasses one of:
 
 | Base companion | Used for |

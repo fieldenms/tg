@@ -6,6 +6,9 @@ import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 ///
 /// Cannot be used if auditing is disabled, all methods will throw [AuditingModeException].
 ///
+/// Each invocation generates a new type.
+/// Companion types for audit entities should be obtained through [ua.com.fielden.platform.companion.ICompanionGenerator], which caches them.
+///
 public interface IAuditCompanionGenerator {
 
     /// Generates a companion object implementation for the specified audit-entity type.
