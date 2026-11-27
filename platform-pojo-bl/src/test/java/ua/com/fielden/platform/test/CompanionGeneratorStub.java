@@ -2,6 +2,7 @@ package ua.com.fielden.platform.test;
 
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.companion.ICompanionGenerator;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /// Stub implementation of entity companion generation for tests in the `platform-pojo-bl` module.
@@ -14,15 +15,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 public final class CompanionGeneratorStub implements ICompanionGenerator {
 
     @Override
-    public Class<?> generateCompanion(final Class<? extends AbstractEntity<?>> type) {
+    public <E extends AbstractEntity<?>> IEntityDao<E> generateCompanion(final Class<E> type) {
         throw new UnsupportedOperationException();
-    }
-
-    /// Returns 0, as this implementation generates no companion types.
-    ///
-    @Override
-    public int generatedTypeCount() {
-        return 0;
     }
 
 }

@@ -2,8 +2,8 @@ package ua.com.fielden.platform.audit;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import jakarta.inject.Inject;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
+import ua.com.fielden.platform.dao.AbstractEntityDao;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -17,24 +17,29 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
 
-/// Base type for implementations of audit-prop entity companion objects.
+/// Generic type for audit-prop entity companion objects.
+/// This type should be instantiated directly.
+/// Unlike [CommonEntityDao], this type does not have to be subclassed.
 ///
 /// Cannot be used if auditing is disabled — will throw [AuditingModeException] upon construction.
 ///
 /// @param <E>  the audited entity type
 ///
-public abstract class CommonAuditPropDao<E extends AbstractEntity<?>>
-        extends CommonEntityDao<AbstractAuditProp<E>>
+public class CommonAuditPropDao<E extends AbstractEntity<?>>
+        extends AbstractEntityDao<AbstractAuditProp<E>>
         implements IAuditPropInstantiator<E>
 {
 
+    private Class<AbstractAuditProp<E>> entityType;
+    private Class<? extends Comparable<?>> keyType;
     private Class<AbstractAuditEntity<E>> auditEntityType;
     private Class<AbstractSynAuditEntity<E>> synAuditEntityType;
 
     private IDomainMetadata domainMetadata;
 
-    @Inject
     protected void init(
+            final Class<AbstractAuditProp<E>> entityType,
+            final Class<? extends Comparable<?>> keyType,
             final AuditingMode auditingMode,
             final IDomainMetadata domainMetadata,
             final IAuditTypeFinder auditTypeFinder)
@@ -43,10 +48,22 @@ public abstract class CommonAuditPropDao<E extends AbstractEntity<?>>
             throw AuditingModeException.cannotBeUsed(this.getClass(), auditingMode);
         }
 
+        this.entityType = entityType;
+        this.keyType = keyType;
         this.domainMetadata = domainMetadata;
-        final var navigator = auditTypeFinder.navigateAuditProp(getEntityType());
+        final var navigator = auditTypeFinder.navigateAuditProp(entityType);
         auditEntityType = navigator.auditEntityType();
         synAuditEntityType = navigator.synAuditEntityType();
+    }
+
+    @Override
+    public Class<AbstractAuditProp<E>> getEntityType() {
+        return entityType;
+    }
+
+    @Override
+    public Class<? extends Comparable<?>> getKeyType() {
+        return keyType;
     }
 
     private static final String TEMPLATE_INSERT_STMT = """

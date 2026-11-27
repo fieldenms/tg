@@ -4,8 +4,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableSet;
 import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
+import ua.com.fielden.platform.dao.AbstractEntityDao;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.DbException;
@@ -36,22 +36,24 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
-import static ua.com.fielden.platform.entity.query.DbVersion.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
-/// Base type for implementations of audit-entity companion objects.
+/// Generic type for audit-entity companion objects.
+/// This type should be instantiated directly.
+/// Unlike [CommonEntityDao], this type does not have to be subclassed.
 ///
 /// Cannot be used if auditing is disabled. Will throw [AuditingModeException] upon construction.
 ///
 /// @param <E>  the audited entity type
 ///
-public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
-        extends CommonEntityDao<AbstractAuditEntity<E>>
+public class CommonAuditEntityDao<E extends AbstractEntity<?>>
+        extends AbstractEntityDao<AbstractAuditEntity<E>>
         implements IEntityAuditor<E>
 {
 
@@ -68,6 +70,8 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
 
     // All fields below are effectively final, but cannot be declared so due to late initialisation.
     // TODO: use Stable Values (https://openjdk.org/jeps/502) once out of preview.
+    private Class<AbstractAuditEntity<E>> entityType;
+    private Class<? extends Comparable<?>> keyType;
     private IAuditPropInstantiator<E> auditPropInstantiator;
     private IDomainMetadata domainMetadata;
     private PropertyInliner propInliner;
@@ -77,8 +81,9 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
     /// Key: audited property. Value: audit-property.
     private Map<String, String> auditedToAuditPropertyNames;
 
-    @Inject
     protected void init(
+            final Class<AbstractAuditEntity<E>> entityType,
+            final Class<? extends Comparable<?>> keyType,
             final AuditingMode auditingMode,
             final IAuditTypeFinder a3tFinder,
             final IDomainMetadata domainMetadata,
@@ -88,14 +93,26 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
             throw AuditingModeException.cannotBeUsed(this.getClass(), auditingMode);
         }
 
+        this.entityType = entityType;
+        this.keyType = keyType;
         this.domainMetadata = domainMetadata;
         this.propInliner = propInliner;
-        auditedToAuditPropertyNames = makeAuditedToAuditPropertyNames(domainMetadata, getEntityType());
+        auditedToAuditPropertyNames = makeAuditedToAuditPropertyNames(domainMetadata, entityType);
         final var propertiesForAuditing = collectPropertiesForAuditing(auditedToAuditPropertyNames.keySet());
-        fetchModelForAuditing = makeFetchModelForAuditing(a3tFinder.navigateAudit(getEntityType()).auditedType(), propertiesForAuditing, domainMetadata);
-        auditedEntityType = a3tFinder.navigateAudit(getEntityType()).auditedType();
-        final var auditPropType = a3tFinder.navigateAudit(getEntityType()).auditPropType();
+        fetchModelForAuditing = makeFetchModelForAuditing(a3tFinder.navigateAudit(entityType).auditedType(), propertiesForAuditing, domainMetadata);
+        auditedEntityType = a3tFinder.navigateAudit(entityType).auditedType();
+        final var auditPropType = a3tFinder.navigateAudit(entityType).auditPropType();
         auditPropInstantiator = co(auditPropType);
+    }
+
+    @Override
+    public Class<AbstractAuditEntity<E>> getEntityType() {
+        return entityType;
+    }
+
+    @Override
+    public Class<? extends Comparable<?>> getKeyType() {
+        return keyType;
     }
 
     private static Set<String> collectPropertiesForAuditing(final Set<String> auditedProperties) {

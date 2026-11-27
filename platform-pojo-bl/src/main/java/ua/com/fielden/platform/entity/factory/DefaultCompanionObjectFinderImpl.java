@@ -19,11 +19,9 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 ///
 /// There are two cases:
 /// 1. If an entity type is annotated with [CompanionObject], the finder uses a companion object type, specified by this annotation.
-/// 2. If an entity type is annotated with [CompanionIsGenerated], the finder uses a generated type that represents the default companion object implementation.
-///    The companion type generation is delegated to [ICompanionGenerator], which generates it once per base entity type.
+/// 2. If an entity type is annotated with [CompanionIsGenerated], the finder uses a generated companion object produced by [ICompanionGenerator].
 ///
 /// If none of the above cases hold, the finder returns `null`.
-///
 ///
 @Singleton
 final class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
@@ -55,22 +53,17 @@ final class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T find(final Class<E> type, final boolean uninstrumented) {
-        final Class<T> coType;
-        if (type.isAnnotationPresent(CompanionObject.class)) {
-            coType = (Class<T>) type.getAnnotation(CompanionObject.class).value();
-        }
-        else if (type.isAnnotationPresent(CompanionIsGenerated.class)) {
-            coType = (Class<T>) companionGenerator.generateCompanion(type);
+        final T co;
+        if (type.isAnnotationPresent(CompanionIsGenerated.class)) {
+            co = (T) companionGenerator.generateCompanion(type);
         }
         else {
-            coType = null;
-        }
-
+            final Class<T> coType = type.isAnnotationPresent(CompanionObject.class) ? (Class<T>) type.getAnnotation(CompanionObject.class).value() : null;
         if (coType != null) {
             try {
-                final T co = injector.getInstance(coType);
-                return decideUninstrumentation(uninstrumented, co);
+                    co = injector.getInstance(coType);
             } catch (final EntityCompanionException ex) {
                 throw ex;
             } catch (final Exception ex) {
@@ -81,8 +74,10 @@ final class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
             }
         }
         else {
-            return null;
+                co = null;
         }
+    }
+        return co == null ? null : decideUninstrumentation(uninstrumented, co);
     }
 
     /// A helper method to decide whether the instantiated companion should read instrumented or uninstrumented entities.
