@@ -19,8 +19,8 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 ///
 /// There are two cases:
 /// 1. If an entity type is annotated with [CompanionObject], the finder uses a companion object type, specified by this annotation.
-/// 2. If an entity type is annotated with [CompanionIsGenerated], the finder generates a new type that represents the default companion object implementation.
-///    The companion type generation is delegated to [ICompanionGenerator].
+/// 2. If an entity type is annotated with [CompanionIsGenerated], the finder uses a generated type that represents the default companion object implementation.
+///    The companion type generation is delegated to [ICompanionGenerator], which generates it once per base entity type.
 ///
 /// If none of the above cases hold, the finder returns `null`.
 ///
