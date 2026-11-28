@@ -33,7 +33,6 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresen
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
-import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
@@ -76,7 +75,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
     public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache, final boolean propertyDescriptorType) {
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
-        this.entityTypeInfo = createEntityTypeInfo(type, properties, entityTypeInfoGetter, serialisationTypeEncoder);
+        this.entityTypeInfo = createEntityTypeInfo(type, properties, entityTypeInfoGetter, serialisationTypeEncoder, factory);
 
         final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<>(type, properties, this.entityTypeInfo, excludeNulls, propertyDescriptorType);
         final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<>(mapper, factory, type, properties, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, propertyDescriptorType);
@@ -86,8 +85,8 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         module.addDeserializer(type, deserialiser);
     }
 
-    private static <T extends AbstractEntity<?>> EntityType createEntityTypeInfo(final Class<T> type, final List<CachedProperty> properties, final EntityTypeInfoGetter entityTypeInfoGetter, final ISerialisationTypeEncoder serialisationTypeEncoder) {
-        final EntityType entityTypeInfo = newPlainEntity(EntityType.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
+    private static <T extends AbstractEntity<?>> EntityType createEntityTypeInfo(final Class<T> type, final List<CachedProperty> properties, final EntityTypeInfoGetter entityTypeInfoGetter, final ISerialisationTypeEncoder serialisationTypeEncoder, final EntityFactory factory) {
+        final EntityType entityTypeInfo = factory.newEntityLightweight(EntityType.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
         entityTypeInfo.setKey(type.getName());
 
         // Inform the client of the type's persistence nature.
@@ -174,7 +173,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             for (final CachedProperty prop : propertiesWithCommonUnionProps) {
                 // Non-composite keys should be persisted by identifying their actual type.
                 final String name = prop.field().getName();
-                final EntityTypeProp entityTypeProp = newPlainEntity(EntityTypeProp.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
+                final EntityTypeProp entityTypeProp = factory.newEntityLightweight(EntityTypeProp.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
 
                 final Boolean secrete = AnnotationReflector.isSecreteProperty(type, name);
                 if (!isSecreteDefault(secrete)) {

@@ -51,7 +51,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     //////////////////////////////////// isInstrumented ////////////////////////////////////
     @Test
     public void isIntrumented_is_false_for_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(entityType, 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(entityType, 1L);
         assertFalse(PropertyTypeDeterminator.isInstrumented(entity.getClass()));
     }
     
@@ -63,7 +63,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void isIntrumented_is_false_for_generated_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(entityTypeGenerated, 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(entityTypeGenerated, 1L);
         assertFalse(PropertyTypeDeterminator.isInstrumented(entity.getClass()));
     }
     
@@ -75,7 +75,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void isIntrumented_is_false_for_proxied_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(entityType, "entityProp"), 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(EntityProxyContainer.proxy(entityType, "entityProp"), 1L);
         assertFalse(PropertyTypeDeterminator.isInstrumented(entity.getClass()));
     }
     
@@ -87,7 +87,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void isIntrumented_is_false_for_proxied_generated_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(entityTypeGenerated, "entityProp"), 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(EntityProxyContainer.proxy(entityTypeGenerated, "entityProp"), 1L);
         assertFalse(PropertyTypeDeterminator.isInstrumented(entity.getClass()));
     }
     
@@ -100,7 +100,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     //////////////////////////////////// isProxied ////////////////////////////////////
     @Test
     public void isProxied_is_false_for_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(entityType, 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(entityType, 1L);
         assertFalse(PropertyTypeDeterminator.isProxied(entity.getClass()));
     }
     
@@ -112,7 +112,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void isProxied_is_false_for_generated_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(entityTypeGenerated, 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(entityTypeGenerated, 1L);
         assertFalse(PropertyTypeDeterminator.isProxied(entity.getClass()));
     }
     
@@ -124,7 +124,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void isProxied_is_true_for_proxied_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(entityType, "entityProp"), 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(EntityProxyContainer.proxy(entityType, "entityProp"), 1L);
         assertTrue(PropertyTypeDeterminator.isProxied(entity.getClass()));
     }
     
@@ -136,7 +136,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void isProxied_is_true_for_proxied_generated_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(entityTypeGenerated, "entityProp"), 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(EntityProxyContainer.proxy(entityTypeGenerated, "entityProp"), 1L);
         assertTrue(PropertyTypeDeterminator.isProxied(entity.getClass()));
     }
     
@@ -149,7 +149,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     //////////////////////////////////// isGenerated ////////////////////////////////////
     @Test
     public void isGenerated_is_false_for_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(entityType, 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(entityType, 1L);
         assertFalse(DynamicEntityClassLoader.isGenerated(entity.getClass()));
     }
 
@@ -161,7 +161,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void isGenerated_is_true_for_generated_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(entityTypeGenerated, 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(entityTypeGenerated, 1L);
         assertTrue(DynamicEntityClassLoader.isGenerated(entity.getClass()));
     }
     
@@ -173,7 +173,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void isGenerated_is_false_for_proxied_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(entityType, "entityProp"), 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(EntityProxyContainer.proxy(entityType, "entityProp"), 1L);
         assertFalse(DynamicEntityClassLoader.isGenerated(entity.getClass()));
     }
     
@@ -185,7 +185,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void isGenerated_is_true_for_proxied_generated_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(entityTypeGenerated, "entityProp"), 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(EntityProxyContainer.proxy(entityTypeGenerated, "entityProp"), 1L);
         assertTrue(DynamicEntityClassLoader.isGenerated(entity.getClass()));
     }
     
@@ -203,7 +203,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
 
     @Test
     public void stripIfNeeded_returns_original_type_for_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(entityType, 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(entityType, 1L);
         assertEquals(entityType, PropertyTypeDeterminator.stripIfNeeded(entity.getClass()));
     }
     
@@ -215,7 +215,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void stripIfNeeded_returns_generated_type_for_generated_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(entityTypeGenerated, 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(entityTypeGenerated, 1L);
         assertEquals(entityTypeGenerated, PropertyTypeDeterminator.stripIfNeeded(entity.getClass()));
     }
     
@@ -227,7 +227,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void stripIfNeeded_returns_original_type_for_proxied_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(entityType, "entityProp"), 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(EntityProxyContainer.proxy(entityType, "entityProp"), 1L);
         assertEquals(entityType, PropertyTypeDeterminator.stripIfNeeded(entity.getClass()));
     }
     
@@ -239,7 +239,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void stripIfNeeded_returns_generated_type_for_proxied_generated_uninstrumented_entity() {
-        final AbstractEntity<?> entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(entityTypeGenerated, "entityProp"), 1L);
+        final AbstractEntity<?> entity = factory.newEntityLightweight(EntityProxyContainer.proxy(entityTypeGenerated, "entityProp"), 1L);
         assertEquals(entityTypeGenerated, PropertyTypeDeterminator.stripIfNeeded(entity.getClass()));
     }
     

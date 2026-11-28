@@ -375,6 +375,8 @@ public class SerialisationTestResource extends AbstractWebResource {
     }
 
     private static List<AbstractEntity<?>> createEntities(final RestServerUtil restUtil, final FactoryForTestingEntities factory) {
+        final var serialiser = restUtil.getSerialiser();
+        final var entityFactory = factory.getFactory();
         return asList(
                 factory.createNullEmptyEntity(),
                 factory.createSimpleEmptyEntity(),
@@ -418,8 +420,8 @@ public class SerialisationTestResource extends AbstractWebResource {
                 factory.createEntityWithMapOfSameEntities(),
                 factory.createEntityWithCompositeKey(),
                 factory.createUninstrumentedEntity(),
-                createGeneratedEntity(restUtil.getSerialiser(), false), // uninstrumented
-                createGeneratedEntity(restUtil.getSerialiser(), true), // instrumented
+                createGeneratedEntity(serialiser, entityFactory, false), // uninstrumented
+                createGeneratedEntity(serialiser, entityFactory, true), // instrumented
                 factory.createInstrumentedEntityWithUninstrumentedProperty(),
                 factory.createUninstrumentedEntityWithInstrumentedProperty(),
                 factory.createPropertyDescriptor(),
@@ -430,24 +432,25 @@ public class SerialisationTestResource extends AbstractWebResource {
                 factory.createInstrumentedEntity(true, EntityWithOtherEntity.class),
                 factory.createUninstrumentedGeneratedEntity(true, EntityWithOtherEntity.class)._1,
                 factory.createInstrumentedGeneratedEntity(true, EntityWithOtherEntity.class)._1,
-                createAndSetIdOnlyProxy(factory.createUninstrumentedEntity(false, EntityWithOtherEntity.class), restUtil.getSerialiser()),
-                createAndSetIdOnlyProxy(factory.createInstrumentedEntity(false, EntityWithOtherEntity.class), restUtil.getSerialiser()),
-                factory.createInstrumentedEntity(false, EntityWithOtherEntity.class).set("prop", createIdOnlyProxy(restUtil.getSerialiser())), // here idOnlyProxy instance really goes into lastInvalidValue due to EntityExistsValidator. It is worthwhile not to remove this weird case for additional checking.
-                createAndSetIdOnlyProxy(factory.createUninstrumentedGeneratedEntity(false, EntityWithOtherEntity.class)._1, restUtil.getSerialiser()),
-                createAndSetIdOnlyProxy(factory.createInstrumentedGeneratedEntity(false, EntityWithOtherEntity.class)._1, restUtil.getSerialiser()));
+                createAndSetIdOnlyProxy(factory.createUninstrumentedEntity(false, EntityWithOtherEntity.class), serialiser, entityFactory),
+                createAndSetIdOnlyProxy(factory.createInstrumentedEntity(false, EntityWithOtherEntity.class), serialiser, entityFactory),
+                // here idOnlyProxy instance really goes into lastInvalidValue due to EntityExistsValidator. It is worthwhile not to remove this weird case for additional checking.
+                factory.createInstrumentedEntity(false, EntityWithOtherEntity.class).set("prop", createIdOnlyProxy(serialiser, entityFactory)),
+                createAndSetIdOnlyProxy(factory.createUninstrumentedGeneratedEntity(false, EntityWithOtherEntity.class)._1, serialiser, entityFactory),
+                createAndSetIdOnlyProxy(factory.createInstrumentedGeneratedEntity(false, EntityWithOtherEntity.class)._1, serialiser, entityFactory));
     }
     
-    private static AbstractEntity<?> createAndSetIdOnlyProxy(final AbstractEntity<?> entity, final ISerialiser serialiser) {
-        return entity.beginInitialising().set("prop", createIdOnlyProxy(serialiser)).endInitialising();
+    private static AbstractEntity<?> createAndSetIdOnlyProxy(final AbstractEntity<?> entity, final ISerialiser serialiser, final EntityFactory factory) {
+        return entity.beginInitialising().set("prop", createIdOnlyProxy(serialiser, factory)).endInitialising();
     }
     
-    private static AbstractEntity<?> createIdOnlyProxy(final ISerialiser serialiser) {
+    private static AbstractEntity<?> createIdOnlyProxy(final ISerialiser serialiser, final EntityFactory factory) {
         final TgJackson tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
         final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = tgJackson.idOnlyProxiedEntityTypeCache;
-        return EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(OtherEntity.class), 189L);
+        return factory.newEntityLightweight(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(OtherEntity.class), 189L);
     }
     
-    private static AbstractEntity<String> createGeneratedEntity(final ISerialiser serialiser, final boolean instrumented) {
+    private static AbstractEntity<String> createGeneratedEntity(final ISerialiser serialiser, final EntityFactory factory, final boolean instrumented) {
         final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
         final Class<? extends AbstractEntity<?>> tmp = startModification(EmptyEntity.class)
                 .modifyTypeName(nextTypeName(EmptyEntity.class.getName()))
@@ -458,9 +461,9 @@ public class SerialisationTestResource extends AbstractWebResource {
         
         final AbstractEntity<String> entity;
         if (instrumented) {
-            entity = (AbstractEntity<String>) serialiser.factory().newEntity(emptyEntityTypeEnhanced, 159L);
+            entity = (AbstractEntity<String>) factory.newEntity(emptyEntityTypeEnhanced, 159L);
         } else {
-            entity = (AbstractEntity<String>) EntityFactory.newPlainEntity(emptyEntityTypeEnhanced, 159L);
+            entity = (AbstractEntity<String>) factory.newEntityLightweight(emptyEntityTypeEnhanced, 159L);
         }
 
         entity.beginInitialising();

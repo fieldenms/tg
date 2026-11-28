@@ -815,7 +815,7 @@ public class AbstractEntityTest {
     public void copy_from_uninstrumented_proxied_instance_is_also_uninstrumented_and_proxied() {
         final Class<? extends Entity> type = EntityProxyContainer.proxy(Entity.class, "firstProperty", "monitoring", "observableProperty");
 
-        final Entity entity = EntityFactory.newPlainEntity(type, 12L);
+        final Entity entity = factory.newEntityLightweight(type, 12L);
         entity.setVersion(42L);
         entity.setKey("key");
         entity.setDesc("description");
@@ -1174,7 +1174,7 @@ public class AbstractEntityTest {
 
     @Test
     public void default_implementation_for_isEditable_returns_failure_for_non_instrumented_entities() {
-        final Entity plainEntityViaFactory = factory.newPlainEntity(Entity.class, null);
+        final Entity plainEntityViaFactory = factory.newEntityLightweight(Entity.class, null);
         final Result res1 = plainEntityViaFactory.isEditable();
         assertFalse(res1.isSuccessful());
         assertEquals(AbstractEntity.ERR_IS_EDITABLE_UNINSTRUMENTED, res1.getMessage());
@@ -1195,7 +1195,7 @@ public class AbstractEntityTest {
 
     @Test
     public void default_implementation_for_isDirty_throws_exception_for_non_instrumented_entities() {
-        final Entity plainEntityViaFactory = factory.newPlainEntity(Entity.class, null);
+        final Entity plainEntityViaFactory = factory.newEntityLightweight(Entity.class, null);
         try {
             plainEntityViaFactory.isDirty();
             fail();

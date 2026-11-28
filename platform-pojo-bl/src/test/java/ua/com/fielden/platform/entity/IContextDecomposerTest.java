@@ -16,20 +16,27 @@ import java.util.Optional;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /// Tests for [IContextDecomposer] accessors over a [CentreContext], including the `chosenEntity*` set introduced together with the additive `withChosenEntity()` opt-in.
 ///
 public class IContextDecomposerTest {
 
-    private static EntityWithOtherEntity newEntity(final long id) {
-        return EntityFactory.newPlainEntity(EntityWithOtherEntity.class, id);
+    private final EntityFactory factory = new ApplicationInjectorFactory()
+            .add(new CommonEntityTestIocModuleWithPropertyFactory())
+            .getInjector()
+            .getInstance(EntityFactory.class);
+
+    private EntityWithOtherEntity newEntity(final long id) {
+        return factory.newEntityLightweight(EntityWithOtherEntity.class, id);
     }
 
-    private static OtherEntity newOther(final long id) {
-        return EntityFactory.newPlainEntity(OtherEntity.class, id);
+    private OtherEntity newOther(final long id) {
+        return factory.newEntityLightweight(OtherEntity.class, id);
     }
 
     // CONTEXT AS A WHOLE //

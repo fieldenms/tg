@@ -62,8 +62,8 @@ public class RestrictedEntitySerialisationWithJacksonTest {
 
     @Test
     public void creating_serialiser_for_types_that_reference_UserSecret_fail() {
-        final UserSecret us = EntityFactory.newPlainEntity(UserSecret.class, 1L);
-        final EntityWithUserSecret entWithSecret = EntityFactory.newPlainEntity(EntityWithUserSecret.class, 2L);
+        final UserSecret us = factory.newEntityLightweight(UserSecret.class, 1L);
+        final EntityWithUserSecret entWithSecret = factory.newEntityLightweight(EntityWithUserSecret.class, 2L);
         entWithSecret.setSecret(us);
         try {
             Serialiser.createSerialiserWithJackson(factory, new ProvidedSerialisationClassProvider(UserSecret.class, EntityWithUserSecret.class), new SerialisationTypeEncoder(), new IdOnlyProxiedEntityTypeCacheForTests()).getEngine(SerialiserEngines.JACKSON);

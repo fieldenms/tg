@@ -125,6 +125,10 @@ Generated in `target/generated-sources/` by `MetaModelProcessor`.
 
 ## Topic-Specific Gotcha
 
+**Instantiate entities with `EntityFactory` or a companion, not `new`.**
+`EntityFactory.newEntity`/`newByKey` and companion `new_()` create instrumented entities, and `EntityFactory.newEntityLightweight` creates uninstrumented ones; each gives the entity the dynamic property access behind `get`/`set`.
+An entity created with `new` or the deprecated static `EntityFactory.newPlainEntity` lacks it, so `get`/`set` fall back to slower reflection on it, as does everything built on them: `copy`, `EntityUtils.copy`, and the `toString`/`equals`/`hashCode`/`compareTo` of a composite key, whose members `DynamicEntityKey` reads via `get`.
+
 **DeleteOperations patterns:**
 Pessimistic locking with `UPGRADE` lock mode for activatable entities.
 Deliberately catches only `PersistenceException` for referential integrity violations.

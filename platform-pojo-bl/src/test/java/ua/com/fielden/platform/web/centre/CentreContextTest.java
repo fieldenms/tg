@@ -11,7 +11,9 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 
 /**
  * The test for {@link CentreContext}.
@@ -21,12 +23,17 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEnt
  */
 public class CentreContextTest {
 
+    private final EntityFactory factory = new ApplicationInjectorFactory()
+            .add(new CommonEntityTestIocModuleWithPropertyFactory())
+            .getInjector()
+            .getInstance(EntityFactory.class);
+
     @Test
     public void proxied_instances_remain_proxied() {
         final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = new CentreContext<>();
         
         final List<AbstractEntity<?>> originalEntities = new ArrayList<>();
-        final AbstractEntity<?> originalEntity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(EntityWithOtherEntity.class, "prop"), 0L);
+        final AbstractEntity<?> originalEntity = factory.newEntityLightweight(EntityProxyContainer.proxy(EntityWithOtherEntity.class, "prop"), 0L);
         originalEntities.add(originalEntity);
         
         assertEquals(1, originalEntity.proxiedPropertyNames().size());

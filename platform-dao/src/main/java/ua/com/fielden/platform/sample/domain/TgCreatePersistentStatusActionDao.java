@@ -35,7 +35,7 @@ public class TgCreatePersistentStatusActionDao extends CommonEntityDao<TgCreateP
         
         
         final TgPersistentStatus newStatus = coTgPersistentStatus
-                .save(entity.getEntityFactory().newEntity(TgPersistentStatus.class, entity.getStatusCode(), entity.getDesc()));
+                .save(getEntityFactory().newEntity(TgPersistentStatus.class, entity.getStatusCode(), entity.getDesc()));
         
         return entity.setStatus(newStatus);
     }

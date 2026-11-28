@@ -8,8 +8,10 @@ import java.io.Serializable;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
+import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.keygen.KeyNumber;
@@ -53,12 +55,25 @@ public class ProxyInterceptor extends EmptyInterceptor {
             if (KeyNumber.class.isAssignableFrom(entityType)) {
                 return factory.newEntity(entityType, (Long) id);
             } else {
-                return EntityFactory.newPlainEntity(entityType, (Long) id);
+                return factory.newEntityLightweight(entityType, (Long) id);
             }
         } catch (final ClassNotFoundException ex) {
             LOGGER.fatal(ex);
             throw Result.failure(ex);
         }
+    }
+
+    /// Union entities are mapped as components, which Hibernate instantiates itself, bypassing [#instantiate(String, EntityMode, Serializable)].
+    /// They are initialised by [EntityFactory] here, as part of loading the entity that owns them.
+    ///
+    @Override
+    public boolean onLoad(final Object entity, final Serializable id, final Object[] state, final String[] propertyNames, final Type[] types) {
+        for (final Object value : state) {
+            if (value instanceof AbstractUnionEntity union) {
+                factory.initPlainEntity(union);
+            }
+        }
+        return false;
     }
 
 }

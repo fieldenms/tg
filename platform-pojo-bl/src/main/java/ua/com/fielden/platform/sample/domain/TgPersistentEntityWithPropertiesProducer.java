@@ -36,15 +36,15 @@ public class TgPersistentEntityWithPropertiesProducer extends DefaultEntityProdu
         if (ofMasterEntity().computation().map(c -> c.apply(null, null).equals("WITH_KEY4")).orElse(false)) {
             entity.setEntityProp(coTgPersistentEntityWithProperties.findByKeyAndFetch(coTgPersistentEntityWithProperties.getFetchProvider().<TgPersistentEntityWithProperties> fetchFor("entityProp").fetchModel(), "KEY4"));
         }
-        return provideProducerInitProp(coTgPersistentEntityWithProperties, entity, serialiser);
+        return provideProducerInitProp(coTgPersistentEntityWithProperties, entity, serialiser, factory());
     }
     
     @Override
     public TgPersistentEntityWithProperties provideDefaultValues(final TgPersistentEntityWithProperties entity) {
-        return provideProducerInitProp(coTgPersistentEntityWithProperties, currentEntityNotEmpty() && chosenPropertyEqualsTo(DESC) ? refetchInstrumentedEntityById(currentEntity().getId()) : entity, serialiser);
+        return provideProducerInitProp(coTgPersistentEntityWithProperties, currentEntityNotEmpty() && chosenPropertyEqualsTo(DESC) ? refetchInstrumentedEntityById(currentEntity().getId()) : entity, serialiser, factory());
     }
     
-    private static TgPersistentEntityWithProperties provideProducerInitProp(final ITgPersistentEntityWithProperties co, final TgPersistentEntityWithProperties entity, final ISerialiser serialiser) {
+    private static TgPersistentEntityWithProperties provideProducerInitProp(final ITgPersistentEntityWithProperties co, final TgPersistentEntityWithProperties entity, final ISerialiser serialiser, final EntityFactory factory) {
         final IFetchProvider<TgPersistentEntityWithProperties> fetchStrategy = co.getFetchProvider();
         final TgPersistentEntityWithProperties defValue =
                 //                coTgPersistentEntityWithProperties.getEntity(from(
@@ -57,7 +57,7 @@ public class TgPersistentEntityWithPropertiesProducer extends DefaultEntityProdu
         
         final TgJackson tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
         final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = tgJackson.idOnlyProxiedEntityTypeCache;
-        final TgPersistentEntityWithProperties idOnlyProxy = EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(TgPersistentEntityWithProperties.class), 7L);
+        final TgPersistentEntityWithProperties idOnlyProxy = factory.newEntityLightweight(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(TgPersistentEntityWithProperties.class), 7L);
         
         entity.setIdOnlyProxyProp(idOnlyProxy);
         return entity;

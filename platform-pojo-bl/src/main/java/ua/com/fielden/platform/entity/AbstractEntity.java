@@ -40,6 +40,7 @@ import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.Optional;
@@ -207,6 +208,11 @@ import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
  * </ul>
  * <p>
  * Please note that mutators for the same collectional property may have different validation annotations.
+ * <h3>Entity instantiation</h3>
+ * Entities should be instantiated only through {@link EntityFactory}, which provides methods for creating both instrumented and
+ * uninstrumented instances.
+ * While the use of `new` for entity instantiation is allowed, it should not be practiced as the resulting instances will
+ * be only partly initialised, which may lead to degraded performance and runtime errors.
  * <p>
  * ==================================================================<br/>
  * <p>
@@ -292,8 +298,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     	STRICT_MODEL_VERIFICATION = true;
     }
 
+    /// Injected into instrumented entities, and assigned to uninstrumented ones by [EntityFactory#initPlainEntity(AbstractEntity)].
+    /// An entity created with `new` or [EntityFactory#newPlainEntity(Class, Long)] has none, so [#get(String)] and [#set(String, Object)] use reflection on it.
+    ///
     @Inject
-    private static DynamicPropertyAccess dynamicPropertyAccess;
+    private @Nullable DynamicPropertyAccess dynamicPropertyAccess;
 
     /**
      * Holds meta-properties for entity properties.
@@ -504,18 +513,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         return actualEntityType;
     }
 
-    /**
-     * Dynamic getter for accessing property value.
-     *
-     * @param propertyName
-     * @return
-     */
+    /// Accesses property value by name.
+    ///
+    @SuppressWarnings("unchecked")
     public <T> T get(final String propertyName) {
         if (Reflector.isPropertyProxied(this, propertyName)) {
             throw new StrictProxyException(ERR_CANNOT_GET_VALUE_FOR_PROXIED_PROPERTY.formatted(propertyName, getType().getName()));
         }
         try {
-            return (T) dynamicPropertyAccess.getProperty(this, propertyName);
+            return dynamicPropertyAccess != null ? (T) dynamicPropertyAccess.getProperty(this, propertyName) : Finder.findFieldValueByName(this, propertyName);
         }
         catch (final StrictProxyException ex) {
             throw new StrictProxyException(ERR_CANNOT_GET_VALUE_FOR_PROXIED_PROPERTY.formatted(propertyName, getType().getName()), ex);
@@ -541,25 +547,21 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
     }
 
-    /**
-     * Dynamic getter for accessing property value.
-     *
-     * @param propertyName
-     * @return
-     */
+    /// Accesses property value by name.
+    ///
     public <T> T get(final IConvertableToPath propertyName) {
         return get(propertyName.toPath());
     }
 
-    /**
-     * Dynamic setter for setting property value.
-     *
-     * @param propertyName
-     * @param value
-     */
+    /// Sets property value by name.
+    ///
     public AbstractEntity<K> set(final String propertyName, final Object value) {
         try {
-            dynamicPropertyAccess.setProperty(this, propertyName, value);
+            if (dynamicPropertyAccess != null) {
+                dynamicPropertyAccess.setProperty(this, propertyName, value);
+            } else {
+                setByReflection(propertyName, value);
+            }
             return this;
         } catch (final Throwable ex) {
             if (ex instanceof Result result) {
@@ -571,14 +573,27 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
     }
 
-    /**
-     * Dynamic setter for setting property value.
-     *
-     * @param propertyName
-     * @param value
-     */
+    /// Sets property value by name.
+    ///
     public AbstractEntity<K> set(final IConvertableToPath propertyName, final Object value) {
         return set(propertyName.toPath(), value);
+    }
+
+    /// Invokes the setter of the named property reflectively, rethrowing the exception thrown by the setter as is.
+    /// For a union entity, a setter of a common property is invoked on the active entity.
+    ///
+    private void setByReflection(final String propertyName, final Object value) throws Throwable {
+        final Class<?> propertyType = Finder.findFieldByName(getType(), propertyName).getType();
+        final Method setter = Reflector.getMethod(this, Mutator.SETTER.getName(propertyName), propertyType);
+        final Object receiver = !setter.getDeclaringClass().isAssignableFrom(getType()) && this instanceof AbstractUnionEntity union
+                                ? union.activeEntity()
+                                : this;
+        setter.setAccessible(true);
+        try {
+            setter.invoke(receiver, value);
+        } catch (final InvocationTargetException ex) {
+            throw ex.getTargetException();
+        }
     }
 
     /**
@@ -1231,11 +1246,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         return nonProxiedProperties().anyMatch(MetaProperty::hasWarnings);
     }
 
-    /**
-     * A convenient getter to obtain an entity factory.
-     *
-     * @return {@link EntityFactory} which created this {@link AbstractEntity}
-     */
+    /// Returns the entity factory that created this entity instance, or `null` if the entity was created with `new` or static [EntityFactory#newPlainEntity(Class, Long)].
+    ///
+    /// @deprecated Visibility will be reduced to `protected` in the future.
+    ///             Existing callers should be adjusted to obtain their own [EntityFactory] dependency.
+    ///
+    @Deprecated
     public final EntityFactory getEntityFactory() {
         return entityFactory;
     }
@@ -1248,6 +1264,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     public final void setEntityFactory(final EntityFactory entityFactory) {
         this.entityFactory = entityFactory;
+    }
+
+    public final void setDynamicPropertyAccess(final DynamicPropertyAccess dynamicPropertyAccess) {
+        this.dynamicPropertyAccess = dynamicPropertyAccess;
     }
 
     /**
@@ -1396,13 +1416,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             throw new EntityException(format("Entity factory is required, but is missing from an instance of entity [%s].", getType().getName()));
         }
     }
-    /**
-     * Creates a new instance of the given type and copies all properties including, but not system properties such as ID and version.
-     *
-     * @param type
-     * @return
-     */
+
+    /// Creates a new instance of the given type and copies all properties including, but not system properties such as ID and version.
+    ///
     public final <COPY extends AbstractEntity> COPY copyWithoutIdentity(final Class<COPY> type) {
+        // TODO For consistency, align with other copying methods by not requiring the entity factory to be present.
+        //      Breaking effect: uninstrumented entities will start creating uninstrumented copies.
         assertEntityFactoryPresence();
         return copyTo(getEntityFactory().newEntity(type));
     }
@@ -1437,7 +1456,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             assertEntityFactoryPresence();
             copy = getEntityFactory().newEntity(type, getId());
         } else {
-            copy = EntityFactory.newPlainEntity(type,  getId());
+            copy = getEntityFactory() != null ? getEntityFactory().newEntityLightweight(type, getId()) : EntityFactory.newPlainEntity(type, getId());
         }
         copy.setVersion(getVersion());
         return copy;

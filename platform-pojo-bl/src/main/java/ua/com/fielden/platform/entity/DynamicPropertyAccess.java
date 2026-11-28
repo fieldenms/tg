@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import com.google.inject.Inject;
 import jakarta.annotation.Nullable;
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessCriticalError;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.indexer.IPropertyIndexer;
@@ -14,6 +15,7 @@ import static ua.com.fielden.platform.utils.ArrayUtils.getLast;
 /**
  * Provides dynamic name-based access (read & write) to property values of entity instances.
  */
+@Singleton
 public final class DynamicPropertyAccess {
 
     public static final String ERR_PROP_ACCESS_INDEX = "Failed to build an index for entity [%s]";
