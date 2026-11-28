@@ -1246,11 +1246,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         return nonProxiedProperties().anyMatch(MetaProperty::hasWarnings);
     }
 
-    /**
-     * A convenient getter to obtain an entity factory.
-     *
-     * @return {@link EntityFactory} which created this {@link AbstractEntity}
-     */
+    /// Returns the entity factory that created this entity instance, or `null` if the entity was created with `new` or static [EntityFactory#newPlainEntity(Class, Long)].
+    ///
+    /// @deprecated Visibility will be reduced to `protected` in the future.
+    ///             Existing callers should be adjusted to obtain their own [EntityFactory] dependency.
+    ///
+    @Deprecated
     public final EntityFactory getEntityFactory() {
         return entityFactory;
     }
