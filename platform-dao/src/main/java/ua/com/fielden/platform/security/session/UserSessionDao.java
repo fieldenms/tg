@@ -33,7 +33,6 @@ import java.util.Set;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import static ua.com.fielden.platform.security.session.Authenticator.mkToken;
@@ -471,7 +470,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         final UserSession saved = assignAuthenticator(save(session), seriesId);
 
         // Need to cache the established session as a plain object.
-        final UserSession userSessionForCache = saved.copyTo(newPlainEntity(UserSession.class, saved.getId()));
+        final UserSession userSessionForCache = saved.copyTo(getEntityFactory().newEntityLightweight(UserSession.class, saved.getId()));
         userSessionForCache.setAuthenticator(saved.getAuthenticator().get());
         oldAuthenticator.ifPresent(auth -> cache.put(auth, userSessionForCache));
         cache.put(saved.getAuthenticator().get().toString(), userSessionForCache);

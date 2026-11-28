@@ -27,7 +27,7 @@ public class MockNotFoundEntityTestCase {
     public void instances_of_mocked_types_are_recognise_as_mock_not_found_values() throws Exception {
         final Class<? extends TgOwnerEntity> mockType = MockNotFoundEntityMaker.mock(TgOwnerEntity.class);
         assertTrue(PropertyTypeDeterminator.isMockNotFoundType(mockType));
-        assertTrue(MockNotFoundEntityMaker.isMockNotFoundValue(factory.newPlainEntity(mockType, null)));
+        assertTrue(MockNotFoundEntityMaker.isMockNotFoundValue(factory.newEntityLightweight(mockType, null)));
     }
 
     @Test

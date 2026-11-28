@@ -1451,7 +1451,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             assertEntityFactoryPresence();
             copy = getEntityFactory().newEntity(type, getId());
         } else {
-            copy = EntityFactory.newPlainEntity(type,  getId());
+            copy = getEntityFactory() != null ? getEntityFactory().newEntityLightweight(type, getId()) : EntityFactory.newPlainEntity(type, getId());
         }
         copy.setVersion(getVersion());
         return copy;

@@ -41,7 +41,6 @@ import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
-import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.fromString;
 import static ua.com.fielden.platform.entity.proxy.EntityProxyContainer.proxy;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
@@ -143,7 +142,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             if (propertyDescriptorType) {
                 entity = entityWithMocksFromString(str -> (T) (uninstrumented ? fromString(str) : fromString(str, of(factory))), node.get("@pdString").asText(), entityType);
             } else {
-                entity = uninstrumented ? newPlainEntity(proxy(entityType, proxiedProps), id) : factory.newEntity(proxy(entityType, proxiedProps), id);
+                entity = uninstrumented ? factory.newEntityLightweight(proxy(entityType, proxiedProps), id) : factory.newEntity(proxy(entityType, proxiedProps), id);
             }
             final JsonNode atIdNode = node.get("@id");
             // At this stage 'clientSideReference' has been already decoded using ISerialisationTypeEncoder, that is why concrete EntityJsonDeserialiser has been chosen for deserialisation
@@ -208,7 +207,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final JavaType concreteType = concreteTypeOf(constructType(entityType, mapper.getTypeFactory(), propertyField), () -> valueNode.get("@id") == null ? valueNode.get("@id_ref") : valueNode.get("@id"));
             if (valueNode.isTextual() && EntityUtils.isEntityType(concreteType.getRawClass()) && valueNode.asText().startsWith(ID_ONLY_PROXY_PREFIX)) { // id-only proxy instance is represented as id-only proxy prefix concatenated with id number
                 final Long determinedId = Long.valueOf(valueNode.asText().replaceFirst(Pattern.quote(ID_ONLY_PROXY_PREFIX), ""));
-                value = EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor((Class) concreteType.getRawClass()), determinedId);
+                value = factory.newEntityLightweight(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor((Class) concreteType.getRawClass()), determinedId);
             } else {
                 try {
                     value = mapper.readValue(valueNode.traverse(mapper), concreteType);

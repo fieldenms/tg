@@ -651,7 +651,7 @@ public class EntitySerialisationWithJacksonTest {
     /////////////////////////////// MetaProperty restoration [END] ///////////////////////////////
     private AbstractEntity createIdOnlyProxy(final long id) {
         final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = ((TgJackson) jacksonSerialiser).idOnlyProxiedEntityTypeCache;
-        return EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(OtherEntity.class), id);
+        return factory.getFactory().newEntityLightweight(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(OtherEntity.class), id);
     }
 
     private AbstractEntity createIdOnlyProxy() {

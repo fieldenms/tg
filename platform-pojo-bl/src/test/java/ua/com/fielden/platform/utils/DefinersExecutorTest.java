@@ -98,7 +98,7 @@ public class DefinersExecutorTest {
     
     @Test
     public void definers_execute_for_root_properties_in_order_of_their_definition_and_no_composite_member_definers_execute_if_it_is_not_instrumented() {
-        final TgDefinersExecutorCompositeKeyMember grandParent = EntityFactory.newPlainEntity(TgDefinersExecutorCompositeKeyMember.class, 1L);
+        final TgDefinersExecutorCompositeKeyMember grandParent = factory.newEntityLightweight(TgDefinersExecutorCompositeKeyMember.class, 1L);
         grandParent.beginInitialising();
         grandParent.setKey("grand1");
         grandParent.setPropWithHandler("PropWithHandler value");

@@ -114,7 +114,7 @@ public class AbstractUnionEntityTest {
 
     @Test
     public void for_uninstrumented_union_activePropertyName_returns_null_if_nothing_has_been_set_otherwise_the_name_of_the_non_null_property() {
-        final UnionEntity union = EntityFactory.newPlainEntity(UnionEntity.class, 2L);
+        final UnionEntity union = factory.newEntityLightweight(UnionEntity.class, 2L);
         assertFalse(union.isInstrumented());
         assertNull(union.activePropertyName());
 
@@ -138,7 +138,7 @@ public class AbstractUnionEntityTest {
 
     @Test
     public void for_uninstrumented_union_activeEntity_returns_null_if_nothing_has_been_set_otherwise_the_name_of_the_non_null_property() {
-        final UnionEntity union = EntityFactory.newPlainEntity(UnionEntity.class, 2L);
+        final UnionEntity union = factory.newEntityLightweight(UnionEntity.class, 2L);
         assertFalse(union.isInstrumented());
         assertNull(union.activeEntity());
 

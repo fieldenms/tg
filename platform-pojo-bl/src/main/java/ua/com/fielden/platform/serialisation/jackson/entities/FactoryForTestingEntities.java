@@ -91,7 +91,7 @@ public class FactoryForTestingEntities {
      * @return
      */
     private <T extends AbstractEntity<?>> T createUninstrumentedPersistedEntity(final Class<T> type, final Long id, final String key, final String desc) {
-        final T entity = EntityFactory.newPlainEntity(type, id);
+        final T entity = factory.newEntityLightweight(type, id);
 
         entity.beginInitialising();
         entity.set(KEY, key);
@@ -463,7 +463,7 @@ public class FactoryForTestingEntities {
     }
 
     public EmptyEntity createUninstrumentedEntity() {
-        final EmptyEntity entity = EntityFactory.newPlainEntity(EmptyEntity.class, 159L);
+        final EmptyEntity entity = factory.newEntityLightweight(EmptyEntity.class, 159L);
 
         entity.beginInitialising();
         entity.setKey("UNINSTRUMENTED");
@@ -476,7 +476,7 @@ public class FactoryForTestingEntities {
     public Entity1WithEntity2 createInstrumentedEntityWithUninstrumentedProperty() {
         final Entity1WithEntity2 entity = factory.newEntity(Entity1WithEntity2.class, 159L);
 
-        final Entity2WithEntity1 uninstrumentedPropValue = EntityFactory.newPlainEntity(Entity2WithEntity1.class, 162L);
+        final Entity2WithEntity1 uninstrumentedPropValue = factory.newEntityLightweight(Entity2WithEntity1.class, 162L);
 
         entity.beginInitialising();
         entity.setProp(uninstrumentedPropValue);
@@ -488,7 +488,7 @@ public class FactoryForTestingEntities {
     }
 
     public Entity1WithEntity2 createUninstrumentedEntityWithInstrumentedProperty() {
-        final Entity1WithEntity2 entity = EntityFactory.newPlainEntity(Entity1WithEntity2.class, 159L);
+        final Entity1WithEntity2 entity = factory.newEntityLightweight(Entity1WithEntity2.class, 159L);
 
         final Entity2WithEntity1 uninstrumentedPropValue = factory.newEntity(Entity2WithEntity1.class, 162L);
 

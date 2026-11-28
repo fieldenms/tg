@@ -16,7 +16,7 @@ public class EntityExistsValidationForUnionTypedPropertyWithUninstrumentedUnionT
 
     @Override
     protected <U extends AbstractUnionEntity> U newUnion(final Class<U> type) {
-        return EntityFactory.newPlainEntity(type, null);
+        return getInstance(EntityFactory.class).newEntityLightweight(type, null);
     }
 
     @Test
