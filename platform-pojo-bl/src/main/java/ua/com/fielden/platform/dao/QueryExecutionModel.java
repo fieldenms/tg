@@ -116,11 +116,11 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         return queryModel;
     }
 
-    public OrderingModel getOrderModel() {
+    public @Nullable OrderingModel getOrderModel() {
         return orderModel;
     }
 
-    public fetch<T> getFetchModel() {
+    public @Nullable fetch<T> getFetchModel() {
         return fetchModel;
     }
 
@@ -206,12 +206,15 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
             return new QueryExecutionModel<>(this);
         }
 
-        public Builder<T, Q> with(final OrderingModel val) {
+        public Builder<T, Q> with(final @Nullable OrderingModel val) {
             orderModel = val;
             return this;
         }
 
-        public Builder<T, Q> with(final fetch<T> val) {
+        /// Specifies a fetch model.
+        /// If null, the [default][fetch.FetchCategory#DEFAULT] fetch model will be used.
+        ///
+        public Builder<T, Q> with(final @Nullable fetch<T> val) {
             fetchModel = val;
             return this;
         }

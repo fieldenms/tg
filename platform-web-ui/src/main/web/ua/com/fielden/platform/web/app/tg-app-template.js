@@ -30,10 +30,10 @@ import { TgLongTapHandlerBehaviour } from '/resources/components/tg-long-tap-han
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
-import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp, isHistoryEntryNumbered, rewriteHistoryEntryUri } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, generateUUID, isHistoryEntryNumbered, rewriteHistoryEntryUri } from '/resources/reflection/tg-polymer-utils.js';
 import { isExternalURL, processURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
-import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import { _requestHeaders } from '/resources/reflection/tg-request-headers.js';
 
 import * as appActions from '/app/tg-app-actions.js';
 
@@ -241,13 +241,12 @@ Polymer({
         },
 
         /**
-         * Additional headers for every 'iron-ajax' client-side requests.
-         * These only contain our custom 'Time-Zone' header that indicates real time-zone for the client application.
-         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able to compute 'Now' moment properly.
+         * Additional headers sent with every 'iron-ajax' client-side request of this element.
+         * Produced by '_requestHeaders', which documents each header and what the server does with it.
          */
         _headers: {
             type: String,
-            value: _timeZoneHeader
+            value: _requestHeaders
         }
     },
 
@@ -882,11 +881,8 @@ Polymer({
             }
             
             self.entityId = 'new';
+            // The server builds the menu for the profile sent in the 'Device-Profile' header (see MenuProducer).
             const context = self._reflector().createContextHolder(null, null, null, null, null, null, null);
-            // Currently there is a difference in constructing app menu content.
-            // We use isMobileApp differentiator when making 'retrieve' call for 'Menu' entity.
-            context['chosenProperty'] = isMobileApp() ? 'mobile' : 'desktop';
-            
             this.retrieve(context);
             this._toastGreeting().text = "Loading menu...";
             this._toastGreeting().hasMore = false;
