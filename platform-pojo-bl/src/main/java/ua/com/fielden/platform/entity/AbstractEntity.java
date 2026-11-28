@@ -1416,13 +1416,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             throw new EntityException(format("Entity factory is required, but is missing from an instance of entity [%s].", getType().getName()));
         }
     }
-    /**
-     * Creates a new instance of the given type and copies all properties including, but not system properties such as ID and version.
-     *
-     * @param type
-     * @return
-     */
+
+    /// Creates a new instance of the given type and copies all properties including, but not system properties such as ID and version.
+    ///
     public final <COPY extends AbstractEntity> COPY copyWithoutIdentity(final Class<COPY> type) {
+        // TODO For consistency, align with other copying methods by not requiring the entity factory to be present.
+        //      Breaking effect: uninstrumented entities will start creating uninstrumented copies.
         assertEntityFactoryPresence();
         return copyTo(getEntityFactory().newEntity(type));
     }
